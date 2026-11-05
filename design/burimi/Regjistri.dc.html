@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="sq">
+<head>
+<meta charset="utf-8">
+<title>Regjistri i veprimeve</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F4F6F3}
+a{color:#0E6B4E}a:hover{color:#0A5039}
+.nav{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 12px;border-radius:10px;color:#C9D6CF;text-decoration:none;font-size:14px;font-weight:500}
+.nav:hover{background:#1B3A2C;color:#FFFFFF}
+.nav.on{background:#E3F1EA;color:#0F2A1F}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{text-align:left;font-size:12px;font-weight:600;color:#56645C;padding:12px;border-bottom:1px solid #E2E7E3;white-space:nowrap;background:#F7F9F7}
+.tbl td{padding:12px;border-bottom:1px solid #EEF1EE;vertical-align:top}
+.mono{font-family:'IBM Plex Mono',monospace;font-size:13px;white-space:nowrap}
+.ac{display:inline-flex;font-size:12px;font-weight:600;padding:4px 8px;border-radius:6px;white-space:nowrap}
+.a-in{color:#33413A;background:#F0F3F1}
+.a-sale{color:#0E6B4E;background:#E3F1EA}
+.a-warn{color:#854D0E;background:#FEF3C7}
+.a-bad{color:#9A3412;background:#FFEDE0}
+.a-set{color:#1D4ED8;background:#E8F0FB}
+.sel{min-height:44px;border:1px solid #CBD5CE;border-radius:10px;padding:0 10px;font:inherit;font-size:14px;color:#14201A;background:#FFFFFF}
+.fl{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:#56645C}
+.bs{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid #CBD5CE;background:#FFFFFF;font:inherit;font-size:14px;font-weight:600;color:#14201A}
+</style>
+</helmet>
+<div style="font-family: Inter, system-ui, sans-serif; color: #14201A; display: flex; flex-wrap: wrap; min-height: 100vh; background: #F4F6F3">
+
+<nav aria-label="Menuja kryesore" style="flex: 1 1 232px; background: #10241B; padding: 24px 16px; display: flex; flex-direction: column; gap: 4px; box-sizing: border-box">
+<div style="display: flex; align-items: center; gap: 10px; padding: 0 8px 24px">
+<div style="width: 36px; height: 36px; border-radius: 10px; background: #3FBF86; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10241B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l1.5-5h15L21 9"/><path d="M4 9v11h16V9"/><path d="M9 20v-6h6v6"/></svg></div>
+<div style="display: flex; flex-direction: column"><span style="color: #FFFFFF; font-weight: 700; font-size: 16px">Market Fllanza</span><span style="color: #8FA79A; font-size: 12px">Prishtinë · Kasa</span></div>
+</div>
+<a href="Main.dc.html" class="nav"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Paneli</a>
+<a href="Arka.dc.html" class="nav"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.7 12.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.5L21 8H6"/></svg>Arka / Shitja</a>
+<a href="Produktet.dc.html" class="nav"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>Produktet</a>
+<a href="Stoku.dc.html" class="nav"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 4h13v12H1z"/><path d="M14 9h4l4 4v3h-8"/><circle cx="5.5" cy="18.5" r="1.8"/><circle cx="17.5" cy="18.5" r="1.8"/></svg>Stoku &amp; Hyrjet</a>
+<a href="Raportet.dc.html" class="nav"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg>Raportet</a>
+<a href="Regjistri.dc.html" class="nav on"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>Regjistri</a>
+<div style="flex-grow: 1; min-height: 24px"></div>
+<a href="ATK.dc.html" class="nav"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>Cilësimet</a>
+</nav>
+
+<main style="flex: 999 1 560px; min-width: 0; padding: 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
+<header style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+<div style="display: flex; flex-direction: column; gap: 4px"><h1 style="margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.02em">Regjistri i veprimeve</h1><span style="font-size: 14px; color: #56645C">Çdo veprim në arkë dhe në cilësime, me kohën dhe përdoruesin. Nuk mund të fshihet.</span></div>
+<span style="display: flex; gap: 8px"><button class="bs"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>CSV</button><button class="bs"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>PDF</button></span>
+</header>
+
+<section aria-label="Regjistri" style="background: #FFFFFF; border: 1px solid #E2E7E3; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column">
+<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; padding: 16px; border-bottom: 1px solid #EEF1EE">
+<label class="fl">Periudha<select class="sel"><option>Sot, 5 nëntor</option><option>Dje</option><option>7 ditë</option></select></label>
+<label class="fl">Përdoruesi<select class="sel"><option>Të gjithë</option><option>Arben Krasniqi</option><option>Liridona Krasniqi</option><option>Granit Berisha</option></select></label>
+<label class="fl">Veprimi<select class="sel"><option>Të gjitha</option><option>Hyrje / dalje</option><option>Shitje</option><option>Anulim / kthim</option><option>Ndryshim çmimi</option><option>Cilësime</option></select></label>
+<label class="fl">Arka<select class="sel"><option>Të gjitha</option><option>Arka 1</option><option>Arka 2</option></select></label>
+<label style="flex: 1 1 220px; display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border: 1px solid #CBD5CE; border-radius: 10px; box-sizing: border-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#56645C" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Kërko në regjistër</span><input type="text" placeholder="Kërko në detaje" style="flex: 1; min-width: 0; border: 0; outline: none; font: inherit; font-size: 14px; background: transparent; color: #14201A"></label>
+</div>
+<div style="overflow-x: auto">
+<table class="tbl">
+<thead><tr><th>Data / ora</th><th>Përdoruesi</th><th>Veprimi</th><th>Detajet</th><th>Pajisja</th></tr></thead>
+<tbody>
+<tr><td class="mono">05.11 11:06:12</td><td>Arben Krasniqi</td><td><span class="ac a-warn">Ndryshim çmimi</span></td><td>Vaj luledielli 1L: €2.40 → <strong>€2.55</strong></td><td style="color: #56645C; white-space: nowrap">Telefoni · Android</td></tr>
+<tr><td class="mono">05.11 11:04:40</td><td>Sistemi</td><td><span class="ac a-bad">Pa internet</span></td><td>Arka 1 humbi lidhjen; 3 fatura në pritje për ATK</td><td style="color: #56645C; white-space: nowrap">Arka 1</td></tr>
+<tr><td class="mono">05.11 10:58:03</td><td>Granit Berisha</td><td><span class="ac a-bad">Anulim</span></td><td>Fatura #01281 (€18.90) – arsyeja: "Gabim në arkë" · miratuar nga Arben K.</td><td style="color: #56645C; white-space: nowrap">Arka 2</td></tr>
+<tr><td class="mono">05.11 10:51:27</td><td>Liridona Krasniqi</td><td><span class="ac a-warn">Kthim malli</span></td><td>Nga #01284: Ujë mineral 1.5L × 2, Kafe e bluar 200g × 1 · −€3.65 kesh</td><td style="color: #56645C; white-space: nowrap">Arka 1</td></tr>
+<tr><td class="mono">05.11 10:42:07</td><td>Liridona Krasniqi</td><td><span class="ac a-sale">Shitje</span></td><td>Fatura #01284 · €7.85 · Kesh + Kartelë · fiskalizuar</td><td style="color: #56645C; white-space: nowrap">Arka 1</td></tr>
+<tr><td class="mono">05.11 10:15:00</td><td>Arben Krasniqi</td><td><span class="ac a-set">Cilësime</span></td><td>Printeri i lidhur: POS-80 Printer (Bluetooth)</td><td style="color: #56645C; white-space: nowrap">Arka 1</td></tr>
+<tr><td class="mono">05.11 08:02:41</td><td>Granit Berisha</td><td><span class="ac a-in">Hyrje</span></td><td>Hyri me PIN · ndërrimi i mëngjesit</td><td style="color: #56645C; white-space: nowrap">Arka 2</td></tr>
+<tr><td class="mono">05.11 07:58:19</td><td>Liridona Krasniqi</td><td><span class="ac a-in">Hyrje</span></td><td>Hyri me PIN · arka u hap me €50.00 kusur</td><td style="color: #56645C; white-space: nowrap">Arka 1</td></tr>
+<tr><td class="mono">05.11 07:55:02</td><td>Arben Krasniqi</td><td><span class="ac a-bad">Hyrje e dështuar</span></td><td>Fjalëkalim i gabuar (1 nga 5 prova)</td><td style="color: #56645C; white-space: nowrap">Telefoni · Android</td></tr>
+</tbody>
+</table>
+</div>
+<div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; font-size: 13px; color: #56645C; flex-wrap: wrap; gap: 12px"><span>9 veprime sot</span><span>Faqja 1 nga 1</span></div>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

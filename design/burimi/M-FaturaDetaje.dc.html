@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="sq">
+<head>
+<meta charset="utf-8">
+<title>Telefon – Detajet e faturës</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0E6B4E}a:hover{color:#0A5039}
+.it{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #EEF1EE;font-size:14px}
+.n{font-variant-numeric:tabular-nums;white-space:nowrap}
+.vl{font-size:10px;font-weight:700;width:18px;height:18px;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;background:#F0F3F1;margin-left:6px}
+.kv{display:flex;justify-content:space-between;font-size:13px;padding:6px 0}
+.kv span:first-child{color:#56645C}
+.mono{font-family:'IBM Plex Mono',monospace;font-size:12px}
+.btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:60px;border-radius:12px;border:1px solid #CBD5CE;background:#FFFFFF;font:inherit;font-size:12px;font-weight:600;color:#14201A;text-decoration:none}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; font-family: Inter, system-ui, sans-serif; color: #14201A; background: #10241B; display: flex; flex-direction: column; overflow: hidden">
+<div style="height: 52px; flex-shrink: 0"></div>
+<section role="dialog" aria-modal="true" aria-labelledby="mfd-t" style="flex: 1; min-height: 0; background: #FFFFFF; border-radius: 20px 20px 0 0; display: flex; flex-direction: column">
+<header style="padding: 14px 16px; border-bottom: 1px solid #EEF1EE; display: flex; justify-content: space-between; align-items: center; gap: 10px">
+<div style="display: flex; flex-direction: column"><span style="display: flex; align-items: center; gap: 8px"><h1 id="mfd-t" style="margin: 0; font-size: 18px; font-weight: 700">#01284</h1><span style="font-size: 11px; font-weight: 600; color: #0E6B4E; background: #E3F1EA; padding: 3px 7px; border-radius: 6px">Fiskalizuar</span></span><span style="font-size: 12px; color: #56645C">05.11 · 10:42 · Arka 1 · Liridona K.</span></div>
+<a href="M-Raportet.dc.html" aria-label="Mbyll" style="width: 44px; height: 44px; border-radius: 10px; background: #F0F3F1; color: #33413A; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 20px">×</a>
+</header>
+<div style="flex: 1; overflow-y: auto; padding: 4px 16px 12px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; flex-direction: column">
+<div class="it"><span>Qumësht i freskët 1L × 2<span class="vl">D</span></span><span class="n" style="font-weight: 600">€1.90</span></div>
+<div class="it"><span>Bukë e bardhë 500g<span class="vl">D</span></span><span class="n" style="font-weight: 600">€0.50</span></div>
+<div class="it"><span style="display: flex; flex-direction: column"><span>Kafe e bluar 200g<span class="vl">E</span></span><span style="font-size: 12px; color: #9A3412">Zbritje 5% · −€0.15</span></span><span class="n" style="font-weight: 600">€2.75</span></div>
+<div class="it"><span>Ujë mineral 1.5L × 6<span class="vl">E</span></span><span class="n" style="font-weight: 600">€2.70</span></div>
+</div>
+<div style="background: #F7F9F7; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 2px">
+<div class="kv"><span>E 18% · baza €4.62</span><span class="n">€0.83</span></div>
+<div class="kv"><span>D 8% · baza €2.22</span><span class="n">€0.18</span></div>
+<div class="kv"><span>Kesh / Kartelë</span><span class="n">€5.00 / €2.85</span></div>
+<div style="display: flex; justify-content: space-between; align-items: baseline; border-top: 1px dashed #CBD5CE; padding-top: 8px; margin-top: 4px"><span style="font-weight: 700">Totali</span><span style="font-size: 24px; font-weight: 700" class="n">€7.85</span></div>
+</div>
+<div style="display: flex; flex-direction: column">
+<div class="kv"><span>Nr. ditor / rendor</span><span class="mono">0086 / 01284</span></div>
+<div class="kv"><span>Nr. SEF</span><span class="mono">SEF-2026-118409</span></div>
+<div class="kv"><span>NUIKF</span><span class="mono">7A3F-92C1-0B5E</span></div>
+</div>
+</div>
+<footer style="padding: 12px 16px 28px; border-top: 1px solid #EEF1EE; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+<button class="btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V2h12v7"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v8H6z"/></svg>Printo kopje</button>
+<a href="M-Kthim.dc.html" class="btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>Kthim malli</a>
+<button class="btn" style="color: #9A3412; border-color: #F3C9A8"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>Anulo</button>
+</footer>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

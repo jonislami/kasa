@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="sq">
+<head>
+<meta charset="utf-8">
+<title>Telefon – Restorant Tavolinat</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0E6B4E}a:hover{color:#0A5039}
+.tb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:56px;font-size:11px;font-weight:500;color:#56645C;text-decoration:none}
+.tb.on{color:#0E6B4E;font-weight:700}
+.zb{flex:1;border:0;min-height:40px;border-radius:9px;background:transparent;font:inherit;font-size:14px;font-weight:600;color:#B5C7BD}
+.zb.on{background:#FFFFFF;color:#10241B}
+.t{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:96px;border-radius:14px;text-decoration:none;font-size:12px;box-sizing:border-box}
+.t b{font-size:17px}
+.free{background:#FFFFFF;border:2px dashed #CBD5CE;color:#33413A}
+.busy{background:#10241B;color:#FFFFFF}
+.busy:hover{color:#FFFFFF}
+.res{background:#FEF3C7;border:2px solid #F6D58A;color:#713F12}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; font-family: Inter, system-ui, sans-serif; color: #14201A; background: #F4F6F3; display: flex; flex-direction: column; overflow: hidden">
+<header style="padding: 52px 16px 14px; background: #10241B; color: #FFFFFF; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; justify-content: space-between; align-items: flex-end"><div style="display: flex; flex-direction: column"><span style="font-size: 12px; color: #8FA79A">Restorant Te Ura</span><h1 style="margin: 0; font-size: 22px; font-weight: 700">Tavolinat</h1></div><span style="font-size: 12px; color: #B5C7BD; text-align: right">8 të zëna<br><strong style="color: #FFFFFF; font-size: 15px">€318.40</strong></span></div>
+<div role="group" aria-label="Zona" style="display: flex; background: #1B3A2C; border-radius: 12px; padding: 4px"><button class="zb {{zIn}}" onClick="{{toIn}}">Brenda · 10</button><button class="zb {{zOut}}" onClick="{{toOut}}">Terasa · 6</button></div>
+</header>
+<div style="flex: 1; overflow-y: auto; padding: 16px">
+<sc-if value="{{isIn}}" hint-placeholder-val="{{ true }}">
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+<a href="M-R-Porosia.dc.html" class="t busy"><b>T1</b><span>€42.80</span><span style="opacity: .75">58 min</span></a>
+<a href="M-R-Porosia.dc.html" class="t free"><b>T2</b><span>E lirë</span></a>
+<a href="M-R-Porosia.dc.html" class="t busy"><b>T3</b><span>€18.40</span><span style="opacity: .75">12 min</span></a>
+<a href="M-R-Porosia.dc.html" class="t res"><b>T4</b><span>Rez. 20:00</span></a>
+<a href="M-R-Porosia.dc.html" class="t busy"><b>T5</b><span>€9.20</span><span style="opacity: .75">25 min</span></a>
+<a href="M-R-Porosia.dc.html" class="t free"><b>T6</b><span>E lirë</span></a>
+<a href="M-R-Porosia.dc.html" class="t busy"><b>T7</b><span>€126.50</span><span style="opacity: .75">1:24</span></a>
+<a href="M-R-Porosia.dc.html" class="t free"><b>T8</b><span>E lirë</span></a>
+<a href="M-R-Porosia.dc.html" class="t busy" style="outline: 3px solid #3FBF86; outline-offset: 2px"><b>T9</b><span>€54.60</span><span style="opacity: .75">41 min</span></a>
+<a href="M-R-Porosia.dc.html" class="t res"><b>T10</b><span>Rez. 21:30</span></a>
+<a href="M-R-Porosia.dc.html" class="t busy" style="grid-column: span 2"><b>Bar 1</b><span>€6.40 · 8 min</span></a>
+</div>
+</sc-if>
+<sc-if value="{{isOut}}" hint-placeholder-val="{{ false }}">
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+<a href="M-R-Porosia.dc.html" class="t busy"><b>T11</b><span>€22.00</span></a><a href="M-R-Porosia.dc.html" class="t free"><b>T12</b><span>E lirë</span></a><a href="M-R-Porosia.dc.html" class="t busy"><b>T13</b><span>€38.50</span></a>
+<a href="M-R-Porosia.dc.html" class="t free"><b>T14</b><span>E lirë</span></a><a href="M-R-Porosia.dc.html" class="t free"><b>T15</b><span>E lirë</span></a><a href="M-R-Porosia.dc.html" class="t free"><b>T16</b><span>E lirë</span></a>
+</div>
+</sc-if>
+</div>
+<nav aria-label="Menuja kryesore" style="display: flex; background: #FFFFFF; border-top: 1px solid #E2E7E3; padding: 6px 8px 22px">
+<a href="M-PaneliLloji-Restorant.dc.html" class="tb"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Paneli</a>
+<a href="M-R-Tavolinat.dc.html" class="tb on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>Tavolinat</a>
+<a href="M-R-Kuzhina.dc.html" class="tb"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 13.9A4 4 0 0 1 7 6a5 5 0 0 1 10 0 4 4 0 0 1 1 7.9V20H6z"/><path d="M6 17h12"/></svg>Kuzhina</a>
+<a href="M-R-Porosia.dc.html" class="tb"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Menuja</a>
+<a href="M-Raportet.dc.html" class="tb"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>Më shumë</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) { super(props); this.state = { z: 'in' }; }
+renderVals() {
+const i = this.state.z === 'in';
+return { isIn: i, isOut: !i, zIn: i ? 'on' : '', zOut: i ? '' : 'on', toIn: () => this.setState({ z: 'in' }), toOut: () => this.setState({ z: 'out' }) };
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="sq">
+<head>
+<meta charset="utf-8">
+<title>Barnatore – Skadimet</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F4F6F3}
+a{color:#0E6B4E}a:hover{color:#0A5039}
+.nav{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 12px;border-radius:10px;color:#C9D6CF;text-decoration:none;font-size:14px;font-weight:500}
+.nav:hover{background:#1B3A2C;color:#FFFFFF}
+.nav.on{background:#E3F1EA;color:#0F2A1F}
+.ft{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:170px;padding:14px 16px;border-radius:14px;border:1px solid #E2E7E3;background:#FFFFFF;font:inherit;color:#14201A;text-align:left;cursor:pointer}
+.ft b{font-size:26px;font-variant-numeric:tabular-nums}
+.ft span{font-size:13px;font-weight:600}
+.ft.on{border:2px solid #14201A;padding:13px 15px}
+.f-x{background:#FFEDE0;border-color:#F3C9A8;color:#7C2D12}
+.f-30{background:#FEF3C7;border-color:#F6D58A;color:#713F12}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{text-align:left;font-size:12px;font-weight:600;color:#56645C;padding:12px;border-bottom:1px solid #E2E7E3;white-space:nowrap;background:#F7F9F7}
+.tbl td{padding:12px;border-bottom:1px solid #EEF1EE;white-space:nowrap}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.gr{display:grid;grid-template-columns:2.2fr 1.6fr 1fr 1.1fr 1.3fr .6fr .8fr 2.2fr;gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid #EEF1EE;font-size:14px}
+.gh{background:#F7F9F7;font-size:12px;font-weight:600;color:#56645C;border-bottom:1px solid #E2E7E3}
+.mono{font-family:'IBM Plex Mono',monospace;font-size:13px}
+.rx{font-size:11px;font-weight:700;color:#1D4ED8;background:#E8F0FB;padding:2px 6px;border-radius:5px;margin-left:6px}
+.d{font-size:12px;font-weight:700;padding:4px 8px;border-radius:6px}
+.d-x{color:#9A3412;background:#FFEDE0}.d-30{color:#854D0E;background:#FEF3C7}.d-60{color:#33413A;background:#F0F3F1}
+.ab{min-height:36px;padding:0 10px;border-radius:8px;border:1px solid #CBD5CE;background:#FFFFFF;font:inherit;font-size:13px;font-weight:600;color:#14201A}
+</style>
+</helmet>
+<div style="font-family: Inter, system-ui, sans-serif; color: #14201A; display: flex; flex-wrap: wrap; min-height: 100vh; background: #F4F6F3">
+
+<nav aria-label="Menuja kryesore" style="flex: 1 1 232px; background: #10241B; padding: 24px 16px; display: flex; flex-direction: column; gap: 4px; box-sizing: border-box">
+<div style="display: flex; align-items: center; gap: 10px; padding: 0 8px 24px">
+<div style="width: 36px; height: 36px; border-radius: 10px; background: #3FBF86; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10241B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg></div>
+<div style="display: flex; flex-direction: column"><span style="color: #FFFFFF; font-weight: 700; font-size: 16px">Barnatorja Shëndeti</span><span style="color: #8FA79A; font-size: 12px">Pejë · Kasa</span></div>
+</div>
+<a href="PaneliLloji-Barnatore.dc.html" class="nav"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Paneli</a>
+<a href="F-Hyrja.dc.html" class="nav"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 4h13v12H1z"/><path d="M14 9h4l4 4v3h-8"/><circle cx="5.5" cy="18.5" r="1.8"/><circle cx="17.5" cy="18.5" r="1.8"/></svg>Hyrjet e mallit</a>
+<a href="F-Skadimet.dc.html" class="nav on"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Skadimet</a>
+<a href="Raportet.dc.html" class="nav"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg>Raportet</a>
+<div style="flex-grow: 1; min-height: 24px"></div>
+</nav>
+
+<main style="flex: 999 1 560px; min-width: 0; padding: 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
+<header style="display: flex; flex-direction: column; gap: 4px"><h1 style="margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.02em">Skadimet</h1><span style="font-size: 14px; color: #56645C">Sot, 5 nëntor 2026 · llogaritet sipas serisë (LOT) të çdo hyrjeje</span></header>
+<div role="group" aria-label="Filtri i skadimit" style="display: flex; flex-wrap: wrap; gap: 12px">
+<button class="ft f-x {{c.x}}" onClick="{{f.x}}"><b>3</b><span>Të skaduara · €41.30</span></button>
+<button class="ft f-30 {{c.d30}}" onClick="{{f.d30}}"><b>5</b><span>Brenda 30 ditëve</span></button>
+<button class="ft {{c.d60}}" onClick="{{f.d60}}"><b>8</b><span>Brenda 60 ditëve</span></button>
+<button class="ft {{c.d90}}" onClick="{{f.d90}}"><b>12</b><span>Brenda 90 ditëve</span></button>
+</div>
+<section aria-label="Lista e barnave" style="background: #FFFFFF; border: 1px solid #E2E7E3; border-radius: 14px; overflow: hidden">
+<div style="padding: 16px; border-bottom: 1px solid #EEF1EE; display: flex; flex-wrap: wrap; gap: 10px; align-items: center">
+<label style="flex: 1 1 320px; display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border: 1px solid #CBD5CE; border-radius: 10px; box-sizing: border-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#56645C" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Kërko sipas substancës aktive</span><input type="text" placeholder="Kërko sipas emrit ose substancës aktive (p.sh. ibuprofen)" style="flex: 1; min-width: 0; border: 0; outline: none; font: inherit; font-size: 14px; background: transparent; color: #14201A"></label>
+<label style="display: flex; align-items: center; gap: 8px; font-size: 14px; min-height: 44px"><input type="checkbox" style="width: 20px; height: 20px; accent-color: #0E6B4E">Vetëm me recetë</label>
+</div>
+<div style="overflow-x: auto"><div role="table" aria-label="Barnat sipas afatit" style="min-width: 980px">
+<div role="row" class="gr gh"><span role="columnheader">Bari</span><span role="columnheader">Substanca aktive</span><span role="columnheader">Seria</span><span role="columnheader">Afati</span><span role="columnheader">Mbeten</span><span role="columnheader" class="num">Sasia</span><span role="columnheader" class="num">Vlera</span><span role="columnheader"></span></div>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+<div role="row" class="gr"><span role="cell"><strong>{{r.n}}</strong><sc-if value="{{r.rx}}" hint-placeholder-val="{{ false }}"><span class="rx">Me recetë</span></sc-if></span><span role="cell" style="color: #33413A">{{r.s}}</span><span role="cell" class="mono">{{r.lot}}</span><span role="cell" class="mono">{{r.exp}}</span><span role="cell"><span class="d {{r.dc}}">{{r.left}}</span></span><span role="cell" class="num">{{r.q}}</span><span role="cell" class="num">{{r.v}}</span><span role="cell" style="display: flex; gap: 6px; justify-content: flex-end"><button class="ab">{{r.a1}}</button><button class="ab">Shkarko</button></span></div>
+</sc-for>
+</div></div>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+constructor(props) { super(props); this.state = { f: 'x' }; }
+renderVals() {
+const X = [
+['Ibuprofen sirup 100ml', 'ibuprofen', 'IS2210', '31.10.2026', 'Skaduar 5 ditë', 4, '€12.80', false, 'd-x'],
+['Salbutamol inhalator', 'salbutamol', 'SB0915', '28.10.2026', 'Skaduar 8 ditë', 2, '€9.40', true, 'd-x'],
+['Kremë hidrokortizon 1%', 'hidrokortizon', 'HK7730', '15.10.2026', 'Skaduar 21 ditë', 3, '€19.10', false, 'd-x']
+];
+const D30 = [
+['Amoksicilinë 500mg', 'amoksicilinë', 'AX4410', '20.11.2026', '15 ditë', 6, '€12.60', true, 'd-30'],
+['Paracetamol sirup 120ml', 'paracetamol', 'PS3318', '25.11.2026', '20 ditë', 5, '€11.50', false, 'd-30'],
+['Loratadinë 10mg', 'loratadinë', 'LR6620', '30.11.2026', '25 ditë', 8, '€14.40', false, 'd-30'],
+['Metformin 850mg', 'metformin', 'MF1190', '02.12.2026', '27 ditë', 10, '€16.00', true, 'd-30'],
+['Vitaminë D3 1000 IU', 'kolekalciferol', 'VD5501', '04.12.2026', '29 ditë', 7, '€24.50', false, 'd-30']
+];
+const D60 = D30.concat([
+['Omeprazol 20mg', 'omeprazol', 'OM2207', '19.12.2026', '44 ditë', 9, '€17.55', false, 'd-60'],
+['Amoksicilinë 500mg', 'amoksicilinë', 'AX5520', '28.12.2026', '53 ditë', 20, '€42.00', true, 'd-60'],
+['Pika për sy 10ml', 'natrium hialuronat', 'SY4402', '02.01.2027', '58 ditë', 4, '€15.20', false, 'd-60']
+]);
+const D90 = D60.concat([
+['Ibuprofen 400mg', 'ibuprofen', 'IB8810', '12.01.2027', '68 ditë', 12, '€16.80', false, 'd-60'],
+['Atorvastatin 20mg', 'atorvastatin', 'AT3301', '20.01.2027', '76 ditë', 6, '€13.20', true, 'd-60'],
+['Magnez 375mg', 'magnez', 'MG7712', '25.01.2027', '81 ditë', 10, '€22.00', false, 'd-60'],
+['Spray për hundë', 'ksilometazolinë', 'XS1180', '30.01.2027', '86 ditë', 5, '€11.75', false, 'd-60']
+]);
+const L = { x: X, d30: D30, d60: D60, d90: D90 }[this.state.f];
+const rows = L.map((r) => ({ n: r[0], s: r[1], lot: r[2], exp: r[3], left: r[4], q: r[5], v: r[6], rx: r[7], dc: r[8], a1: r[8] === 'd-x' ? 'Kthe te furnitori' : 'Zbritje' }));
+const c = {}, f = {};
+['x', 'd30', 'd60', 'd90'].forEach((k) => { c[k] = this.state.f === k ? 'on' : ''; f[k] = () => this.setState({ f: k }); });
+return { rows, c, f };
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="sq">
+<head>
+<meta charset="utf-8">
+<title>Restorant – Porosia e tavolinës</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F4F6F3}
+a{color:#0E6B4E}a:hover{color:#0A5039}
+.nav{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 12px;border-radius:10px;color:#C9D6CF;text-decoration:none;font-size:14px;font-weight:500}
+.nav:hover{background:#1B3A2C;color:#FFFFFF}
+.nav.on{background:#E3F1EA;color:#0F2A1F}
+.cb{border:1px solid #CBD5CE;background:#FFFFFF;min-height:44px;padding:0 16px;border-radius:999px;font:inherit;font-size:14px;font-weight:600;color:#14201A}
+.cb.on{background:#14201A;border-color:#14201A;color:#FFFFFF}
+.mi{border:1px solid #E2E7E3;background:#FFFFFF;border-radius:12px;padding:14px;text-align:left;font:inherit;color:#14201A;display:flex;flex-direction:column;gap:6px;min-height:92px}
+.mi:hover{border-color:#0E6B4E}
+.mi.sel{border:2px solid #0E6B4E;padding:13px;background:#F0F7F3}
+.md{min-height:40px;padding:0 14px;border-radius:999px;border:1px solid #CBD5CE;background:#FFFFFF;font:inherit;font-size:13px;font-weight:600;color:#14201A}
+.md.on{background:#0E6B4E;border-color:#0E6B4E;color:#FFFFFF}
+.ln{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #EEF1EE;font-size:14px}
+.q{font-weight:700;width:28px;flex-shrink:0;font-variant-numeric:tabular-nums}
+.ab{min-height:46px;border-radius:10px;border:1px solid #CBD5CE;background:#FFFFFF;font:inherit;font-size:13px;font-weight:600;color:#14201A}
+</style>
+</helmet>
+<div style="font-family: Inter, system-ui, sans-serif; color: #14201A; display: flex; flex-wrap: wrap; min-height: 100vh; background: #F4F6F3">
+
+<nav aria-label="Menuja kryesore" style="flex: 1 1 232px; background: #10241B; padding: 24px 16px; display: flex; flex-direction: column; gap: 4px; box-sizing: border-box">
+<div style="display: flex; align-items: center; gap: 10px; padding: 0 8px 24px">
+<div style="width: 36px; height: 36px; border-radius: 10px; background: #3FBF86; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10241B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><path d="M6 2v2M10 2v2M14 2v2"/></svg></div>
+<div style="display: flex; flex-direction: column"><span style="color: #FFFFFF; font-weight: 700; font-size: 16px">Restorant Te Ura</span><span style="color: #8FA79A; font-size: 12px">Kamarieri: Driton</span></div>
+</div>
+<a href="PaneliLloji-Restorant.dc.html" class="nav"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Paneli</a>
+<a href="R-Tavolinat.dc.html" class="nav on"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>Tavolinat</a>
+<a href="R-Kuzhina.dc.html" class="nav"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 13.9A4 4 0 0 1 7 6a5 5 0 0 1 10 0 4 4 0 0 1 1 7.9V20H6z"/><path d="M6 17h12"/></svg>Kuzhina &amp; Bari</a>
+<a href="R-Porosia.dc.html" class="nav"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Menuja</a>
+<a href="Raportet.dc.html" class="nav"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg>Raportet</a>
+<div style="flex-grow: 1; min-height: 24px"></div>
+</nav>
+
+<main style="flex: 999 1 560px; min-width: 0; padding: 24px; box-sizing: border-box; display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+<section aria-label="Menuja" style="flex: 999 1 480px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; align-items: center; gap: 12px"><a href="R-Tavolinat.dc.html" aria-label="Kthehu te tavolinat" style="width: 44px; height: 44px; border-radius: 10px; border: 1px solid #CBD5CE; background: #FFFFFF; display: flex; align-items: center; justify-content: center; color: #14201A; text-decoration: none">‹</a><h1 style="margin: 0; font-size: 24px; font-weight: 700">Tavolina T9 · Brenda</h1><span style="font-size: 13px; color: #56645C">4 persona · 41 min</span></div>
+<div role="group" aria-label="Kategoritë" style="display: flex; flex-wrap: wrap; gap: 8px">
+<button class="cb {{cc.kafe}}" onClick="{{cat.kafe}}">Kafe</button><button class="cb {{cc.pije}}" onClick="{{cat.pije}}">Pije</button><button class="cb {{cc.ush}}" onClick="{{cat.ush}}">Ushqim</button><button class="cb {{cc.emb}}" onClick="{{cat.emb}}">Ëmbëlsira</button>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px">
+<sc-for list="{{items}}" as="m" hint-placeholder-count="6">
+<button class="mi {{m.cls}}" onClick="{{m.pick}}"><span style="font-size: 14px; font-weight: 600">{{m.name}}</span><span style="margin-top: auto; font-size: 16px; font-weight: 700">{{m.price}}</span></button>
+</sc-for>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #E2E7E3; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; justify-content: space-between; align-items: center"><span style="font-size: 15px; font-weight: 700">Modifikuesit · {{selName}}</span><span style="display: flex; align-items: center; gap: 8px"><button class="ab" style="width: 44px" aria-label="Zvogëlo">−</button><strong style="width: 24px; text-align: center">2</strong><button class="ab" style="width: 44px" aria-label="Rrit">+</button></span></div>
+<div role="group" aria-label="Modifikuesit" style="display: flex; flex-wrap: wrap; gap: 8px">
+<button class="md {{mc.ps}}" aria-pressed="{{mp.ps}}" onClick="{{mt.ps}}">Pa sheqer</button>
+<button class="md {{mc.em}}" aria-pressed="{{mp.em}}" onClick="{{mt.em}}">E madhe +€0.30</button>
+<button class="md {{mc.qb}}" aria-pressed="{{mp.qb}}" onClick="{{mt.qb}}">Qumësht bajameje +€0.50</button>
+<button class="md {{mc.sh}}" aria-pressed="{{mp.sh}}" onClick="{{mt.sh}}">Ekstra shkumë</button>
+<button class="md {{mc.mr}}" aria-pressed="{{mp.mr}}" onClick="{{mt.mr}}">Për me marrë</button>
+</div>
+<button style="min-height: 48px; border-radius: 10px; border: 0; background: #14201A; color: #FFFFFF; font: inherit; font-size: 14px; font-weight: 700">Shto në porosi</button>
+</div>
+</section>
+
+<aside aria-labelledby="po-t" style="flex: 1 1 380px; max-width: 100%; background: #FFFFFF; border: 1px solid #E2E7E3; border-radius: 16px; display: flex; flex-direction: column; box-sizing: border-box">
+<div style="padding: 16px 20px; border-bottom: 1px solid #EEF1EE; display: flex; justify-content: space-between; align-items: center"><h2 id="po-t" style="margin: 0; font-size: 17px; font-weight: 700">Porosia e T9</h2><span style="font-size: 12px; color: #56645C">Hapur 19:34</span></div>
+<div style="padding: 4px 20px; display: flex; flex-direction: column">
+<span style="font-size: 12px; font-weight: 700; color: #0E6B4E; padding: 10px 0 2px">TË REJA · PA DËRGUAR</span>
+<div class="ln" style="background: #F0F7F3; margin: 0 -20px; padding: 10px 20px"><span class="q">2×</span><span style="flex: 1; display: flex; flex-direction: column"><span style="font-weight: 600">Makiato</span><span style="font-size: 12px; color: #56645C">e madhe · pa sheqer · Bari</span></span><span style="font-weight: 600">€3.00</span></div>
+<div class="ln" style="background: #F0F7F3; margin: 0 -20px; padding: 10px 20px"><span class="q">1×</span><span style="flex: 1; display: flex; flex-direction: column"><span style="font-weight: 600">Trilece</span><span style="font-size: 12px; color: #56645C">Kuzhina</span></span><span style="font-weight: 600">€3.00</span></div>
+<span style="font-size: 12px; font-weight: 700; color: #56645C; padding: 12px 0 2px">TË DËRGUARA</span>
+<div class="ln"><span class="q">1×</span><span style="flex: 1">Pica Margarita</span><span>€6.50</span></div>
+<div class="ln"><span class="q">1×</span><span style="flex: 1">Tavë kosi</span><span>€7.50</span></div>
+<div class="ln"><span class="q">2×</span><span style="flex: 1">Pleskavicë</span><span>€12.00</span></div>
+<div class="ln"><span class="q">2×</span><span style="flex: 1">Sallatë shope</span><span>€7.00</span></div>
+<div class="ln"><span class="q">4×</span><span style="flex: 1">Birrë vendore 0.5</span><span>€10.00</span></div>
+<div class="ln"><span class="q">2×</span><span style="flex: 1">Coca-Cola 0.33</span><span>€3.60</span></div>
+<div class="ln" style="border-bottom: 0"><span class="q">2×</span><span style="flex: 1">Ujë 0.5</span><span>€2.00</span></div>
+</div>
+<div style="margin-top: auto; padding: 14px 20px; background: #F7F9F7; border-top: 1px solid #EEF1EE; display: flex; justify-content: space-between; align-items: baseline"><span style="font-weight: 600">Totali</span><span style="font-size: 30px; font-weight: 700">€54.60</span></div>
+<div style="padding: 14px 20px 20px; display: flex; flex-direction: column; gap: 10px">
+<button style="display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 54px; border-radius: 12px; border: 0; background: #1D4ED8; color: #FFFFFF; font: inherit; font-size: 16px; font-weight: 700"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></svg>Dërgo në kuzhinë/bar · 2</button>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px"><button class="ab">Ndaj llogarinë</button><a href="R-Tavolinat.dc.html" class="ab" style="display: flex; align-items: center; justify-content: center; text-decoration: none">Ndërro tavolinën</a></div>
+<button style="min-height: 56px; border-radius: 12px; border: 0; background: #0E6B4E; color: #FFFFFF; font: inherit; font-size: 17px; font-weight: 700">Paguaj €54.60</button>
+</div>
+</aside>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+constructor(props) { super(props); this.state = { cat: 'kafe', sel: 'Makiato', mods: { ps: true, em: true } }; }
+renderVals() {
+const M = {
+kafe: [['Ekspres', 1.0], ['Makiato', 1.2], ['Kapuçino', 1.5], ['Kafe turke', 1.0], ['Çaj', 1.0], ['Makiato e ftohtë', 2.0]],
+pije: [['Ujë 0.5', 1.0], ['Coca-Cola 0.33', 1.8], ['Lëng i freskët', 2.5], ['Limonadë', 2.0], ['Birrë vendore 0.5', 2.5], ['Verë e kuqe · gotë', 3.0]],
+ush: [['Pica Margarita', 6.5], ['Tavë kosi', 7.5], ['Pleskavicë', 6.0], ['Fli me kos', 5.0], ['Sallatë shope', 3.5], ['Byrek me spinaq', 2.5]],
+emb: [['Trilece', 3.0], ['Bakllava', 2.5], ['Tortë çokollate', 3.0]]
+};
+const cc = {}, cat = {};
+Object.keys(M).forEach((k) => { cc[k] = this.state.cat === k ? 'on' : ''; cat[k] = () => this.setState({ cat: k }); });
+const items = M[this.state.cat].map(([n, p]) => ({ name: n, price: '€' + p.toFixed(2), cls: this.state.sel === n ? 'sel' : '', pick: () => this.setState({ sel: n }) }));
+const mc = {}, mp = {}, mt = {};
+['ps', 'em', 'qb', 'sh', 'mr'].forEach((k) => { const on = !!this.state.mods[k]; mc[k] = on ? 'on' : ''; mp[k] = on ? 'true' : 'false'; mt[k] = () => this.setState({ mods: { ...this.state.mods, [k]: !on } }); });
+return { cc, cat, items, rows: [], selName: this.state.sel, mc, mp, mt };
+}
+}
+</script>
+</body>
+</html>

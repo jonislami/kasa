@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="sq">
+<head>
+<meta charset="utf-8">
+<title>Telefon – Puna e punëtorëve</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0E6B4E}a:hover{color:#0A5039}
+.tb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:56px;font-size:11px;font-weight:500;color:#56645C;text-decoration:none}
+.tb.on{color:#0E6B4E;font-weight:700}
+.nd{width:20px;height:20px;border-radius:6px;border:2px solid currentColor;box-sizing:border-box}
+.wk{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px 0 4px;border-radius:999px;border:1px solid #CBD5CE;background:#FFFFFF;font:inherit;font-size:13px;font-weight:600;color:#14201A;flex-shrink:0}
+.wk.on{border:2px solid #14201A;padding:0 11px 0 3px}
+.av{width:32px;height:32px;border-radius:50%;color:#FFFFFF;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.k{background:#FFFFFF;border:1px solid #E2E7E3;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.ev{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid #EEF1EE;font-size:13px}
+.ev.f{border-top:0}
+.tm{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#56645C;width:42px;flex-shrink:0}
+.ac{font-size:11px;font-weight:600;padding:3px 7px;border-radius:6px;white-space:nowrap}
+.a-sale{color:#0E6B4E;background:#E3F1EA}.a-warn{color:#854D0E;background:#FEF3C7}.a-bad{color:#9A3412;background:#FFEDE0}.a-in{color:#33413A;background:#F0F3F1}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; font-family: Inter, system-ui, sans-serif; color: #14201A; background: #F4F6F3; display: flex; flex-direction: column; overflow: hidden">
+<header style="padding: 52px 16px 12px; background: #FFFFFF; border-bottom: 1px solid #E2E7E3; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; align-items: center"><div style="display: flex; flex-direction: column"><h1 style="margin: 0; font-size: 20px; font-weight: 700">Puna e punëtorëve</h1><span style="font-size: 12px; color: #56645C">7 ditë · Market Fllanza</span></div><select aria-label="Periudha" style="min-height: 40px; border: 1px solid #CBD5CE; border-radius: 10px; padding: 0 8px; font: inherit; font-size: 13px; color: #14201A; background: #FFFFFF"><option>7 ditë</option><option>Sot</option><option>Ky muaj</option></select></div>
+<div role="group" aria-label="Punëtori" style="display: flex; gap: 8px; overflow-x: auto"><button class="wk {{c.l}}" onClick="{{p.l}}"><span class="av" style="background: #0E6B4E">LK</span>Liridona</button><button class="wk {{c.g}}" onClick="{{p.g}}"><span class="av" style="background: #1D4ED8">GB</span>Granit</button><button class="wk {{c.a}}" onClick="{{p.a}}"><span class="av" style="background: #A16207">AK</span>Arben</button></div>
+</header>
+<div style="flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<sc-for list="{{kpis}}" as="k" hint-placeholder-count="4"><div class="k"><span style="font-size: 12px; color: #56645C">{{k.l}}</span><span style="font-size: 19px; font-weight: 700">{{k.v}}</span><span style="font-size: 11px; color: #56645C">{{k.s}}</span></div></sc-for>
+</div>
+<section aria-labelledby="mpp-l" style="background: #FFFFFF; border: 1px solid #E2E7E3; border-radius: 14px; padding: 10px 14px">
+<h2 id="mpp-l" style="margin: 0 0 4px; font-size: 14px; font-weight: 700">Veprimet sot</h2>
+<sc-for list="{{events}}" as="e" hint-placeholder-count="4"><div class="ev {{e.f}}"><span class="tm">{{e.t}}</span><span class="ac {{e.c}}">{{e.a}}</span><span style="flex: 1; min-width: 0">{{e.d}}</span></div></sc-for>
+</section>
+<section aria-label="Krahasimi" style="background: #FFFFFF; border: 1px solid #E2E7E3; border-radius: 14px; padding: 10px 14px; display: flex; flex-direction: column; gap: 8px">
+<h2 style="margin: 0; font-size: 14px; font-weight: 700">Krahasimi · € / orë</h2>
+<div style="display: flex; flex-direction: column; gap: 4px; font-size: 13px"><span style="display: flex; justify-content: space-between"><span>Arben K.</span><strong>€89.83</strong></span><div style="height: 6px; background: #EEF1EE; border-radius: 3px"><div style="width: 100%; height: 6px; background: #A16207; border-radius: 3px"></div></div></div>
+<div style="display: flex; flex-direction: column; gap: 4px; font-size: 13px"><span style="display: flex; justify-content: space-between"><span>Liridona K.</span><strong>€82.56</strong></span><div style="height: 6px; background: #EEF1EE; border-radius: 3px"><div style="width: 92%; height: 6px; background: #0E6B4E; border-radius: 3px"></div></div></div>
+<div style="display: flex; flex-direction: column; gap: 4px; font-size: 13px"><span style="display: flex; justify-content: space-between"><span>Granit B.</span><strong>€78.25</strong></span><div style="height: 6px; background: #EEF1EE; border-radius: 3px"><div style="width: 87%; height: 6px; background: #1D4ED8; border-radius: 3px"></div></div></div>
+</section>
+</div>
+<nav aria-label="Menuja kryesore" style="display: flex; background: #FFFFFF; border-top: 1px solid #E2E7E3; padding: 6px 8px 22px">
+<a href="M-PaneliLloji-Market.dc.html" class="tb"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Paneli</a>
+<a href="M-Offline.dc.html" class="tb"><span class="nd" aria-hidden="true"></span>Arka</a>
+<a href="M-Raportet.dc.html" class="tb"><span class="nd" aria-hidden="true"></span>Raportet</a>
+<a href="M-PunaPunetoreve.dc.html" class="tb on"><span class="nd" aria-hidden="true"></span>Punëtorët</a>
+<a href="M-Regjistri.dc.html" class="tb"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>Më shumë</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) { super(props); this.state = { w: 'l' }; }
+renderVals() {
+const W = {
+l: { kpis: [['Fatura', '248', '€3,412.30'], ['Kthime / anulime', '1 / 0', '−€3.65'], ['Komisioni 2%', '€68.25', 'bonus'], ['Orët', '41:20', '6 ndërrime']],
+ev: [['07:58', 'Hyrje', 'a-in', 'PIN · Arka 1'], ['10:42', 'Shitje', 'a-sale', '#01284 · €7.85'], ['10:51', 'Kthim', 'a-warn', '−€3.65 · miratuar'], ['11:01', 'Offline', 'a-bad', '#01293 · €12.40']] },
+g: { kpis: [['Fatura', '214', '€2,980.10'], ['Kthime / anulime', '0 / 1', '#01281'], ['Komisioni 2%', '€59.60', 'bonus'], ['Orët', '38:05', '5 ndërrime']],
+ev: [['08:02', 'Hyrje', 'a-in', 'PIN · Arka 2'], ['10:27', 'Shitje', 'a-sale', '#01281 · €18.90'], ['10:31', 'Shitje', 'a-sale', '#01282 · €1.45'], ['10:58', 'Anulim', 'a-bad', '#01281 · miratuar']] },
+a: { kpis: [['Fatura', '150', '€2,036.20'], ['Kthime / anulime', '0 / 0', '—'], ['Komisioni', '—', 'pronari'], ['Orët', '22:40', '4 ndërrime']],
+ev: [['07:56', 'Hyrje', 'a-in', 'Email · telefoni'], ['10:15', 'Cilësime', 'a-in', 'Printeri POS-80'], ['10:51', 'Miratim', 'a-warn', 'Kthimi i Liridonës'], ['11:06', 'Çmim', 'a-warn', 'Vaj luledielli → €2.55']] }
+}[this.state.w];
+const c = {}, p = {};
+['l', 'g', 'a'].forEach((k) => { c[k] = this.state.w === k ? 'on' : ''; p[k] = () => this.setState({ w: k }); });
+return { c, p, kpis: W.kpis.map(([l, v, s]) => ({ l, v, s })), events: W.ev.map(([t, a, cc, d], i) => ({ t, a, c: cc, d, f: i === 0 ? 'f' : '' })) };
+}
+}
+</script>
+</body>
+</html>

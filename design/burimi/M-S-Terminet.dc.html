@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="sq">
+<head>
+<meta charset="utf-8">
+<title>Telefon – Sallon Terminet</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0E6B4E}a:hover{color:#0A5039}
+.tb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:56px;font-size:11px;font-weight:500;color:#56645C;text-decoration:none}
+.tb.on{color:#0E6B4E;font-weight:700}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #CBD5CE;background:#FFFFFF;min-height:38px;padding:0 12px;border-radius:999px;font:inherit;font-size:13px;font-weight:600;color:#14201A;white-space:nowrap;flex-shrink:0}
+.chip.on{background:#14201A;border-color:#14201A;color:#FFFFFF}
+.ap{display:flex;align-items:stretch;gap:12px;width:100%;padding:10px 12px;border-radius:12px;border:1px solid #E2E7E3;background:#FFFFFF;font:inherit;color:#14201A;text-align:left}
+.bar{width:4px;border-radius:2px;flex-shrink:0}
+.tm{font-weight:700;font-variant-numeric:tabular-nums;width:44px;flex-shrink:0;font-size:14px}
+.kv{display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid #EEF1EE;font-size:14px}
+.kv span:first-child{color:#56645C}
+.ab{min-height:48px;border-radius:10px;border:1px solid #CBD5CE;background:#FFFFFF;font:inherit;font-size:13px;font-weight:600;color:#14201A}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; font-family: Inter, system-ui, sans-serif; color: #14201A; background: #F4F6F3; display: flex; flex-direction: column; overflow: hidden">
+<header style="padding: 52px 16px 12px; background: #10241B; color: #FFFFFF; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; justify-content: space-between; align-items: center"><div style="display: flex; flex-direction: column"><span style="font-size: 12px; color: #8FA79A">Sallon Bukuria</span><h1 style="margin: 0; font-size: 20px; font-weight: 700">E enjte, 5 nëntor</h1></div><button aria-label="Termin i ri" style="width: 44px; height: 44px; border-radius: 12px; border: 0; background: #3FBF86; color: #10241B; font: inherit; font-size: 24px; font-weight: 700">+</button></div>
+<div style="display: flex; gap: 6px; justify-content: space-between"><span style="font-size: 12px; color: #B5C7BD; display: flex; flex-direction: column; align-items: center; gap: 2px">Hën<strong style="font-size: 15px; color: #FFFFFF">2</strong></span><span style="font-size: 12px; color: #B5C7BD; display: flex; flex-direction: column; align-items: center; gap: 2px">Mar<strong style="font-size: 15px; color: #FFFFFF">3</strong></span><span style="font-size: 12px; color: #B5C7BD; display: flex; flex-direction: column; align-items: center; gap: 2px">Mër<strong style="font-size: 15px; color: #FFFFFF">4</strong></span><span style="font-size: 12px; color: #10241B; background: #FFFFFF; border-radius: 10px; padding: 4px 8px; display: flex; flex-direction: column; align-items: center; gap: 2px; font-weight: 600">Enj<strong style="font-size: 15px">5</strong></span><span style="font-size: 12px; color: #B5C7BD; display: flex; flex-direction: column; align-items: center; gap: 2px">Pre<strong style="font-size: 15px; color: #FFFFFF">6</strong></span><span style="font-size: 12px; color: #B5C7BD; display: flex; flex-direction: column; align-items: center; gap: 2px">Sht<strong style="font-size: 15px; color: #FFFFFF">7</strong></span><span style="font-size: 12px; color: #B5C7BD; display: flex; flex-direction: column; align-items: center; gap: 2px">Die<strong style="font-size: 15px; color: #FFFFFF">8</strong></span></div>
+</header>
+<div role="group" aria-label="Punëtori" style="display: flex; gap: 8px; overflow-x: auto; padding: 12px 16px; flex-shrink: 0"><button class="chip on">Të gjithë · 13</button><button class="chip"><span style="width: 10px; height: 10px; border-radius: 50%; background: #7C3AED"></span>Arta</button><button class="chip"><span style="width: 10px; height: 10px; border-radius: 50%; background: #BE185D"></span>Blerina</button><button class="chip"><span style="width: 10px; height: 10px; border-radius: 50%; background: #0369A1"></span>Dren</button></div>
+<div style="flex: 1; overflow-y: auto; padding: 0 16px 12px; display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 12px; font-weight: 700; color: #9A3412; display: flex; align-items: center; gap: 8px">TANI 11:20 <span style="flex: 1; height: 2px; background: #9A3412"></span></span>
+<button class="ap" onClick="{{open}}" style="border: 2px solid #0E6B4E"><span class="tm">11:00</span><span class="bar" style="background: #7C3AED"></span><span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><strong style="font-size: 15px">Donika Shala</strong><span style="font-size: 13px; color: #56645C">Prerje &amp; fen · Arta · 45 min</span></span><span style="font-size: 11px; font-weight: 600; color: #0E6B4E; align-self: center">Ka ardhur</span></button>
+<button class="ap" onClick="{{open}}"><span class="tm">12:00</span><span class="bar" style="background: #0369A1"></span><span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><strong style="font-size: 15px">Liridon Mustafa</strong><span style="font-size: 13px; color: #56645C">Prerje meshkuj · Dren · 30 min</span></span></button>
+<button class="ap" onClick="{{open}}"><span class="tm">13:00</span><span class="bar" style="background: #BE185D"></span><span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><strong style="font-size: 15px">Era Morina</strong><span style="font-size: 13px; color: #56645C">Vetulla &amp; qerpikë · Blerina</span></span></button>
+<button class="ap" onClick="{{open}}"><span class="tm">14:00</span><span class="bar" style="background: #7C3AED"></span><span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><strong style="font-size: 15px">Teuta Hyseni</strong><span style="font-size: 13px; color: #56645C">Fen me valë · Arta</span></span></button>
+<button class="ap" onClick="{{open}}" style="opacity: .6"><span class="tm">15:00</span><span class="bar" style="background: #0369A1"></span><span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><strong style="font-size: 15px; text-decoration: line-through">Gent Thaçi</strong><span style="font-size: 13px; color: #9A3412">Nuk erdhi</span></span></button>
+<button class="ap" onClick="{{open}}"><span class="tm">16:30</span><span class="bar" style="background: #7C3AED"></span><span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><strong style="font-size: 15px">Leonora Bytyqi</strong><span style="font-size: 13px; color: #56645C">Prerje &amp; fen · Arta</span></span></button>
+<button class="ap" onClick="{{open}}"><span class="tm">17:00</span><span class="bar" style="background: #BE185D"></span><span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><strong style="font-size: 15px">Vlora Zeka</strong><span style="font-size: 13px; color: #56645C">Grim për dasmë · 90 min</span></span></button>
+</div>
+<nav aria-label="Menuja kryesore" style="display: flex; background: #FFFFFF; border-top: 1px solid #E2E7E3; padding: 6px 8px 22px">
+<a href="M-PaneliLloji.dc.html" class="tb"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Paneli</a>
+<a href="M-S-Terminet.dc.html" class="tb on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Terminet</a>
+<a href="M-S-Arka.dc.html" class="tb"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.7 12.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.5L21 8H6"/></svg>Arka</a>
+<a href="M-S-Punetoret.dc.html" class="tb"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M16 3.5a4 4 0 0 1 0 9M22 21a7 7 0 0 0-4-6.3"/></svg>Punëtorët</a>
+<a href="M-Raportet.dc.html" class="tb"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>Më shumë</a>
+</nav>
+
+<sc-if value="{{sheet}}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; background: rgba(16,36,27,.5); display: flex; flex-direction: column; justify-content: flex-end">
+<section role="dialog" aria-modal="true" aria-labelledby="ms-t" style="background: #FFFFFF; border-radius: 20px 20px 0 0; padding: 16px 16px 28px; display: flex; flex-direction: column; gap: 4px">
+<div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 6px"><h2 id="ms-t" style="margin: 0; font-size: 19px; font-weight: 700">Donika Shala</h2><button onClick="{{close}}" aria-label="Mbyll" style="width: 44px; height: 44px; border-radius: 10px; border: 0; background: #F0F3F1; font: inherit; font-size: 20px; color: #33413A">×</button></div>
+<div class="kv"><span>Telefoni</span><span>049 552 107</span></div>
+<div class="kv"><span>Shërbimi</span><span>Prerje &amp; fen · €15.00</span></div>
+<div class="kv"><span>Punëtori</span><span>Arta</span></div>
+<div class="kv"><span>Data · ora</span><span>05.11 · 11:00 · 45 min</span></div>
+<a href="M-S-Arka.dc.html" style="margin-top: 10px; display: flex; align-items: center; justify-content: center; min-height: 52px; border-radius: 12px; background: #0E6B4E; color: #FFFFFF; text-decoration: none; font-size: 15px; font-weight: 700">Paguaj në arkë · €15.00</a>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 8px"><button class="ab" onClick="{{close}}">I kryer</button><button class="ab" onClick="{{close}}" style="color: #854D0E">Nuk erdhi</button><button class="ab" onClick="{{close}}" style="color: #9A3412">Anulo</button></div>
+</section>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) { super(props); this.state = { sheet: false }; }
+renderVals() {
+return { sheet: this.state.sheet, open: () => this.setState({ sheet: true }), close: () => this.setState({ sheet: false }) };
+}
+}
+</script>
+</body>
+</html>

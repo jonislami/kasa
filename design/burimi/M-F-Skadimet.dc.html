@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="sq">
+<head>
+<meta charset="utf-8">
+<title>Telefon – Barnatore skadimet</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0E6B4E}a:hover{color:#0A5039}
+.tb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:56px;font-size:11px;font-weight:500;color:#56645C;text-decoration:none}
+.tb.on{color:#0E6B4E;font-weight:700}
+.chip{border:1px solid #CBD5CE;background:#FFFFFF;min-height:40px;padding:0 12px;border-radius:999px;font:inherit;font-size:13px;font-weight:600;color:#14201A;white-space:nowrap;flex-shrink:0}
+.chip.on{background:#14201A;border-color:#14201A;color:#FFFFFF}
+.rw{display:flex;align-items:center;gap:10px;padding:12px 0;border-top:1px solid #EEF1EE}
+.rw.f{border-top:0}
+.d{font-size:11px;font-weight:700;padding:4px 8px;border-radius:6px;white-space:nowrap}
+.d-x{color:#9A3412;background:#FFEDE0}.d-30{color:#854D0E;background:#FEF3C7}.d-60{color:#33413A;background:#F0F3F1}
+.rx{font-size:10px;font-weight:700;color:#1D4ED8;background:#E8F0FB;padding:2px 5px;border-radius:4px;margin-left:6px}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; font-family: Inter, system-ui, sans-serif; color: #14201A; background: #F4F6F3; display: flex; flex-direction: column; overflow: hidden">
+<header style="padding: 52px 16px 12px; background: #FFFFFF; border-bottom: 1px solid #E2E7E3; display: flex; flex-direction: column; gap: 10px">
+<h1 style="margin: 0; font-size: 20px; font-weight: 700">Skadimet</h1>
+<label style="display: flex; align-items: center; gap: 8px; min-height: 46px; padding: 0 12px; border: 1px solid #CBD5CE; border-radius: 12px; box-sizing: border-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#56645C" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Kërko substancën aktive</span><input type="text" placeholder="Emri ose substanca aktive" style="flex: 1; min-width: 0; border: 0; outline: none; font: inherit; font-size: 15px; background: transparent; color: #14201A"></label>
+</header>
+<div role="group" aria-label="Filtri" style="display: flex; gap: 8px; overflow-x: auto; padding: 12px 16px; flex-shrink: 0"><button class="chip {{c.x}}" onClick="{{f.x}}">Të skaduara 3</button><button class="chip {{c.d30}}" onClick="{{f.d30}}">≤ 30 ditë 5</button><button class="chip {{c.d60}}" onClick="{{f.d60}}">≤ 60 ditë 8</button><button class="chip {{c.d90}}" onClick="{{f.d90}}">≤ 90 ditë 12</button></div>
+<div style="flex: 1; overflow-y: auto; padding: 0 16px 12px">
+<div style="background: #FFFFFF; border: 1px solid #E2E7E3; border-radius: 14px; padding: 0 14px">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+<div class="rw {{r.f}}"><span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px; font-weight: 600">{{r.n}}<sc-if value="{{r.rx}}" hint-placeholder-val="{{ false }}"><span class="rx">Rx</span></sc-if></span><span style="font-size: 12px; color: #56645C">{{r.s}} · <span style="font-family: 'IBM Plex Mono', monospace">{{r.lot}}</span> · {{r.q}} copë</span></span><span class="d {{r.dc}}">{{r.left}}</span></div>
+</sc-for>
+</div>
+</div>
+<nav aria-label="Menuja kryesore" style="display: flex; background: #FFFFFF; border-top: 1px solid #E2E7E3; padding: 6px 8px 22px">
+<a href="M-PaneliLloji-Barnatore.dc.html" class="tb"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Paneli</a>
+<a href="M-F-Hyrja.dc.html" class="tb"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 4h13v12H1z"/><path d="M14 9h4l4 4v3h-8"/><circle cx="5.5" cy="18.5" r="1.8"/><circle cx="17.5" cy="18.5" r="1.8"/></svg>Hyrjet</a>
+<a href="M-F-Skadimet.dc.html" class="tb on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Skadimet</a>
+<a href="M-Raportet.dc.html" class="tb"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg>Raportet</a>
+<a href="M-Cilesimet.dc.html" class="tb"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>Më shumë</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) { super(props); this.state = { f: 'x' }; }
+renderVals() {
+const X = [['Ibuprofen sirup 100ml', 'ibuprofen', 'IS2210', 4, 'Skaduar 5 ditë', false, 'd-x'], ['Salbutamol inhalator', 'salbutamol', 'SB0915', 2, 'Skaduar 8 ditë', true, 'd-x'], ['Kremë hidrokortizon 1%', 'hidrokortizon', 'HK7730', 3, 'Skaduar 21 ditë', false, 'd-x']];
+const D30 = [['Amoksicilinë 500mg', 'amoksicilinë', 'AX4410', 6, '15 ditë', true, 'd-30'], ['Paracetamol sirup 120ml', 'paracetamol', 'PS3318', 5, '20 ditë', false, 'd-30'], ['Loratadinë 10mg', 'loratadinë', 'LR6620', 8, '25 ditë', false, 'd-30'], ['Metformin 850mg', 'metformin', 'MF1190', 10, '27 ditë', true, 'd-30'], ['Vitaminë D3 1000 IU', 'kolekalciferol', 'VD5501', 7, '29 ditë', false, 'd-30']];
+const D60 = D30.concat([['Omeprazol 20mg', 'omeprazol', 'OM2207', 9, '44 ditë', false, 'd-60'], ['Amoksicilinë 500mg', 'amoksicilinë', 'AX5520', 20, '53 ditë', true, 'd-60'], ['Pika për sy 10ml', 'natrium hialuronat', 'SY4402', 4, '58 ditë', false, 'd-60']]);
+const D90 = D60.concat([['Ibuprofen 400mg', 'ibuprofen', 'IB8810', 12, '68 ditë', false, 'd-60'], ['Atorvastatin 20mg', 'atorvastatin', 'AT3301', 6, '76 ditë', true, 'd-60'], ['Magnez 375mg', 'magnez', 'MG7712', 10, '81 ditë', false, 'd-60'], ['Spray për hundë', 'ksilometazolinë', 'XS1180', 5, '86 ditë', false, 'd-60']]);
+const L = { x: X, d30: D30, d60: D60, d90: D90 }[this.state.f];
+const rows = L.map((r, i) => ({ n: r[0], s: r[1], lot: r[2], q: r[3], left: r[4], rx: r[5], dc: r[6], f: i === 0 ? 'f' : '' }));
+const c = {}, f = {};
+['x', 'd30', 'd60', 'd90'].forEach((k) => { c[k] = this.state.f === k ? 'on' : ''; f[k] = () => this.setState({ f: k }); });
+return { rows, c, f };
+}
+}
+</script>
+</body>
+</html>

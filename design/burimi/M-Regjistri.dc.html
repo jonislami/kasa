@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="sq">
+<head>
+<meta charset="utf-8">
+<title>Telefon – Regjistri i veprimeve</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0E6B4E}a:hover{color:#0A5039}
+.tb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:56px;font-size:11px;font-weight:500;color:#56645C;text-decoration:none}
+.tb.on{color:#0E6B4E;font-weight:700}
+.chip{border:1px solid #CBD5CE;background:#FFFFFF;min-height:38px;padding:0 12px;border-radius:999px;font:inherit;font-size:13px;font-weight:500;color:#14201A;white-space:nowrap;flex-shrink:0}
+.chip.on{background:#14201A;border-color:#14201A;color:#FFFFFF}
+.ev{display:flex;gap:12px;padding:12px 0;border-top:1px solid #EEF1EE}
+.tm{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#56645C;width:44px;flex-shrink:0;padding-top:2px}
+.ac{display:inline-flex;font-size:11px;font-weight:600;padding:3px 7px;border-radius:6px}
+.a-in{color:#33413A;background:#F0F3F1}.a-sale{color:#0E6B4E;background:#E3F1EA}.a-warn{color:#854D0E;background:#FEF3C7}.a-bad{color:#9A3412;background:#FFEDE0}.a-set{color:#1D4ED8;background:#E8F0FB}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; font-family: Inter, system-ui, sans-serif; color: #14201A; background: #F4F6F3; display: flex; flex-direction: column; overflow: hidden">
+<header style="padding: 52px 16px 12px; background: #FFFFFF; border-bottom: 1px solid #E2E7E3; display: flex; justify-content: space-between; align-items: center">
+<div style="display: flex; flex-direction: column"><h1 style="margin: 0; font-size: 20px; font-weight: 700">Regjistri</h1><span style="font-size: 12px; color: #56645C">Sot · 9 veprime</span></div>
+<button style="display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border-radius: 10px; border: 1px solid #CBD5CE; background: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600; color: #14201A"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>CSV / PDF</button>
+</header>
+<div role="group" aria-label="Filtro veprimet" style="display: flex; gap: 8px; overflow-x: auto; padding: 12px 16px; flex-shrink: 0">
+<button class="chip on">Të gjitha</button><button class="chip">Shitje</button><button class="chip">Anulim / kthim</button><button class="chip">Çmime</button><button class="chip">Hyrje</button><button class="chip">Cilësime</button>
+</div>
+<div style="flex: 1; overflow-y: auto; padding: 0 16px 12px">
+<div style="background: #FFFFFF; border: 1px solid #E2E7E3; border-radius: 14px; padding: 0 14px">
+<div class="ev" style="border-top: 0"><span class="tm">11:06</span><span style="display: flex; flex-direction: column; gap: 4px"><span><span class="ac a-warn">Ndryshim çmimi</span></span><span style="font-size: 14px">Vaj luledielli 1L: €2.40 → <strong>€2.55</strong></span><span style="font-size: 12px; color: #56645C">Arben Krasniqi · telefoni</span></span></div>
+<div class="ev"><span class="tm">11:04</span><span style="display: flex; flex-direction: column; gap: 4px"><span><span class="ac a-bad">Pa internet</span></span><span style="font-size: 14px">Arka 1 humbi lidhjen · 3 fatura në pritje</span><span style="font-size: 12px; color: #56645C">Sistemi</span></span></div>
+<div class="ev"><span class="tm">10:58</span><span style="display: flex; flex-direction: column; gap: 4px"><span><span class="ac a-bad">Anulim</span></span><span style="font-size: 14px">#01281 (€18.90) · "Gabim në arkë"</span><span style="font-size: 12px; color: #56645C">Granit Berisha · miratuar nga Arben K.</span></span></div>
+<div class="ev"><span class="tm">10:51</span><span style="display: flex; flex-direction: column; gap: 4px"><span><span class="ac a-warn">Kthim malli</span></span><span style="font-size: 14px">Nga #01284 · −€3.65 kesh</span><span style="font-size: 12px; color: #56645C">Liridona Krasniqi · Arka 1</span></span></div>
+<div class="ev"><span class="tm">10:42</span><span style="display: flex; flex-direction: column; gap: 4px"><span><span class="ac a-sale">Shitje</span></span><span style="font-size: 14px">#01284 · €7.85 · fiskalizuar</span><span style="font-size: 12px; color: #56645C">Liridona Krasniqi · Arka 1</span></span></div>
+<div class="ev"><span class="tm">10:15</span><span style="display: flex; flex-direction: column; gap: 4px"><span><span class="ac a-set">Cilësime</span></span><span style="font-size: 14px">Printeri i lidhur: POS-80 Printer</span><span style="font-size: 12px; color: #56645C">Arben Krasniqi · Arka 1</span></span></div>
+<div class="ev"><span class="tm">07:58</span><span style="display: flex; flex-direction: column; gap: 4px"><span><span class="ac a-in">Hyrje</span></span><span style="font-size: 14px">Hyri me PIN · kusuri €50.00</span><span style="font-size: 12px; color: #56645C">Liridona Krasniqi · Arka 1</span></span></div>
+</div>
+</div>
+<nav aria-label="Menuja kryesore" style="display: flex; background: #FFFFFF; border-top: 1px solid #E2E7E3; padding: 6px 8px 22px">
+<a href="M-Paneli.dc.html" class="tb"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Paneli</a>
+<a href="M-Arka.dc.html" class="tb"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.7 12.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.5L21 8H6"/></svg>Arka</a>
+<a href="M-Produktet.dc.html" class="tb"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>Produktet</a>
+<a href="M-Raportet.dc.html" class="tb"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg>Raportet</a>
+<a href="M-Cilesimet.dc.html" class="tb on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>Më shumë</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

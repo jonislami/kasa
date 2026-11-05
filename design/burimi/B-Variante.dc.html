@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="sq">
+<head>
+<meta charset="utf-8">
+<title>Butik – Produkti me variante</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F4F6F3}
+a{color:#0E6B4E}a:hover{color:#0A5039}
+.nav{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 12px;border-radius:10px;color:#C9D6CF;text-decoration:none;font-size:14px;font-weight:500}
+.nav:hover{background:#1B3A2C;color:#FFFFFF}
+.nav.on{background:#E3F1EA;color:#0F2A1F}
+.mx{width:100%;border-collapse:separate;border-spacing:8px}
+.mx th{font-size:13px;font-weight:600;color:#56645C;text-align:center;padding:4px}
+.mx th.rh{text-align:left;white-space:nowrap}
+.cl{width:100%;min-height:72px;border-radius:10px;border:1px solid #E2E7E3;background:#FFFFFF;font:inherit;color:#14201A;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer}
+.cl b{font-size:20px;font-variant-numeric:tabular-nums}
+.cl span{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#56645C}
+.cl.low{background:#FEF3C7;border-color:#F6D58A}
+.cl.zero{background:#FFEDE0;border-color:#F3C9A8}
+.cl.zero b{color:#9A3412}
+.cl.sel{outline:3px solid #0E6B4E;outline-offset:1px}
+.sw{width:14px;height:14px;border-radius:50%;display:inline-block;vertical-align:middle;margin-right:8px;border:1px solid #CBD5CE}
+.bc{display:flex;gap:1px;height:46px;align-items:stretch}
+.bc i{background:#111111;display:block}
+</style>
+</helmet>
+<div style="font-family: Inter, system-ui, sans-serif; color: #14201A; display: flex; flex-wrap: wrap; min-height: 100vh; background: #F4F6F3">
+
+<nav aria-label="Menuja kryesore" style="flex: 1 1 232px; background: #10241B; padding: 24px 16px; display: flex; flex-direction: column; gap: 4px; box-sizing: border-box">
+<div style="display: flex; align-items: center; gap: 10px; padding: 0 8px 24px">
+<div style="width: 36px; height: 36px; border-radius: 10px; background: #3FBF86; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10241B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg></div>
+<div style="display: flex; flex-direction: column"><span style="color: #FFFFFF; font-weight: 700; font-size: 16px">Butik Elira</span><span style="color: #8FA79A; font-size: 12px">Prishtinë · Kasa</span></div>
+</div>
+<a href="PaneliLloji-Butik.dc.html" class="nav"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Paneli</a>
+<a href="B-Arka.dc.html" class="nav"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.7 12.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.5L21 8H6"/></svg>Arka</a>
+<a href="B-Variante.dc.html" class="nav on"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>Produktet</a>
+<a href="Raportet.dc.html" class="nav"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg>Raportet</a>
+<div style="flex-grow: 1; min-height: 24px"></div>
+</nav>
+
+<main style="flex: 999 1 560px; min-width: 0; padding: 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
+<header style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+<div style="display: flex; flex-direction: column; gap: 4px"><a href="B-Variante.dc.html" style="font-size: 13px; font-weight: 600; text-decoration: none">‹ Produktet</a><h1 style="margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.02em">Xhaketë lëkure femrash</h1><span style="font-size: 14px; color: #56645C">Xhaketa · €89.00 · TVSH 18% · 15 variante · 31 copë në stok</span></div>
+<span style="display: flex; gap: 10px"><button style="min-height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid #CBD5CE; background: #FFFFFF; font: inherit; font-size: 14px; font-weight: 600; color: #14201A">+ Madhësi</button><button style="min-height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid #CBD5CE; background: #FFFFFF; font: inherit; font-size: 14px; font-weight: 600; color: #14201A">+ Ngjyrë</button></span>
+</header>
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+<section aria-labelledby="v-m" style="flex: 999 1 560px; min-width: 0; background: #FFFFFF; border: 1px solid #E2E7E3; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; align-items: center; padding: 0 8px"><h2 id="v-m" style="margin: 0; font-size: 16px; font-weight: 600">Stoku sipas madhësisë × ngjyrës</h2><span style="display: flex; gap: 14px; font-size: 12px; color: #56645C"><span><span class="sw" style="background: #FEF3C7"></span>1 copë</span><span><span class="sw" style="background: #FFEDE0"></span>Mungon</span></span></div>
+<div style="overflow-x: auto">
+<table class="mx">
+<thead><tr><th></th><th>XS</th><th>S</th><th>M</th><th>L</th><th>XL</th><th>Gjithsej</th></tr></thead>
+<tbody>
+<tr><th class="rh"><span class="sw" style="background: #111111"></span>E zezë</th>
+<td><button class="cl {{k.z0}}" onClick="{{s.z0}}"><b>2</b><span>…0101</span></button></td><td><button class="cl {{k.z1}}" onClick="{{s.z1}}"><b>4</b><span>…0102</span></button></td><td><button class="cl {{k.z2}}" onClick="{{s.z2}}"><b>5</b><span>…0103</span></button></td><td><button class="cl {{k.z3}}" onClick="{{s.z3}}"><b>3</b><span>…0104</span></button></td><td><button class="cl {{k.z4}}" onClick="{{s.z4}}"><b>1</b><span>…0105</span></button></td><td style="text-align: center; font-weight: 700">15</td></tr>
+<tr><th class="rh"><span class="sw" style="background: #7C4A2D"></span>Kafe</th>
+<td><button class="cl {{k.k0}}" onClick="{{s.k0}}"><b>0</b><span>…0201</span></button></td><td><button class="cl {{k.k1}}" onClick="{{s.k1}}"><b>2</b><span>…0202</span></button></td><td><button class="cl {{k.k2}}" onClick="{{s.k2}}"><b>3</b><span>…0203</span></button></td><td><button class="cl {{k.k3}}" onClick="{{s.k3}}"><b>2</b><span>…0204</span></button></td><td><button class="cl {{k.k4}}" onClick="{{s.k4}}"><b>0</b><span>…0205</span></button></td><td style="text-align: center; font-weight: 700">7</td></tr>
+<tr><th class="rh"><span class="sw" style="background: #D9C4A3"></span>Bezhë</th>
+<td><button class="cl {{k.b0}}" onClick="{{s.b0}}"><b>1</b><span>…0301</span></button></td><td><button class="cl {{k.b1}}" onClick="{{s.b1}}"><b>3</b><span>…0302</span></button></td><td><button class="cl {{k.b2}}" onClick="{{s.b2}}"><b>0</b><span>…0303</span></button></td><td><button class="cl {{k.b3}}" onClick="{{s.b3}}"><b>4</b><span>…0304</span></button></td><td><button class="cl {{k.b4}}" onClick="{{s.b4}}"><b>1</b><span>…0305</span></button></td><td style="text-align: center; font-weight: 700">9</td></tr>
+</tbody>
+</table>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 16px; padding: 12px 8px 0; border-top: 1px solid #EEF1EE; font-size: 14px">
+<span>Zgjedhur: <strong>{{selName}}</strong></span><span style="color: #56645C">Barkodi <span style="font-family: 'IBM Plex Mono', monospace; color: #14201A">{{selCode}}</span></span><span style="color: #56645C">Stoku <strong style="color: #14201A">{{selQty}}</strong></span>
+</div>
+</section>
+
+<aside aria-labelledby="v-l" style="flex: 1 1 320px; background: #FFFFFF; border: 1px solid #E2E7E3; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 16px; box-sizing: border-box">
+<h2 id="v-l" style="margin: 0; font-size: 17px; font-weight: 700">Printo etiketa</h2>
+<div style="background: #F0F3F1; border-radius: 12px; padding: 20px; display: flex; justify-content: center">
+<div role="img" aria-label="Parapamja e etiketës" style="width: 240px; background: #FFFFFF; border: 1px solid #CBD5CE; border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; color: #111111">
+<span style="font-size: 11px; font-weight: 600">BUTIK ELIRA</span>
+<span style="font-family: Inter, sans-serif; font-size: 13px; font-weight: 700">Xhaketë lëkure femrash</span>
+<span style="font-size: 12px">{{selName}}</span>
+<div class="bc" aria-hidden="true"><i style="width: 2px"></i><i style="width: 1px"></i><i style="width: 3px"></i><i style="width: 1px"></i><i style="width: 2px"></i><i style="width: 1px"></i><i style="width: 1px"></i><i style="width: 3px"></i><i style="width: 2px"></i><i style="width: 1px"></i><i style="width: 3px"></i><i style="width: 1px"></i><i style="width: 2px"></i><i style="width: 2px"></i><i style="width: 1px"></i><i style="width: 3px"></i><i style="width: 1px"></i><i style="width: 2px"></i><i style="width: 1px"></i><i style="width: 3px"></i><i style="width: 1px"></i><i style="width: 2px"></i><i style="width: 3px"></i><i style="width: 1px"></i><i style="width: 2px"></i><i style="width: 1px"></i><i style="width: 3px"></i><i style="width: 2px"></i><i style="width: 1px"></i><i style="width: 2px"></i><i style="width: 3px"></i><i style="width: 1px"></i></div>
+<span style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 10px">{{selCode}}</span><strong style="font-size: 18px">€89.00</strong></span>
+</div>
+</div>
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 500; color: #33413A">Çfarë të printohet<select style="min-height: 44px; border: 1px solid #CBD5CE; border-radius: 10px; padding: 0 10px; font: inherit; font-size: 14px; color: #14201A; background: #FFFFFF"><option>Vetëm varianti i zgjedhur</option><option>Një etiketë për çdo copë në stok (31)</option><option>Vetëm hyrja e fundit</option></select></label>
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 500; color: #33413A">Sasia<input type="text" value="{{selQty}}" style="min-height: 44px; border: 1px solid #CBD5CE; border-radius: 10px; padding: 0 12px; font: inherit; font-size: 15px; color: #14201A"></label>
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 500; color: #33413A">Madhësia e etiketës<select style="min-height: 44px; border: 1px solid #CBD5CE; border-radius: 10px; padding: 0 10px; font: inherit; font-size: 14px; color: #14201A; background: #FFFFFF"><option>40 × 30 mm</option><option>50 × 25 mm</option></select></label>
+<button style="display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; border-radius: 12px; border: 0; background: #0E6B4E; color: #FFFFFF; font: inherit; font-size: 15px; font-weight: 700"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V2h12v7"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v8H6z"/></svg>Printo etiketat</button>
+</aside>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+constructor(props) { super(props); this.state = { sel: 'z2' }; }
+renderVals() {
+const sizes = ['XS', 'S', 'M', 'L', 'XL'];
+const colors = { z: ['E zezë', '01', [2, 4, 5, 3, 1]], k: ['Kafe', '02', [0, 2, 3, 2, 0]], b: ['Bezhë', '03', [1, 3, 0, 4, 1]] };
+const k = {}, s = {};
+let selName = '', selCode = '', selQty = 0;
+Object.keys(colors).forEach((c) => colors[c][2].forEach((q, i) => {
+const id = c + i; const on = this.state.sel === id;
+k[id] = (q === 0 ? 'zero' : q === 1 ? 'low' : '') + (on ? ' sel' : '');
+s[id] = () => this.setState({ sel: id });
+if (on) { selName = colors[c][0] + ' · ' + sizes[i]; selCode = '2001234' + colors[c][1] + '0' + (i + 1); selQty = q; }
+}));
+return { k, s, selName, selCode, selQty };
+}
+}
+</script>
+</body>
+</html>

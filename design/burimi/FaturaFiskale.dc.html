@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="sq">
+<head>
+<meta charset="utf-8">
+<title>Fatura fiskale 80mm</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.r{display:flex;justify-content:space-between;gap:8px}
+.hr{border-top:1px dashed #111111}
+.q{display:grid;grid-template-columns:repeat(25,4px);grid-auto-rows:4px}
+.q .b{background:#111111}
+</style>
+</helmet>
+<div style="width: 320px; height: 1160px; box-sizing: border-box; padding: 22px 18px; background: #FFFFFF; color: #111111; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11.5px; line-height: 1.5; display: flex; flex-direction: column; gap: 9px">
+
+<div style="display: flex; align-items: center; justify-content: space-between">
+<span style="display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 26px; border: 2px solid #111111; border-radius: 4px; font-size: 13px; font-weight: 700; letter-spacing: .08em">RKS</span>
+<span style="font-size: 10px; text-align: right">Kupon i fiskalizuar<br>Kasa 1.4.2</span>
+</div>
+
+<div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1px">
+<span style="font-size: 15px; font-weight: 700">MARKET FLLANZA</span>
+<span>NUI: 811234567</span>
+<span>Nr. TVSH: 330012345</span>
+<span>Rr. Agim Ramadani 24, Prishtinë</span>
+<span>Arka 1 · FK-0412-8831</span>
+</div>
+
+<div style="text-align: center; font-size: 14px; font-weight: 700; padding: 5px 0; border-top: 2px solid #111111; border-bottom: 2px solid #111111">{{title}}</div>
+
+<sc-if value="{{isCopy}}" hint-placeholder-val="{{ false }}"><div style="text-align: center; font-weight: 700; background: #111111; color: #FFFFFF; padding: 4px">KOPJE · NUK ËSHTË KUPON I RI</div></sc-if>
+<sc-if value="{{isVoid}}" hint-placeholder-val="{{ false }}"><div style="display: flex; flex-direction: column; text-align: center; font-weight: 600; border: 2px solid #111111; padding: 5px"><span style="font-weight: 700">ANULON KUPONIN #01284</span><span style="font-size: 10px">NUIKF 7A3F-92C1-0B5E · 05.11.2026 10:42</span></div></sc-if>
+<sc-if value="{{isOff}}" hint-placeholder-val="{{ false }}"><div style="text-align: center; font-weight: 700; border: 2px dashed #111111; padding: 5px">OFFLINE · lëshuar pa internet</div></sc-if>
+
+<div style="display: flex; flex-direction: column">
+<div class="r"><span>Data/ora:</span><span>{{dateTime}}</span></div>
+<div class="r"><span>Nr. ditor/rendor:</span><span>{{dailyNo}}</span></div>
+<div class="r"><span>Operatori:</span><span>Liridona K. (ID 0003)</span></div>
+</div>
+
+<div class="hr"></div>
+
+<div style="display: flex; flex-direction: column; gap: 5px">
+<div style="display: flex; flex-direction: column"><span>Qumësht i freskët 1L</span><div class="r"><span>  {{q2}} x 0.95</span><span>{{a190}} D</span></div></div>
+<div style="display: flex; flex-direction: column"><span>Bukë e bardhë 500g</span><div class="r"><span>  {{q1}} x 0.50</span><span>{{a050}} D</span></div></div>
+<div style="display: flex; flex-direction: column"><span>Kafe e bluar 200g</span><div class="r"><span>  {{q1}} x 2.90</span><span>{{a290}} E</span></div><div class="r"><span>  Zbritje 5%</span><span>{{d015}} E</span></div></div>
+<div style="display: flex; flex-direction: column"><span>Ujë mineral 1.5L</span><div class="r"><span>  {{q6}} x 0.45</span><span>{{a270}} E</span></div></div>
+</div>
+
+<div class="hr"></div>
+<div style="display: flex; flex-direction: column">
+<div class="r"><span>Totali pa TVSH</span><span>{{base}}</span></div>
+<div class="r"><span>TVSH</span><span>{{vat}}</span></div>
+</div>
+<div class="r" style="align-items: baseline"><span style="font-size: 14px; font-weight: 700">TOTALI EUR</span><span style="font-size: 20px; font-weight: 700">{{total}}</span></div>
+
+<div style="display: flex; flex-direction: column">
+<sc-if value="{{notVoid}}" hint-placeholder-val="{{ true }}">
+<div class="r"><span>Pagesa: Kesh</span><span>5.00</span></div>
+<div class="r"><span>Pagesa: Kartelë</span><span>2.85</span></div>
+</sc-if>
+<sc-if value="{{isVoid}}" hint-placeholder-val="{{ false }}">
+<div class="r"><span>Kthyer: Kesh</span><span>-5.00</span></div>
+<div class="r"><span>Kthyer: Kartelë</span><span>-2.85</span></div>
+</sc-if>
+</div>
+
+<div class="hr"></div>
+<div style="display: flex; flex-direction: column">
+<div class="r" style="font-weight: 600"><span style="width: 70px">TVSH</span><span style="flex: 1; text-align: right">Baza</span><span style="width: 64px; text-align: right">Tvsh</span></div>
+<div class="r"><span style="width: 70px">E 18%</span><span style="flex: 1; text-align: right">{{bE}}</span><span style="width: 64px; text-align: right">{{vE}}</span></div>
+<div class="r"><span style="width: 70px">D 8%</span><span style="flex: 1; text-align: right">{{bD}}</span><span style="width: 64px; text-align: right">{{vD}}</span></div>
+<div class="r"><span style="width: 70px">C 0%</span><span style="flex: 1; text-align: right">0.00</span><span style="width: 64px; text-align: right">0.00</span></div>
+<div class="r"><span style="width: 70px">A Lir.</span><span style="flex: 1; text-align: right">0.00</span><span style="width: 64px; text-align: right">-</span></div>
+</div>
+
+<div class="hr"></div>
+<div style="display: flex; flex-direction: column">
+<div class="r"><span>Nr. SEF:</span><span>{{sef}}</span></div>
+<div class="r"><span>NUIKF:</span><span>{{nuikf}}</span></div>
+</div>
+
+<div style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding-top: 4px">
+<div class="q" role="img" aria-label="Kodi QR për verifikimin e kuponit">
+<sc-for list="{{qr}}" as="c" hint-placeholder-count="625"><span class="{{c.k}}"></span></sc-for>
+</div>
+<span style="font-size: 10px; text-align: center">{{qrNote}}</span>
+</div>
+
+<div class="hr"></div>
+<div style="text-align: center; font-weight: 600">Faleminderit për blerjen!</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"variant":{"editor":"enum","options":["origjinal","kopje","anulim","offline"],"default":"origjinal"},"$preview":{"width":320,"height":1160}}'>
+class Component extends DCLogic {
+renderVals() {
+const v = this.props.variant ?? 'origjinal';
+const neg = v === 'anulim';
+const m = (n) => (neg ? '-' : '') + n.toFixed(2);
+const qn = (n) => (neg ? '-' : '') + n;
+const titles = { origjinal: 'KUPON FISKAL', kopje: 'KOPJE E KUPONIT', anulim: 'KUPON ANULIMI', offline: 'KUPON FISKAL' };
+const N = 25, cells = [];
+const finder = (r, c, R, C) => { const y = r - R, x = c - C; if (y < 0 || x < 0 || y > 6 || x > 6) return null; return y === 0 || y === 6 || x === 0 || x === 6 || (y >= 2 && y <= 4 && x >= 2 && x <= 4); };
+for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+let f = finder(r, c, 0, 0); if (f === null) f = finder(r, c, 0, 18); if (f === null) f = finder(r, c, 18, 0);
+let on;
+if (f !== null) on = f;
+else if ((r === 7 || c === 7) && (r < 8 || c < 8)) on = false;
+else if (r === 7 && c > 16 || c === 7 && r > 16 || r === 17 && c < 8 || c === 17 && r < 8) on = false;
+else on = ((r * 7 + c * 13 + r * c + (v === 'offline' ? 3 : 0)) % 5) < 2;
+cells.push({ k: on ? 'b' : '' });
+}
+return {
+title: titles[v], isCopy: v === 'kopje', isVoid: neg, notVoid: !neg, isOff: v === 'offline',
+dateTime: neg ? '05.11.2026 10:58:03' : v === 'kopje' ? '05.11.2026 10:42:07' : v === 'offline' ? '05.11.2026 11:01:15' : '05.11.2026 10:42:07',
+dailyNo: neg ? '0091 / 01285' : v === 'offline' ? '0093 / 01293' : '0086 / 01284',
+q1: qn(1), q2: qn(2), q6: qn(6),
+a190: m(1.9), a050: m(0.5), a290: m(2.9), a270: m(2.7), d015: neg ? '0.15' : '-0.15',
+base: m(6.84), vat: m(1.01), total: m(7.85),
+bE: m(4.62), vE: m(0.83), bD: m(2.22), vD: m(0.18),
+sef: v === 'offline' ? 'në pritje' : neg ? 'SEF-2026-118433' : 'SEF-2026-118409',
+nuikf: v === 'offline' ? 'C41D-77E0-5A92 (lokal)' : neg ? '2B90-E1F4-6C07' : '7A3F-92C1-0B5E',
+qrNote: v === 'offline' ? 'Kuponi dërgohet në ATK brenda 48 orëve' : 'Skano për ta verifikuar në ATK',
+qr: cells
+};
+}
+}
+</script>
+</body>
+</html>

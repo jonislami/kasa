@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="sq">
+<head>
+<meta charset="utf-8">
+<title>Cilësimet – Arkat në ATK</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F4F6F3}
+a{color:#0E6B4E}a:hover{color:#0A5039}
+.nav{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 12px;border-radius:10px;color:#C9D6CF;text-decoration:none;font-size:14px;font-weight:500}
+.nav:hover{background:#1B3A2C;color:#FFFFFF}
+.nav.on{background:#E3F1EA;color:#0F2A1F}
+.sn{display:flex;align-items:center;min-height:44px;padding:0 14px;border-radius:10px;font-size:14px;color:#33413A;text-decoration:none}
+.sn:hover{background:#EEF2EF;color:#14201A}
+.sn.on{background:#FFFFFF;color:#14201A;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.card{background:#FFFFFF;border:1px solid #E2E7E3;border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:16px}
+.reg{display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid #EEF1EE;flex-wrap:wrap}
+.st{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:4px 9px;border-radius:999px}
+.dot{width:7px;height:7px;border-radius:50%}
+.mono{font-family:'IBM Plex Mono',monospace}
+.step{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.sc{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;border:2px solid #CBD5CE;color:#56645C;background:#FFFFFF}
+.sc.on{border-color:#0E6B4E;color:#0E6B4E}
+.sc.done{border-color:#0E6B4E;background:#0E6B4E;color:#FFFFFF}
+.inp{min-height:48px;border:1px solid #CBD5CE;border-radius:10px;padding:0 12px;font:inherit;font-size:16px;color:#14201A;background:#FFFFFF;box-sizing:border-box;width:100%}
+.eb{border:0;min-height:38px;padding:0 14px;border-radius:8px;background:transparent;font:inherit;font-size:13px;font-weight:600;color:#56645C}
+.eb.on{background:#FFFFFF;color:#14201A;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.bp{min-height:48px;padding:0 22px;border-radius:10px;border:0;background:#0E6B4E;color:#FFFFFF;font:inherit;font-size:15px;font-weight:700}
+.bs{min-height:48px;padding:0 18px;border-radius:10px;border:1px solid #CBD5CE;background:#FFFFFF;color:#14201A;font:inherit;font-size:14px;font-weight:600}
+</style>
+</helmet>
+<div style="font-family: Inter, system-ui, sans-serif; color: #14201A; display: flex; flex-wrap: wrap; min-height: 100vh; background: #F4F6F3">
+
+<nav aria-label="Menuja kryesore" style="flex: 1 1 232px; background: #10241B; padding: 24px 16px; display: flex; flex-direction: column; gap: 4px; box-sizing: border-box">
+<div style="display: flex; align-items: center; gap: 10px; padding: 0 8px 24px">
+<div style="width: 36px; height: 36px; border-radius: 10px; background: #3FBF86; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10241B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l1.5-5h15L21 9"/><path d="M4 9v11h16V9"/><path d="M9 20v-6h6v6"/></svg></div>
+<div style="display: flex; flex-direction: column"><span style="color: #FFFFFF; font-weight: 700; font-size: 16px">Market Fllanza</span><span style="color: #8FA79A; font-size: 12px">Prishtinë · Kasa</span></div>
+</div>
+<a href="Main.dc.html" class="nav"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Paneli</a>
+<a href="Arka.dc.html" class="nav"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.7 12.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.5L21 8H6"/></svg>Arka / Shitja</a>
+<a href="Produktet.dc.html" class="nav"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>Produktet</a>
+<a href="Stoku.dc.html" class="nav"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 4h13v12H1z"/><path d="M14 9h4l4 4v3h-8"/><circle cx="5.5" cy="18.5" r="1.8"/><circle cx="17.5" cy="18.5" r="1.8"/></svg>Stoku &amp; Hyrjet</a>
+<a href="Raportet.dc.html" class="nav"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg>Raportet</a>
+<a href="Regjistri.dc.html" class="nav"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>Regjistri</a>
+<div style="flex-grow: 1; min-height: 24px"></div>
+<a href="ATK.dc.html" class="nav on"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>Cilësimet</a>
+</nav>
+
+<main style="flex: 999 1 560px; min-width: 0; padding: 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
+<header style="display: flex; flex-direction: column; gap: 4px"><h1 style="margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.02em">Cilësimet</h1><span style="font-size: 14px; color: #56645C">Arkat dhe fiskalizimi në ATK</span></header>
+
+<div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+<nav aria-label="Seksionet e cilësimeve" style="flex: 1 1 200px; display: flex; flex-direction: column; gap: 2px">
+<a href="Cilesimet.dc.html" class="sn">Të dhënat e dyqanit</a>
+<a href="Cilesimet.dc.html" class="sn">Printeri &amp; Fatura</a>
+<a href="Cilesimet.dc.html" class="sn">Përdoruesit &amp; PIN-et</a>
+<a href="ATK.dc.html" class="sn on">Arkat &amp; ATK</a>
+<a href="Cilesimet.dc.html" class="sn">TVSH &amp; Taksat</a>
+<a href="Cilesimet.dc.html" class="sn">Kopje rezervë</a>
+</nav>
+
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+
+<section class="card" aria-labelledby="a-list">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 2px"><h2 id="a-list" style="margin: 0; font-size: 17px; font-weight: 700">Arkat e biznesit</h2><span style="font-size: 13px; color: #56645C">NUI 811234567 · Nr. TVSH 330012345</span></div>
+<div role="group" aria-label="Mjedisi i ATK" style="display: flex; align-items: center; gap: 10px"><span style="font-size: 13px; color: #56645C">Mjedisi</span><div style="display: flex; background: #E7ECE8; border-radius: 10px; padding: 3px"><button class="eb {{envTest}}" onClick="{{toTest}}">Test</button><button class="eb {{envProd}}" onClick="{{toProd}}">Prodhim</button></div></div>
+</div>
+<div style="display: flex; flex-direction: column">
+<div class="reg"><span style="flex: 1 1 200px; display: flex; flex-direction: column"><span style="font-weight: 600">Arka 1 – Hyrja kryesore</span><span class="mono" style="font-size: 12px; color: #56645C">Nr. fiskal FK-0412-8831 · certifikata deri 14.10.2027</span></span><span class="st" style="color: #0E6B4E; background: #E3F1EA"><span class="dot" style="background: #0E6B4E"></span>Aktive</span><button class="bs" style="min-height: 40px">Detajet</button></div>
+<div class="reg"><span style="flex: 1 1 200px; display: flex; flex-direction: column"><span style="font-weight: 600">Arka 2 – Kasa e shpejtë</span><span style="font-size: 12px; color: #56645C">Regjistrimi po bëhet më poshtë</span></span><span class="st" style="color: #854D0E; background: #FEF3C7"><span class="dot" style="background: #B45309"></span>Në pritje</span><button class="bs" style="min-height: 40px">Vazhdo</button></div>
+<div class="reg"><span style="flex: 1 1 200px; display: flex; flex-direction: column"><span style="font-weight: 600">Arka 3 – Telefoni i pronarit</span><span style="font-size: 12px; color: #56645C">Nuk mund të lëshojë kupon fiskal</span></span><span class="st" style="color: #33413A; background: #F0F3F1"><span class="dot" style="background: #8A968F"></span>E pa regjistruar</span><button class="bs" style="min-height: 40px">Regjistro</button></div>
+<div class="reg"><span style="flex: 1 1 200px; display: flex; flex-direction: column"><span style="font-weight: 600">Arka 4 – Depo</span><span style="font-size: 12px; color: #9A3412">Certifikata ka skaduar më 02.11.2026</span></span><span class="st" style="color: #9A3412; background: #FFEDE0"><span class="dot" style="background: #9A3412"></span>Gabim</span><button class="bs" style="min-height: 40px; color: #9A3412; border-color: #F3C9A8">Rinovo</button></div>
+</div>
+</section>
+
+<section class="card" aria-labelledby="a-wiz" style="border: 2px solid #0E6B4E">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap"><h2 id="a-wiz" style="margin: 0; font-size: 17px; font-weight: 700">Regjistro Arka 2 në ATK</h2><span style="font-size: 12px; font-weight: 600; color: #56645C">Mjedisi: {{envName}}</span></div>
+<ol aria-label="Hapat" style="margin: 0; padding: 0; list-style: none; display: flex; gap: 12px; align-items: center">
+<li class="step"><span class="sc {{s1}}">1</span><span style="font-size: 14px; font-weight: 600">Numri i fiskalizimit</span></li>
+<li aria-hidden="true" style="flex: 0 0 40px; height: 2px; background: #CBD5CE"></li>
+<li class="step"><span class="sc {{s2}}">2</span><span style="font-size: 14px; font-weight: 600">Verifikimi</span></li>
+<li aria-hidden="true" style="flex: 0 0 40px; height: 2px; background: #CBD5CE"></li>
+<li class="step"><span class="sc {{s3}}">3</span><span style="font-size: 14px; font-weight: 600">Certifikata</span></li>
+</ol>
+
+<sc-if value="{{is1}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column; gap: 12px; background: #F7F9F7; border-radius: 12px; padding: 16px">
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 500; color: #33413A">Numri i fiskalizimit të arkës (nga portali i ATK)<input class="inp mono" type="text" value="FK-0412-9902"></label>
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 500; color: #33413A">Adresa e njësisë<input class="inp" type="text" value="Rr. Agim Ramadani 24, Prishtinë"></label>
+<span style="font-size: 12px; color: #56645C">Numrin e merr pasi ta deklarosh arkën në portalin e ATK.</span>
+</div>
+</sc-if>
+<sc-if value="{{is2}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 10px; background: #FEF3C7; border-radius: 12px; padding: 16px">
+<span style="font-weight: 700; color: #854D0E">Duke verifikuar FK-0412-9902…</span>
+<span style="font-size: 13px; line-height: 1.5; color: #854D0E">ATK po kontrollon numrin dhe NUI-në e biznesit. Zakonisht zgjat më pak se një minutë. Mos e mbyll dritaren.</span>
+<div style="height: 8px; background: #FDE68A; border-radius: 4px"><div style="width: 60%; height: 8px; background: #B45309; border-radius: 4px"></div></div>
+</div>
+</sc-if>
+<sc-if value="{{is3}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; gap: 14px; align-items: flex-start; background: #E3F1EA; border-radius: 12px; padding: 16px">
+<span aria-hidden="true" style="width: 40px; height: 40px; border-radius: 50%; background: #0E6B4E; color: #FFFFFF; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span>
+<span style="display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: #0F2A1F"><strong style="font-size: 15px">Certifikata u mor – Arka 2 është aktive</strong><span class="mono">Seria: 4F:22:9A:C0:71 · vlen deri 05.11.2027</span><span>Faturat e ardhshme nga kjo arkë dërgohen në ATK automatikisht.</span></span>
+</div>
+</sc-if>
+
+<div style="display: flex; justify-content: flex-end; gap: 10px">
+<sc-if value="{{showBack}}" hint-placeholder-val="{{ false }}"><button class="bs" onClick="{{back}}">Kthehu</button></sc-if>
+<button class="bp" onClick="{{next}}">{{nextLbl}}</button>
+</div>
+</section>
+</div>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1060}}'>
+class Component extends DCLogic {
+constructor(props) { super(props); this.state = { step: 1, env: 'prod' }; }
+renderVals() {
+const s = this.state.step;
+const cls = (n) => (s > n ? 'done' : s === n ? 'on' : '');
+return {
+s1: cls(1), s2: cls(2), s3: s === 3 ? 'done' : '',
+is1: s === 1, is2: s === 2, is3: s === 3,
+showBack: s === 2,
+nextLbl: s === 1 ? 'Dërgo për verifikim' : s === 2 ? 'Merr certifikatën' : 'Mbaro',
+next: () => this.setState({ step: s === 3 ? 1 : s + 1 }),
+back: () => this.setState({ step: Math.max(1, s - 1) }),
+envTest: this.state.env === 'test' ? 'on' : '', envProd: this.state.env === 'prod' ? 'on' : '',
+envName: this.state.env === 'test' ? 'Test' : 'Prodhim',
+toTest: () => this.setState({ env: 'test' }), toProd: () => this.setState({ env: 'prod' })
+};
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="sq">
+<head>
+<meta charset="utf-8">
+<title>Fatura fiskale – variantet</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1300px; box-sizing: border-box; padding: 32px 20px; background: #E7ECE8; font-family: Inter, system-ui, sans-serif; color: #14201A; display: flex; justify-content: space-between">
+<div style="display: flex; flex-direction: column; gap: 12px"><span style="display: flex; flex-direction: column; gap: 2px"><strong style="font-size: 16px">Origjinali</strong><span style="font-size: 13px; color: #56645C">Shitja #01284, e fiskalizuar</span></span><div style="box-shadow: 0 6px 20px rgba(16,36,27,.15)"><dc-import name="FaturaFiskale" variant="origjinal" hint-size="320px,1160px"></dc-import></div></div>
+<div style="display: flex; flex-direction: column; gap: 12px"><span style="display: flex; flex-direction: column; gap: 2px"><strong style="font-size: 16px">Kopje e kuponit</strong><span style="font-size: 13px; color: #56645C">"Printo kopje" nga detajet</span></span><div style="box-shadow: 0 6px 20px rgba(16,36,27,.15)"><dc-import name="FaturaFiskale" variant="kopje" hint-size="320px,1160px"></dc-import></div></div>
+<div style="display: flex; flex-direction: column; gap: 12px"><span style="display: flex; flex-direction: column; gap: 2px"><strong style="font-size: 16px">Anulim</strong><span style="font-size: 13px; color: #56645C">Shuma negative, lidhur me #01284</span></span><div style="box-shadow: 0 6px 20px rgba(16,36,27,.15)"><dc-import name="FaturaFiskale" variant="anulim" hint-size="320px,1160px"></dc-import></div></div>
+<div style="display: flex; flex-direction: column; gap: 12px"><span style="display: flex; flex-direction: column; gap: 2px"><strong style="font-size: 16px">Offline</strong><span style="font-size: 13px; color: #56645C">Pa internet, SEF në pritje</span></span><div style="box-shadow: 0 6px 20px rgba(16,36,27,.15)"><dc-import name="FaturaFiskale" variant="offline" hint-size="320px,1160px"></dc-import></div></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1300}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
