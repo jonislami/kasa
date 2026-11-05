@@ -1,4 +1,4 @@
-import { supabase, isMissingSchema } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import type { UnitCode } from '@/lib/units'
 import type { VatCode } from '@/lib/vat'
 
@@ -69,19 +69,22 @@ export class CatalogNotMigrated extends Error {
   }
 }
 
+// Only a missing table or function means "not migrated"; other errors (e.g. a wrong column) are shown as they are.
+const NOT_MIGRATED = new Set(['42P01', 'PGRST205', 'PGRST202', '42883'])
+
 function fail(error: { code?: string; message: string }): never {
-  if (isMissingSchema(error)) throw new CatalogNotMigrated()
+  if (error.code && NOT_MIGRATED.has(error.code)) throw new CatalogNotMigrated()
   throw new Error(error.message)
 }
 
 const PRODUCT_COLS =
   'id, kind, name, barcode, category_id, unit, sale_price, vat_code, stock, min_stock, duration_min, substance, atk_type, show_in_pos, active, updated_at'
 
-async function fetchAll<T>(table: string, cols: string): Promise<T[]> {
+async function fetchAll<T>(table: string, cols: string, orderBy: string): Promise<T[]> {
   const out: T[] = []
   const page = 1000
   for (let from = 0; ; from += page) {
-    const { data, error } = await supabase.from(table).select(cols).order('id').range(from, from + page - 1)
+    const { data, error } = await supabase.from(table).select(cols).order(orderBy).range(from, from + page - 1)
     if (error) fail(error)
     out.push(...((data ?? []) as T[]))
     if (!data || data.length < page) break
@@ -97,8 +100,8 @@ type ProductRow = Omit<Product, 'purchase_price' | 'sale_price' | 'stock' | 'min
 
 export async function fetchProducts(withCosts: boolean): Promise<Product[]> {
   const [rows, costs] = await Promise.all([
-    fetchAll<ProductRow>('products', PRODUCT_COLS),
-    withCosts ? fetchAll<{ product_id: string; purchase_price: number | string }>('product_costs', 'product_id, purchase_price') : Promise.resolve([]),
+    fetchAll<ProductRow>('products', PRODUCT_COLS, 'id'),
+    withCosts ? fetchAll<{ product_id: string; purchase_price: number | string }>('product_costs', 'product_id, purchase_price', 'product_id') : Promise.resolve([]),
   ])
   const costMap = new Map(costs.map((c) => [c.product_id, Number(c.purchase_price)]))
   return rows
