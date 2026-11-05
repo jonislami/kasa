@@ -36,6 +36,23 @@
   }
 }
 
+/* Browser printing of receipts (80mm paper) – only .print-root is printed */
+@media print {
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+  body > *:not(.print-root) {
+    display: none !important;
+  }
+  .print-root {
+    display: block !important;
+  }
+  body {
+    background: #fff;
+  }
+}
+
 @layer utilities {
   .pt-safe {
     padding-top: env(safe-area-inset-top);

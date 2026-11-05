@@ -13,6 +13,9 @@ import { isManagerRole } from '@/lib/business'
 import { supabaseConfigured } from '@/lib/supabase'
 
 const PlatformPage = lazy(() => import('@/features/platform/PlatformPage').then((m) => ({ default: m.PlatformPage })))
+const PosPage = lazy(() => import('@/features/pos/PosPage').then((m) => ({ default: m.PosPage })))
+const RefundPage = lazy(() => import('@/features/pos/RefundPage').then((m) => ({ default: m.RefundPage })))
+const SettingsPage = lazy(() => import('@/features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })))
 const ProductsPage = lazy(() => import('@/features/products/ProductsPage').then((m) => ({ default: m.ProductsPage })))
 
 function Lazy({ children }: { children: ReactNode }) {
@@ -46,10 +49,6 @@ function WorkSoon() {
   )
 }
 
-function SettingsSoon() {
-  const { profile } = useBusiness()
-  return <ComingSoon title={isManagerRole(profile.role) ? 'Cilësimet' : 'Printeri'} phase="Faza 6 – Cilësimet, printeri, fatura" />
-}
 
 export function AppRoutes() {
   return (
@@ -69,9 +68,31 @@ export function AppRoutes() {
 
       <Route path="/" element={<Home />}>
         <Route index element={<DashboardPage />} />
-        <Route path="arka" element={<ComingSoon title="Arka / Shitja" phase="Faza 3 – Arka" />} />
+        <Route
+          path="arka"
+          element={
+            <Lazy>
+              <PosPage />
+            </Lazy>
+          }
+        />
+        <Route
+          path="arka/kthim"
+          element={
+            <Lazy>
+              <RefundPage />
+            </Lazy>
+          }
+        />
         <Route path="puna" element={<WorkSoon />} />
-        <Route path="cilesimet" element={<SettingsSoon />} />
+        <Route
+          path="cilesimet"
+          element={
+            <Lazy>
+              <SettingsPage />
+            </Lazy>
+          }
+        />
         <Route
           path="produktet"
           element={
