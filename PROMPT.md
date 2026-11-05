@@ -18,7 +18,8 @@ kohë; ndalu pas çdo faze që ta kontrollojë përdoruesi.
 7. Faqja e internetit te `/` (për vizitorët), `/login` me email+fjalëkalim, AuthGuard.
 8. `/platforma` + Edge Function `platform-admin`: krijo biznes (lloji, emri, pronari, email, fjalëkalim i
    gjeneruar), dritarja "Të dhënat për hyrje" me Kopjo, fjalëkalim i ri, çaktivizo/aktivizo.
-9. `.env.example`, `npm run build` pa gabime.
+9. Shtresa `src/lib/device/` (vetëm zbatimi `web` tani, me ndërfaqen gati për Electron dhe Capacitor).
+10. `.env.example`, `npm run build` pa gabime.
 
 ## Faza 2 – Katalogu
 Produktet dhe shërbimet (`kind`: product/service, kohëzgjatja), kategoritë, filtrat, formulari, importi nga
@@ -44,6 +45,16 @@ rezervë.
 ## Faza 7 – PWA dhe puna offline
 Instalimi, kopja lokale e katalogut për arkën, sinkronizimi automatik, njoftimi "Duke punuar offline",
 lidhja e pajisjes me biznesin.
+
+## Faza 7b – Aplikacionet që shkarkohen
+- **Windows:** Electron + electron-builder → instalues `.exe`, ikona dhe emri "Kasa", përditësim automatik
+  (electron-updater, GitHub Releases), Web Bluetooth me zgjedhjen e pajisjes, printim USB/Serial, çelësi me
+  `safeStorage`.
+- **Android:** Capacitor → APK i nënshkruar + paketa për Play Store, Bluetooth BLE, çelësi në Keystore, ikona dhe
+  splash.
+- **iPhone/iPad:** Capacitor → projekt iOS (ndërtohet në Mac me Apple Developer), Bluetooth BLE, Keychain.
+- Faqja `/shkarko` në faqen e internetit me butonat për secilën platformë dhe udhëzimet e instalimit.
+- Udhëzues te `docs/publikimi.md`: si ndërtohet dhe publikohet çdo version (Windows, Android, iOS).
 
 ## Faza 8 – Modulet sipas llojit (secili veç e veç)
 - **8a Sallon:** punëtorët me komision, punëtori për çdo rresht të faturës, terminet (kalendar për punëtor),

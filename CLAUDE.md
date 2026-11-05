@@ -1,7 +1,10 @@
 # Kasa – udhëzime për Claude Code
 
-**Kasa** është një platformë web për biznese në Kosovë: arka/shitja (POS), produktet dhe shërbimet, stoku,
-raportet, printeri termik me Bluetooth dhe fiskalizimi në ATK. Punon në kompjuter, tablet dhe telefon (PWA).
+**Kasa** është një platformë për biznese në Kosovë: arka/shitja (POS), produktet dhe shërbimet, stoku,
+raportet, printeri termik me Bluetooth dhe fiskalizimi në ATK (SEF). Një kod i vetëm që punon si:
+- **faqe web / PWA** (shfletuesi),
+- **program për Windows** (.exe, Electron),
+- **aplikacion Android** (APK + Play Store) dhe **iPhone/iPad** (App Store), me Capacitor.
 
 Një aplikacion dhe një databazë për shumë biznese (multi-tenant). Çdo biznes ka një **lloj** që zgjidhet kur
 krijohet dhe **nuk ndryshohet më**:
@@ -23,7 +26,26 @@ ndryshojnë sipas llojit (regjistri te `src/lib/business.ts`).
 - TanStack Query për leximin/ruajtjen; kopje lokale (offline) për arkën
 - PWA (vite-plugin-pwa)
 - Printimi: Web Bluetooth + ESC/POS; rezervë `window.print()` 80mm
-- Deploy: Vercel (nga GitHub)
+- Deploy: Vercel (nga GitHub) për web-in
+- **Windows:** Electron + electron-builder (instalues NSIS `.exe`), përditësim automatik me electron-updater nga
+  GitHub Releases. Chromium-i i Electron-it lejon Web Bluetooth (me `select-bluetooth-device`) dhe Web Serial/USB.
+- **Android / iOS:** Capacitor (`android/`, `ios/`), Bluetooth me `@capacitor-community/bluetooth-le`. iOS ndërtohet
+  në Mac me llogari Apple Developer.
+
+## Aplikacionet që shkarkohen (SEF)
+ATK kërkon që SEF të instalohet në pajisje, ta mbajë çelësin privat të sigurt dhe të përditësohet. Prandaj:
+- Pjesa që varet nga pajisja kalon përmes një shtrese të vetme `src/lib/device/` me tri zbatime
+  (`web`, `electron`, `capacitor`) dhe zgjedhje automatike:
+  - **çelësi i ATK-së:** web → WebCrypto jo i eksportueshëm + IndexedDB; Windows → DPAPI/safeStorage i Electron-it;
+    Android → Keystore; iOS → Keychain/Secure Enclave. Çelësi nuk del kurrë nga pajisja.
+  - **printeri:** Web Bluetooth (web/Windows), BLE plugin (Android/iOS), USB/Serial (Windows).
+  - **ruajtja offline e enkriptuar** e kuponëve.
+  - **ID e pajisjes** (lidhja me arkën dhe POS ID-në e ATK-së).
+- Kodi i ndërfaqes është i njëjti; asnjë `if (electron)` jashtë `src/lib/device/`.
+- Faqja e internetit ka `/shkarko`: Windows (.exe nga GitHub Releases), Android (Play Store + APK), iPhone (App
+  Store) dhe "Përdore në shfletues".
+- Versioni i aplikacionit (`package.json`) shfaqet te Cilësimet dhe dërgohet me çdo kupon fiskal; çdo version i ri
+  që prek fiskalizimin njoftohet te ATK para publikimit.
 
 ## Rolet dhe qasja
 - **Admini i platformës** (tabela `platform_admins`): sheh të gjitha bizneset te `/platforma`, krijon biznes të ri
@@ -92,6 +114,7 @@ ndryshojnë sipas llojit (regjistri te `src/lib/business.ts`).
 | `/tavolinat` | vetëm Restorant |
 | `/cilesimet` | Cilësimet |
 | `/platforma` | vetëm admini i platformës |
+| `/shkarko` | publike: shkarkimi për Windows, Android, iPhone |
 | fatura e printuar | Fatura.png (80mm / 58mm) |
 
 ## Rregullat e biznesit
@@ -131,7 +154,9 @@ src/
   app/ (router, layout: Sidebar, TabBar, AuthGuard, nav)
   features/{landing,auth,platform,dashboard,pos,products,stock,reports,settings,salon,boutique,pharmacy,restaurant}/
   components/ui/ (Button, Input, Select, Card, Badge, Table, Tabs, Toggle, Dialog)
-  lib/{supabase.ts, money.ts, vat.ts, business.ts, offlineCache.ts, printer/, fiscal/}
+  lib/{supabase.ts, money.ts, vat.ts, business.ts, offlineCache.ts, printer/, fiscal/, device/}
+electron/           – procesi kryesor i Windows (main.ts, preload.ts), pa logjikë biznesi
+android/ ios/       – projektet e Capacitor (gjenerohen me `npx cap add`)
   types/database.ts
 supabase/
   schema.sql        – skema e plotë për një projekt të ri (ekzekutohet një herë)
