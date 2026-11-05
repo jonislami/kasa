@@ -1,4 +1,5 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { lazy, Suspense, type ReactNode } from 'react'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useAuth } from './AuthProvider'
 import { FullScreenLoader, RequireBusiness, RequireManager, RequirePlatformAdmin, RequireType } from './AuthGuard'
 import { AppLayout } from './layout/AppLayout'
@@ -6,16 +7,26 @@ import { LandingPage } from '@/features/landing/LandingPage'
 import { DownloadPage } from '@/features/download/DownloadPage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
-import { PlatformPage } from '@/features/platform/PlatformPage'
 import { ComingSoon } from '@/features/ComingSoon'
 import { useBusiness } from './AuthProvider'
-import { businessType, isManagerRole } from '@/lib/business'
+import { isManagerRole } from '@/lib/business'
 import { supabaseConfigured } from '@/lib/supabase'
+
+const PlatformPage = lazy(() => import('@/features/platform/PlatformPage').then((m) => ({ default: m.PlatformPage })))
+const ProductsPage = lazy(() => import('@/features/products/ProductsPage').then((m) => ({ default: m.ProductsPage })))
+
+function Lazy({ children }: { children: ReactNode }) {
+  return <Suspense fallback={<FullScreenLoader />}>{children}</Suspense>
+}
 
 /** "/" – visitors see the website, signed-in users their panel. */
 function Home() {
   const { status, ctx } = useAuth()
-  if (!supabaseConfigured || status === 'anonymous') return <LandingPage />
+  const { pathname } = useLocation()
+  if (!supabaseConfigured || status === 'anonymous') {
+    // Only "/" itself is the public website; inner screens ask for login.
+    return pathname === '/' ? <LandingPage /> : <Navigate to="/login" replace state={{ from: pathname }} />
+  }
   if (status === 'loading') return <FullScreenLoader />
   if (ctx?.is_platform_admin && !ctx.profile) return <Navigate to="/platforma" replace />
   return (
@@ -23,11 +34,6 @@ function Home() {
       <AppLayout />
     </RequireBusiness>
   )
-}
-
-function CatalogSoon() {
-  const { business } = useBusiness()
-  return <ComingSoon title={businessType(business.type).terms.catalog} phase="Faza 2 – Katalogu" />
 }
 
 function WorkSoon() {
@@ -54,7 +60,9 @@ export function AppRoutes() {
         path="/platforma"
         element={
           <RequirePlatformAdmin>
-            <PlatformPage />
+            <Lazy>
+              <PlatformPage />
+            </Lazy>
           </RequirePlatformAdmin>
         }
       />
@@ -68,7 +76,9 @@ export function AppRoutes() {
           path="produktet"
           element={
             <RequireManager>
-              <CatalogSoon />
+              <Lazy>
+                <ProductsPage />
+              </Lazy>
             </RequireManager>
           }
         />

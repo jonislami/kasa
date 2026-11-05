@@ -29,6 +29,8 @@ export interface BusinessTypeInfo {
     item: string // singular
     items: string // plural
     worker: string // what a worker is called
+    newItem: string // "Produkt i ri"
+    itemOf: string // "produktit" (Emri i …)
   }
 }
 
@@ -40,7 +42,7 @@ export const BUSINESS_TYPES: Record<BusinessType, BusinessTypeInfo> = {
     description: 'Barkod, stok, furnitorë',
     icon: ShoppingBasket,
     modules: ['barcode', 'weight', 'stock'],
-    terms: { catalog: 'Produktet', item: 'produkt', items: 'produkte', worker: 'Arkëtar' },
+    terms: { catalog: 'Produktet', item: 'produkt', items: 'produkte', worker: 'Arkëtar', newItem: 'Produkt i ri', itemOf: 'produktit' },
   },
   restaurant: {
     code: 'restaurant',
@@ -49,7 +51,7 @@ export const BUSINESS_TYPES: Record<BusinessType, BusinessTypeInfo> = {
     description: 'Tavolina, kuzhinë',
     icon: Coffee,
     modules: ['tables', 'kitchen', 'recipes', 'stock'],
-    terms: { catalog: 'Menuja', item: 'artikull', items: 'artikuj', worker: 'Kamarier' },
+    terms: { catalog: 'Menuja', item: 'artikull', items: 'artikuj', worker: 'Kamarier', newItem: 'Artikull i ri', itemOf: 'artikullit' },
   },
   pharmacy: {
     code: 'pharmacy',
@@ -58,7 +60,7 @@ export const BUSINESS_TYPES: Record<BusinessType, BusinessTypeInfo> = {
     description: 'Seri, afat skadimi',
     icon: Pill,
     modules: ['barcode', 'lots', 'stock'],
-    terms: { catalog: 'Barnat', item: 'barnë', items: 'barna', worker: 'Farmacist' },
+    terms: { catalog: 'Barnat', item: 'bar', items: 'barna', worker: 'Farmacist', newItem: 'Bar i ri', itemOf: 'barit' },
   },
   boutique: {
     code: 'boutique',
@@ -67,7 +69,7 @@ export const BUSINESS_TYPES: Record<BusinessType, BusinessTypeInfo> = {
     description: 'Madhësi, ngjyra',
     icon: Shirt,
     modules: ['barcode', 'variants', 'stock'],
-    terms: { catalog: 'Artikujt', item: 'artikull', items: 'artikuj', worker: 'Shitës' },
+    terms: { catalog: 'Artikujt', item: 'artikull', items: 'artikuj', worker: 'Shitës', newItem: 'Artikull i ri', itemOf: 'artikullit' },
   },
   salon: {
     code: 'salon',
@@ -76,7 +78,7 @@ export const BUSINESS_TYPES: Record<BusinessType, BusinessTypeInfo> = {
     description: 'Termine, punëtorë',
     icon: Scissors,
     modules: ['appointments', 'commission'],
-    terms: { catalog: 'Shërbimet', item: 'shërbim', items: 'shërbime', worker: 'Punëtor' },
+    terms: { catalog: 'Shërbimet', item: 'shërbim', items: 'shërbime', worker: 'Punëtor', newItem: 'Shërbim i ri', itemOf: 'shërbimit' },
   },
 }
 

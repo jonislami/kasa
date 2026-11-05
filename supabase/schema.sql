@@ -1,6 +1,7 @@
 -- =====================================================================
 -- Kasa – full schema for a NEW Supabase project (run once, in SQL Editor).
 -- Later changes go to supabase/migrations/, one file per change.
+-- NEW project: run this file, then every file in supabase/migrations/ in order (0001, 0002, …).
 --
 -- Rules:
 --   * every business table: business_id uuid not null default current_business_id()
