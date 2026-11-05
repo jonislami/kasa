@@ -10,7 +10,9 @@ kohë; ndalu pas çdo faze që ta kontrollojë përdoruesi.
 2. Tailwind, React Router, @supabase/supabase-js, @tanstack/react-query, lucide-react, vite-plugin-pwa.
 3. Tokenat, shkronja Inter, rregullat e telefonit (pa zmadhim, safe-area, 16px input).
 4. Komponentët `components/ui/`: Button, Input, Select, Card, Badge, Table, Tabs, Toggle, Dialog.
-5. Layout: Sidebar (desktop) dhe TabBar (telefon), menuja sipas llojit të biznesit dhe rolit.
+5. Layout: Sidebar (desktop) dhe TabBar (telefon), menuja sipas llojit të biznesit dhe rolit – **dy panele të
+   ndara**: paneli i adminit (gjithçka) dhe paneli i punëtorit (vetëm arka/shërbimet dhe puna e vet), të kufizuara
+   edhe në databazë me RLS.
 6. `supabase/schema.sql` – bazë e pastër:
    - `businesses` (emri, lloji `business_type` i pandryshueshëm, aktiv, numëratori i faturave, të dhënat fiskale),
    - `profiles` (roli, `business_id`), `platform_admins`, `current_business_id()`, `is_manager()`, `is_platform_admin()`,
@@ -34,8 +36,10 @@ shitjet të pandryshueshme, **anulimi** dhe **kthimi** me referencë, radha offl
 Hyrjet e mallit (draft → `confirm_stock_entry`), furnitorët, lëvizjet, inventarizimi, paralajmërimet e stokit.
 
 ## Faza 5 – Paneli dhe raportet
-Shitjet ditore, grafiku 7 ditë / muaj / vit, më të shiturat, fitimi, TVSH sipas normës, sipas arkëtarit,
+Shitjet ditore, grafiku 7 ditë / muaj / vit, më të shiturat, fitimi, TVSH sipas normës, sipas punëtorit,
 lista e faturave, regjistri i veprimeve, eksport Excel/CSV/PDF.
+**Puna e punëtorëve** (`/puna`): admini zgjedh punëtorin dhe periudhën dhe sheh shitjet, shërbimet, faturat,
+anulimet/kthimet, terminet, komisionin dhe orët e hyrjes/daljes; punëtori sheh vetëm punën e vet të sotme.
 
 ## Faza 6 – Cilësimet, printeri, fatura
 Të dhënat e biznesit (NUI, nr. TVSH, adresa), arkat, përdoruesit dhe PIN-et (`pin-login`), printeri Bluetooth

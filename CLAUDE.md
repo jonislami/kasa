@@ -51,9 +51,19 @@ ATK kërkon që SEF të instalohet në pajisje, ta mbajë çelësin privat të s
 - **Admini i platformës** (tabela `platform_admins`): sheh të gjitha bizneset te `/platforma`, krijon biznes të ri
   bashkë me llogarinë e pronarit (email + fjalëkalim) përmes Edge Function `platform-admin`, çaktivizon biznese,
   vendos fjalëkalim të ri për pronarin. Nuk sheh të dhënat e brendshme të bizneseve të tjera.
-- Brenda biznesit: `admin` (pronari), `manager`, `cashier`. Arkëtari sheh vetëm Arkën (dhe Terminet te salloni) dhe
-  cilësimet e printerit; **nuk sheh çmimet e blerjes dhe fitimin**.
-- Arkëtarët hyjnë me **PIN 4-shifror** (Edge Function `pin-login`, bcrypt, bllokim pas 5 gabimeve). Pajisja lidhet
+- Brenda biznesit: `admin` (pronari), `manager`, `worker` (punëtori: arkëtar, kamarier, berber, farmacist…).
+- **Çdo biznes ka dy panele të ndara:**
+  - **Paneli i adminit** (admin/manager): sheh gjithçka të biznesit – shtimin dhe ndryshimin e produkteve/shërbimeve
+    dhe çmimeve, stokun, raportet, fitimin, përdoruesit, cilësimet – dhe **punën e çdo punëtori**: shitjet dhe
+    shërbimet që ka kryer, faturat, anulimet/kthimet, terminet, komisionin, orët e hyrjes/daljes, sipas ditës ose
+    periudhës (faqja `/puna`).
+  - **Paneli i punëtorit**: vetëm sa i duhet për të kryer punën – arka/shitja (ose porositë te restoranti, terminet e
+    veta te salloni), lista e punës së vet të sotme (shitjet/shërbimet, totali, komisioni i vet), printeri.
+    **Nuk shton e nuk ndryshon produkte, çmime apo stok**, nuk sheh çmimet e blerjes, fitimin, raportet e biznesit
+    as punën e punëtorëve të tjerë. Anulimi/kthimi kërkon miratimin e adminit (PIN i menaxherit).
+  - Kufizimet zbatohen në databazë (RLS + RPC), jo vetëm duke fshehur butonat.
+- Çdo shitje, rresht fature, termin dhe veprim ruan `worker_id`, që admini ta shohë punën për punëtor.
+- Punëtorët hyjnë me **PIN 4-shifror** (Edge Function `pin-login`, bcrypt, bllokim pas 5 gabimeve). Pajisja lidhet
   me biznesin kur menaxheri hyn njëherë me email.
 
 ## Siguria e të dhënave (e detyrueshme)
@@ -109,7 +119,8 @@ ATK kërkon që SEF të instalohet në pajisje, ta mbajë çelësin privat të s
 | `/arka` | Arka / Shitja |
 | `/produktet` | Produktet / Menuja / Barnat / Artikujt / Shërbimet (sipas llojit) |
 | `/stoku` | Hyrjet, historiku, lëvizjet, inventarizimi, furnitorët |
-| `/raportet` | Raportet |
+| `/raportet` | Raportet (admin) |
+| `/puna` | admin: puna e çdo punëtori; punëtori: puna e vet e sotme |
 | `/terminet` | vetëm Sallon |
 | `/tavolinat` | vetëm Restorant |
 | `/cilesimet` | Cilësimet |
