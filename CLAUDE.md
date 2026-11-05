@@ -1,0 +1,152 @@
+# Kasa – udhëzime për Claude Code
+
+**Kasa** është një platformë web për biznese në Kosovë: arka/shitja (POS), produktet dhe shërbimet, stoku,
+raportet, printeri termik me Bluetooth dhe fiskalizimi në ATK. Punon në kompjuter, tablet dhe telefon (PWA).
+
+Një aplikacion dhe një databazë për shumë biznese (multi-tenant). Çdo biznes ka një **lloj** që zgjidhet kur
+krijohet dhe **nuk ndryshohet më**:
+
+| Lloji | Kodi | Çka e dallon |
+|---|---|---|
+| Market | `market` | barkod, peshë (kg), stok |
+| Kafiterie / Restorant | `restaurant` | tavolina, porosi, kuzhinë/bar, receta |
+| Barnatore | `pharmacy` | seri (lot) + afat skadimi, FEFO |
+| Butik / Veshje & Këpucë | `boutique` | variante (madhësi × ngjyrë), etiketa |
+| Sallon / Shërbime | `salon` | shërbime pa stok, punëtorë me komision, termine |
+
+Dizajni, përdoruesit/PIN-et, arka, printeri, raportet dhe fiskalizimi janë të përbashkëta; modulet dhe termat
+ndryshojnë sipas llojit (regjistri te `src/lib/business.ts`).
+
+## Stack-u
+- Vite + React 18 + TypeScript (strict), Tailwind CSS, React Router
+- Supabase: Auth, Postgres, RLS, RPC (funksione SQL), Edge Functions – klienti `@supabase/supabase-js`
+- TanStack Query për leximin/ruajtjen; kopje lokale (offline) për arkën
+- PWA (vite-plugin-pwa)
+- Printimi: Web Bluetooth + ESC/POS; rezervë `window.print()` 80mm
+- Deploy: Vercel (nga GitHub)
+
+## Rolet dhe qasja
+- **Admini i platformës** (tabela `platform_admins`): sheh të gjitha bizneset te `/platforma`, krijon biznes të ri
+  bashkë me llogarinë e pronarit (email + fjalëkalim) përmes Edge Function `platform-admin`, çaktivizon biznese,
+  vendos fjalëkalim të ri për pronarin. Nuk sheh të dhënat e brendshme të bizneseve të tjera.
+- Brenda biznesit: `admin` (pronari), `manager`, `cashier`. Arkëtari sheh vetëm Arkën (dhe Terminet te salloni) dhe
+  cilësimet e printerit; **nuk sheh çmimet e blerjes dhe fitimin**.
+- Arkëtarët hyjnë me **PIN 4-shifror** (Edge Function `pin-login`, bcrypt, bllokim pas 5 gabimeve). Pajisja lidhet
+  me biznesin kur menaxheri hyn njëherë me email.
+
+## Siguria e të dhënave (e detyrueshme)
+- Çdo tabelë e biznesit ka `business_id uuid not null default current_business_id()` dhe RLS
+  `business_id = current_business_id()`. Asnjë tabelë pa RLS.
+- `current_business_id()` kthen biznesin e përdoruesit vetëm nëse biznesi është aktiv.
+- Stoku, shitjet, anulimet dhe kthimet ndryshojnë **vetëm përmes RPC** (`security definer`) që kontrollojnë
+  biznesin dhe shkruajnë `stock_movements`.
+- Shitjet janë **të pandryshueshme**: pa UPDATE/DELETE nga klienti; korrigjimi bëhet me kupon anulimi/kthimi që
+  i referohet origjinalit.
+- `service_role` përdoret vetëm brenda Edge Functions, asnjëherë në klient.
+- Regjistri i veprimeve (`audit_log`, vetëm-shtim): hyrje, shitje, anulim, kthim, ndryshim çmimi/cilësimesh.
+
+## Dizajni (burimi i së vërtetës)
+- `design/screenshots/*.png` dhe `design/html/*.html` – pamjet e marketit (arka, produktet, stoku, cilësimet,
+  login, fatura). I njëjti stil vlen për të gjitha llojet; ekranet e reja ndërtohen me të njëjtët komponentë.
+  Ktheji në React + Tailwind, mos e kopjo HTML-në.
+- Ekranet `M-*` janë për telefon (390px). Një aplikacion responsive: nën `md` (768px) menuja poshtë (tab bar),
+  mbi `md` sidebar i errët.
+- Të dhënat në dizajn janë shembuj.
+
+### Tokenat (`tailwind.config.ts`)
+| Emri | Vlera | Përdorimi |
+|---|---|---|
+| brand-900 | #10241B | sidebar, header i errët |
+| brand-800 | #1B3A2C | hover në sidebar |
+| brand-600 | #0E6B4E | butoni kryesor, linqe, aktive |
+| brand-400 | #3FBF86 | logo |
+| brand-100 | #E3F1EA | sfond aktiv |
+| ink | #14201A | teksti kryesor |
+| muted | #56645C | teksti dytësor |
+| line | #E2E7E3 | kufijtë e kartave |
+| field | #CBD5CE | kufijtë e input-eve |
+| bg | #F4F6F3 | sfondi i faqes |
+| warn-700 / warn-100 | #9A3412 / #FFEDE0 | stok kritik, gabime |
+| amber-700 / amber-100 | #854D0E / #FEF3C7 | stok i ulët, paralajmërime |
+| bt-600 | #1D4ED8 | butonat e Bluetooth |
+
+- Shkronja: Inter (400/500/600/700); fatura: IBM Plex Mono. Shifrat: `tabular-nums`.
+- Radius: kartat 14px, butonat/input 10–12px. Lartësia minimale e butonave 44px. Ikonat: lucide-react (stroke 2).
+
+### Telefoni (mësime nga versioni i parë)
+- Viewport pa zmadhim (`maximum-scale=1`), input-et 16px nën `md`, `touch-action: manipulation`,
+  `overscroll-behavior: none`, `overflow-x: clip` (jo `hidden`, që `sticky` të punojë).
+- Shirit i errët fiks pas orës/baterisë (`env(safe-area-inset-top)`), përmbajtja fillon poshtë tij.
+- iPhone/Safari nuk ka Web Bluetooth: mesazh i qartë + printim nga shfletuesi.
+
+## Rrugët
+| Rruga | Ekrani |
+|---|---|
+| `/` | pa hyrje: faqja e internetit (prezantimi + "Hyr"); me hyrje: Paneli |
+| `/login` | email+fjalëkalim (pronar/menaxher) ose PIN (arkëtar) |
+| `/arka` | Arka / Shitja |
+| `/produktet` | Produktet / Menuja / Barnat / Artikujt / Shërbimet (sipas llojit) |
+| `/stoku` | Hyrjet, historiku, lëvizjet, inventarizimi, furnitorët |
+| `/raportet` | Raportet |
+| `/terminet` | vetëm Sallon |
+| `/tavolinat` | vetëm Restorant |
+| `/cilesimet` | Cilësimet |
+| `/platforma` | vetëm admini i platformës |
+| fatura e printuar | Fatura.png (80mm / 58mm) |
+
+## Rregullat e biznesit
+- Valuta EUR, 2 decimale. Çmimet e shitjes **me TVSH të përfshirë**. Baza = bruto / (1 + norma).
+- Normat dhe shkronjat sipas ATK-së: **E = 18%, D = 8%, C = 0%, A = e liruar**. TVSH llogaritet një herë për
+  normë mbi shumën bruto të asaj norme (si në faturë). Fatura shfaq ndarjen sipas normës.
+- Marzha = (çmimi i shitjes − çmimi i blerjes) / çmimi i shitjes.
+- Stok i ulët: `stock <= min_stock` (vetëm kur `min_stock > 0`); kritik: `stock <= min_stock / 2`.
+  Shërbimet nuk kanë stok dhe nuk dalin në paralajmërime.
+- Njësitë: copë, kg, pako, litër (kg lejon 3 decimale); lidhen me kodet e ATK-së.
+- Numri i faturës: për biznes, rritet automatikisht (rresht i kyçur në `businesses`), shfaqet si `#00487`;
+  plus numri ditor. Shitjet offline marrin numër të përkohshëm `OFF-…` dhe çelës idempotence (`client_id`).
+- Pagesat: kesh, kartelë, të kombinuara; kusuri. Zbritje për artikull dhe për nëntotal.
+- Kuponi fiskal: deri në Fazën e fiskalizimit fatura shënohet "Kupon jo-fiskal"; struktura e të dhënave
+  ndërtohet që në fillim sipas ATK-së (shih `docs/atk/`).
+
+## Fiskalizimi (ATK – SEF)
+- Referencat: `docs/atk/` (Udhëzimi Administrativ 01/2026, specifikat nga github.com/fiskalizimi,
+  `models.proto`, faqet e kërkesave teknike, shënimet).
+- Çdo arkë: çelës ECDSA P-256 **jo i eksportueshëm** në pajisje (WebCrypto + IndexedDB), certifikatë nga ATK.
+- PosCoupon + CitizenCoupon → protobuf → base64 → SHA-256 → ECDSA → dërgim **para printimit**; QR =
+  `base64(CitizenCoupon)|nënshkrimi`. Çmimet ×10000, totalet ×100.
+- Offline: kuponi nënshkruhet në pajisje, shënohet "OFFLINE", radha e enkriptuar, dërgim brenda 48 orëve.
+- Kodi i fiskalizimit vetëm te `src/lib/fiscal/`.
+
+## Printeri Bluetooth
+- `src/lib/printer/`: `navigator.bluetooth.requestDevice` me shërbimet e zakonshme
+  (p.sh. `000018f0-0000-1000-8000-00805f9b34fb`) dhe `optionalServices`; karakteristika me write; copa
+  20–512 bytes (opsion në cilësime).
+- ESC/POS: init, align, bold, total me madhësi të dyfishtë, vija, QR (`GS ( k`), prerja, sirtari.
+  58mm = 32 karaktere/rresht, 80mm = 48. Shkronjat ë/ç: CP1250/CP852 ose zëvendësim – opsion.
+- Mbaj mend pajisjen e fundit; rilidhje me `navigator.bluetooth.getDevices()`.
+
+## Struktura
+```
+src/
+  app/ (router, layout: Sidebar, TabBar, AuthGuard, nav)
+  features/{landing,auth,platform,dashboard,pos,products,stock,reports,settings,salon,boutique,pharmacy,restaurant}/
+  components/ui/ (Button, Input, Select, Card, Badge, Table, Tabs, Toggle, Dialog)
+  lib/{supabase.ts, money.ts, vat.ts, business.ts, offlineCache.ts, printer/, fiscal/}
+  types/database.ts
+supabase/
+  schema.sql        – skema e plotë për një projekt të ri (ekzekutohet një herë)
+  migrations/       – ndryshimet pas fillimit, një skedar për çdo ndryshim
+  functions/        – Edge Functions (pin-login, platform-admin, më vonë fiscal-relay)
+```
+
+## Mënyra e punës
+- Puno në faza (shih `PROMPT.md`). Pas çdo faze: `npm run build` pa gabime, pastaj trego çfarë u bë.
+- **Git:** `main` = versioni live në Vercel. Puna e papërfunduar shkon në degë të veçantë; në `main` vetëm kur
+  përdoruesi e miraton.
+- **Supabase:** SQL-në dhe Edge Functions i vendos vetë përdoruesi. Sa herë duhet shtuar diçka në Supabase,
+  shkruaje qartë nën titullin **"Duhet ta bësh ti në Supabase"**, me skedarin dhe hapat. Para se t'i japësh,
+  provoje migrimin në databazë brenda një transaksioni që anulohet.
+- Ndryshimet e skemës duhet të mos e prishin versionin live: klienti punon edhe para, edhe pas migrimit
+  (rezervë kur mungon kolona/funksioni: kodet 42703, PGRST202, 42P01/PGRST205).
+- Çelësat në `.env.local` (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`), asnjëherë në kod.
+- Teksti i ndërfaqes në shqip (më vonë edhe serbisht); kodi, emrat e variablave dhe komentet në anglisht.

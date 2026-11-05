@@ -1,0 +1,1655 @@
+ 
+Republika e Kosovës 
+Republika Kosova - Republic of Kosovo 
+Qeveria - Vlada – Government 
+Ministria e Financave - Ministarstvo Finansija - Ministry of 
+Finance 
+ 
+ 
+ 
+ 
+UDHËZIM ADMINISTRATIV (MF) NR. 01/2026 PËR SHFRYTËZIMIN E PAJISJEVE 
+ELEKTRONIKE FISKALE, SISTEMEVE FISKALE DHE SOFTUERËVE 
+ELEKTRONIKË FISKALË 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+Ministri i Financave,  
+Në mbështetje të nenit 7, paragrafit 5 dhe nenit 121 të Ligjit Nr. 08/L -257 për Administrimin e 
+Procedurave Tatimor e si dhe nenit 11 të Ligjit Nr. 08/L -117 për Qeverinë e Republikës së 
+Kosovës, 
+ 
+Miraton: 
+ 
+UDHËZIM ADMINISTRATIV (MF) NR. 01/2026 PËR SHFRYTËZIMIN E PAJISJEVE 
+ELEKTRONIKE FISKALE, SISTEMEVE FISKALE DHE SOFTUERËVE 
+ELEKTRONIKË FISKALË 
+ 
+ 
+KAPITULLI I  
+DISPOZITAT E PËRGJITHSHME 
+ 
+Neni 1 
+Qëllimi 
+1. Me këtë Udhëzim Administrativ (në tekstin e mëtejmë: Udhëzimi) përcaktohen rregullat , 
+kriteret, detyrimet, afatet dhe procedurat që duhet të ndiqen, lidhur me lëshimin e kuponëve 
+fiskalë gjatë realizimit të veprimtarive ekono mike në territorin e Republikës së Kosovës, si 
+dhe mjetet për nxitjen e konsumatorëve për marrje të kuponit fiskal. 
+ 
+2. Dispozitat e këtij Udhëzimi garantojnë vijimësinë e funksionimit të Pajisjeve Elektronike 
+Fiskale/Sistemeve Fiskale, përpara hyrjes në fuqi të këtij Udhëzimi. 
+ 
+Neni 2 
+Fushëveprimi 
+ 
+Dispozitat e këtij Udhëzimi janë të obligueshme për Administratën Tatimore të Kosovës, 
+tatimpaguesit, prodhuesit/zhvilluesit dhe mirëmbajtësit e Pajisjeve Elektronike Fiskale/Sistemeve 
+Fiskale dhe Softuerëve Elektronikë Fiskalë, si dhe për të gjitha subjektet e tjera që përfshihen në 
+procesin e fiskalizimit dhe çështjet tjera të përfshira në këtë Udhëzim. 
+ 
+ 
+ 
+ 
+Neni 3 
+Shkurtesat 
+1. Për qëllime të këtij Udhëzimi, shkurtesat në vijim kanë këto kuptime: 
+ 
+1.1. 2D Barkodi – Nënshkrimi elektronik i gjeneruar përmes kriptimit të të dhënave 
+në Dokumentin Fiskal; 
+ 
+1.2. AF – Arkë Fiskale; 
+ 
+1.3. API – Ndërfaqja e Programimit të Aplikacioneve (Application Programming 
+Interface); 
+ 
+1.4. ARBK –Agjencia për Regjistrimin e Bizneseve në Kosovë; 
+ 
+1.5. ATK –Administrata Tatimore e Kosovës; 
+ 
+1.6. DAF –Divizioni për Arka Fiskale; 
+ 
+1.7. DF – Dokumenti Fiskal, si çdo dokument i cili shtypet nga PEF/SF/SEF, që 
+nënshkruhet me 2D Barkode të kriptuar nga Serveri i ATK-së; 
+ 
+1.8. E-POS - Pikë elektronike e shitjes; 
+ 
+1.9. EPROM – ROM memorie e shlyeshme dhe e programueshme (Erasable 
+Programmable Read Only Memory); 
+ 
+1.10. GPRS – Standard për komunikim pa tela (General Packet Radio Service); 
+ 
+1.11. JSON – Notacioni i Objekteve JavaScript (JavaScript Object Notation); 
+ 
+1.12. KK – Kripto Kartela, mediat të sigurta për ruajtje të shifrave (certifikatë për 
+kriptim/shifrim); 
+ 
+1.13. KM – Kartela e Memories; 
+ 
+1.14. KMS – Kripto Moduli i Sigurtë, (shifrimi) i të dhënave; 
+ 
+1.15. Kodi QR  – Barkodi dydimensional i përgjigjes së shpejtë, që përdoret për të 
+aksesuar në mënyrë të thjeshtë dhe të shpejtë informacionin; 
+ 
+1.16. MF – Ministria e Financave 
+ 
+1.17. NUIKF – Numri Unik Identifikues i Kuponit Fiskal; 
+ 
+1.18. OE – Operatori Ekonomik i autorizuar për furnizim, instalim, verifikim, riparim 
+dhe mirëmbajtje të PEF/SF; 
+ 
+1.19. PC – Kompjuter personal; 
+ 
+1.20. PDF – Portable Document Format; 
+ 
+1.21. PEF/SF – Pajisje Elektronike Fiskale/Sistem Fiskal; 
+ 
+1.22. PF – Printer Fiskal; 
+ 
+1.23. PKI – Infrastruktura e Çelësit Publik (Public Key Infrastructure); 
+ 
+1.24. POS – Pikë e shitjes; 
+ 
+1.25. Protobuf – Formati i të Dhënave Protokollore (Protocol Buffers); 
+ 
+1.26. PROM – ROM i Programueshëm (Programmable Read Only Memory); 
+ 
+1.27. ROM – Memorie vetëm për lexim (Read Only Memory); 
+ 
+1.28. SEF – Softuer Elektronik Fiskal; 
+ 
+1.29. TCP/IP – Protokolli i Kontrollit të Transmetimit/Protokolli i Internetit 
+(Transmission Control Protocol/Internet Protocol); 
+ 
+1.30. TI – Teknologjia Informative; 
+ 
+1.31. TT – Terminal Tatimor; 
+ 
+1.32. VPN – Rrjet Privat Virtual; 
+ 
+1.33. ZHKE – Zhurnali Kontrollues Elektronik (kartelë e memories); dhe 
+ 
+1.34. ZHSEF – Zhvilluesi i Softuerit Elektronik Fiskal. 
+ 
+ 
+Neni 4 
+Përkufizimet 
+1. Për qëllime të këtij Udhëzimi përkufizimet e mëposhtme kanë këto kuptime dhe përmbajtje: 
+1.1. Pajisja Elektronike Fiskale / Sistem i Fiskal - pajisja ose sistemi elektronik i 
+kompjuterizuar, që shfrytëzohet për të lëshuar kuponët e shitjes për transaksionet 
+me pakicë. PEF/SF përfshin ato pajisje elektronike, si: arkat fiskale, printerët fiskalë 
+dhe sistemet fiskale për veprimtari të veçanta . Një  PEF/SF përfshin memorien 
+fiskale, memorien punuese ditore, softuerin mbështetës (firmware), orën e saktë, 
+mekanizmin e shtypjes së kuponit, si dhe njësitë kontrolluese lidhë se për tastiera, 
+TT, KMS, KM, ZHKE, ekrane dhe nën-njësitë e transmetimit të të dhënave hyrëse 
+dhe dalëse (sikurse janë skanerët), të cilat sigurohen të jenë pjesë e sistemit. Të 
+gjithë komponentët e ofruar dhe funksionet e PEF /SF aprovohen ose autorizohen 
+nga DAF-i, ndërsa softueri mbështetës (firmware) ose mekanizmi tjetër verifikues i 
+funksioneve të PEF/SF, duhet të jetë në dispozicion të ATK-së; 
+1.2. Softueri Elektronik Fiskal – është softuer elektronik i zhvilluar për të regjistruar 
+dhe raportuar transaksionet financiare të tatimpaguesve në mënyrë të automatizua r 
+dhe në përputhje me legjislacionin tatimor në Republikën e Kosovës. Përmes SEF-
+it regjistrohen furnizimet e mallrave dhe /ose shërbimeve për transaksionet me 
+pakicë, gjenerohet kuponi fiskal dhe raportohen të dhënat në kohë reale në Sistemin 
+Informativ të ATK-së; 
+1.3. Arka F iskale - është regjistrues elektronik i furnizimit të mallrave dhe /ose 
+shërbimeve, arka që janë të pajisur a posaçërisht me memorie fiskale, pllombë 
+fiskale dhe mundësi e pajisje tjera, ashtu siç përkufizohen në specifikacionet teknike 
+dhe funksionale të publikuara nga ATK-ja; 
+1.4. Memoria Fiskale - është një medium i ruajtur dhe i sigurt, është nën -njësi në të 
+cilën të gjitha informatat fiskale ruhen dhe mbahen të pandryshueshme në PEF/SF. 
+Memoria Fiskale është e programuar si memorie vetëm e le xueshme (read -only, 
+EPROM, ROM i programuar i shlyeshëm, ose PROM, ROM i programuar). Qarqet 
+e memories fiskale mbrohen në kuti të veçantë e cila është e vendosur në një pjesë 
+të dizanjuar veçanërisht, që është pjesë integrale e shtëpizës së PEF -së. Në kuadër 
+të Memories Fiskale përfshihet edhe komponenti (karkasa) që regjistron çdo heqje 
+apo intervenim në mbështjellësin (shtëpizën) e PEF/SF;  
+1.5. Rrjeti i të Dhënave Fiskale - është rrjeti komunikues ndërmjet PEF /SF dhe 
+Sistemit Informativ të ATK-së, që ka të b ëjë me transmetimin e kriptuar të të 
+dhënave fiskale përmes KMS-së; 
+1.6. Divizioni për Arka Fiskale – Divizion i  themeluar në kuadër të strukturës 
+organizative të ATK-së, përgjegjës për menaxhimin e PEF/SF/SEF, për të rishikuar 
+dhe miratuar PEF/SF, operatorët ekonomik për furnizim, instalim dhe mirëmbajtje 
+të PEF/SF dhe teknikët e autorizuar për PEF/SF; 
+1.7. Konsumatori i fundit – nënkupton personin fizik jo afarist, i cili mallrat dhe/ose 
+shërbimet e blera i përdor për nevoja personale. Po ashtu, konsumator i fundit mund 
+të konsiderohet edhe personi fizik afarist, personi juridik, ortakëria dhe grupimi apo 
+shoqëria e personave duke përfshirë konzorciumet dhe autoritet publike , të cilët 
+mallrat dhe/ose shërbimet e blera i përdor për nevoja biznesore dhe jo për qëllim të 
+rishitjes apo zhvillimin e aktiviteteve të tyre; 
+1.8. Kuponi fiskal – është dokument në të cilin regjistrohet furnizimi i mallrave dhe/ose 
+shërbimeve në pikën e shitjes për konsumatorin e fundit . Kuponi fiskal gjenerohet 
+nga PEF/SF/SEF, i cili shtypet në letër apo mund të dërgohet në mënyrë elektronike 
+për furnizime të veçanta (furnizime elektronike) . Karakteristikat e veçanta t ë 
+kuponit fiskal , janë: logo fiskale  dhe nënshkrimi me 2D barkod (Kodi QR). 
+Karakteristikat e tjera përcaktohen në dokumentin e kërkesave specifike teknike dhe 
+funksionale për PEF/SF/SEF; 
+1.9.   Softueri mbështetës (Firmware) - Softuer i sendërtuar për funksionim të PEF-së; 
+1.10. Karkasa - Memorie apo hapësirë e veçantë në kuadër të memories fiskale  për 
+regjistrimin e ndërhyrjeve në shtëpizën e PEF/SF; 
+1.11. Sistemi Informativ i ATK-së - Sistemi kompjuterik i cili pranon/dërgon komanda 
+dhe të dhëna të koduara në drejtim të sistemeve për evidentimin e qarkullimit; 
+1.12. Abonimi - Tarifë periodike që mundëson transferimin e të dhënave nga PEF/SF në 
+Sistemin Informativ të ATK-së përmes  teknologjisë GPRS; 
+1.13. Internet -  Rrjet global i ndërlidhur i kompjuterëve dhe pajisjeve të tjera 
+elektronike, që përdor protokollet standarde të komunikimit (si TCP/IP) , për të 
+shkëmbyer informacione; dhe 
+1.14. Mënyra e pagesës - Pagesa përmes parasë së gatshme (kesh), debit kartelës, kredit 
+kartelës, llogarisë bankare, çekut, SMS-it, apo ndonjë instrumenti tjetër ekuivalent 
+të pagesës. 
+ 
+2. Termat e tjera të përdorura në këtë Udhëzim kanë kuptimin e njëjtë sikurse në Ligjin në fuqi 
+për Administrimin e Procedurave Tatimore (në tekstin e mëtejmë: Ligji). 
+ 
+ 
+KAPITULLI II 
+DETYRIMI PËR TË LËSHUAR KUPONË FISKALË 
+ 
+Neni 5 
+Personat që duhet të lëshojnë kuponë fiskalë 
+1. Të gjithë personat që bëjnë furnizime të mallrave dhe/ose shërbimeve për konsumatorin e 
+fundit, pavarësisht mënyrës së pagesës, lëshojnë kuponë fiskalë për ato furnizime. 
+ 
+2. Pavarësisht paragrafit 1 të këtij neni, personi i cili ofron falas furnizime të mallrave dhe/ose 
+shërbimeve për konsumatorin e fundit, për qëllime tatimore, obligohet të lëshoj ë kupon 
+fiskal për atë furnizim. 
+ 
+3. Të gjithë personat që bëjnë furnizime të mallrave dhe/ose shërbimeve për personin fizik 
+afarist, personin juridik dhe personat  e tjerë (përveç konsumatorit të fundit kur duhet t’i 
+lëshojnë kupon  fiskal) përdorin faturën tatimore, ashtu siç është përcaktuar me 
+legjislacionin tatimor në fuqi. 
+ 
+4. Ministri përkatës për Financa,  me vendim të veçantë mund të përjashtojë nga detyrimi për 
+lëshimin e kuponit fiskal edhe ndonjë kategori tjetër të tatimpaguesve. 
+ 
+ 
+ 
+Neni 6 
+Momenti i lëshimit të kuponit fiskal 
+1. Printimi dhe dhënia e kuponit fiskal për konsumatorin , është i detyrueshëm në momentin  e 
+pagesës së furnizimit me mall dhe/ose shërbim.  
+ 
+2. Printimi dhe dhënia e kuponit fiskal për konsumatorin , është i detyrueshëm edhe për çdo 
+pagesë të bërë përpara kryerjes së furnizimit të mallrave , ose përpara përfundimit të 
+furnizimit të shërbimeve.  
+ 
+3. Në përjashtim të paragrafit 1 të këtij neni, në rastet  kur ndodh furnizimi me mall dhe/ose 
+shërbim, mirëpo  pagesa bëhet më vonë (me afat pagese) sipas dakordimit të dy palëve, 
+printimi dhe dhënia e kuponit fiskal për konsumatorin është i detyrueshëm në momentin e 
+furnizimit të mallit dhe/ose shërbimit. 
+ 
+ 
+Neni 7 
+Përmbajtja e kuponit fiskal 
+1. Kuponi fiskal përpilohet duke u bazuar në kërkesat specifike dhe teknike për PEF/SF/SEF , 
+të aprovuara nga Drejtori i Përgjithshëm i ATK-së. 
+ 
+2. Kuponi fiskal përmban, të paktën, informacionet e mëposhtme: 
+ 
+2.1. Numrin Unik Identifikues/Numrin Fiskal të tatimpaguesit; 
+ 
+2.2. Numrin e TVSH-së, nëse tatimpaguesi është i regjistruar për TVSH; 
+ 
+2.3. Emrin e tatimpaguesit; 
+ 
+2.4. Adresën e tatimpaguesit; 
+ 
+2.5. Emrin e personit (operatorit) dhe numrin identifikues të tij; 
+ 
+2.6. Së paku një rresht për secilin artikull: 
+ 
+2.6.1. sasia;  
+ 
+2.6.2. çmimi për njësi;  
+ 
+2.6.3. emrin e artikullit apo shërbimit;  
+ 
+2.6.4. vlerën e sasisë së furnizimit;  
+ 
+2.6.5. normën përkatëse të TVSH-së të shënuar me një shkronjë specifike për çdo 
+artikull të furnizuar;  
+ 
+2.7. Përqindjen (apo vlerën) e zbritjes dhe shumën e saj me shenjën minus , apo 
+përqindjen (vlerën) e rritjes, nëse ka për artikull; 
+ 
+2.8. Shumën e nën-totalit, përqindjen (apo vlerën) e zbritjes mbi të dhe shumën e saj me 
+shenjën minus, përqindjen (apo vlerën) tepricë, nëse ka; 
+ 
+2.9. Shumën totale për pagesë; 
+ 
+2.10. Shumën e paguar në mënyra të ndryshme  të pagesës, si: para të gatshme ( kesh), 
+kredit kartelë, debit kartelë, llogari bankare, kupon shpërblyes (vauçer), çek, SMS, 
+etj.; 
+ 
+2.11. Shumën e tatimit sipas normave të ndryshme aktive tatimore; 
+ 
+2.12. Shumën totale pa tatim; 
+ 
+2.13. Datën, orën dhe minutat e lëshimit; 
+ 
+2.14. Numrin identifikues të PEF/SF/SEF; 
+ 
+2.15. Numrin ditor të kuponit fiskal; 
+ 
+2.16. Kodin QR; 
+ 
+2.17. Numrin Unik Identifikues të Kuponit Fiskal (për verifikim të kuponit fiskal); 
+ 
+2.18. Logon – RKS;  
+ 
+2.19. Tipin e kuponit (i rregullt, anulim, kthim malli, etj.); dhe 
+ 
+2.20. Tekstin e lirë, etj. 
+ 
+ 
+  
+KAPITULLI III  
+PAJISJET ELEKTRONIKE FISKALE DHE SISTEMET FISKALE 
+ 
+Neni 8 
+Personat e obliguar për instalim të Pajisjeve Elektronike Fiskale dhe/ose Sistemeve 
+Fiskale 
+1. Personat e obliguar për pajisje me PEF/SF, janë tatimpaguesit e përcaktuar në nenin 5, të këtij 
+Udhëzimi, që ushtrojnë veprimtari ekonomike në shitjen me pakicë, në ofrimin e shërbimeve në 
+vende apo njësi të hapura për publikun apo çdo lloj veprimtarie tjetër të ngjashme, janë të 
+obliguar që të shfrytëzo jnë PEF/SF dhe pajis jet e tjera të obligueshme për regjistrimin dhe 
+vërtetimin e furnizimit të mallrave dhe/ose shërbimeve. 
+ 
+2. Nga paragrafi 1 i këtij neni, nuk obligohen kategoritë si vijon: 
+ 
+2.1. Ndërmarrjet që ofrojnë shërbime të energjisë, shërbime komunale, shërbime të 
+telekomunikacionit, shërbime bankare dhe/apo financiare (duke përfshirë 
+shërbimet e  transferit të parave, shërbimet  e  institucioneve mikrofinanciare, 
+shërbimet e lizingut financiar), si dhe ndërmarrjet e tjera publike që për mallrat e 
+shitura dhe/ose shërbimet e ofruara, i u paguhet kompensimi nga konsumatorët  
+duke e bazuar në faturat e përllogaritjes së konsumit përmes instrumenteve matëse 
+(energjia elektrike, ngrohja, uji, telefoni), ose ndonjë mënyre tjetër e faturimit, siç 
+janë kompanitë e menaxhimit të mbeturinave, etj.; 
+ 
+2.2. Veprimtaritë e institucioneve qeveritare publike, por duke mos u kufizuar vetëm 
+në krijimet artistike dhe letrare, aktivitetet e arteve teatrale, aktivitetet  e 
+institucioneve artistike, veprimtaritë e bibliotekave, arkivave dhe muzeut; 
+ 
+2.3. Personi (biznesi) i cili ofron furnizime të mallrave dhe/ose shërbime vetëm për 
+personin e përfshirë në aktivitet ekonomik (biznes). Ky person obligohet të lëshojë 
+faturë tatimore, ashtu siç është përcaktuar me legjislacionin tatimor në fuqi. 
+ 
+3. Personi, të cilit i referohet obligimi i përcaktuar me paragrafin 2 të këtij neni dhe i  cili 
+njëkohësisht kryen edhe aktivitete që nuk janë të përjashtuara ose të liruara nga detyrimi i 
+regjistrimit përmes PEF/SF dhe të transferimit të të dhënave përmes terminalit t e Sistemi 
+Informativ i ATK-së, në kuptim të paragrafit 1 të këtij neni, është i obliguar që çdo qarkullim 
+individual gjatë kryerjes së këtyre aktiviteteve , ta regjistrojë përmes PEF/SF, si dhe t’i 
+transferojë të dhënat përmes terminalit në server të ATK-së. 
+ 
+4. Në rast të ndonjë ndryshimi në shfrytëzimin e PEF/SF (lokacionit, shitjes, transferit, 
+çregjistrimit, ndërprerjes së aktivitetit ekonomik apo të ngjashme), shfrytëzuesi i PEF/SF duhet 
+të njoftojë ATK-në, në pajtueshmëri me procedurat e përcaktuara nga ATK-ja. 
+ 
+ 
+5. Ministri përkatës për Financa, përveç përjashtimeve të përcaktuara në paragrafin 2 të këtij 
+neni, me vendim të veçantë mund të përjashtoj ë nga detyrimi për instalim të PEF/SF edhe 
+ndonjë kategori tjetër të tatimpaguesve. 
+ 
+ 
+ 
+Neni 9 
+Llojet e Pajisjeve Elektronike Fiskale dhe Sistemeve Fiskale 
+ 
+1. Përshkrimi i përgjithshëm i PEF/SF, është si vijon: 
+ 
+1.1. Modeli me PEF përfshin Arkën Fiskale (AF), Printerin Fiskal (PF) si dhe sistemet 
+elektronike të pikave të shitjes, pajisjet e lidhura, pajisjet e transmetimit të të 
+dhënave dhe sistemet që përfshijnë: 
+ 
+1.1.1. Arka Fiskale lloji jo portabël “stand - alone” apo i pavarur dhe portabël 
+i pavarur, dhe sistemet e Pikave  Elektronike të Shitjes për regjistrimin dhe 
+ruajtjen e të dhënave në përputhje me vendimin e Drejtorit të Përgjithshëm të 
+ATK–së; 
+ 
+1.1.2. Arka Fiskale ka memorie fiskale të paprekshme dhe memorien punuese; dhe 
+ 
+1.1.3. Të dhënat që regjistrohen dhe ruhen në memorie (memorien punuese dhe në 
+memorien fiskale), lidhen me mallrat e shitura dhe shërbimet e ofruara për 
+konsumatorët, duke shtypur raportin fiskal, siç kërkohet me legjislacionin në 
+fuqi; 
+ 
+1.2. Printeri F iskal është PEF me të gjitha karakteristikat përkatëse dhe me naxhohet 
+përmes një softueri aplikativ dhe mund të përdoret si: 
+ 
+1.2.1. POS i bazuar në kompjuter personal (PC); 
+ 
+1.2.2. Sistem fiskal të  veçantë elektronik me memorie fiskale për regjistrimin e 
+qarkullimit të shitjeve me pakicë për: 
+ 
+1.2.2.1. Derivatet e naftës nëpërmes pajisjeve/sistemeve llogaritëse për 
+shitjen e karburanteve të lëngshme (pompat e gazit,  benzinës, dhe  
+të ngjashme); 
+ 
+1.2.2.2. Shërbimet e autolarjeve, parkingjeve, transportit, dhe shërbime tjera; 
+dhe 
+ 
+1.2.2.3. Kategori të veçanta që mund të përcaktohen më vonë me vendim nga 
+Drejtori i Përgjithshëm i ATK-së. 
+ 
+ 
+ 
+Neni 10 
+Përkufizimi i llojeve të PEF 
+ 
+1. PEF janë pajisje me memorie fiskale dhe memorie pune, në të cilat regjistrohen të dhënat e 
+furnizimeve të mallrave dhe /ose shërbimeve për klientët në mënyrë adekuate , ashtu që të 
+mundësohet printimi, si dhe të mundësohet transferi dhe procesimi i mëtejmë i këtyre të 
+dhënave, sikur që është përshkruar në këtë Udhëzim. 
+ 
+2. PEF duhet të funksionojnë në mënyrë të tillë që të dhënat e përgjithshme të ruhen për secilin 
+transaksion në memorien fiskale dhe kartelë të memories, duke mos lejuar ndonjë ndryshim 
+apo manipulim të të dhënave para, gjatë dhe pas ruajtjes në memorien fiskale. Këto të dhëna 
+transmetohen në ATK si përmbledhje ditore. 
+ 
+3. PEF duhet të kenë parametër të posaçëm për  të rregulluar statusin e shumë gjuhësisë, 
+konform legjislacionit në fuqi për përdorimin e gjuhëve zyrtare në Republikën e Kosovës. 
+ 
+4. Ekzistojnë këto lloje të PEF të autorizuara që të operojnë në Kosovë, të cilat mund të  
+klasifikohen si më poshtë: 
+ 
+4.1.  Arka Fiskale portabël; 
+ 
+4.2. Arka Fiskale joportabël; dhe 
+ 
+4.3. Sistem Elektronik i pikave të shitjes, me komponentët e autorizuar si printerët fiskal,  
+pajisjet elektronike  fiskale për t’u instaluar dhe integruar me pikën ekzistuese të  
+sistemeve të shitjes. 
+ 
+ 
+ 
+Neni 11 
+Arka Fiskale portabël dhe jo portabël 
+1. Arka Fiskale portabël dhe joportabël përmes së cilës regjistrohet qarkullimi i mallrave dhe/ose 
+shërbimeve, duhet të ketë këto funksione: 
+ 
+1.1. Arka Fiskale portabël duhet të ketë dimensione të përshtatshme  dhe të ketë të 
+instaluara bateritë që rimbushen, të cilat mundësojnë të printohen së paku dhjetë 
+mijë ( 10000) linja pa rimbushje  të baterive. Një AF e tillë nuk është e 
+obligueshme të ketë monitor për konsumatorë; 
+ 
+1.2. Arka Fiskale portabël duhet të ketë të inkorporuar TT-në apo interfejs për lidhjen 
+dhe shfrytëzimin e TT-së të jashtëm; 
+ 
+1.3 Arka Fiskale joportabël duhet të ketë një monitor  për konsumatorë, interfejs për 
+të kontrolluar tërheqjen  e të hollave të gatshme dhe së paku një interfejs për 
+lidhjen me skanerin e barkodit; 
+ 
+1.4 Çdo PEF duhet të ketë një numër serik të veçantë i cili është i regjistruar në ATK, 
+si dhe numër serik të memories fiskale. 
+ 
+2. Arka Fiskale mund të lidhet me një kompjuter, qoftë direkt apo nëpërmjet rrjetit kompjuterik. 
+ 
+3. Asnjë softuer kompjuterik nuk lejohet të ndryshojë të dhënat në memorien fiskale. 
+ 
+4. Arka Fiskale duhet të ketë programin (softuerin) me një modul fiskal të pavarur të mbrojtur nga 
+ndryshimi dhe fshirjet, duke shfrytëzuar funksionet standarde për regjistrim të mallrave dhe/ose 
+shërbimeve, ekranin dhe menaxhimin e futjes së të dhënave në memorien fiskale. 
+ 
+5. Arka Fiskale duhet të ketë mundësinë e shtypjes së kuponit  fiskal, për furnizimet e bëra për 
+secilin klient. 
+ 
+6. Arka Fiskale duhet të ketë mundësinë e regjistrimit të të gjitha transaksioneve ditore, e mbajtur 
+në një ditar elektronik të llogarive sikurse është paraparë në këtë Udhëzim. 
+ 
+7. Arka Fiskale duhet të ketë mundësinë e shtypjes së raporteve menaxheriale pa fshirje , si: 
+“raportin X” (paratë e gatshme në sirtar), “raportin Z” (raporti ditor i mbylljes), si dhe raporte 
+të ndryshme periodike. 
+ 
+8. Arka Fiskale duhet të ketë mundësinë e anulimit t ë artikujve në kupon para shtypjes, derisa 
+kthimi i artikujve bëhet përmes kuponit të kthimit/anulimit (storno). 
+ 
+9. Një AF mund të ketë edhe pajisje shtesë sikurse: pajisjet e skenimit të barkodit dhe terminalin 
+për pagesa me kredit kartelë, ose pajisje të tjera që mund të autorizohen me vendim të veçantë 
+nga Drejtori i Përgjithshëm i ATK-së. 
+ 
+ 
+ 
+Neni 12 
+Sistemi i pikës së shitjes me printer fiskal si printer të kuponëve 
+1. Sistemet fiskale të pikave të shitjes duhet të përdorin vetëm printerin fiskal. Në një sistem  të 
+tillë, printeri fiskal duhet të lidhet me njësinë e kontrollit në POS. Është tipike dhe shumë më 
+fleksibile që njësia e kontrollit të jetë një kompjuter që udhëhiqet nga programi softuerik. 
+ 
+2. Çdo printer fiskal në sistem, duhet të ketë një numër serik unik, i cili është i regjistruar në ATK, 
+si dhe numër serik të memories fiskale. 
+ 
+3. Sistemet e pikave të shitjes (POS) janë të ndryshm e, specifikacionet funksionale dhe teknike 
+parashikojnë të njëjtat detyrime dhe obligime me t ë cilat ngarkohen  shfrytëzuesit e Arkave 
+Fiskale, por nuk mandatojnë mënyrën se si përmbushen këto obligime. 
+ 
+Neni 13 
+Softueri dhe hardueri i sendërtuar 
+1. Hardueri i integruar përfshin mikroprocesorin ose mikrokontroll erin, si dhe komponentët e 
+tjerë. Softueri i sendërtuar i quajtur “firmware”, vepron si sistem i menaxhimit të të dhënave 
+fiskale dhe gjithashtu vepron si program kontrollues për pajisjen. 
+ 
+2. Softueri dhe hardueri, që përdoret nga shfrytëzuesi i PEF-it, duhet që të transferojë të dhëna të 
+kriptuara fiskale në formatin e kërkuar nëpërmes KMS dhe TT në server të ATK-së. 
+ 
+3. Instalimi i çdo PEF-i, nga personi i autorizuar, bëhet në mënyrë që të pamundësojë ndryshimet 
+në softuerin dhe harduerin origjinal të autorizuar. Kur të jenë instaluar softueri dhe hardueri, çdo 
+modifikim bëhet vetëm nëpërmjet teknikut të autorizuar. 
+ 
+ 
+Neni 14 
+Softueri i jashtëm i aplikacionit i përfshirë në Sistemet Fiskale të POS 
+1. Softueri i jashtëm i aplikacionit i përfshirë në sistemin fiskal të POS-it, mbështet pjesën tjetër 
+të funksioneve sistemore për menaxhim të të dhënave (kontabiliteti dhe të ngjashme). 
+ 
+2. Në rastet ku softueri i aplikacionit është i ndërlidhur me përmbajtjen e kuponëve fiskalë, personi 
+i autorizuar që e bën  instalimin, së bashku me shfrytëzuesin, si dhe personin e autorizuar për 
+softuerin e POS-it, ofrojnë konfirmim me shkrim për ATK-në se softueri funksionon si duhet në 
+pajtueshmëri me specifikacionet dhe kushtet për sigurinë e të dhënave. Testimi, i cili d uhet të 
+bëhet para se PEF -i të vendoset në funksion, duhet të konfirmojë se softueri i cili gjeneron 
+kuponët fiskalë operon plotësisht në pajtueshmëri me kërkesat ligjore tatimore për librat dhe 
+regjistrat, me kërkesat e këtij Udhëzimi, me specifikacionet teknike dhe funksionale të aprovuara 
+nga Drejtori i Përgjithshëm i ATK-së, si  dhe që nuk cenon në asnjë mënyrë integritetin e të 
+dhënave fiskale të PEF-it. 
+ 
+3. Testimi që konfirmon me shkrim funksionimin normal të softuerit, përfshin: 
+ 
+3.1. Detajet e plota mbi prodhuesin e softuerit të aplikacionit; 
+ 
+3.2. Emrin e saktë të shpërndarjes dhe numrin e versionit aktual të softuerit; 
+ 
+3.3. Një kopje të versionit demonstrues të softuerit specifik të ruajtur në një format dhe 
+medium përkatës; dhe 
+ 
+3.4. Të dhënat e plota mbi kërkesat e softuerit dhe kushtet operuese në kompjuter; 
+ 
+4. Funksionimin e PEF-it me një sistem të ndërlidhur që shfr ytëzon softuerin e pa autorizuar të 
+aplikacionit për lëshimin e kuponit fiskal, që është i ndaluar dhe i nënshtrohet ndëshkimeve siç 
+parashikohet në legjislacionin përkatës; 
+ 
+5. Specifikacionet funksionale dhe teknike të softuerëve në rastet e veçanta, përcaktohet me  
+vendim nga Drejtori i Përgjithshëm i ATK-së. 
+ 
+ 
+ 
+Neni 15 
+Rrjeti i komunikimit 
+1. Për transmetimin elektronik të të dhënave fiskale në intervalet  e paracaktuara krijohet rrjeti 
+i komunikimit ndërmjet PEF/SF dhe ATK-së nëpërmes KMS-së dhe TT-së. 
+2. Sistemi Informativ i ATK -së në çdo kohë mund të vendosë komunikimin (on demand) me 
+KMS-në e PEF/SF dhe kërkon: 
+ 
+2.1. Raport ditor; 
+ 
+2.2. Totalin e kuponëve fiskalë; dhe 
+ 
+2.3. Informata të tjera të kërkuara nga ATK-ja. 
+3. Rrjetet e të dhënave fiskale të komunikimit ndërmjet PEF/SF dhe ATK-së, duhet të jenë: 
+ 
+3.1. Të sigurta – të gjitha lidhjet duhet të operojnë në Rrjete Virtuale Private (VPN), 
+ndërmjet TT-së dhe sistemit kompjuterik të ATK-së, të lidhura përmes internetit. 
+Ofruesit e telekomunikimit janë përgjegjës për zbatimin dhe mirëmbajtjen e 
+topologjisë dhe operimit të VPN-së përmes teknologjisë GPRS. Ata e mbështesin 
+çdo TT me SIM kartelë dhe me një adresë dinamike. TT-ja duhet të jetë e 
+konfiguruar që të punojë vetëm me një PEF/SF; 
+ 
+3.2. Komunikuese - Pajisja Elektronike Fiskale komunikon me Sistemin Informativ të  
+ATK-së, brenda një orari në kohën e caktuar nga ana e Sistemit Informativ të ATK-
+së, përmes KMS-së. Gjithashtu, Sistemi Informativ i ATK-së mundet në çdo kohë 
+të vendosë komunikimin me KMS-në e PEF/SF; 
+ 
+3.3. Efikase – nuk lejohet trafik apo rrugëtim i panevojshëm, nëse nuk është përcaktuar 
+nga Sistemi Informativ i  ATK-së. Trafiku i rrjetit caktohet në atë mënyrë që të 
+zvogëlojë shpenzimet për  ATK-në dhe tatimpaguesin, duke përmbushur 
+njëkohësisht të gjitha kërkesat e specifikuara; dhe 
+ 
+3.4. Kompatibile – PEF/SF dhe pajisjet transmetuese duhet të jenë në pajtueshmëri me 
+të gjitha protokollet dhe standardet e komunikimit. Komunikimi me Sistemin 
+Informativ të ATK-së përmes TCP/IP socket , sipas kërkesave specifike teknike 
+dhe funksionale të kërkuara nga ATK-ja. 
+ 
+4. Ofruesit e telekomunikimit duhet të jenë të autorizuar nga autoriteti kompetent që të ofrojnë 
+shërbime për bartjen e të dhënave fiskale nga PEF/SF në sistemin e ATK-së, sipas kërkesave 
+specifike teknike dhe funksionale të përcaktuara nga ATK-ja. 
+ 
+ 
+Neni 16 
+Sistemi informativ i integruar në ATK 
+1. Sistemi i TI-së në ATK, duhet të pranojë të dhënat fiskale të kriptuara (të shifruara) dhe të 
+dhënat e tjera të transmetuara nga PEF/SF, nga të gjithë tatimpagues it e lidhur me sistemin e 
+ATK-së. 
+2. Sistemi i TI-së, informatat e pranuara nga PEF/SF do t’i procesojë në mënyrë automatike  për 
+secilin tatimpagues. 
+3. Shpeshtësia e transmetimit të të dhënave nga PEF/SF në Sistemin Informativ të ATK-së, 
+përcaktohet me vendim nga Drejtori i Përgjithshëm i ATK-së. 
+ 
+ 
+Neni 17 
+Autorizimet për Operatorët Ekonomikë 
+1. Operatorët Ekonomikë të autorizuar sipas dispozitave ligjore para hyrjes në fuqi të këtij 
+Udhëzimi, konsiderohen të jenë të autorizuar për  zhvillimin e procesit të fiskalizimit të 
+tatimpaguesve me PEF/SF, deri në përmbylljen e periudhës kalimtare, apo deri në periudhën e 
+përcaktuar me një vendim tjetër nga Ministri përkatës për Financa. 
+ 
+2. Operatori Ekonomik obligohet të përkrahë me pjesë rezervë dhe të mirëmbajë PEF/SF, të cilat 
+janë në shfrytëzim nga tatimpagues it për të paktën  pesë (5) vite nga data e fundit e shitjes së 
+PEF/SF në tregun e Kosovës, deri në përmbylljen e periudhës kalimtare, apo deri në periudhën 
+e përcaktuar me një vendim tjetër nga Ministri përkatës për Financa. 
+ 
+3. Në qoftë se një model i PEF/SF nuk ricertifikohet nga OE-ja për çfarëdo arsye, atëherë ky model 
+nuk ka të drejtë të shitet nga OE-ja dhe nga tatimpaguesi si PEF/SF. 
+4. Pajisja Elektronike Fiskale e cila për pesë (5) vite është përdorur nga i njëjti tatimpagues dhe e 
+cila më tutje nuk përkrahet me pjesë rezervë dhe mbështetje nga OE-ja, nuk mund të përdoret 
+si PEF/SF.  
+5. Përjashtim nga paragrafi 4 i këtij neni, PEF/SF e cila edhe pas pesë (5) viteve të përdorimit, i 
+përmbush kërkesat specifike teknike dhe funksionale , si dhe përkrahet nga O E-ja, mund të 
+përdoret si PEF /SF deri në përmbylljen e periudhës kalimtare, apo deri në periudhën e 
+përcaktuar me një vendim tjetër nga Ministri përkatës për Financa. 
+ 
+ 
+ 
+ 
+Neni 18 
+Aplikimi për Operator Ekonomik dhe PEF/SF 
+1. Çdo prodhues, importues ose montues i PEF/SF, mund të bëhet operator i autorizuar i PEF/SF, 
+për një apo më shumë modele specifike në çdo kohë, sipas kritereve të publikuara nga ATK-ja. 
+2. Kërkesa për të qenë OE, dorëzohet në çdo kohë, mirëpo  shitja e pajisjeve elektronike fiskale 
+mund të bëhet vetëm pas aprovimit nga DAF-i. 
+3. Certifikimi i PEF /SF bëhet nga institutet, laboratorët apo institucionet kompetente dhe të 
+autorizuara, për testimin dhe verifikimin e përmbushjes së kërkesave  specifike teknike dhe 
+funksionale, të përcaktuara nga ATK-ja. 
+4. Autorizimi i instituteve, laboratorëve apo institucioneve kompetente, bëhet në bazë të kritereve 
+të përcaktuara nga ATK-ja. 
+5. Instalimi dhe mirëmbajtja e PEF/SF, bëhet vetëm nga personeli i OE-së, që ka shitur PEF/SF. 
+6. Divizioni për Arka Fiskale  është përgjegjës të kërkojë dhe të verifikoj ë çdo informatë dhe të 
+dhënë, duke përfshirë: dëshminë e përvojës, solvencën, kredibilitetin, personelin teknik dhe të 
+dhëna të ngjashme. 
+7. Divizioni për Arka Fiskale  brenda tridhjetë (30) ditësh nga data e pranimit të kërkesave dhe 
+informatave, vendos për dhënien apo jo të autorizimit për OE-në. 
+8. Divizioni për Arka Fiskale është përgjegjës të tërheqë dhe anulojë autorizimin e dhënë, në rast 
+se: 
+ 
+8.1. Përdoruesit ballafaqohen me probleme serioze; 
+8.2. Operatori Ekonomik e ka shkelur ndonjë dispozitë të këtij apo ndonjë akti tjetër 
+nënligjor, të lëshuar lidhur me PEF/SF; 
+8.3. Në rastet kur OE-ja nuk arrin të certifikojë së paku një model të PEF/SF nga organi  
+kompetent, brenda dymbëdhjetë (12) muajve nga data e marrjes së autorizimit nga 
+ATK-ja; 
+8.4. Operatori Ekonomik nuk dorëzon deklaratat tatimore ose nuk kryen në kohë 
+obligimet tatimore edhe pas kërkesës së dërguar nga ATK-ja;  
+8.5. Në rast të ndryshimit të kushteve sipas të cilave është dhënë autorizimi, të cilat nuk 
+përditësohen nga Operatori Ekonomik. 
+ 
+9. Kundër vendimit të DAF-it mund të ushtrohet ankesë në Komisionin e veçantë për shqyrtimin 
+e ankesave, të themeluar nga Administrata Tatimore e Kosovës. 
+10. Testet e kohëpaskohshme, sipas kërkesës, nëpërmjet kontrollit për operim të duhur të 
+pajisjeve, mund të bëhen nga DAF-i, nga institucionet, laboratorët apo organizatat e caktuara 
+të autorizuara prej këtij Divizioni, për t’u siguruar që pas aprovimit fillestar PEF/SF, vazhdojnë 
+të përmbushin kërkesat përkatëse dhe të veprojnë me besueshmëri edhe pas instalimit në pika t 
+e shitjes. 
+11. Administrata Tatimore e Kosovës ka të drejtën e rishikimit të çdo instalimi të PEF/SF të bërë 
+nga çdo operator, për t’u siguruar se ajo punon në përputhje me kërkesat dhe specifikacionet e 
+vendosura. Përveç kësaj, ATK-ja ka të drejtën të rishikojë regjistrimet e çdo operatori , për t’u 
+siguruar se ai i përmbush të gjitha kërkesat e vendosura në lidhje me autorizimin e tyre , për të 
+vepruar si furnizues, instalues dhe mirëmbajtës i PEF/SF. 
+12. Administrata Tatimore e Kosovës, me aprovimin e Ministrit përkatës për Financa, përcakton 
+kushtet bazë, procedurat që duhet të ndiqen dhe dokumentet që duhet të dorëzohen , kur të 
+kërkohet autorizimi për furn izim, instalim dhe mir ëmbajtje të PEF/SF.  Në këtë dokument , 
+përveç kërkesave tjera që ATK-ja mund t’i vendosë, duhet të kërkojë që: 
+ 
+12.1. Operatori Ekonomik të garantojë punën me një garanci bankare, apo forma të tjera 
+të garantimit të pranueshëm; 
+ 
+12.2. Operatori Ekonomik duhet të rilicencohet çdo katër (4) vite nga ATK-ja;  
+ 
+12.3. Operatori Ekonomik duhet që modelet e PEF/SF të certifikuara, t’i ricertifikojë 
+nga organi kompetent çdo katër (4) vite; 
+ 
+12.4. Për çdo mosrespektim të kushteve të parashtruara nga ATK-ja, gjatë kryerjes së 
+aktiviteteve të veta në shitjen, instalimin dhe riparimin e PEF /SF, Operatori 
+Ekonomik është përgjegjës direkt dhe do t’i nënshtrohe t përgjegjësive ligjore të 
+parapara me legjislacionin e aplikueshëm; 
+ 
+12.5. Për nevoja të kontrollit nga ATK -ja, OE-ja përgatit një manual përdorimi për 
+qasjen dhe nxjerrjen e informatave nga PEF/SF; 
+ 
+12.6. Operatori Ekonomik, duhet të sigurojë se telekomunikimi, ndërmjet PEF/SF dhe 
+sistemit informativ të ATK -së, të  realizohet nëpërmjet  një operatori të 
+telekomunikimit të autorizuar nga autoriteti kompetent; 
+ 
+12.7. Operatori Ekonomik i autorizuar lidh marrëveshje me operatorin e autorizuar për 
+telekomunikim e cila përmban, ndër të tjera, garancinë e duhur për mundësi të 
+vazhdueshme telekomunikimi ndërmjet PEF/SF dhe sistemit informativ në ATK; 
+dhe 
+ 
+12.8. Marrëveshja e OE-së me kompaninë telekomunikuese të autorizuar, duhet të 
+parashikojë zëvendësimin apo riparimin e garantuar të pajisjeve  të veta të 
+komunikimit (modem dhe pajisje të ngjashme), brenda dyzetetetë (48) orëve, pasi 
+të jetë raportuar problemi;  
+ 
+13. Operatori Ekonomik është i obliguar që t’u përgjigjet të gjitha kërkesave të tatimpaguesve , 
+për t’u pajisur me PEF/SF në afatin më së largu pesëmbëdhjetë (15) ditë nga data e paraqitjes 
+së kërkesës për furnizim me pajisje.  
+ 
+14. Operatori Ekonomik është i obliguar të bëjë intervenimet dhe mënjanimin e mosfunksionimit 
+të PEF/SF, sipas kërkesave të tatimpaguesve dhe ATK -së për servisim dhe mirëmbajtje të 
+PEF/SF, në afat jo më të largët se dyzetetetë (48) orë nga momenti i paraqitjes së problemit. 
+ 
+ 
+ 
+Neni 19 
+Lëshimi i numrit unik të certifikimit të PEF/SF 
+Pas kalimit me sukses të të gjitha testeve për modelin specifik të pajisjes, DAF-i i jep OE-së 
+një numër unik të mbrojtur të autorizimit. Ky autorizim, është dëshmi për blerësit se ai 
+Operatori Ekonomik  është i autorizuar për të shitur atë pajisje dhe se i plotëson të gjitha 
+specifikimet dhe kushtet për shfrytëzim si PEF/SF. DAF-i në bazë të rezultateve në testim duhet 
+të nxjerrë vendim për certifikim të pajisjeve përkatëse brenda pesëmbëdhjetë (15) ditësh pas 
+pranimit të raportit nga institutet, laboratorët apo institucionet kompetente dhe të autorizuara 
+për testimin dhe verifikimin e përmbus hjes së kërkesave specifike teknike dhe funksionale të 
+përcaktuara nga ATK-ja. 
+ 
+ 
+ 
+Neni 20 
+Mirëmbajtja e të dhënave lidhur me OE, PEF/SF e instaluar dhe 
+shfrytëzuesit 
+ 
+1. Administrata Tatimore e Kosovës  mban evidencë elektronike të të dhënave, për të gjith a 
+PEF/SF e instaluara, në të cilin përfshihen: 
+ 
+1.1. identifikimi i pajisjes së instaluar, lloji i PEF/SF, numri serik i PEF/SF, numri 
+serik i memories fiskale, numri serik i KK-së, prodhuesi dhe modeli i PEF/SF 
+dhe të dhënat e tjera të përshkruara në specifikat teknike; 
+ 
+1.2. data kur është instaluar PEF/SF dhe kur është aprovuar nga ATK-ja; 
+ 
+1.3. emri, adresa dhe numri unik identifikues/numri fiskal, i shfrytëzuesit; 
+ 
+1.4. vendi  ku  është  instaluar  PEF/SF; 
+ 
+1.5. emrin e OE-së, adresën e tij, numrin unik identifikues/numrin fiskal dhe numrin 
+e TVSH-së, të personit të autorizuar; 
+ 
+1.6. numrin e autorizimit të lëshuar për OE-në, për llojin e caktuar të PEF/SF; 
+ 
+1.7. të dhënat për personat e autorizuar nga OE-ja që furnizojnë, instalojnë dhe 
+mirëmbajnë PEF/SF; 
+ 
+1.8. personat e autorizuar për të riparuar PEF/SF, ku përfshihet lloji i PEF/SF që 
+personi është i autorizuar ta riparojë, emrin dhe adresën e tij, numrin identifikues 
+të kartelës, numrin personal identifikues dhe datën e skadimit të autorizimit; dhe 
+ 
+1.9. numrin e autorizimit të lëshuar për secilin PEF/SF specifik. 
+2. Administrata Tatimore e Kosovës  mirëmban dhe freskon bazën e të dhënave për evidencën 
+elektronike. 
+ 
+Neni 21 
+Teknikët e autorizuar 
+ 
+1. Operatori Ekonomik i autorizuar, emëron teknikët që instalojnë dhe riparojnë PEF/SF, për të 
+cilat është i autorizuar t ’i shesë. Instalimi i PEF /SF të autorizuar duhet të bëhet vetëm nga 
+tekniku i caktuar. Operatori Ekonomik i autorizuar mund të kontraktojë persona të tretë që 
+nuk janë të punësuar tek , ai për të mirëmbajtur PEF/SF. Megjithatë, kjo nuk i heq OE-së 
+përgjegjësinë për të siguruar se mirëmbajtja është bërë në mënyrë korrekte dhe në përputhje 
+me procedurat e përcaktuara. 
+ 
+2. Operatori Ekonomik i autorizuar, dorëzon në DAF, emrat, adresat dhe numrat identifikues 
+personal të teknikëve, përpara se ata të jenë autorizuar për instalimin dhe riparimin e PEF/SF. 
+Operatori i autorizuar duhet të përfshijë të gjitha të dhënat e nevojshme të kompanisë dhe  të 
+dhënat personale (përfshirë këtu edhe kualifikimin teknik), si dhe dokumentin e identifikimit 
+me fotografi. 
+ 
+3. Divizioni për Arka Fiskale  shqyrton të dhënat e dorëzuara nga Operatori Ekonomik  i 
+autorizuar, si dhe mund të kërkojë sqarime të nevojshme, para lëshimit ose refuzimit të 
+autorizimit, për teknikët që instalojnë ose riparojnë PEF/SF. DAF-i mund të kërkojë:  
+ 
+3.1.  Deklaratën se individi është i autorizuar nga OE-ja dhe i certifikuar nga 
+prodhuesi për të instaluar dhe mirëmbajtur PEF/SF e caktuar; dhe 
+ 
+3.2. Listën e llojeve të PEF/SF, të cilat tekniku është i autorizuar t’i instalojë apo 
+mirëmbajë. 
+ 
+4. Pas aprovimit të teknikut, DAF-i kërkon nga institucioni përkatës , që të sigurojë kartelë 
+identifikuese me fotografi , e cila  e identifikon këtë individ  si teknik për instalim dhe 
+mirëmbajtje. Tekniku, pajiset me numrin unik identifikues i cili krahasohet me numrin 
+identifikues personal të atij/asaj në bazën e të dhënave të mbajtur nga ATK-ja, përshkruar në  
+këtë Udhëzim. 
+ 
+5. Kartela identifikuese përmban: 
+ 
+5.1. Emrin dhe mbiemrin e teknikut; 
+5.2. Numrin unik identifikues (vula); 
+5.3. Datat deri kur kartela identifikuese është e vlefshme. 
+ 
+6. Divizioni për Arka Fiskale  mund të autorizojë edhe teknikë të tjerë për të mirëmbajtur 
+PEF/SF. Personi që kërkon të autorizohet si teknik për mirëmbajtje, dorëzon kërkesë në DAF, 
+përpara se të bëjë nd onjë mirëmbajtje të PEF /SF. Kërkesa për autorizim përfshin: emrin, 
+adresën, numrin identifikues personal, historinë e punësimit, përvojën teknike dhe një 
+dokument identifikimi me fotografi. Bashkëngjitur me kërkesën, dorëzon certifikatën nga 
+Operatori Ekonomik i autorizuar se teknikisht është i aftë për të mirëmbajtur PEF/SF, kopje 
+të diplomave apo certifikatave për trajnim teknik e njohuri për PEF/SF.  
+ 
+7. Divizioni për Arka Fiskale , shqyrton kërkesën dhe merr vendim. Në rast të refuzimit të 
+kërkesës, bëhet n joftimi me shkrim për arsyet e refuzimit. Kërkesa refuzohe t vetëm nëse 
+dokumentacioni nuk është i plotë, apo kërkuesi nuk plotëson kushtet për të qenë teknik i 
+autorizuar për mirëmbajtje. Nëse aprovohet kërkesa e aplikantit si teknik për mirëmbajtje, 
+DAF-i zbaton procedurat e paragrafit 4 të këtij neni.  
+ 
+8. Vlefshmëria e autorizimit për teknikët për instalim dhe mirëmbajtje është jetë tre (3) vite. Pas 
+kësaj periudhe duhet të apliko het për vazhdim të autorizimit. Teknikët e mirëmbajtjes dhe 
+instalimit, i dorëzojnë DAF-it një kërkesë për ripërtëritje, së paku dyzetepesë (45) ditë para 
+skadimit të autorizimit ekzistues. Kërkesa për ripërtëritje, përfshin të dhënat dhe certifikatat 
+e kërkuara sipas kushteve në fuqi në kohën e ri aplikimit. Vazhdimi i autorizimit  aprovohet 
+nga DAF-i, përveç nëse ka dëshmi se tekniku ka ndonjë pengesë teknike apo ligjore për 
+instalim dhe mirëmbajtje të PEF/SF. 
+ 
+9. Nëse një teknik i autorizuar për instalim dhe mirëmbajtje të PEF/SF, ndërpret aktivitetin për 
+çfarë është i autorizuar, përpara skadimit të autorizimit, OE-ja njofton ATK -në (revokon 
+autorizimin dhe kthen kartelën identifikuese) , brenda tridhjetë (30) ditësh pas ndërprerjes së 
+aktivitetit. 
+ 
+ 
+Neni 22 
+Siguria e qasjes në brendi të PEF/SF 
+ 
+1. Siguria e qasjes në brendi të PEF /SF, mbrohet me një dado (bulon) të veçantë, e cila lidh 
+pjesën e sipërme të PEF/SF me pjesën e poshtme. Kjo dado është vënë në pjesën e dukshme 
+të kapakut të shtëpizës së PEF/SF në mënyrë që, ndërhyrja brenda PEF/SF, të jetë e pamundur 
+pa heqjen e dados (bulonit) mbrojtëse. 
+ 
+2. Vula e sigurisë - pllomba, shfrytëzohet për të vulosur dadon (bulonin) e cila nuk lejon 
+gërvishtjen dhe është bërë në atë mënyrë që e bën të pamundur heqjen pa e dëmtuar atë. 
+ 
+3. Nëse një teknik i autorizuar nga OE-ja zbulon se vula e pllombës është dëmtuar në PEF /SF, 
+tekniku duhet të lajmërojë urgjentisht rastin te njësia përkatëse në ATK. Tekniku, nuk bën 
+asnjë ndërhyrje përderisa nuk autorizohet nga ATK-ja. 
+ 
+4. Nëse i punësuari i ATK -së, identifi kon një vulë të dëmtuar, lajmëron menjëherë zyrtarin 
+përgjegjës në ATK , që të nxjerr ë nga funksioni PEF /SF nga furnizimi i rrymës dhe të mos 
+përdoret derisa të jetë ekzaminuar dhe përcaktuar se funksionon normalisht. 
+ 
+Neni 23 
+Teknikët e autorizuar - kodi kontrollues i qasjes 
+ 
+1. Hapja dhe ri pllombimi i një PEF /SF, bëhet vetëm nga tekniku i autorizuar nga DAF-i, në 
+pajtim me nenin 20 të këtij Udhëzimi. 
+ 
+2. Tekniku i autorizuar aplikon konfigurime përkatëse me një program softuerik të PEF/SF, duke 
+përdorur një algoritëm të veçantë, kod qasjeje dhe fjalëkalim. 
+ 
+Neni 24 
+Instalimi, kontrolli, mirëmbajtja e PEF/SF  
+ 
+ 
+1. Operatori Ekonomik duhet të sigurojë që secili PEF/SF i instaluar , funksionon pa asnjë 
+pengesë dhe konform kërkesave specifike teknike dhe funksionale për PEF/SF, të përcaktuara 
+nga ATK-ja. 
+ 
+2. Çdo PEF/SF duhet të shoqërohet me ditar të instalimit, kontrollit, mirëmbajtjes, të dhënë nga 
+OE-ja.  
+ 
+3. Para instalimit të PEF/SF, O E-ja duhet të informojë ATK -në për blerësin e PEF/SF, duke 
+ofruar të dhënat, si: 
+ 
+3.1. Numrin Unik Identifikues të blerësit; 
+ 
+3.2. Numrin Fiskal të blerësit (nëse nuk ka Numër Unik Identifikues);  
+ 
+3.3. Numrin Serik të PEF/SF që  instalohet; 
+ 
+3.4. Llojin e PEF/SF që  instalohet; dhe 
+ 
+3.5. Datën e pritur të instalimit.  
+ 
+4. Gjatë instalimit të PEF/SF, tekniku zhvillon testin e komunikimit për të siguruar se PEF/SF 
+është në gjendje të vendosë lidhjen komunikuese të TT -së me Sistemin Informativ të ATK-
+së.  
+ 
+5. Pas instalimit të PEF/SF, Operatori Ekonomik  raporton në mënyrë elektronike në ATK për 
+PEF/SF e/i instaluar, duke përfshirë të dhënat e faturës së shitjes, funksionalitetin e pajisjes, 
+si dhe datën e instalimit.  
+ 
+6. Operatori Ekonomik nuk duhet të programojë PEF/SF apo të ndikojë në mënyra tjera, të cilat 
+pengojnë apo bllokojnë funksionalitetin e PEF/SF në periudha apo afate të caktuara.  
+ 
+7. Tekniku i autorizuar obligohet të regjistrojë në ditar informatat e detajuara për çdo instalim, 
+kontroll, mirëmbajtje të PEF/SF, përfshirë kohë n e fillimit dhe përfundimit të procesit të 
+instalimit, kontrollit dhe mirëmbajtjes, si dhe të dhënat e përshkruara në kartelën identifikuese 
+të tij.  
+ 
+8. Pas mirëmbajtjes së PEF/SF, që ka pasur defekt, tekniku i riparimit i dorëzon ATK-së raportin 
+që përshkruan defektin, datën dhe kohën kur ka ndodhur defekti dhe datën dhe kohën kur 
+PEF/SF është kthyer në punë. 
+ 
+9. Pas instalimit, kontrollit, mirëmbajtjes të çdo PEF/SF, tekniku i autorizuar duhet të verifikojë 
+funksionalitetin e PEF/SF. 
+ 
+10. Secili PEF/SF i shitur d he instaluar, duhet t’i nënshtrohet një kontrolli të rregullt teknik në 
+baza të rregullta çdo njëzetekatër ( 24) muaj. Raporti i kontrollit të rregullt dhe çfarëdo 
+kontrolli tjetër duhet t’i dërgohet ATK-së, në formën elektronike, brenda pesë (5) ditëve, pas 
+kontrollit të kryer. Kripto Kartela, pa pasur nevojë për ndryshime, duhet të jetë funksionale 
+dhe të ruajë standardin e sigurisë së sistemit. 
+ 
+11. Shfrytëzuesi i PEF/SF, detyrohet të mbajë ditarin e përcaktuar në paragrafin 2 të këtij neni 
+dhe t’ia paraqesë ATK-së sipas kërkesës.  
+ 
+12. Çdoherë kur kërkohet nga tatimpaguesi, PEF/SF e instaluar,  duhet t’i nënshtrohet kontrollit 
+nga OE-ja, me qëllim të ofrimit të shërbimit të mirëmbajtjes dhe evitimit të mosfunksionimit 
+të pajisjes. 
+ 
+13. Operatori Ekonomik është i obliguar të bëjë intervenimet dhe mënjanimin e mosfunksionimit 
+të PEF/SF, sipas kërkesave të tatimpaguesve dhe ATK -së për servisim dhe mirëmbajtje të 
+PEF/SF, në afat jo më të largët se dyzetetetë (48) orë nga momenti i paraqitjes së problemit.  
+ 
+14. Administrata Tatimore e Kosovës  ka të drejtë të rishikojë çdo instalim, kontroll apo 
+mirëmbajtje të PEF/SF, si dhe regjistrimet në ditar, të bëra nga tekniku i autorizuar, për të 
+siguruar se instalimi, kontrolli dhe mirëmbajtja, si dhe regjistrimet, janë bërë në përputhje me 
+kërkesat dhe kushtet e përcaktuara nga ATK-ja. 
+ 
+Neni 25 
+Bartja e PEF/SF 
+ 
+1. Secili Operator Ekonomik i autorizuar mund të marrë përsipër furnizimin, instalimin dhe mirëmbajtjen 
+e PEF/SF të një OE tjetër, në rastet kur OE-ja tjetër ndërpret aktivitetin lidhur me furnizimin, 
+instalimin dhe mirëmbajtjen e PEF/SF. 
+ 
+2. Për zbatimin e paragrafit 1 të këtij neni, OE-ja duhet të posedojë marrëveshje me OE-në tjetër 
+për bartjen e të drejtave dhe përgjegjësive për furnizimin dhe instalimin e PEF/SF të mbetura 
+në stok të OE-së tjetër, si dhe mirëmbajtjen e PEF/SF të cilat janë shitur dhe instaluar nga OE-
+ja tjetër. 
+ 
+3. Për zbatimin e  paragrafëve 1 dhe 2 të këtij neni, OE-të e njoftojnë ATK-në tridhjetë (30) ditë 
+përpara. 
+ 
+4. Operatori Ekonomik i autorizuar nuk mund të ndërpres ë aktivitetin lidhur me furnizimin, 
+instalimin dhe mirëmbajtjen e PEF/SF , nëse nuk është arritur marrëveshja e përcaktuar në 
+paragrafin 2 të këtij neni. 
+ 
+5. Përjashtimisht nga paragrafi 4 i këtij neni, Operatori Ekonomik i autorizuar mund të ndërpresë 
+aktivitetin lidhur me furnizimin, instalimin dhe mirëmbajtjen e PEF/SF, nëse është plotësuar 
+zbatimi i paragrafit 2 të nenit 17 të këtij Udhëzimi.  
+ 
+ 
+ 
+ 
+ 
+Neni 26  
+Shfrytëzimi i kuponit tatimor 
+ 
+ 
+Në rast të prishjes së përkohshme  apo problemeve tjera teknike  të PEF/SF, shfrytëzuesi është i 
+detyruar të lëshojë një  kupon të shkruar tatimor për çdo shitje të bërë. ATK  miraton bllokun 
+tatimor (në formë fizike apo elektronike) , i cili përmban numrat serik ë. Për të gjith ë kuponët 
+tatimorë të lëshuar gjatë shitjes, si rezultat i prishjes apo problemeve teknike të PEF/SF, bëhet një 
+raport me shkrim. Pas evitimit të prishjes apo problemit të PEF/SF, përdoruesi menjëherë e kthen 
+atë në punë. Detajet lidhur me kuponin tatimor përcaktohen nga ATK-ja. 
+ 
+Neni 27 
+Regjimi i leximit (raporti “X”) 
+ 
+ 
+Çdo PEF /SF duhet të lejojë leximin dhe printimin e të dhënave të regjistruara në memorien 
+fiskale, nëpërmjet tastierës për një mori të raporteve statistikore, të cilat janë vetëm për qëllime 
+statistikore, e jo për qëllime tatimore. Kushtet për regjimin e leximit përcaktohen nga Drejtori i 
+Përgjithshëm i ATK- së. 
+ 
+Neni 28 
+Regjimi i mbylljes (raporti “Z”) 
+ 
+ 
+1. Çdo PE F/SF përmban kushtet e përcaktuara sipas specifikave funksionale dhe teknike të 
+përcaktuar nga ATK-ja, si vijon: 
+1.1. Përgatit mbylljen fiskale të qarkullimit ditor, printimin e raportit tatimor ditor dhe 
+të dhënat të cilat duhet të transmetohen në ATK; 
+ 
+1.2. Mundëson leximin e  përmbajtjes së memories fiskale , nëpërmjet raporteve 
+periodike tatimore në pajtueshmëri me specifikacionet e publikuara; 
+ 
+1.3. Siguron kushtet për kryerjen e verifikimit, për çdo raport tatimor ditor për qëllime 
+të kontrollit të saktësisë së funksionimit të memories fiskale; dhe 
+ 
+1.4. Ofron raporte ditore dhe raporte tjera periodike tatimore që karakterizohen me 
+titullin e raportit të shoqëruar me shenjën “Z”, si dhe të përmbajë në fund të 
+kuponit (në bold) logon fiskale dhe emërtimin “RAPORTI TATIMOR”. 
+ 
+2. Përjashtim nga paragrafi 1, nënparagrafi 1.1. i këtij neni, në rastet kur tatimpaguesi njofton 
+ATK-në për ndërprerjen e përkohshme të aktivitetit ekonomik, atëherë për periudhën e 
+ndërprerjes (pauzimit ) nuk kërkohet mbyllja fiskale e qarkullimit ditor, printimi i raportit 
+tatimor ditor dhe të dhënat të cilat duhet të transmetohen në ATK.  
+ 
+Neni 29 
+Moduli i Programimit (P) 
+ 
+1. Secili PEF/SF, përmban përveç të tjerash: 
+ 
+1.1 Mundësinë e regjistrimit në memorien fiskale të të dhënave të tatimpaguesit, të 
+cilat duhet  të  paraqiten  në  kuponin  fiskal; 
+ 
+1.2 Mundësinë e programimit së paku të katër (4) normave tatimore. Normat tatimore, 
+janë të shkruara në memorien fiskale. Kjo lejohet në momentin e instalimit ose pas 
+mbylljes së raportit tatimor ditor dhe transmetimit të të dhënave “Z” në ATK. 
+Duhet të ekzistojë mundësia për të paraqitur normat e ndryshme tatimore me 
+shkronjat prej “A” deri në “E”. Shkronja “A” nënkupton normën tatim ore të 
+përjashtuar nga TVSH-ja, ndërsa shkronjat “B” deri në “E” format e ndryshme të 
+normave tatimore të TVSH -së të parapara me Ligjin e TVSH -së. Ndryshimi i 
+normës tatimore, ndodh vetëm pasi që raporti tatimor ditor të finalizohet dhe të 
+dhënat përkatëse të jenë transmetuar në memorien fiskale relevante. Ndryshimet 
+në memorien fiskale mund të bëhen brenda përmbajtjes speciale për ndryshimin e 
+normave tatimore. Ndryshimet e normës tatimore, kryhen nga mirëmbajtësi në 
+bazë të manualit të posaçëm për ndryshimin e normave tatimore; 
+ 
+1.3 Lejimin e programimit të parametrave komunikues me rrjetën komunikuese të 
+ATK-së për transmetimin e raporteve tatimore periodike; dhe 
+ 
+1.4 Lejimin e konfigurimit dhe leximit të memories fiskale. 
+ 
+2. Drejtori i Përgjithshëm i ATK-së  nxjerrë vendim për të kufizuar dhe vendosur funksionet dhe 
+specifikacionet për regjimin programues. 
+ 
+Neni 30 
+Ditari elektronik i kuponëve fiskalë 
+ 
+1. Ditari elektronik i kuponëve fiskalë ruan dokumentet fiskale në formën elektronike, si dhe në 
+ditarin elektronik (kartelën e memories). 
+ 
+2. Drejtori i Përgjithshëm i ATK -së miraton k ërkesat dhe specifikat teknike për ditarin 
+elektronik të kuponëve fiskalë.   
+ 
+  
+KAPITULLI IV  
+SOFTUERËT ELEKTRONIKË FISKALË 
+ 
+Neni 31 
+Personat e obliguar për instalim të Softuerit Elektronik Fiskal 
+ 
+1. Personat e obliguar për instalim të SEF-it, janë si vijon: 
+ 
+1.1. Tatimpaguesit e përcaktuar në nenin 5 të këtij Udhëzimi, që ushtrojnë veprimtari 
+ekonomike, në shitjen me pakicë, në ofrimin e shërbimeve në vende apo njësi të 
+hapura për publikun , apo çdo lloj veprimtarie tjetër të ngjashme, përfshirë edhe 
+ndërmarrjet publike dhe ndërmarrjet shoqërore, janë të obliguar që të shfrytëzojnë 
+SEF-in dhe pajiset e tjera të obligueshme për regjistrimin dhe vërtetimin e 
+furnizimit të mallrave dhe/ose shërbimeve; dhe 
+ 
+1.2. Institucionet publike, të cilat për shërbimet e ofruara pranojnë pagesa kesh. 
+ 
+2. Me qëllim të zbatimit të paragrafit 1 të këtij neni, personi që lëshon kuponë fiskalë, mund të 
+testojë të dhënat e kuponit fiskal dhe procedurën e fiskalizimit. 
+3. Metodologjia e testimit të të dhënave të kuponit fiskal dhe procedurës së fiskalizimit nga 
+tatimpaguesi që lëshon kuponë fiskalë, përcaktohet nga ATK-ja. 
+4. Në rast të ndonjë ndryshimi në shfrytëzimin e SEF-it (lokacionit, shitjes, transferit, 
+çregjistrimit, ndërprerjes së aktivitetit ekonomik apo të ngjashme), shfrytëzuesi i SEF-it duhet 
+të njoftojë ATK-në në pajtueshmëri me procedurat e përcaktuara nga ATK-ja. 
+5. Nga paragrafi 1 i këtij neni, nuk obligohen kategoritë si vijon: 
+5.1. Institucionet publike të cilat ofrojnë shërbime, për të cilat pranojnë pagesa përmes 
+llogarisë bankare apo formave tjera të pagesave elektronike; 
+5.2. Personi (biznesi) i cili ofron furnizime të mallrave dhe/ose shërbimeve vetëm për 
+personin e përfshirë në aktivitet ekonomik (biznes). Ky person obligohet të lëshojë 
+faturë tatimore, ashtu siç është përcaktuar me legjislacionin tatimor në fuqi. 
+ 
+6. Personi të cilit i referohet obligimi i përcaktuar me paragrafin 5 të këtij neni dhe i  cili 
+njëkohësisht kryen edhe aktivitete që nuk janë të përjashtuara , ose të liruara nga detyrimi i 
+regjistrimit përmes SEF-t dhe të transferimit të të dhënave te Sistemi Informativ i  ATK-së, në 
+kuptim të paragrafit 1 të këtij neni, është  i obliguar që çdo qarkullim individual gjatë kryerjes 
+së këtyre aktiviteteve të regjistrojë në SEF, përmes së cilit transferohen të dhënat në server të 
+ATK-së. 
+7. Ministri përkatës për Financa, përveç përjashtimeve të përcaktuara në paragrafin 5 të këtij 
+neni, me vendim të veçantë mund të përjashtojë nga detyrimi për instalim të SEF-it edhe 
+ndonjë kategori tjetër të tatimpaguesve. 
+ 
+ 
+Neni 32 
+Softueri Elektronik Fiskal 
+ 
+1. Softueri Elektronik Fiskal mundëson ruajtjen e çdo transaksioni në regjistër elektronik (data 
+bazë), të nënshkruar në mënyrë elektronike për çdo kupon fiskal, duke përdorur certifikatën 
+digjitale, sipas nenit 34 të këtij Udhëzimi dhe lidhjen me internet për shkëmbimin elektronik 
+të të dhënave me Sistemin Informativ të ATK-së.  
+ 
+2. Softueri Elektronik Fiskal nëpërmes së cilit regjistrohet furnizimi i mallrave dhe/ose 
+shërbimeve, duhet t’i ketë së paku këto funksione: 
+ 
+2.1. të jetë në gjendje të nënshkruajë në mënyrë elektronike çdo kupon fiskal; 
+ 
+2.2. të identifikohet përmes certifikatës digjitale në sistemin e ATK-së; 
+ 
+2.3. të vendosë lidhjen për shkëmbimin e sigurt të të dhënave me Sistemin Informativ 
+të ATK-së përmes internetit; 
+ 
+2.4. të përkrahë komunikimin përmes protokollit  të sigurt ë ‘Secure Hyper  Text 
+Transfer Protocol’ (HTTPS); 
+ 
+2.5. të gjenerojë dhe dërgoj ë kupon fiskal sipas specifikave të kërkuara , duke e 
+përfshirë edhe Kodin QR; 
+ 
+2.6. të ndërlidhet me printer për shtypjen e kuponit fiskal, sipas formatit të paracaktuar 
+nga ATK-ja; 
+ 
+2.7. të bëhet përditësimi (Upgrade) sipas nevojës; 
+ 
+2.8. të ketë mundësi të dërgojë kërkesa (mesazhe) në sistemin e ATK-së, në formatin 
+e përcaktuar nga ATK-ja; dhe 
+ 
+2.9. të përkrahë shumëgjuhësinë, sipas legjislacionit në fuqi për përdorimin e gjuhëve 
+zyrtare në Republikën e Kosovës. 
+ 
+3. Softueri Elektronik Fiskal, në raste të ndërprerjeve të komunikimeve me Sistemin Informativ 
+të ATK-së, duhet të mundësojë gjenerimin e kuponëve fiskal ë dhe t’i ruajë në mënyrë të 
+sigurt, në kuadër të SEF-ve. Në momentin që rikthehet komunikimi me Sistemin Informativ 
+të ATK-së (rivendoset komunikimi me Sistemin Informativ të ATK-së), këto informacione 
+dërgohen në mënyrë automatike në Sistemin Informativ të ATK-së.  
+ 
+4. Softueri Elektronik Fiskal mund të jetë i përshtatshëm p ër përdorim, përmes Kompjuterit 
+Personal (PC), LapTop, Tablet, telefon mobil të mençur, etj.  
+ 
+5. Drejtori i Përgjithshëm i ATK -së  nxjerrë vendim për specifikat funksionale dhe  teknike 
+minimale dhe mënyrën e zbatimit të SEF-it.   
+ 
+Neni 33 
+Sistemi Informativ i Administratës Tatimore të Kosovës 
+ 
+1. Sistemi Informativ i Administratës Tatimore të Kosovës, duhet të mundësojë: 
+ 
+1.1 lidhjen e sigurt  për shkëmbimin e të dhënave  me S EF, përmes internetit dhe 
+protokollit të sigurt të komunikimit “Secure Hyper Text Transfer Protocol 
+(HTTPS); 
+ 
+1.2 validimin e identitetit të tatimpaguesit përmes certifikatës digjitale; 
+ 
+1.3 pranimin e kërkesave në kohë reale të  dërguara nga S EF-i për çdo furnizim të 
+mallit dhe/ose shërbimit; 
+ 
+1.4 pranimin dhe ruajtjen e informacioneve nga secili tatimpagues veç e veç; 
+ 
+1.5 përpunimin e të dhënave të pranuara nga SEF-i në kohë reale; 
+ 
+1.6 verifikimin e kuponit fiskal nga qytetari përmes një aplikacioni të veçantë; dhe 
+ 
+1.7 funksione tjera të rëndësishme që  përshkruhen me specifikat teknike dhe 
+funksionale. 
+ 
+2. Drejtori i Përgjithshëm i ATK-së  nxjerrë vendim për specifikat teknike dhe funksionale dhe 
+mënyrën e funksionimit të Sistemit Informativ të ATK-së.   
+ 
+ 
+Neni 34 
+Certifikata digjitale dhe çelësi privat 
+ 
+1. Me qëllim të zbatimit të procedurës së fiskalizimit të kuponëve, tatimpaguesi për çdo SEF të 
+instaluar në pika të shitjes  që lëshon kuponë fiskalë, duhet të pajiset me një certifikatë 
+digjitale, e cila gjenerohet dhe lëshohet nga ATK-ja apo autoritet tjetër përkatës për lëshimin 
+e certifikatave digjitale.  
+ 
+2. Për çdo SEF të instaluar, nga tatimpaguesi duhet të gjenerohet një çelës privat, i cili duhet të 
+ruhet në një nivel të lartë sigurie, duke garantuar konformitetin dhe konfidencialitetin e tij. 
+ 
+3. Personi që lëshon kuponë fiskal ë, gjatë procesit të pajisjes me certifikatë digjitale dhe me 
+çelësin privat për secilin SEF të instaluar, duhet  t’i dorëzojë në formë elektronike këto të 
+dhëna:  
+ 
+3.1  Numrin Unik Identifikues/Numrin Fiskal; 
+ 
+3.2  Numrin e Njësisë;  
+ 
+3.3  Numrin e POS-it;  
+ 
+3.4  Kodin e zgjidhjes softuerike; dhe 
+  
+3.5  Numrin e Fiskalizimit, i cili merret në Sistemin Elektronik të ATK-së. 
+ 
+ 
+Neni 35 
+Aplikimi dhe regjistrimi i zhvilluesve dhe mirëmbajtësve të SEF-it 
+ 
+1. Çdo person fizik apo juridik i cili zhvillon apo mirëmban SEF për nevoja të fiskalizimit të 
+tatimpaguesve, sipas specifikave teknike dhe funksionale të përcaktuara nga ATK-ja, mund 
+të aplikojë për regjistrim dhe certifikim të atij SEF-i, te Komisioni i përbërë nga ATK-ja. 
+ 
+2. Zhvilluesi dhe/ose mirëmbajtësi i SEF-it, të referuar në paragrafin 1 të këtij neni, duhet të 
+autorizohet nga Komisioni, përpara fillimit të ushtrimit të veprimtarisë  së ofrimit të këtyre 
+zgjidhjeve softuerike dhe/ose shërbimeve të mirëmbajtjes në territorin e Republikës së 
+Kosovës. 
+ 
+3. Kërkesa për certifikim të SEF-it mund të dorëzohet në çdo kohë, mirëpo shitja dhe instalimi 
+i SEF tek tatimpaguesi mund të bëhet vetëm pas certifikimit nga Komisioni. 
+ 
+4. Komisioni, brenda pesëmbëdhjetë (15) ditë  pune nga data e pranimit  të kërkesës për 
+certifikim të SEF-it, vendos për aprovim apo refuzim të certifikimit të SEF-it. 
+ 
+5. Kushtet dhe procedurat e aplikimit për certifikim dhe mirëmbajtje të SEF-it, përcaktohen nga 
+një Komision i veçantë nga ATK-ja. 
+ 
+6. Komisioni e regjistron SEF-in e certifikuar në mënyrë elektronike, në regjistrin e zhvilluesve 
+ose të mirëmbajtësve softuerikë të menaxhuar nga Komisioni. 
+ 
+7. Regjistrimi i zhvilluesit të SEF-it sipas paragrafit 6 të këtij neni, nuk e zëvendëson detyrimin 
+për regjistrim në Agjencinë për Regjistrimin e Bizneseve në Kosovë (A RBK) apo ATK, që 
+ushtron veprimtari tregtare dhe jotregtare, në përputhje me legjislacionin përkatës në fuqi.  
+ 
+8. Pas regjistrimit, personi i referuar në paragrafin 1 të këtij neni, pajiset me kodin unik të SEF-
+it. Ky kod së bashku me NUI/NF të zhvilluesit të softuerit, duhet të integrohen në zgjidhjen 
+softuerike nga zhvilluesit e softuerëve, përpara dorëzimit te tatimpaguesi që lëshon kuponë 
+fiskalë, në mënyrë që sistemi fiskal të identifikojë zhvilluesin dhe zgjidhjen soft uerike të 
+përdorur gjatë çdo dërgimi të kuponëve fiskalë në procedurën e fiskalizimit. 
+ 
+9. Komisioni i dërgon në formë elektronike kodin e regjistrimit të zgjidhjes softuerike, personit 
+të përcaktuar në paragrafin 1 të këtij neni. Ky kod ruhet në regjistrin e Softuerëve Elektronikë 
+Fiskalë që menaxhohet nga Komisioni.  
+ 
+10. Çdo tatimpagues që lëshon kuponë fiskalë, duhet të njoftojë ATK-në për zgjidhjen softuerike 
+të përdorur për lëshimin e kuponëve fiskal ë, si dhe për zhvilluesin dhe mirëmbajtësin e 
+zgjidhjes softuerike.  
+ 
+11. Regjistrimi i zhvilluesit të softuerit dhe zgjidhjes softuerike kryhet në secilin fiskalizim, pasi 
+të dhënat e zgjidhjes softuerike të përdorura janë pjesë integrale e të dhënave për fiskalizimin 
+e kuponëve fiskalë. Të dhënat për mirëmbajtësin duhet të regjistrohen gjatë regjistrimit të të 
+dhënave për vendin e ushtrimit të veprimtarisë së tatimpaguesit/personit, ose në kuadër të 
+secilës pajisje elektronike të lëshimit të kuponëve fiskal ë, nëse tatimpaguesi /personi ka 
+mirëmbajtës të ndryshëm. 
+ 
+12. Tatimpaguesi/personi që lëshon kuponë fiskalë, nuk mund të lëshojë kuponë fiskalë nëse 
+zhvilluesi i softuerit dhe zgjidhja soft uerike që përdor, nuk janë regjistruar në regjistrin e 
+zhvilluesve dhe/ose të mirëmbajtësve soft uerikë të menaxhuar dhe certifikuar nga 
+Komisioni. Për këtë qëllim, çdo tatimpagues /person që lëshon kuponë fiskal ë, mund të 
+kontrollojë nëpërmjet emërtimit/emrit dhe mbiemrit apo kodit/numrit unik të identifikimit të 
+zhvilluesit të softuerit, nëse ai zhvillues dhe zgjidhja softuerike janë të regjistruar në regjistër.   
+ 
+13. Tatimpaguesi/personi që lëshon kuponë fiskal ë dhe zhvilluesi dhe/ose mirëmbajtësi i 
+softuerit, janë përgjegjës për funksionimin e zgjidhjes soft uerike sipas specifikave 
+funksionale dhe teknike të përcaktuara nga ATK-ja.  
+ 
+ 
+Neni 36 
+Anulimi i certifikatës për SEF 
+ 
+1. Komisioni është përgjegjës të tërheqë dhe anulojë certifikatën e dhënë për SEF, në rast se: 
+ 
+1.1. përdoruesit ballafaqohen me probleme serioze lidhur me funksionimin e SEF-it; 
+ 
+1.2. zhvilluesi i SEF -it e ka shkelur ndonjë dispozitë të këtij apo ndonjë akti tjetër  
+nënligjor, të lëshuar lidhur me SEF-in; 
+ 
+1.3. në rast të ndryshimit të kushteve sipas të cilave është dhënë certifikata, të cilat nuk 
+përditësohen nga zhvilluesi i SEF-it. 
+ 
+2. Kundër vendimit të Komisionit mund të ushtrohet ankesë në Komisionin e veçantë për 
+shqyrtimin e ankesave, të themeluar nga Administrata Tatimore e Kosovës..  
+ 
+3. Administrata Tatimore e Kosovës ka të drejtën e verifikimit të çdo instalimi të SEF-it, të 
+realizuar nga çdo zhvillues i SEF-it, për t’u siguruar se ai punon në përputhje me specifikat 
+teknike dhe funksionale, si dhe elementeve tjera të nevojshme. 
+ 
+ 
+Neni 37 
+Rrjeti i komunikimit ndërmjet SEF-it dhe Sistemit Informativ të ATK-së 
+ 
+ 
+1. Për transmetimin elektronik të të dhënave fiskale, duke shfrytëzuar internetin, krijohet rrjeti i 
+komunikimit ndërmjet SEF dhe Sistemit Informativ të ATK-së.  
+ 
+2. Rrjetet e komunikimit të të dhënave fiskale ndërmjet SEF-it me Sistemin Informativ të ATK-
+së, duhet të jenë: 
+ 
+2.1.      të sigurta – të gjitha lidhjet ndërmjet SEF-it dhe Sistemit Informativ të ATK-së, të 
+lidhura përmes internetit, duhet të jenë të enkriptuara dhe të nënshkruara me 
+çelësin privat, sipas specifikave teknike dhe funksionale; 
+ 
+2.2.      direkte – vendosja e komunikimit ndërmjet SEF-it dhe Sistemit Informativ të ATK-
+së, bëhet përmes HTTPS protokollit, duke shfrytëzuar internetin; 
+ 
+2.3.      efikase – nuk lejohet trafik apo rrugëtim i panevojshëm, nëse nuk është përcaktuar 
+nga ATK -ja. Trafiku i rrjetit duhet të caktohet në atë mënyrë që  zvogëlo n 
+shpenzimet e trafikut për ATK -në dhe tatimpaguesin, duke përmbushur 
+njëkohësisht të gjitha kërkesat e specifikuara; dhe 
+ 
+2.4.    kompatibile – SEF-i duhet të je të në pajtueshmëri me të gjitha protokollet dhe 
+standardet e komunikimit me Sistemin Informativ të ATK-së.  
+ 
+ 
+ 
+ 
+ 
+Neni 38 
+Shitjet nëpërmjet pajisjeve të vetëshërbimit (automatët) 
+ 
+1. Pajisje e vetëshërbimit (automat) që realizon qarkullim nga shitja e mallrave dhe/ose 
+shërbimeve, konsiderohet çdo pajisje e automatizuar, ku gjatë furnizimit të mallrave dhe/ose 
+shërbimeve dhe mbledhjes së pagesave, nuk merr pjesë një individ në cilësinë e shitësit. 
+Pajisjet e vetëshërbimit për qëllim të fiskalizimit nuk konsiderohen të jenë bankomatet e 
+bankave apo e-banking (shërbimet bankare elektronike).  
+ 
+2. Pajisja e vetëshërbimit (automat) kryen procesin e fiskalizimit, duke raportuar të dhënat e 
+shitjeve në kohën e shitjes së mallrave dhe/ose shërbimeve, në Sistemin Informativ të ATK-
+së përmes lidhjes në internet.  
+ 
+3. Çdo pajisje vetëshërbimi konsiderohet si një pajisje elektronike për shitje me para në dorë, 
+për të cilën duhet të regjistrohet vendi i ushtrimit të veprimtarisë së tatimpaguesit dhe 
+regjistrimi/deklarimi i kuponëve fiskalë në librat e tatimpaguesit. 
+ 
+4. Kur dorëzohen të dhënat në lidhje me pajisjen e vetëshërbimit (automat), sipas paragrafit 3 të 
+këtij neni, tatimpaguesi duhet të tregojë adresën ku ndodhet pajisja e vetëshërbimit, ose 
+adresën e tij më të afërt (vendndodhja gjeografike) dhe gjithashtu të përshkruajë 
+vendndodhjen e saktë në një hapësirë të caktuar.  
+ 
+5. Në secilën pajisje vetëshërbimi (automat), tatimpaguesi që lëshon kuponë fiskalë, duhet të 
+vendosë një afishe me kodin QR të printuar që përmban të dhënat e mëposhtme:  
+ 
+5.1. Numrin Unik Identifikues të tatimpaguesit; dhe 
+ 
+5.2. Numrin Identifikues të SEF-it.  
+ 
+6. Për specifikacionet teknike dhe funksionale të pajisjeve të vetëshërbimit (automatët) dhe 
+shkëmbimin e të dhënave me Sistemin Informativ të ATK-së, nxirret vendim nga Drejtori i 
+Përgjithshëm i ATK-së. 
+ 
+7. Nëse pajisja e vetëshërbimit ka një ndërprerje të përkohshme në shërbimin e komunikimit me 
+Sistemin Informativ të ATK-së, tatimpaguesi që lëshon kuponë fiskalë duhet të sigurojë 
+ruajtjen e të dhënave në shitje dhe të kryejë procedurën e fiskalizimit, pas eliminimit të 
+problemit ose lidhjes së rivendosur, brenda dyzet e tetë (48) orëve.  
+ 
+8. Tatimpaguesit që operojnë në sektorë të veçantë të ekonomisë (p.sh. sektori i hidrokarbureve, 
+autolarje, furnizim me energji elektrike, apo të ngjashme) dhe kryejnë shitje përmes makinave 
+të vetëshërbimit (automat), duhet të mundësojnë printimin e kuponëve fiskalë, kur kryejnë 
+shitje përmes këtyre pajisjeve.  
+ 
+ 
+ 
+ 
+Neni 39 
+Kuponi fiskal dhe gjenerimi i Kodit QR 
+1. Kuponi Fiskal  duhet të printohet në letër për të gjitha furnizimet e mallrave dhe /ose 
+shërbimeve të bëra për konsumatorët e fundit (individët). Sidoqoftë, nëse ofrohen shërbime 
+elektronike ose furnizimi i mallrave dhe/ose shërbimeve kontraktohet dhe ngarkohet përmes 
+një aplikacioni celular, dyqani në internet ose të ngjashme, kuponi fiskal mund të mos 
+printohet në letër, por mund t'i dërgohet blerësit ose marrësit të kuponit fiskal në formë 
+elektronike. Për shembull, në rast të shitjes në distancë nëse klienti (një individ) paguan me 
+kartelën e kreditit, atëherë kjo konsiderohet se është pagesa e parave në dorë, por kuponi fiskal 
+mund të mos printohet në letër, kështu që në vend të kësaj, shitësi mund t'ia dërgojë blerësit 
+kuponin fiskal në formë elektronike. 
+ 
+2. Në rast pagese pa para në dorë, për transaksionet me konsumatorët individë (individualë), 
+kuponi fiskal mund të printohet në letër ose të dërgohet në formë elektronike. Blerësi duhet 
+të japë pëlqimin e tij për pranimin e kuponit fiskal në formë elektronike. 
+ 
+3. Për të siguruar lehtësisht verifikimin e kuponit fiskal të lëshuar, duhet të gjenerohet një Kod 
+QR për secilin kupon fiskal. Kodi QR është një element i detyrueshëm i kuponit fiskal, si në 
+rastin kur kuponi fiskal raportohet me sukses në ATK dhe fiskalizohet, edhe në rastet kur 
+kuponi fiskal nuk mund të fiskalizohet, si p.sh: për shkak të mungesës së internetit, 
+disponueshmërisë së serverit të shërbimit fiskalizues, etj. Kodi QR përmban të dhëna të 
+kuponit fiskal, si dhe nënshkrimin digjital. 
+ 
+4. Kodi QR së bashku me elementët e tjerë të detyrueshëm të kuponit fiskal, duhet të jetë element 
+përbërës i secilit kupon fiskal të lëshuar për konsumatorin e fundit, pavarësisht se kuponi 
+fiskal printohet në letër apo dërgohet në mënyrë elektronike te konsumatori.  
+ 
+5. Zgjidhja softuerike e përdorur për lëshimin e kuponëve fiskal dhe fiskalizimin e tyre duhet të 
+krijojë automatikisht një numër unik në formatin e specifikuar në specifikimet teknike të 
+publikuara në faqen e internetit të ATK-së. 
+ 
+ 
+Neni 40 
+Njoftimi për kuponin fiskal 
+1. Tatimpaguesi, që lëshon kuponë fiskalë, detyrohet të paraqesë një njoftim në secilën pajisje 
+elektronike të pagesës, ose në një vend tjetër të dukshëm në ambientet e brendshme të 
+tatimpaguesit, që tregon detyrimin për të lëshuar kuponin fiskal si dhe detyrimin e blerësit për 
+të marrë dhe ruajtur kuponin fiskal.  
+ 
+2. Si përjashtim nga paragrafi 1 i këtij neni, tatimpaguesi që lëshon kuponë fiskalë, i cili zbaton 
+procedurën e fiskalizimit të shitjeve nëpërmjet pajisjeve të vetëshërbimit (automat), është i 
+detyruar të paraqesë në çdo pajisje vetëshërbimi një njoftim për fiskalizimin e shitjeve 
+nëpërmjet këtyre pajisjeve.  
+ 
+3. Administrata Tatimore e Kosovës, përcakton përmbajtjen dhe pamjen e njoftimit të 
+përmendur në paragrafët 1 dhe 2 të këtij neni. 
+ 
+Neni 41 
+Detyrimet e blerësit 
+ 
+Blerësi ose marrësi i një kuponi fiskal të lëshuar apo të pranuar në mënyrë elektronike, duhet ta 
+mbajë kuponin fiskal të lëshuar apo ta dëshmojë pranimin e kuponit fiskal në mënyrë elektronike, 
+deri në tridhjetë ( 30) metra pas largimit nga vendi i ushtrimit të aktivitetit të shitësit, pra të 
+tatimpaguesit që ka lëshuar kuponin fiskal. Me kërkesë të një zyrtari të autorizuar të ATK-së, 
+blerësi duhet t’i tregojë kuponin fiskal të lëshuar. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Neni 42  
+Verifikimi i kuponit fiskal  
+ 
+1. Blerësit dhe të gjithë marrësit e kuponëve fiskal ë, për të gjith ë kuponët e marrë  nga 
+tatimpaguesit/personat që janë të detyruar të lëshojnë kuponë fiskalë, mund të verifikojnë nëse 
+kuponi fiskal është raportuar në ATK.  
+ 
+2. Verifikimi  bëhet duke skanuar Kodin QR në kuponin fiskal, përmes aplikacionit të veçantë 
+nga një telefon inteligjent , apo nga ndonjë pajisje tjetër elektronike që ka funksionin e 
+skanimit. Kodi QR krijon një lidhje me Sistemin Informativ të ATK-së, me detaje të kuponit 
+fiskal të skanuar. Këtu është një shembull i Kodit QR, i cili gjendet në një kupon fiskal. 
+ 
+3. Blerësi dhe të gjithë marrësit e kuponit fiskal, gjithashtu mund të kryejnë verifikimin e kuponit 
+fiskal, duke bërë një kërkesë në shfletuesin në internet ose aplikacionin e telefonit celular të 
+ 
+Shembulli i Kodit QR 
+ 
+ 
+ 
+ 
+Logo Fiskale 
+RKS 
+MF 
+ 
+ 
+
+disponueshëm në faqen e internetit të ATK-së dhe duke futur manualisht të dhënat e kërkuara 
+(për shembull NUIKF-në). Në situatat kur kuponi fiskal  lëshohet manualisht nga blloku i 
+veçantë i kuponit fiskal ose kur mungojnë disa nga të dhënat e përmendura, blerësi mund të 
+verifikojë kuponin fiskal në zyrën më të afërt të ATK-së.  
+ 
+4.  Pas skanimit të Kodit QR ose hedhjes së të dhënave sipas p aragrafit 3 të këtij neni, hapet 
+faqja me detaje rreth kuponit fiskal, ku ka një ikonë e cila tregon statusin e kuponit fiskal. 
+Ekzistojnë raste të mundshme, si:  
+ 
+4.1. Kuponi fiskal është regjistruar me sukses; apo 
+4.2. Kuponi fiskal ka një problem që duhet raportuar. 
+5. Nëse kuponi fiskal është regjistruar me sukses, shfaqen informacionet në lidhje me kuponin 
+fiskal të lëshuar.  
+ 
+6. Në rast se kuponi fiskal nuk është regjistruar,  shfaqet një mesazh që udhëzon blerësin, që 
+verifikimin ta bëjë më vonë, kjo sepse në disa raste kuponi fiskal mund të regjistrohet pasi të 
+jetë lëshuar, mirëpo regjistrimi duhet të bëhet brenda afatit kohor. 
+ 
+7. Ndonjëherë një kupon fiskal  i lëshuar duhet të korrigjohet, kështu që tatimpaguesi që ka 
+lëshuar kuponin fiskal  lëshon një kupon fiskal korrigjues dhe do ta fiskalizojë atë duke iu 
+referuar kuponit fiskal  origjinal. Në këtë situatë, blerësi do të marrë një nga mesazhet e 
+mëposhtme paralajmëruese:  
+ 
+7.1.    "Fiskalizimi i suksesshëm, por ky është korrigjim i një kupon fiskal tjetër" - Në këtë 
+situatë blerësi ka verifikuar kuponin fiskal korrigjues dhe  shfaqet referenca për 
+kuponin fiskal origjinal që po korrigjohet ( NUIKF i tij). Nëse blerësi nuk e ka 
+marrë kuponin fiskal  origjinal, me të cilën lidhet k y kupon fiskal korrigjues, 
+atëherë ka shumë të ngjarë që tatimpaguesi ka bërë shkelje  dhe blerësi duhet ta 
+raportojë atë pranë ATK-së, direkt në kërkesë.  
+7.2.    "Fiskalizimi i suksesshëm, por ka kupon fiskal korrigjues të këtij kuponi fiskal" - 
+Në këtë situatë blerësi ka verifikuar kuponin fiskal origjinal dhe referenca për 
+kuponin fiskal korrigjues të tij, është lëshuar dhe fiskalizuar pasi të shfaqet kuponi 
+fiskal (NUIKF i tij). Nëse blerësi nuk e ka marrë kuponin fiskal korrigjues, kjo do 
+të thotë që ka shumë të ngjarë që tatimpaguesi ka bërë shkelje dhe blerësi duhet ta 
+raportojë atë pranë ATK-së, direkt mbi aplikacion.  
+8. Në rast se ka një problem me kuponin fiskal, i cili duhet të raportohet , duke u  bazuar në 
+kuponin fiskal të verifikuar nga blerësi dhe të dhënat e ruajtura në Sistemin Informativ të 
+ATK-së, mund të hasen situatat e mëposhtme:  
+ 
+8.1.    Kuponi fiskal nuk është i regjistruar në bazën e të dhënave - Në këtë rast kuponi 
+fiskal nuk gjendet në bazën e të dhënave të ATK-së, që do të thotë se nuk është 
+fiskalizuar, dhe ka kaluar më shumë se dyzet e tetë (48) orë nga lëshimi i kuponit 
+fiskal dhe tatimpaguesi nuk ka një aprovim për fiskalizimin mujor ose nuk ka 
+kaluar afati kohor për fiskalizimin pasues. Në këtë rast, ATK-ja  kryen një analizë 
+të hollësishme.  
+8.2.     Numri Unik Identifikues i Kuponit Fiskal  nuk është i vlefshëm - Në këtë rast 
+NUIKF nuk është formuar siç duhet dhe gabimi  shfaqet. Ky gabim tregon se 
+kuponi fiskal është i dyshimtë dhe duhet të analizohet më tej nga ATK-ja.  
+8.3.    Detajet e lëshuara të kuponit fiskal nuk përputhen me detajet e kuponit fiskal në 
+kërkesë - Arsyet e mundshme përfshijnë një rast kur soft ueri për regjistrimin e 
+kuponit fiskal përmban disa gabime dhe regjistron kupon fiskal me të dhëna të 
+pasakta. Arsye tjetër mund të jetë kur kuponi fiskal i lëshuar ka një kod të rremë, 
+NUIKF dhe Kod QR, të cilët janë vendosur në kupon fiskal vetëm për ta bërë atë 
+të duket i saktë, por në realitet, ato mund të lidhen me disa kuponë fiskalë të tjerë 
+ekzistues.  
+8.4.    Kuponi fiskal korrigjues nuk është regjistruar brenda afatit të kërkuar - Në këtë 
+situatë tatimpaguesi ka verifikuar kuponin fiskal korrigjues, por k y kupon fiskal 
+nuk ishte në bazën e të dhënave, dhe ka kaluar më shumë se dyzet e tetë (48) orë 
+nga lëshimi i kuponit fiskal korrigjues dhe tatimpaguesi nuk ka një aprovim për 
+fiskalizimin mujor, ose ka kaluar afati kohor për fiskalizimin pasues.  
+8.5.     Parametrat e kuponit fiskal nuk përputhen me detajet e kuponit fiskal në aplikim - 
+Në këtë situatë Kodi QR në kuponin fiskal të lëshuar, ka një lidhje me aplikacionin 
+në internet me parametrat e pyetjeve të cilat përshkruajnë disa nga detajet e 
+rëndësishme për identifikimin e kuponit fiskal. Këto parametra përfshijnë NUIKF, 
+shumën totale, datën e lëshimit të kuponit fiskal dhe informacione të tjera. Është e 
+mundur që Kodi QR të përmbajë informacion të pavlefshëm, si për shembull 
+ekziston një kupon fiskal i regjistruar në NUIKF nga Kodi QR, por parametra të 
+tjerë, si shuma totale e kuponit fiskal, nuk përputhen me informacionin në kuponin 
+fiskal të regjistruar me të njëjtën NUIKF.  
+9. Nëse një kërkesë për verifikim është zyrtarisht e pasaktë, blerësi ose marrësi i kuponit fiskal 
+merr një mesazh se është e nevojshme të kontrollojë saktësinë e informacionit të dhënë.  
+ 
+10. Nëse sistemi i verifikimit të kuponit fiskal përkohësisht nuk është i disponueshëm, blerësi ose 
+marrësi i kuponit fiskal merr një mesazh ku thuhet se sistemi i verifikimit të kuponit fiskal 
+përkohësisht nuk është i disponueshëm.  
+ 
+11. Nëse kuponi fiskal i paraqitur për verifikim nuk është i regjistruar në bazën e të dhënave të 
+ATK-së, ose blerësi has në ndonjë problem tjetër me kuponin fiskal, blerësi ose marrësi i 
+kuponit fiskal mund të raportojë direkt në aplikacionin “Denonco”, i cili është i publikuar në 
+ueb-faqe të ATK-së. Blerësi, gjithashtu mund të paraqesë kuponët fiskalë me disa probleme 
+ose parregullsi, në zyrën më të afërt të ATK-së, për qëllime kontrolli. 
+ 
+ 
+ 
+ 
+ 
+ 
+Neni 43  
+Fiskalizimi i kuponëve korrigjues/saktësues 
+ 
+1. Të gjitha detyrimet e përcaktuara në dispozitat e këtij Udhëzimi zbatohen, sipas nevojës edhe 
+për lëshimin e kuponëve fiskal korrigjues/saktësues.  
+ 
+2. Kuponi fiskal korrigjues/saktësues duhet të përmbajë një referencë të kuponit fiskal origjinal, 
+që korrigjohet. 
+ 
+ 
+ 
+Neni 44  
+Ndërprerja e lidhjes elektronike (internetit)  
+ 
+1. Në rast të ndërprerjes së lidhjes elektro nike (internetit), tatimpaguesi lëshon kuponë fiskalë, 
+të cilët përmbajnë të dhënat e përcaktuara në nenin  7 të këtij Udhëzimi.  
+ 
+2. Tatimpaguesi që lëshon kuponë fiskalë, duhet që brenda dyzet e tetë (48) orëve, duke filluar 
+nga momenti i ndërprerjes së lidhjes, të vendosë një lidhje interneti dhe t’ia dorëzojë ATK-së 
+të gjithë kuponët fiskalë të lëshuar sipas paragrafit 1 të këtij neni. 
+ 
+3. Kuponët fiskalë të lëshuar sipas  paragrafit 1 të këtij neni, konsiderohen se janë fiskalizuar 
+saktësisht, nëse procesi i fiskalizimit është kryer brenda afatit të përcaktuar në paragrafin 2 të 
+këtij neni. 
+ 
+4. Në mënyrë që procesi i përshkruar në paragrafët 1 deri në 3 të këtij neni të jetë një përjashtim, 
+tatimpaguesi që lëshon kuponë fiskalë, duhet të sigurojë mbështetje të përshtatshme softuerike 
+dhe hard uerike për shkëmbimin dhe dërgimin e të dhënave në ATK , por e dhe lidhje të 
+përshtatshme interneti.  
+ 
+5. Nëse tatimpaguesi  që lëshon kuponë fiskal ë, nuk mundet që në afatin e përcaktuar në 
+paragrafin 2 të këtij neni, të rivendosë lidhjen elektronike (internetin) për arsye të nevojës për 
+të ndryshuar pajisjen për vendosjen e lidhjes elektronike (internetit), pamundësisë për të  
+vendosur lidhjen elektronike (internetin), për të cilën është përgjegjës ofruesi i këtij shërbimi, 
+ose për arsye të forcës madhore, ai duhet të njoftojë ATK -në për këtë, në formë elektronike 
+ose personalisht në zyrën përkatëse të ATK -së ku është i regjist ruar tatimpaguesi, si dhe të 
+dërgojë dokumentacionin ose provat e tjera, që dëshmojnë pamundësinë e vendosjes së lidhjes 
+elektronike (internetit).  
+ 
+6. Nëse është e pamundur që lidhja të bëhet në afatin e përcaktuar në paragrafin 2 të këtij neni , 
+tatimpaguesi vazhdon të lëshojë kuponë fiskal ë edhe pa procedurë fiskalizimi, derisa të 
+rivendoset lidhja përsëri. Pas rifillimit të funksionimit, ai fiskalizon të gjithë kuponët e lëshuar 
+në modalitetin jashtë linje (offline). Nëse ndërprerja në lidhjen në internet është hasur gjatë 
+muajit dhe rilidhja nuk është bërë deri në ditën e dhjetë (10) të muajit vijues, tatimpaguesi 
+paraqet të gjithë kuponët fiskalë të pafiskalizuar në ATK. 
+ 
+Neni 45  
+Ndërprerja e punës së pajisjes për zbatimin e fiskalizimit  
+ 
+1. Nëse ndodh ndërprerja e plotë e punës së pajisjes për zbatimin e fiskalizimit, tatimpaguesi që 
+lëshon kuponë fiskalë, lëshon një kupon fiskal nga një bllok i veçantë i kuponëve fiskalë.  
+ 
+2. Tatimpaguesi që lëshon kuponë fiskal ë, duhet të fiskalizojë bllokun e veçantë të kuponëve 
+fiskalë në ATK. 
+ 
+3. Blloku i veçantë i kuponëve fiskalë duhet të ketë numër serik të printuar, për çdo kupon fiskal 
+që përmban. 
+ 
+4. Blloku i veçantë i kuponëve fiskal ë përmban dy kopje për secil in kupon : origjinalin për 
+konsumatorin dhe kopjen që mbetet te furnizuesi i mallit dhe/apo shërbimit.  
+ 
+5. Në rastin e referuar në p aragrafin 1 të këtij neni, tatimpaguesi  që lëshon kuponë fiskal ë, 
+detyrohet që brenda dyzet e tetë (48) orëve, nga momenti kur pajisja ka ndaluar plotësisht së 
+funksionuari, të mundësojë funksionimin e pajisjes për lëshimin e kuponëve fiskalë ose të 
+sigurojë një pajisje të re.  
+ 
+6. Brenda pesë (5) ditëve pas afatit të përcaktuar në p aragrafin 5 të këtij neni, tatimpaguesi  që 
+lëshon kuponë fiskalë sipas paragrafit 1 të këtij neni, detyrohet t’i regjistrojë të gjithë kuponët 
+fiskalë në SEF, të cilët dërgohen në mënyrë automatike në Sistemin Informativ të ATK-së.  
+ 
+ 
+Neni 46  
+Ruajtja e kuponëve fiskalë  
+ 
+Tatimpaguesi që lëshon kuponë fiskal ë, duhet të marrë masa për ruajtjen e kuponëve fiskal ë të 
+lëshuar, në përputhje me Ligjin në fuqi për Administrimin e Procedurave Tatimore. 
+ 
+ 
+Neni 47 
+Nxitja për marrjen e kuponit fiskal 
+ 
+1. Për të gjithë personat të cilët dëshirojnë të jenë pjesëmarrës në lojë shpërblyese me anë të 
+kuponëve fiskalë, forma dhe mënyra e aplikimit vendoset nga ATK, pas aprovimit të Ministrit 
+përkatës për Financa. 
+ 
+2. Procedurat për zbatimin e kësaj dispozite  përcaktohen me një Udhëzues të veçantë të miratuar 
+nga Drejtori i Përgjithshëm i ATK -së, i cili definon procedurat për aplikim, verifikim 
+elektronik të kuponëve fiskalë dhe përzgjedhje të përfituesve. 
+ 
+Neni 48  
+Mbrojtja e të dhënave  
+ 
+Dispozitat e këtij Udhëzimi zbatohen duke respektuar dispozitat e Ligjit në fuqi për Mbrojtjen e 
+të Dhënave Personale.  
+ 
+Neni 49 
+Gjobat dhe ndëshkimet 
+ 
+1. Për moszbatimin e dispozitave ligjore lidhur me fis kalizimin dhe lëshimin e kuponit fiskal, 
+aplikohen gjobat e përcaktuara me Ligjin në fuqi për Administrimin e Procedurave Tatimore. 
+ 
+2. Gjobat e përcaktuara me Ligjin në fuqi për Administrimin e Procedurave Tatimore, lidhur me 
+mosinstalimin, mosfurnizimin dhe mosmirëmbajtjen e PEF/SF, aplikohen përshtatshmërisht 
+edhe për Softuerët Elektronikë Fiskalë. 
+ 
+ 
+Neni 50 
+Dispozitat kalimtare 
+ 
+1. Ministri përkatës për Financa, me vendim përcakton t atimpaguesit dhe periudhën e kalimit 
+nga përdorimi i Pajisjeve Elektronike Fiskale/Sistemeve Fiskale, në Softuerë Elektronik ë 
+Fiskalë. 
+ 
+2. Tatimpaguesit e përcaktuar në nenin 8 të këtij Udhëzimi, të cilët nuk janë të pajisur me 
+PEF/SF, nga data e hyrjes në fuqi të këtij Udhëzimi , nuk janë të obliguar për t’u pajisur me 
+PEF/SF, por janë të obliguar që brenda gjashtëdhjetë (60) ditëve nga kjo d atë, të instalojnë 
+dhe përdorin SEF-in. Brenda kësaj periudhe, këta tatimpagues kërkohet të përdorin kuponët 
+tatimorë të fiskalizuar në ATK.  
+ 
+Neni 51  
+Dispozitat shfuqizuese 
+ 
+1. Ky Udhëzim shfuqizon Udhëzimin Administrativ MF -Nr. 0 2/2018 për Shfrytëzimin e 
+Pajisjeve Elektronike dhe Sistemeve Fiskale. 
+ 
+2. Vendimet e nxjerra nga ATK -ja lidhur me PEF/SF, të cilat nuk bien ndesh me dispozitat e 
+këtij Udhëzimi, mbesin në fuqi deri në nxjerrjen e vendimeve të reja. 
+ 
+ 
+ 
+ 
+ 
+Neni 52 
+Hyrja në fuqi 
+ 
+ 
+Ky Udhëzim hyn në fuqi në datën e publikimit në Gazetën Zyrtare të Republikës së Kosovës. 
+ 
+ 
+                                                                                                      Hekuran Murati 
+ 
+               ______________________ 
+                                                                                                      Ministër i Financave  
+ 
+ 
+Datë, ____/_____/ 2026 
+ 
+ 

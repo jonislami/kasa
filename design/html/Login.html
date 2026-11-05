@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="sq">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hyrja – Market</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F4F6F3}
+a{color:#0E6B4E}a:hover{color:#0A5039}
+.fld{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:500;color:#33413A}
+.inp{min-height:52px;border:1px solid #CBD5CE;border-radius:12px;padding:0 14px;font:inherit;font-size:16px;color:#14201A;background:#FFFFFF;box-sizing:border-box;width:100%}
+.key{min-height:60px;border-radius:12px;border:1px solid #E2E7E3;background:#FFFFFF;font:inherit;font-size:22px;font-weight:600;color:#14201A}
+.key:hover{background:#F0F3F1}
+</style>
+
+</head>
+<body>
+
+
+<div style="font-family: Inter, system-ui, sans-serif; color: #14201A; display: flex; flex-wrap: wrap; min-height: 100vh; background: #F4F6F3">
+
+<section aria-label="Prezantimi" style="flex: 1 1 420px; background: #10241B; color: #FFFFFF; padding: 48px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; gap: 48px">
+<div style="display: flex; align-items: center; gap: 12px">
+<div style="width: 44px; height: 44px; border-radius: 12px; background: #3FBF86; display: flex; align-items: center; justify-content: center">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10241B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l1.5-5h15L21 9"/><path d="M4 9v11h16V9"/><path d="M9 20v-6h6v6"/></svg>
+</div>
+<span style="font-size: 20px; font-weight: 700">[Emri i Marketit]</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 16px; max-width: 460px">
+<h1 style="margin: 0; font-size: 44px; line-height: 1.1; font-weight: 700; letter-spacing: -0.03em">Shitja, stoku dhe raportet në një vend.</h1>
+<p style="margin: 0; font-size: 17px; line-height: 1.5; color: #B5C7BD">Arka e shpejtë me barkod, hyrjet e mallit nga furnitorët dhe pasqyra e ditës – nga kompjuteri ose telefoni.</p>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 24px; font-size: 14px; color: #B5C7BD">
+<span style="display: flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6EE7B0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Punon edhe pa internet</span>
+<span style="display: flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6EE7B0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Printer me Bluetooth</span>
+<span style="display: flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6EE7B0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Disa arka e përdorues</span>
+</div>
+</section>
+
+<main style="flex: 1 1 520px; display: flex; align-items: center; justify-content: center; padding: 48px 24px; box-sizing: border-box">
+<div style="width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h2 style="margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.02em">Mirë se erdhe</h2>
+<span style="font-size: 15px; color: #56645C">Hyr në llogarinë tënde për të vazhduar</span>
+</div>
+
+<div role="tablist" aria-label="Lloji i hyrjes" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); background: #E7ECE8; border-radius: 12px; padding: 4px">
+
+<button role="tab" aria-selected="true" style="border: 0; min-height: 44px; border-radius: 9px; background: #FFFFFF; font: inherit; font-size: 14px; font-weight: 600; color: #14201A; box-shadow: 0 1px 3px rgba(0,0,0,.1)">Menaxher</button>
+<button role="tab" aria-selected="false" style="border: 0; min-height: 44px; border-radius: 9px; background: transparent; font: inherit; font-size: 14px; font-weight: 500; color: #56645C">Arkëtar (PIN)</button>
+
+
+</div>
+
+
+<form style="display: flex; flex-direction: column; gap: 16px">
+<label class="fld">Email ose përdoruesi<input class="inp" type="text" placeholder="emri@market.com"></label>
+<label class="fld"><span style="display: flex; justify-content: space-between"><span>Fjalëkalimi</span><a href="Login.html" style="font-size: 13px; font-weight: 600">Harrove fjalëkalimin?</a></span><input class="inp" type="password" value="password"></label>
+<label style="display: flex; align-items: center; gap: 10px; font-size: 14px; min-height: 44px"><input type="checkbox" checked style="width: 20px; height: 20px; accent-color: #0E6B4E">Më mbaj të kyçur në këtë pajisje</label>
+<a href="Main.html" style="display: flex; align-items: center; justify-content: center; min-height: 54px; border-radius: 12px; background: #0E6B4E; color: #FFFFFF; text-decoration: none; font-size: 16px; font-weight: 700">Hyr</a>
+</form>
+
+
+
+
+<span style="font-size: 13px; color: #56645C; text-align: center">Ke problem me hyrjen? Kontakto administratorin e dyqanit.</span>
+</div>
+</main>
+</div>
+
+</body>
+</html>
