@@ -82,6 +82,8 @@ Sistemi i dizajnit:
 21. **Barnatore – Hyrja e mallit me seri dhe afat** – për çdo bar: numri i serisë (lot), afati i skadimit, sasia.
 22. **Barnatore – Skadimet** – barnat që skadojnë brenda 30/60/90 ditëve dhe ato të skaduara, me ngjyra
     paralajmëruese; kërkimi sipas substancës aktive; shënimi "Me recetë".
+23. **Paneli sipas llojit** – katër variante të Main.png: sallon (terminet e sotme, punëtorët), restorant (tavolinat
+    e zëna, porositë në kuzhinë), butik (madhësitë që mungojnë), barnatore (skadimet).
 24. **Paneli i punëtorit** (desktop + telefon) – ekrani që sheh punëtori pas hyrjes me PIN: butoni i madh "Shitje e
     re" / "Porosi e re" / terminet e tij të sotme (sipas llojit), "Puna ime sot" (numri i shitjeve/shërbimeve,
     totali, komisioni i vet), pa menu për produktet, stokun dhe raportet; menuja poshtë vetëm me Arka, Puna ime,
@@ -90,5 +92,3 @@ Sistemi i dizajnit:
     komisioni, orët e punës); lista e veprimeve të tij (faturat, shërbimet, anulimet, terminet) me orë; krahasimi i
     punëtorëve në një tabelë.
 26. **Miratimi i adminit** – dritarja kur punëtori kërkon anulim/kthim: "Kërkohet PIN-i i menaxherit".
-23. **Paneli sipas llojit** – katër variante të Main.png: sallon (terminet e sotme, punëtorët), restorant (tavolinat
-    e zëna, porositë në kuzhinë), butik (madhësitë që mungojnë), barnatore (skadimet).
