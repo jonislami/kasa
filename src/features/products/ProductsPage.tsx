@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, Package, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
@@ -154,7 +155,7 @@ export function ProductsPage() {
     />
   )
 
-  const subtitle = products.isLoading
+  const subtitle = loadState(products) === 'loading'
     ? 'Duke ngarkuar…'
     : `${activeProducts.length} ${info.terms.items} në ${cats.length} ${cats.length === 1 ? 'kategori' : 'kategori'}`
 
@@ -281,9 +282,11 @@ export function ProductsPage() {
               </div>
             </div>
 
-            {products.isLoading ? (
+            {loadState(products) === 'offline' ? (
+              <OfflineEmpty />
+            ) : loadState(products) === 'loading' ? (
               <div className="px-6 py-12 text-center text-muted">Duke ngarkuar…</div>
-            ) : products.isError ? (
+            ) : loadState(products) === 'error' ? (
               <EmptyState title="Lista nuk u ngarkua" text={(products.error as Error).message} />
             ) : rows.length === 0 ? (
               <EmptyState

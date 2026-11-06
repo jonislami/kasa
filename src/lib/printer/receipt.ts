@@ -1,3 +1,4 @@
+import { formatKosovoDateTime } from '@/lib/clock'
 import type { Business } from '@/app/AuthProvider'
 import { formatInvoiceNo } from '@/lib/money'
 import type { Sale } from '@/features/pos/api'
@@ -8,9 +9,7 @@ const n2 = (v: number) => new Intl.NumberFormat('en-US', { minimumFractionDigits
 const qty = (v: number, unit: string) => new Intl.NumberFormat('en-US', { maximumFractionDigits: unit === 'kg' ? 3 : 0, useGrouping: false }).format(v)
 
 function dateTime(iso: string) {
-  const d = new Date(iso)
-  const p = (x: number) => String(x).padStart(2, '0')
-  return `${p(d.getDate())}.${p(d.getMonth() + 1)}.${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`
+  return formatKosovoDateTime(iso)
 }
 
 const TITLES = { sale: null, void: 'ANULIM', refund: 'KTHIM MALLI' } as const

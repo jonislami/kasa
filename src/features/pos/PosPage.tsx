@@ -17,6 +17,7 @@ import { enqueueSale, loadCatalog, loadHeld, nextOfflineNo, saveCatalog, saveHel
 import { PrintArea, Receipt } from './Receipt'
 import { SalesDialog } from './SalesDialog'
 import { printReceipt } from '@/lib/printer'
+import { serverDate, KOSOVO_TZ } from '@/lib/clock'
 import { fetchReceiptSettings } from '@/features/settings/api'
 
 const parseNum = (s: string) => {
@@ -42,6 +43,7 @@ export function PosPage() {
   // ---------- catalog (online, with a local copy for offline) ----------
   const catalog = useQuery({
     queryKey: ['pos-products'],
+    networkMode: 'always', // has its own local copy when offline
     queryFn: async () => {
       try {
         const [products, categories] = await Promise.all([fetchPosProducts(), fetchCategories()])
@@ -58,8 +60,8 @@ export function PosPage() {
   const products = useMemo(() => catalog.data?.products ?? [], [catalog.data])
   const categories = catalog.data?.categories ?? []
 
-  const registers = useQuery({ queryKey: ['registers'], queryFn: fetchRegisters, retry: false })
-  const receiptSettings = useQuery({ queryKey: ['receipt-settings'], queryFn: fetchReceiptSettings, retry: false, staleTime: 5 * 60_000 })
+  const registers = useQuery({ queryKey: ['registers'], queryFn: fetchRegisters, retry: false, networkMode: 'always' })
+  const receiptSettings = useQuery({ queryKey: ['receipt-settings'], queryFn: fetchReceiptSettings, retry: false, staleTime: 5 * 60_000, networkMode: 'always' })
   const [registerId, setRegisterId] = useState<string | null>(() => localStorage.getItem(`kasa.register.${business.id}`))
   useEffect(() => {
     const list = registers.data
@@ -177,7 +179,7 @@ export function PosPage() {
         items: cart.lines.map((l) => ({ product_id: l.product.id, quantity: l.quantity, unit_price: l.product.sale_price, discount: l.discount || undefined })),
         invoice_discount: totals.invoiceDiscount || undefined,
         payment: { method: m, tendered: m === 'card' ? undefined : tenderedAmount, card_amount: m === 'mixed' ? cardAmount : undefined },
-        client_created_at: new Date().toISOString(),
+        client_created_at: serverDate().toISOString(),
       }
       setBusy(true)
       try {
@@ -507,7 +509,7 @@ export function PosPage() {
               <li key={h.id} className="flex items-center gap-2">
                 <button type="button" onClick={() => restoreHeld(h)} className="min-w-0 flex-1 rounded-xl border border-line px-4 py-3 text-left hover:bg-bg">
                   <div className="truncate font-semibold">{h.label}</div>
-                  <div className="text-xs text-muted">{new Date(h.saved_at).toLocaleTimeString('sq-AL', { hour: '2-digit', minute: '2-digit' })}</div>
+                  <div className="text-xs text-muted">{new Date(h.saved_at).toLocaleTimeString('sq-AL', { timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })}</div>
                 </button>
                 <button
                   type="button"
@@ -541,7 +543,7 @@ export function PosPage() {
   // ================= DESKTOP =================
   if (wide) {
     return (
-      <div className="flex h-dvh gap-5 p-6">
+      <div className="flex h-[calc(100dvh-44px)] gap-5 p-6 pt-3">
         <div className="flex min-w-0 flex-1 flex-col gap-4">
           <div className="flex items-center gap-3">
             {searchBox}
@@ -715,7 +717,7 @@ export function PosPage() {
 
   // ================= PHONE / TABLET =================
   return (
-    <div className="flex min-h-[calc(100dvh-76px-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex-col">
+    <div className="flex min-h-[calc(100dvh-116px-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex-col">
       <div className="sticky top-[env(safe-area-inset-top)] z-20 border-b border-line bg-white px-4 pb-3 pt-4">
         <div className="mb-3 flex items-start justify-between">
           <div>
@@ -832,7 +834,7 @@ function localReceipt(
     invoice_no: 0,
     daily_no: 0,
     sale_date: '',
-    created_at: input.client_created_at ?? new Date().toISOString(),
+    created_at: input.client_created_at ?? serverDate().toISOString(),
     client_created_at: input.client_created_at ?? null,
     items_count: totals.itemsCount,
     subtotal: totals.subtotal,

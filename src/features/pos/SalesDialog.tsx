@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
+import { KOSOVO_TZ } from '@/lib/clock'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronLeft, RefreshCw } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
@@ -15,7 +17,7 @@ const VOID_REASONS = ['Gabim në arkë', 'Klienti ndërroi mendje', 'Pagesa nuk 
 const KIND_LABEL = { sale: null, void: 'Anulim', refund: 'Kthim' } as const
 const PAY_LABEL = { cash: 'Kesh', card: 'Kartelë', mixed: 'Kesh + Kartelë' } as const
 
-const time = (iso: string) => new Date(iso).toLocaleTimeString('sq-AL', { hour: '2-digit', minute: '2-digit' })
+const time = (iso: string) => new Date(iso).toLocaleTimeString('sq-AL', { timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })
 
 export function SalesDialog({
   open,
@@ -204,9 +206,11 @@ export function SalesDialog({
                 </ul>
               </div>
             )}
-            {list.isLoading ? (
+            {loadState(list) === 'offline' ? (
+              <OfflineEmpty />
+            ) : loadState(list) === 'loading' ? (
               <div className="py-10 text-center text-muted">Duke ngarkuar…</div>
-            ) : list.isError ? (
+            ) : loadState(list) === 'error' ? (
               <div className="py-10 text-center text-warn-700">Lista nuk u ngarkua (pa internet?)</div>
             ) : rows.length === 0 ? (
               <div className="py-10 text-center text-muted">Ende pa fatura sot</div>

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { BarChart3, Plus, ReceiptText, ShoppingCart } from 'lucide-react'
@@ -7,6 +8,7 @@ import { PageHeader } from '@/app/layout/AppLayout'
 import { Badge, Button, Card, CardHeader, EmptyState, StatCard, Tabs } from '@/components/ui'
 import { businessType, hasModule, isManagerRole } from '@/lib/business'
 import { formatEUR, formatInvoiceNo } from '@/lib/money'
+import { kosovoParts, serverDate, KOSOVO_TZ } from '@/lib/clock'
 import { formatQty } from '@/lib/units'
 import { fetchProducts, stockLevel } from '@/features/products/api'
 import {
@@ -26,16 +28,16 @@ import { InvoiceDialog } from '@/features/reports/InvoiceDialog'
 import { MyWork } from '@/features/reports/MyWork'
 import { ShiftCard } from '@/features/reports/ShiftCard'
 
-const dateFmt = new Intl.DateTimeFormat('sq-AL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-const timeFmt = new Intl.DateTimeFormat('sq-AL', { hour: '2-digit', minute: '2-digit' })
+const dateFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+const timeFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })
 
 function todayLong(): string {
-  const s = dateFmt.format(new Date())
+  const s = dateFmt.format(serverDate())
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
 function greeting(): string {
-  const h = new Date().getHours()
+  const h = kosovoParts().h
   return h < 11 ? 'Mirëmëngjes' : h < 18 ? 'Mirëdita' : 'Mirëmbrëma'
 }
 
@@ -179,7 +181,9 @@ function ManagerDashboard({ itemsLabel, stockOn }: { itemsLabel: string; stockOn
             />
           </div>
           <div className="mt-6">
-            {series.isLoading ? (
+            {loadState(series) === 'offline' ? (
+              <OfflineEmpty />
+            ) : loadState(series) === 'loading' ? (
               <div className="h-[220px]" />
             ) : (
               <>

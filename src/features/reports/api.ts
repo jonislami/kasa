@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { kosovoDateISO, KOSOVO_TZ } from '@/lib/clock'
 import type { Role } from '@/lib/business'
 import type { VatCode } from '@/lib/vat'
 
@@ -32,7 +33,7 @@ export function addDays(isoDate: string, days: number): string {
 }
 
 export function today(): string {
-  return iso(new Date())
+  return kosovoDateISO()
 }
 
 export type PeriodKey = 'today' | 'yesterday' | '7' | 'month' | 'custom'
@@ -53,8 +54,8 @@ export function periodRange(key: PeriodKey, custom?: { from: string; to: string 
   }
 }
 
-const longFmt = new Intl.DateTimeFormat('sq-AL', { day: 'numeric', month: 'long', year: 'numeric' })
-const dayFmt = new Intl.DateTimeFormat('sq-AL', { day: 'numeric', month: 'long' })
+const longFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, day: 'numeric', month: 'long', year: 'numeric' })
+const dayFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, day: 'numeric', month: 'long' })
 
 export function formatRange(from: string, to: string): string {
   const a = new Date(from + 'T00:00:00')

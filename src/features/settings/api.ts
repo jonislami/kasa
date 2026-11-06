@@ -75,11 +75,32 @@ export const DEFAULT_RECEIPT: ReceiptSettings = {
   settings: { auto_print: false, copies: 1, open_drawer: false, show_logo: true, show_vat: true, show_barcode: false, cut: true },
 }
 
+const RECEIPT_CACHE = 'kasa.receiptSettings'
+
+/** Printer/receipt settings; the last copy is kept on the device so printing works offline. */
 export async function fetchReceiptSettings(): Promise<ReceiptSettings> {
-  const { data, error } = await supabase.from('business_settings').select('receipt_header, receipt_footer, paper_width, printer_chunk, printer_charset, settings').maybeSingle()
-  if (error) fail(error)
-  if (!data) return DEFAULT_RECEIPT
-  return { ...DEFAULT_RECEIPT, ...(data as ReceiptSettings), settings: { ...DEFAULT_RECEIPT.settings, ...((data as ReceiptSettings).settings ?? {}) } }
+  try {
+    const { data, error } = await supabase.from('business_settings').select('receipt_header, receipt_footer, paper_width, printer_chunk, printer_charset, settings').maybeSingle()
+    if (error) throw error
+    const out = data
+      ? { ...DEFAULT_RECEIPT, ...(data as ReceiptSettings), settings: { ...DEFAULT_RECEIPT.settings, ...((data as ReceiptSettings).settings ?? {}) } }
+      : DEFAULT_RECEIPT
+    try {
+      localStorage.setItem(RECEIPT_CACHE, JSON.stringify(out))
+    } catch {
+      /* storage unavailable */
+    }
+    return out
+  } catch (e) {
+    try {
+      const cached = localStorage.getItem(RECEIPT_CACHE)
+      if (cached) return JSON.parse(cached) as ReceiptSettings
+    } catch {
+      /* ignore */
+    }
+    if (e && typeof e === 'object' && 'code' in e) fail(e as { code?: string; message: string })
+    throw e
+  }
 }
 
 export async function saveReceiptSettings(businessId: string, s: ReceiptSettings): Promise<void> {

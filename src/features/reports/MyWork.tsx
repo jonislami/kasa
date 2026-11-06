@@ -1,11 +1,13 @@
 import { useState } from 'react'
+import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
+import { KOSOVO_TZ } from '@/lib/clock'
 import { useQuery } from '@tanstack/react-query'
 import { Badge, Card, EmptyState, StatCard } from '@/components/ui'
 import { formatEUR, formatInvoiceNo } from '@/lib/money'
 import { fetchWork, formatMinutes, PAY_LABEL, ReportsNotMigrated, type WorkEvent } from './api'
 import { InvoiceDialog } from './InvoiceDialog'
 
-const timeFmt = new Intl.DateTimeFormat('sq-AL', { hour: '2-digit', minute: '2-digit' })
+const timeFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })
 
 /** "Puna ime sot" – the signed-in worker's own work today (no prices of purchase, no others). */
 export function MyWork({ showCommission }: { showCommission: boolean }) {
@@ -46,7 +48,9 @@ export function MyWork({ showCommission }: { showCommission: boolean }) {
 
       <Card className="mt-4 overflow-hidden">
         <h2 className="px-5 pt-5 text-[17px] font-semibold">Faturat e mia të sotme</h2>
-        {work.isLoading ? (
+        {loadState(work) === 'offline' ? (
+              <OfflineEmpty />
+            ) : loadState(work) === 'loading' ? (
           <p className="py-10 text-center text-muted">Duke ngarkuar…</p>
         ) : docs.length === 0 ? (
           <EmptyState title="Ende pa shitje sot" />

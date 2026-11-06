@@ -1,5 +1,7 @@
 import { useEffect, useSyncExternalStore } from 'react'
+import { onlineManager } from '@tanstack/react-query'
 import { device } from '@/lib/device'
+import { serverDate } from '@/lib/clock'
 import { createSale, NetworkError, type CreateSaleInput, type Sale } from './api'
 import type { Cart, PosProduct } from './cart'
 
@@ -24,6 +26,15 @@ type State = { online: boolean; pending: QueuedSale[]; syncing: boolean; lastSyn
 let state: State = { online: typeof navigator === 'undefined' ? true : navigator.onLine, pending: [], syncing: false, lastSync: null }
 const listeners = new Set<() => void>()
 
+// Real connectivity (see lib/connectivity): offline when the server cannot be reached even with Wi-Fi on.
+onlineManager.subscribe((online) => {
+  if (state.online !== online) {
+    state = { ...state, online }
+    listeners.forEach((l) => l())
+    if (online) void syncQueue()
+  }
+})
+
 function set(patch: Partial<State>) {
   state = { ...state, ...patch }
   listeners.forEach((l) => l())
@@ -42,7 +53,7 @@ async function loadPending() {
 }
 
 export async function enqueueSale(input: CreateSaleInput): Promise<void> {
-  const item: QueuedSale = { input, queued_at: new Date().toISOString(), attempts: 0, last_error: null, rejected: false }
+  const item: QueuedSale = { input, queued_at: serverDate().toISOString(), attempts: 0, last_error: null, rejected: false }
   await device.storage.set(PREFIX + input.client_id, item)
   await loadPending()
 }
@@ -77,7 +88,7 @@ export function syncQueue(onSent?: (s: Sale) => void): Promise<void> {
           }
         }
       }
-      set({ lastSync: new Date().toISOString() })
+      set({ lastSync: serverDate().toISOString() })
     } finally {
       await loadPending()
       set({ syncing: false })

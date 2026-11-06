@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
 import { useQuery } from '@tanstack/react-query'
 import { FileText, Search } from 'lucide-react'
 import { Badge, Button, Card, Dialog, EmptyState, Table, Tabs, Td, Th } from '@/components/ui'
@@ -170,9 +171,11 @@ function EntryDialog({
           <div className="font-medium">{formatDateTime(entry.confirmed_at ?? entry.created_at)}</div>
         </div>
       </div>
-      {items.isLoading ? (
+      {loadState(items) === 'offline' ? (
+              <OfflineEmpty />
+            ) : loadState(items) === 'loading' ? (
         <p className="py-6 text-center text-muted">Duke ngarkuar…</p>
-      ) : items.isError ? (
+      ) : loadState(items) === 'error' ? (
         <p className="text-sm text-warn-700">{(items.error as Error).message}</p>
       ) : (
         <Table>

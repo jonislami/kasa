@@ -14,6 +14,7 @@ import { BusinessSection } from './BusinessSection'
 import { PrinterSection } from './PrinterSection'
 import { RegistersSection } from './RegistersSection'
 import { UsersSection } from './UsersSection'
+import { InstallCard } from '@/app/AppStatus'
 
 type Section = 'biznesi' | 'printeri' | 'perdoruesit' | 'arkat' | 'tvsh' | 'backup'
 
@@ -37,6 +38,7 @@ export function SettingsPage() {
       <>
         <PageHeader title="Printeri" />
         <div className="px-4 py-5 md:px-8 md:py-0 md:pb-8">
+          <InstallCard className="mb-5" />
           <PrinterSection />
           <p className="mt-6 text-center text-sm text-muted">Kasa v{device.appVersion}</p>
         </div>
@@ -68,6 +70,7 @@ export function SettingsPage() {
           <Select aria-label="Seksioni" value={section} onChange={(e) => go(e.target.value as Section)} options={SECTIONS} />
         </div>
         <div className="min-w-0 flex-1">
+          <InstallCard className="mb-5" />
           {section === 'biznesi' && <BusinessSection />}
           {section === 'printeri' && <PrinterSection />}
           {section === 'perdoruesit' && (

@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { kosovoDateISO, KOSOVO_TZ } from '@/lib/clock'
 import { round2 } from '@/lib/money'
 import type { VatCode } from '@/lib/vat'
 
@@ -328,12 +329,11 @@ export function dueDate(entryDate: string, days: number | null): string | null {
 }
 
 export function todayISO(): string {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  return kosovoDateISO()
 }
 
-const dateFmt = new Intl.DateTimeFormat('sq-AL', { day: '2-digit', month: '2-digit', year: 'numeric' })
-const dateTimeFmt = new Intl.DateTimeFormat('sq-AL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+const dateFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, day: '2-digit', month: '2-digit', year: 'numeric' })
+const dateTimeFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 
 export function formatDate(iso: string): string {
   return dateFmt.format(new Date(iso.length === 10 ? iso + 'T00:00:00' : iso))

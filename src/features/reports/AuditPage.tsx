@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react'
+import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
+import { KOSOVO_TZ } from '@/lib/clock'
 import { createPortal } from 'react-dom'
 import { useBusiness } from '@/app/AuthProvider'
 import { useQuery } from '@tanstack/react-query'
@@ -36,7 +38,7 @@ const ACTIONS: Record<string, { label: string; tone: Tone }> = {
 
 const REASONS: Record<string, string> = { damage: 'i dëmtuar', expired: 'skadim', loss: 'humbje', own_use: 'përdorim i brendshëm', return_supplier: 'kthim te furnitori', correction: 'korrigjim', other: 'tjetër' }
 
-const dtFmt = new Intl.DateTimeFormat('sq-AL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })
+const dtFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })
 
 function eur(v: unknown): string {
   return v == null || v === '' ? '—' : formatEUR(Number(v))
@@ -167,9 +169,11 @@ export function AuditPage() {
             </div>
           </div>
 
-          {audit.isLoading ? (
+          {loadState(audit) === 'offline' ? (
+              <OfflineEmpty />
+            ) : loadState(audit) === 'loading' ? (
             <p className="py-12 text-center text-muted">Duke ngarkuar…</p>
-          ) : audit.isError ? (
+          ) : loadState(audit) === 'error' ? (
             <EmptyState title="Regjistri nuk u ngarkua" text={(audit.error as Error).message} />
           ) : rows.length === 0 ? (
             <EmptyState title="Asnjë veprim në këtë periudhë" />

@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
 import { useBusiness } from '@/app/AuthProvider'
 import { Button, Dialog } from '@/components/ui'
 import { formatInvoiceNo } from '@/lib/money'
@@ -24,9 +25,11 @@ export function InvoiceDialog({ saleId, onClose }: { saleId: string | null; onCl
         </div>
       }
     >
-      {sale.isLoading ? (
+      {loadState(sale) === 'offline' ? (
+              <OfflineEmpty />
+            ) : loadState(sale) === 'loading' ? (
         <p className="py-8 text-center text-muted">Duke ngarkuar…</p>
-      ) : sale.isError || !sale.data ? (
+      ) : loadState(sale) === 'error' || !sale.data ? (
         <p className="text-sm text-warn-700">{sale.error ? (sale.error as Error).message : 'Fatura nuk u gjet'}</p>
       ) : (
         <div className="flex justify-center">

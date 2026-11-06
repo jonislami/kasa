@@ -49,7 +49,7 @@ export function RefundPage() {
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState<Sale | null>(null)
   const [printing, setPrinting] = useState(false)
-  const receiptSettings = useQuery({ queryKey: ['receipt-settings'], queryFn: fetchReceiptSettings, retry: false, staleTime: 5 * 60_000 })
+  const receiptSettings = useQuery({ queryKey: ['receipt-settings'], queryFn: fetchReceiptSettings, retry: false, staleTime: 5 * 60_000, networkMode: 'always' })
 
   const find = async (raw = number) => {
     const n = Number(raw.replace(/\D/g, ''))

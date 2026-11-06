@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react'
+import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
+import { KOSOVO_TZ } from '@/lib/clock'
 import { useQuery } from '@tanstack/react-query'
 import { BarChart3, Search } from 'lucide-react'
 import { PageHeader } from '@/app/layout/AppLayout'
@@ -26,7 +28,7 @@ import {
 import { BarChart, BarLabels, Delta } from './charts'
 import { InvoiceDialog } from './InvoiceDialog'
 
-const dtFmt = new Intl.DateTimeFormat('sq-AL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+const dtFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 const PERIOD_LABEL: Record<PeriodKey, string> = { today: 'nga dje', yesterday: 'nga pardje', '7': 'nga java e kaluar', month: 'nga periudha e kaluar', custom: 'nga periudha e kaluar' }
 
 export function ReportsPage() {
@@ -132,7 +134,9 @@ export function ReportsPage() {
         <StatCard label="TVSH e mbledhur" value={t ? formatEUR(t.vat_total) : '—'} sub={t ? `Pa TVSH ${formatEUR(t.net_total)}` : undefined} />
       </div>
 
-      {report.isLoading ? (
+      {loadState(report) === 'offline' ? (
+              <OfflineEmpty />
+            ) : loadState(report) === 'loading' ? (
         <p className="py-16 text-center text-muted">Duke ngarkuar…</p>
       ) : r ? (
         <ReportBody r={r} invoices={invoices.data ?? []} people={people.data ?? new Map()} />

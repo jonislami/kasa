@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
+import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowDownLeft, ArrowUpRight, History, MinusCircle } from 'lucide-react'
 import { Button, Card, Dialog, EmptyState, Input, Select, Table, Tabs, Td, Th } from '@/components/ui'
 import { cn } from '@/lib/cn'
+import { serverDate } from '@/lib/clock'
 import { formatQty } from '@/lib/units'
 import type { Product } from '@/features/products/api'
 import {
@@ -20,7 +22,7 @@ type Period = 'today' | '7' | '30' | 'all'
 
 function since(period: Period): string | undefined {
   if (period === 'all') return undefined
-  const d = new Date()
+  const d = serverDate()
   d.setHours(0, 0, 0, 0)
   if (period !== 'today') d.setDate(d.getDate() - Number(period) + 1)
   return d.toISOString()
@@ -80,9 +82,11 @@ export function MovementsTab({ products, people }: { products: Product[]; people
         )}
       </div>
 
-      {movements.isLoading ? (
+      {loadState(movements) === 'offline' ? (
+              <OfflineEmpty />
+            ) : loadState(movements) === 'loading' ? (
         <p className="py-12 text-center text-muted">Duke ngarkuar…</p>
-      ) : movements.isError ? (
+      ) : loadState(movements) === 'error' ? (
         <EmptyState title="Lista nuk u ngarkua" text={(movements.error as Error).message} />
       ) : rows.length === 0 ? (
         <EmptyState icon={<History className="h-6 w-6" />} title="Asnjë lëvizje në këtë periudhë" />

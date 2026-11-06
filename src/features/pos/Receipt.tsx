@@ -1,3 +1,4 @@
+import { formatKosovoDateTime } from '@/lib/clock'
 import { createPortal } from 'react-dom'
 import { Store } from 'lucide-react'
 import type { Business } from '@/app/AuthProvider'
@@ -11,9 +12,7 @@ const qty = (v: number, unit: string) =>
   new Intl.NumberFormat('en-US', { maximumFractionDigits: unit === 'kg' ? 3 : 0 }).format(v)
 
 export function formatDateTime(iso: string) {
-  const d = new Date(iso)
-  const p = (x: number) => String(x).padStart(2, '0')
-  return `${p(d.getDate())}.${p(d.getMonth() + 1)}.${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`
+  return formatKosovoDateTime(iso)
 }
 
 const TITLES = { sale: null, void: 'ANULIM', refund: 'KTHIM MALLI' } as const

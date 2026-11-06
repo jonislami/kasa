@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
+import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
+import { KOSOVO_TZ } from '@/lib/clock'
 import { useQuery } from '@tanstack/react-query'
 import { Users } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
@@ -22,8 +24,8 @@ import { InvoiceDialog } from '@/features/reports/InvoiceDialog'
 import { MyWork } from '@/features/reports/MyWork'
 import { ShiftCard } from '@/features/reports/ShiftCard'
 
-const timeFmt = new Intl.DateTimeFormat('sq-AL', { hour: '2-digit', minute: '2-digit' })
-const dayTimeFmt = new Intl.DateTimeFormat('sq-AL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+const timeFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })
+const dayTimeFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 const COLORS = ['bg-brand-600', 'bg-bt-600', 'bg-[#A16207]', 'bg-[#7C3AED]', 'bg-[#BE123C]', 'bg-[#0F766E]']
 
 function initials(name: string): string {
@@ -155,7 +157,9 @@ function ManagerWork({ workerTerm, commission }: { workerTerm: string; commissio
             <h2 className="px-5 pt-5 text-[17px] font-semibold">
               Veprimet {w ? `e ${w.worker.name.split(' ')[0]}` : ''} {multiDay ? '' : period === 'today' ? 'sot' : 'dje'}
             </h2>
-            {work.isLoading ? (
+            {loadState(work) === 'offline' ? (
+              <OfflineEmpty />
+            ) : loadState(work) === 'loading' ? (
               <p className="py-10 text-center text-muted">Duke ngarkuar…</p>
             ) : !w || w.events.length === 0 ? (
               <EmptyState title="Asnjë veprim në këtë periudhë" />

@@ -1,11 +1,12 @@
 import { useState } from 'react'
+import { KOSOVO_TZ } from '@/lib/clock'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Clock, LogIn, LogOut } from 'lucide-react'
 import { Button, Dialog, Input } from '@/components/ui'
 import { formatEUR } from '@/lib/money'
 import { endShift, fetchOpenShift, formatMinutes, ReportsNotMigrated, startShift } from './api'
 
-const timeFmt = new Intl.DateTimeFormat('sq-AL', { hour: '2-digit', minute: '2-digit' })
+const timeFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })
 
 /** Clock in / out for the signed-in person (worker panel and "Puna ime"). */
 export function ShiftCard() {

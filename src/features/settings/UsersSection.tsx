@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
+import { KOSOVO_TZ } from '@/lib/clock'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { KeyRound, Lock, Plus, UserRound } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
@@ -7,7 +9,7 @@ import { businessType, hasModule, ROLE_LABELS } from '@/lib/business'
 import { cn } from '@/lib/cn'
 import { createUser, fetchUsers, setUserPassword, setUserPin, SettingsNotMigrated, updateUser, type BusinessUser } from './api'
 
-const dtFmt = new Intl.DateTimeFormat('sq-AL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+const dtFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 const WEAK = new Set(['0000', '1111', '1234', '2222', '3333', '4444', '5555', '6666', '7777', '8888', '9999', '4321'])
 
 function pinError(pin: string, pin2: string): string | null {
@@ -50,9 +52,11 @@ export function UsersSection() {
         </Button>
       </div>
 
-      {users.isLoading ? (
+      {loadState(users) === 'offline' ? (
+              <OfflineEmpty />
+            ) : loadState(users) === 'loading' ? (
         <p className="py-10 text-center text-muted">Duke ngarkuar…</p>
-      ) : users.isError ? (
+      ) : loadState(users) === 'error' ? (
         <p className="px-5 py-6 text-sm text-warn-700">{(users.error as Error).message}</p>
       ) : (
         <ul className="mt-4 divide-y divide-line border-t border-line">

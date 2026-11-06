@@ -1,6 +1,11 @@
 import { Outlet, useNavigate } from 'react-router-dom'
 import { useEffect, type ReactNode } from 'react'
 import { ensureDeviceLinked } from '@/lib/deviceLink'
+import { ClockBar, OfflineBar } from '@/app/AppStatus'
+import { useQueryClient } from '@tanstack/react-query'
+import { fetchCategories, fetchProducts } from '@/features/products/api'
+import { fetchEntries, fetchSuppliers } from '@/features/stock/api'
+import { hasModule } from '@/lib/business'
 import { useAuth, useBusiness } from '@/app/AuthProvider'
 import { navFor, type NavItem } from '@/app/nav'
 import { LogoMark } from '@/components/Logo'
@@ -51,6 +56,20 @@ export function AppLayout() {
   const info = businessType(business.type)
   const sub = profile.role === 'worker' ? info.terms.worker : ROLE_LABELS[profile.role]
 
+  // While online, load the main lists once so the screens also open without internet later
+  // (they are kept encrypted on the device, see lib/queryPersist).
+  const qc = useQueryClient()
+  useEffect(() => {
+    if (!isManagerRole(profile.role) || !navigator.onLine) return
+    const opts = { staleTime: 5 * 60_000 }
+    void qc.prefetchQuery({ queryKey: ['products', 'admin'], queryFn: () => fetchProducts(true), ...opts })
+    void qc.prefetchQuery({ queryKey: ['categories'], queryFn: fetchCategories, ...opts })
+    if (hasModule(business.type, 'stock')) {
+      void qc.prefetchQuery({ queryKey: ['stock', 'suppliers'], queryFn: fetchSuppliers, ...opts })
+      void qc.prefetchQuery({ queryKey: ['stock', 'entries'], queryFn: () => fetchEntries(), ...opts })
+    }
+  }, [qc, profile.role, business.type])
+
   // Link this device to the business (managers) so workers can sign in here with their PIN.
   useEffect(() => {
     void ensureDeviceLinked({ id: business.id, name: business.name }, isManagerRole(profile.role)).catch(() => undefined)
@@ -72,6 +91,8 @@ export function AppLayout() {
       userName={profile.full_name || profile.email || 'Përdorues'}
       userSub={sub}
     >
+      <ClockBar />
+      <OfflineBar />
       <Outlet />
     </Shell>
   )

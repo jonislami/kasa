@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ClipboardCheck, X } from 'lucide-react'
 import { Badge, Button, Card, Dialog, EmptyState, Input, Select, Table, Td, Th } from '@/components/ui'
@@ -309,7 +310,9 @@ function CountDialog({ count, people, onClose }: { count: InventoryCount | null;
       title={`Inventarizimi #${count.count_no}`}
       subtitle={[count.title, formatDateTime(count.created_at), count.created_by ? people.get(count.created_by) : null].filter(Boolean).join(' · ')}
     >
-      {items.isLoading ? (
+      {loadState(items) === 'offline' ? (
+              <OfflineEmpty />
+            ) : loadState(items) === 'loading' ? (
         <p className="py-6 text-center text-muted">Duke ngarkuar…</p>
       ) : (
         <Table>

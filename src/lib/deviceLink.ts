@@ -50,6 +50,15 @@ export async function ensureDeviceLinked(business: { id: string; name: string },
   const link = await getLink()
   if (link && link.business_id === business.id && link.device_id === deviceId) {
     const { data } = await supabase.rpc('device_heartbeat', { p: { device_id: deviceId, app_version: device.appVersion } })
+    // The register a manager assigned to this device becomes the till's default.
+    const reg = (data as { register_id?: string | null } | null)?.register_id
+    if (reg) {
+      try {
+        localStorage.setItem(`kasa.register.${business.id}`, reg)
+      } catch {
+        /* storage unavailable */
+      }
+    }
     // Removed, moved or blocked on the server: a manager signing in here links it again.
     if ((data && (data as { active: boolean }).active) || !isManager) return link
   }

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
 import { useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle, ArrowDown, Equal, Truck } from 'lucide-react'
@@ -196,7 +197,9 @@ export function StockPage() {
 
       <div className="flex flex-col gap-5 px-4 pb-28 pt-5 md:px-8 md:pb-8 xl:flex-row xl:items-start">
         <div className="min-w-0 flex-1">
-          {products.isLoading ? (
+          {loadState(products) === 'offline' ? (
+              <OfflineEmpty />
+            ) : loadState(products) === 'loading' ? (
             <Card>
               <p className="py-12 text-center text-muted">Duke ngarkuar…</p>
             </Card>

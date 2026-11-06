@@ -15,7 +15,7 @@ export function PrinterSection() {
   const { business, profile } = useBusiness()
   const manager = isManagerRole(profile.role)
   const qc = useQueryClient()
-  const settings = useQuery({ queryKey: ['receipt-settings'], queryFn: fetchReceiptSettings })
+  const settings = useQuery({ queryKey: ['receipt-settings'], queryFn: fetchReceiptSettings, networkMode: 'always' })
   const [form, setForm] = useState<ReceiptSettings>(DEFAULT_RECEIPT)
   const [saved, setSaved] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)

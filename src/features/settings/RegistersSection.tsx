@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { KOSOVO_TZ } from '@/lib/clock'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Monitor, Plus, Smartphone } from 'lucide-react'
 import { Badge, Button, Card, Dialog, EmptyState, Input, Select } from '@/components/ui'
@@ -6,7 +7,7 @@ import { device } from '@/lib/device'
 import { fetchPeople } from '@/features/stock/api'
 import { fetchDevices, fetchRegisters, saveRegister, SettingsNotMigrated, updateDevice, type DeviceRow, type Register } from './api'
 
-const dtFmt = new Intl.DateTimeFormat('sq-AL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+const dtFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 
 function seen(iso: string): { text: string; online: boolean } {
   const min = (Date.now() - new Date(iso).getTime()) / 60000
@@ -17,7 +18,7 @@ function seen(iso: string): { text: string; online: boolean } {
 
 export function RegistersSection() {
   const qc = useQueryClient()
-  const registers = useQuery({ queryKey: ['registers'], queryFn: fetchRegisters })
+  const registers = useQuery({ queryKey: ['registers', 'all'], queryFn: fetchRegisters })
   const devices = useQuery({ queryKey: ['devices'], queryFn: fetchDevices })
   const people = useQuery({ queryKey: ['people'], queryFn: fetchPeople, staleTime: 5 * 60_000 })
   const thisDevice = useQuery({ queryKey: ['this-device-id'], queryFn: () => device.getDeviceId(), staleTime: Infinity })

@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import type { Session } from '@supabase/supabase-js'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, supabaseConfigured } from '@/lib/supabase'
+import { cacheOwnerChanged, forgetCache } from '@/lib/queryPersist'
 import type { BusinessType, Role } from '@/lib/business'
 
 export interface Profile {
@@ -32,6 +33,16 @@ export interface SessionContext {
   is_platform_admin: boolean
   profile: Profile | null
   business: Business | null
+  /** true when the server could not be reached and the last known context is used (offline start). */
+  offline?: boolean
+}
+
+// Last known session context per user, so the till opens without internet.
+const ctxKey = (userId: string) => `kasa.ctx.${userId}`
+
+function isNetworkError(e: unknown): boolean {
+  if (typeof navigator !== 'undefined' && !navigator.onLine) return true
+  return /fetch|network|load failed|timeout|ERR_INTERNET/i.test(String((e as { message?: string })?.message ?? e))
 }
 
 type Status = 'loading' | 'anonymous' | 'ready' | 'error'
@@ -79,16 +90,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const userId = session?.user.id
+
+  // Another person signed in on this device: drop the previous person's cached screens.
+  useEffect(() => {
+    if (userId && cacheOwnerChanged(userId)) {
+      queryClient.removeQueries({ predicate: (q) => q.queryKey[0] !== 'session-context' })
+      void forgetCache()
+    }
+  }, [userId, queryClient])
   const ctxQuery = useQuery({
     queryKey: ['session-context', userId],
+    networkMode: 'always', // falls back to the last known context offline
     enabled: Boolean(userId),
     staleTime: 5 * 60_000,
+    retry: (count, e) => !isNetworkError(e) && count < 1,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('my_context')
-      if (error) throw error
-      return data as SessionContext
+      try {
+        const { data, error } = await supabase.rpc('my_context')
+        if (error) throw error
+        try {
+          localStorage.setItem(ctxKey(userId!), JSON.stringify(data))
+        } catch {
+          /* storage unavailable */
+        }
+        return data as SessionContext
+      } catch (e) {
+        if (isNetworkError(e)) {
+          try {
+            const cached = localStorage.getItem(ctxKey(userId!))
+            if (cached) return { ...(JSON.parse(cached) as SessionContext), offline: true }
+          } catch {
+            /* fall through */
+          }
+        }
+        throw e
+      }
     },
   })
+
+  // Back online after an offline start: load the fresh context.
+  useEffect(() => {
+    if (!ctxQuery.data?.offline) return
+    const onOnline = () => void queryClient.invalidateQueries({ queryKey: ['session-context'] })
+    window.addEventListener('online', onOnline)
+    const t = window.setInterval(onOnline, 60_000)
+    return () => {
+      window.removeEventListener('online', onOnline)
+      window.clearInterval(t)
+    }
+  }, [ctxQuery.data?.offline, queryClient])
 
   const signIn = useCallback(async (email: string, password: string, remember: boolean) => {
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
@@ -107,9 +157,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut()
+    try {
+      if (session?.user.id) localStorage.removeItem(ctxKey(session.user.id))
+    } catch {
+      /* storage unavailable */
+    }
+    // Only this device: the same person may be signed in on another till or phone.
+    await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined)
     queryClient.clear()
-  }, [queryClient])
+    await forgetCache()
+  }, [queryClient, session?.user.id])
 
   const refresh = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: ['session-context'] })

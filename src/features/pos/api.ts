@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { kosovoDateISO, serverDate } from '@/lib/clock'
 import type { VatCode } from '@/lib/vat'
 import type { PosProduct } from './cart'
 
@@ -260,13 +261,31 @@ export interface Register {
   name: string
 }
 
+/** Active registers; the last list is kept on the device so the till shows its name offline. */
 export async function fetchRegisters(): Promise<Register[]> {
-  const { data, error } = await supabase.from('registers').select('id, name').eq('active', true).order('name')
-  if (error) throw new Error(error.message)
-  return (data ?? []) as Register[]
+  try {
+    const { data, error } = await supabase.from('registers').select('id, name').eq('active', true).order('name')
+    if (error) throw new Error(error.message)
+    try {
+      localStorage.setItem('kasa.registers', JSON.stringify(data ?? []))
+    } catch {
+      /* storage unavailable */
+    }
+    return (data ?? []) as Register[]
+  } catch (e) {
+    if (isNetworkError(e)) {
+      try {
+        const cached = localStorage.getItem('kasa.registers')
+        if (cached) return JSON.parse(cached) as Register[]
+      } catch {
+        /* ignore */
+      }
+    }
+    throw e
+  }
 }
 
 /** Local date in Kosovo (matches sale_date on the server). */
-export function localDate(d = new Date()): string {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Belgrade' }).format(d)
+export function localDate(d = serverDate()): string {
+  return kosovoDateISO(d.getTime())
 }
