@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { BarChart3, Plus, ReceiptText, ShoppingCart } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
 import { PageHeader } from '@/app/layout/AppLayout'
 import { Button, Card, CardHeader, EmptyState, StatCard } from '@/components/ui'
 import { businessType, hasModule, isManagerRole } from '@/lib/business'
 import { formatEUR } from '@/lib/money'
+import { fetchProducts, stockLevel } from '@/features/products/api'
 
 const dateFmt = new Intl.DateTimeFormat('sq-AL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
@@ -21,6 +23,9 @@ export function DashboardPage() {
   const { business, profile } = useBusiness()
   const info = businessType(business.type)
   const manager = isManagerRole(profile.role)
+  const stockOn = manager && hasModule(business.type, 'stock')
+  const products = useQuery({ queryKey: ['products', 'admin'], queryFn: () => fetchProducts(true), enabled: stockOn })
+  const lowStock = (products.data ?? []).filter((p) => p.active && ['low', 'critical'].includes(stockLevel(p))).length
 
   if (!manager) {
     return (
@@ -76,7 +81,14 @@ export function DashboardPage() {
         <StatCard label="Fatura (kuponë)" value="0" />
         <StatCard label="Fitimi bruto" value={formatEUR(0)} />
         {hasModule(business.type, 'stock') ? (
-          <StatCard label="Stok i ulët" value={`0 ${info.terms.items}`} />
+          <Link to="/stoku" className="contents">
+            <StatCard
+              label="Stok i ulët"
+              value={`${lowStock} ${info.terms.items}`}
+              sub={lowStock > 0 ? 'Shiko te Stoku →' : undefined}
+              tone={lowStock > 0 ? 'warn' : 'default'}
+            />
+          </Link>
         ) : (
           <StatCard label="Punëtorë aktivë" value="—" />
         )}

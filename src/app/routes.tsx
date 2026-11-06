@@ -16,6 +16,7 @@ const PlatformPage = lazy(() => import('@/features/platform/PlatformPage').then(
 const PosPage = lazy(() => import('@/features/pos/PosPage').then((m) => ({ default: m.PosPage })))
 const RefundPage = lazy(() => import('@/features/pos/RefundPage').then((m) => ({ default: m.RefundPage })))
 const SettingsPage = lazy(() => import('@/features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })))
+const StockPage = lazy(() => import('@/features/stock/StockPage').then((m) => ({ default: m.StockPage })))
 const ProductsPage = lazy(() => import('@/features/products/ProductsPage').then((m) => ({ default: m.ProductsPage })))
 
 function Lazy({ children }: { children: ReactNode }) {
@@ -107,7 +108,9 @@ export function AppRoutes() {
           path="stoku"
           element={
             <RequireManager>
-              <ComingSoon title="Stoku & Hyrjet" phase="Faza 4 – Stoku" />
+              <Lazy>
+                <StockPage />
+              </Lazy>
             </RequireManager>
           }
         />
