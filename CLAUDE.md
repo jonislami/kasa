@@ -62,6 +62,10 @@ ATK kërkon që SEF të instalohet në pajisje, ta mbajë çelësin privat të s
     **Nuk shton e nuk ndryshon produkte, çmime apo stok**, nuk sheh çmimet e blerjes, fitimin, raportet e biznesit
     as punën e punëtorëve të tjerë. Anulimi/kthimi kërkon miratimin e adminit (PIN i menaxherit).
   - Kufizimet zbatohen në databazë (RLS + RPC), jo vetëm duke fshehur butonat.
+- **Kontabilisti** (`accountant`, Faza 6b): person i jashtëm që e fton pronari; një llogari me shumë biznese
+  (`business_members` + biznesi aktiv), faqja `/klientet` ("Klientët e mi"). Vetëm lexim: shitjet, anulimet,
+  kthimet, stoku, raportet, TVSH-ja, eksporti. Nuk sheh punëtorët/PIN-et, arkat, pajisjet, çelësat e ATK-së,
+  përdoruesit, cilësimet; nuk shet. Pronari ia heq qasjen kur të dojë.
 - Çdo shitje, rresht fature, termin dhe veprim ruan `worker_id`, që admini ta shohë punën për punëtor.
 - Punëtorët hyjnë me **PIN 4-shifror** (Edge Function `pin-login`, bcrypt, bllokim pas 5 gabimeve). Pajisja lidhet
   me biznesin kur menaxheri hyn njëherë me email.
@@ -125,6 +129,8 @@ ATK kërkon që SEF të instalohet në pajisje, ta mbajë çelësin privat të s
 | `/tavolinat` | vetëm Restorant |
 | `/cilesimet` | Cilësimet |
 | `/platforma` | vetëm admini i platformës |
+| `/klientet` | vetëm kontabilisti: "Klientët e mi" (të gjitha bizneset e tij) |
+| `/fiskalizimi` | admin: hapat e ATK-së, arkat (POS ID, versioni, parë së fundi), kodet e regjistrimit |
 | `/shkarko` | publike: shkarkimi për Windows, Android, iPhone |
 | fatura e printuar | Fatura.png (80mm / 58mm) |
 
