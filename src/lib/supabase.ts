@@ -1,8 +1,9 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { configureConnectivity, trackedFetch } from '@/lib/connectivity'
 
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
+// An empty value (e.g. a CI build without the secrets) counts as missing.
+const url = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim() || undefined
+const anonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim() || undefined
 
 /** False when .env.local is missing – the app shows a setup message instead of crashing. */
 export const supabaseConfigured = Boolean(url && anonKey)
