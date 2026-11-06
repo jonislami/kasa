@@ -35,8 +35,10 @@ export interface PrinterSupport {
 
 export interface PrinterTransport {
   support(): PrinterSupport
-  /** Opens the system picker and connects. Returns the device name. */
+  /** Opens the system picker and connects (Bluetooth). Returns the device name. */
   connect(): Promise<string>
+  /** USB / serial thermal printer (Web Serial – Chrome/Edge on a computer, Windows app). */
+  connectSerial?(): Promise<string>
   /** Reconnects to the last used printer without the picker, if possible. */
   reconnect(): Promise<string | null>
   isConnected(): boolean
@@ -44,8 +46,22 @@ export interface PrinterTransport {
   disconnect(): Promise<void>
 }
 
+/** Bluetooth/USB device list shown by the app when the platform has no system picker (Windows app). */
+export interface DeviceChooser {
+  subscribe(cb: (list: { kind: 'bluetooth' | 'serial'; devices: { id: string; name: string }[] }) => void): () => void
+  select(kind: 'bluetooth' | 'serial', id: string | null): void
+}
+
+/** Updates of an installed app (Windows: GitHub Releases). The web version uses the service worker. */
+export interface AppUpdates {
+  subscribe(cb: (info: { state: 'ready'; version: string }) => void): () => void
+  install(): void
+}
+
 export interface DeviceAdapter {
   platform: DevicePlatform
+  deviceChooser?: DeviceChooser
+  appUpdates?: AppUpdates
   /** Stable ID for this installation (links the device to a register and ATK POS ID). */
   getDeviceId(): Promise<string>
   /** App version from package.json – shown in settings and sent with every fiscal coupon. */

@@ -173,7 +173,8 @@ src/
   features/{landing,auth,platform,dashboard,pos,products,stock,reports,settings,salon,boutique,pharmacy,restaurant}/
   components/ui/ (Button, Input, Select, Card, Badge, Table, Tabs, Toggle, Dialog)
   lib/{supabase.ts, money.ts, vat.ts, business.ts, offlineCache.ts, printer/, fiscal/, device/}
-electron/           – procesi kryesor i Windows (main.ts, preload.ts), pa logjikë biznesi
+electron/           – procesi kryesor i Windows (main.cts, preload.cts → dist-electron/*.cjs), pa logjikë biznesi
+electron-builder.yml, capacitor.config.ts, .github/workflows/release.yml – ndërtimi dhe publikimi (docs/publikimi.md)
 android/ ios/       – projektet e Capacitor (gjenerohen me `npx cap add`)
   types/database.ts
 supabase/

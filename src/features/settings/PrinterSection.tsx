@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Bluetooth, Printer } from 'lucide-react'
+import { Bluetooth, Printer, Usb } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
 import { Badge, Button, Card, Input, Select, Toggle } from '@/components/ui'
 import { device } from '@/lib/device'
@@ -201,6 +201,20 @@ function BluetoothCard({ settings }: { settings: ReceiptSettings }) {
             >
               <Bluetooth className="h-4 w-4" /> {connected ? 'Lidh një printer tjetër' : 'Lidh printerin me Bluetooth'}
             </Button>
+            {support.usbSerial && device.printer.connectSerial && (
+              <Button
+                variant="secondary"
+                disabled={busy}
+                onClick={() =>
+                  run(async () => {
+                    setName(await device.printer.connectSerial!())
+                    setMsg({ ok: true, text: 'Printeri USB u lidh' })
+                  })
+                }
+              >
+                <Usb className="h-4 w-4" /> Printer me USB
+              </Button>
+            )}
             {connected && (
               <>
                 <Button

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Kasa</string>
+    <string name="title_activity_main">Kasa</string>
+    <string name="package_name">app.kasa.pos</string>
+    <string name="custom_url_scheme">app.kasa.pos</string>
+</resources>

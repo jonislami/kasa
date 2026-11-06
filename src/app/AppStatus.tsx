@@ -5,6 +5,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react'
 import { AlertTriangle, CheckCircle2, Clock, Download, RefreshCw, WifiOff, X } from 'lucide-react'
 import { Button } from '@/components/ui'
 import { cn } from '@/lib/cn'
+import { device } from '@/lib/device'
 import { formatEUR } from '@/lib/money'
 import { promptInstall, useInstallState } from '@/lib/pwa'
 import { checkClock, formatDrift, serverNow, useClock, KOSOVO_TZ } from '@/lib/clock'
@@ -12,8 +13,72 @@ import { syncQueue, useOfflineQueue } from '@/features/pos/offline'
 
 const timeFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })
 
-/** A new version of the app is ready: the user decides when to reload (never mid-sale). */
+/** A new version is ready (web: service worker · Windows app: GitHub Releases). */
 export function UpdatePrompt() {
+  return device.appUpdates ? <InstalledAppUpdate /> : device.platform === 'web' ? <WebUpdatePrompt /> : null
+}
+
+/** Windows app: the new version is downloaded; it installs when the user taps (or on next start). */
+function InstalledAppUpdate() {
+  const [version, setVersion] = useState<string | null>(null)
+  useEffect(() => device.appUpdates?.subscribe((i) => setVersion(i.version)), [])
+  if (!version) return null
+  return (
+    <div className="fixed inset-x-3 bottom-6 z-[60] mx-auto flex max-w-[460px] items-center gap-3 rounded-card bg-ink px-4 py-3 text-white shadow-2xl md:left-auto md:right-6">
+      <RefreshCw className="h-5 w-5 shrink-0 text-brand-400" />
+      <div className="min-w-0 flex-1 text-sm">
+        <div className="font-semibold">Kasa {version} është gati</div>
+        <div className="text-white/70">Instalohet tani ose herën tjetër që hapet programi.</div>
+      </div>
+      <Button size="sm" onClick={() => device.appUpdates?.install()}>
+        Instalo
+      </Button>
+      <button type="button" aria-label="Më vonë" onClick={() => setVersion(null)} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-white/10">
+        <X className="h-4 w-4" />
+      </button>
+    </div>
+  )
+}
+
+/**
+ * Windows app: Bluetooth / USB device list (Electron has no system picker). Opens when the page asks
+ * for a device (printer "Lidh") and closes when one is chosen or the user cancels.
+ */
+export function DeviceChooserDialog() {
+  const chooser = device.deviceChooser
+  const [list, setList] = useState<{ kind: 'bluetooth' | 'serial'; devices: { id: string; name: string }[] } | null>(null)
+  useEffect(() => chooser?.subscribe(setList), [chooser])
+  if (!chooser || !list) return null
+  const pick = (id: string | null) => {
+    chooser.select(list.kind, id)
+    setList(null)
+  }
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#4d5c53]/70 p-6">
+      <div className="w-full max-w-[440px] rounded-[20px] bg-white p-5 shadow-2xl">
+        <div className="text-lg font-semibold">{list.kind === 'bluetooth' ? 'Zgjidh printerin Bluetooth' : 'Zgjidh printerin USB'}</div>
+        <p className="mt-1 text-sm text-muted">{list.devices.length ? 'Pajisjet që u gjetën:' : 'Duke kërkuar… ndize printerin dhe afroje.'}</p>
+        <ul className="mt-3 max-h-[50vh] divide-y divide-line overflow-y-auto rounded-card border border-line">
+          {list.devices.map((d) => (
+            <li key={d.id}>
+              <button type="button" onClick={() => pick(d.id)} className="w-full px-4 py-3 text-left font-medium hover:bg-brand-100">
+                {d.name}
+              </button>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-4 flex justify-end">
+          <Button variant="secondary" onClick={() => pick(null)}>
+            Anulo
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** Web/PWA: a new version of the app is ready; the user decides when to reload (never mid-sale). */
+function WebUpdatePrompt() {
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     offlineReady: [offlineReady, setOfflineReady],
@@ -130,7 +195,7 @@ export function OfflineBar() {
 export function InstallCard({ className }: { className?: string }) {
   const state = useInstallState()
   const [msg, setMsg] = useState<string | null>(null)
-  if (state === 'installed' || state === 'unavailable') return null
+  if (device.platform !== 'web' || state === 'installed' || state === 'unavailable') return null
   return (
     <div className={cn('flex flex-wrap items-center gap-3 rounded-card border border-line bg-white px-5 py-4', className)}>
       <img src="/icon-192.png" alt="" className="h-11 w-11 rounded-xl" />

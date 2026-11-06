@@ -1,0 +1,45 @@
+# Windows installer (NSIS) + auto-update from GitHub Releases (jonislami/kasa).
+appId: app.kasa.pos
+productName: Kasa
+copyright: Kasa
+directories:
+  output: release
+  buildResources: build
+files:
+  - dist/**/*
+  - dist-electron/**/*
+  - package.json
+  # The web app is already bundled in dist/ – only electron-updater is needed at runtime.
+  - "!node_modules/{lucide-react,write-excel-file,read-excel-file,react,react-dom,react-router,react-router-dom,scheduler,clsx,cookie,set-cookie-parser,worker-f,unzipper-esm,fflate,archiver*,jszip}/**"
+  - "!node_modules/@tanstack/**"
+  - "!node_modules/@supabase/**"
+  - "!node_modules/@capacitor/**"
+  - "!node_modules/@capacitor-community/**"
+  - "!node_modules/workbox-*/**"
+  - "!**/*.{map,md,ts,tsx}"
+
+extraMetadata:
+  main: dist-electron/main.cjs
+asar: true
+compression: maximum
+# Chromium UI strings: only what Kasa needs (the app itself is in Albanian).
+electronLanguages: [en-US, sq]
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: build/icon.png
+  artifactName: Kasa-Setup-${version}.${ext}
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: Kasa
+  deleteAppDataOnUninstall: false
+publish:
+  - provider: github
+    owner: jonislami
+    repo: kasa
+    releaseType: release

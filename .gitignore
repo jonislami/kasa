@@ -4,3 +4,5 @@ dev-dist
 .env.local
 .env
 *.local
+dist-electron/
+release/

@@ -1,5 +1,7 @@
 import type { DeviceAdapter, DevicePlatform } from './types'
 import { webDevice } from './web'
+import { electronDevice } from './electron'
+import { capacitorDevice } from './capacitor'
 
 export type * from './types'
 
@@ -13,9 +15,10 @@ export function detectPlatform(): DevicePlatform {
 
 function pick(): DeviceAdapter {
   switch (detectPlatform()) {
-    // electron: safeStorage/DPAPI + USB/Serial – phase 7b
-    // capacitor: Keystore/Keychain + BLE plugin – phase 7b
-    // Until then both fall back to the web implementation (WebCrypto + IndexedDB + Web Bluetooth).
+    case 'electron':
+      return electronDevice // DPAPI-sealed storage, Bluetooth/USB chooser, GitHub updates
+    case 'capacitor':
+      return capacitorDevice // native BLE printing (Android, iPhone)
     default:
       return webDevice
   }

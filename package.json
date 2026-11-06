@@ -7,14 +7,27 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc -b --noEmit"
+    "typecheck": "tsc -b --noEmit",
+    "electron:compile": "tsc -p electron/tsconfig.json",
+    "electron:dev": "npm run electron:compile && cross-env KASA_DEV_URL=http://localhost:5173 electron .",
+    "electron:start": "npm run build && npm run electron:compile && electron .",
+    "dist:win": "npm run build && npm run electron:compile && electron-builder --win --publish never",
+    "release:win": "npm run build && npm run electron:compile && electron-builder --win --publish always",
+    "cap:sync": "npm run build && cap sync",
+    "android:open": "cap open android",
+    "ios:open": "cap open ios"
   },
   "dependencies": {
+    "@capacitor-community/bluetooth-le": "^8.3.0",
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/ios": "^8.6.0",
     "@supabase/supabase-js": "^2.119.0",
     "@tanstack/query-async-storage-persister": "^5.106.1",
     "@tanstack/react-query": "^5.106.1",
     "@tanstack/react-query-persist-client": "^5.106.1",
     "clsx": "^2.1.1",
+    "electron-updater": "^6.8.11",
     "lucide-react": "^1.69.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -23,16 +36,26 @@
     "write-excel-file": "^4.1.1"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.6.0",
     "@types/node": "^26.6.6",
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^6.2.1",
     "autoprefixer": "^10.6.2",
+    "cross-env": "^10.1.0",
+    "electron": "^45.2.3",
+    "electron-builder": "^26.18.0",
     "postcss": "^8.5.32",
     "tailwindcss": "^3.4.19",
     "typescript": "^7.0.2",
     "vite": "^8.3.6",
     "vite-plugin-pwa": "^2.0.0",
     "workbox-window": "^7.4.1"
-  }
+  },
+  "description": "Kasa – arka, stoku dhe raportet për bizneset në Kosovë",
+  "author": {
+    "name": "Kasa",
+    "email": "jonislami72@gmail.com"
+  },
+  "main": "dist-electron/main.cjs"
 }

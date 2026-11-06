@@ -7,7 +7,7 @@ import { CACHE_MAX_AGE, persister, shouldPersist } from '@/lib/queryPersist'
 import { device } from '@/lib/device'
 import { AuthProvider } from '@/app/AuthProvider'
 import { AppRoutes } from '@/app/routes'
-import { UpdatePrompt } from '@/app/AppStatus'
+import { DeviceChooserDialog, UpdatePrompt } from '@/app/AppStatus'
 import './index.css'
 
 const queryClient = new QueryClient({
@@ -28,6 +28,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <AuthProvider>
           <AppRoutes />
           <UpdatePrompt />
+          <DeviceChooserDialog />
         </AuthProvider>
       </BrowserRouter>
     </PersistQueryClientProvider>
