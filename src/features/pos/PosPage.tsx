@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Camera, ClipboardList, Minus, PauseCircle, Plus, ScanLine, Search, Trash2, WifiOff, X } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
@@ -11,7 +11,8 @@ import { formatQty, unitLabel } from '@/lib/units'
 import { useMediaQuery } from '@/lib/useMediaQuery'
 import { fetchCategories } from '@/features/products/api'
 import { createSale, fetchPosProducts, fetchRegisters, NetworkError, type CreateSaleInput, type PaymentMethod, type Sale } from './api'
-import { addToCart, computeTotals, emptyCart, setLineDiscount, setQuantity, type Cart, type CartLine, type PosProduct } from './cart'
+import { addToCart, computeTotals, emptyCart, setLineDiscount, setLineStaff, setQuantity, type Cart, type CartLine, type PosProduct } from './cart'
+import { fetchAppointment, fetchStaff, initials, staffColor, type Appointment } from '@/features/salon/api'
 import { CameraScanner, CashDialog, DiscountDialog, LineDialog } from './dialogs'
 import { enqueueSale, loadCatalog, loadHeld, nextOfflineNo, saveCatalog, saveHeld, useOfflineQueue, type HeldCart } from './offline'
 import { PrintArea, Receipt } from './Receipt'
@@ -72,6 +73,14 @@ export function PosPage() {
   }, [registerId, business.id])
   const registerName = registers.data?.find((r) => r.id === registerId)?.name ?? null
 
+  // ---------- salon: who performs each line, appointment being paid ----------
+  const salon = hasModule(business.type, 'commission')
+  const staffQ = useQuery({ queryKey: ['staff'], queryFn: fetchStaff, enabled: salon, retry: false, staleTime: 5 * 60_000 })
+  const staff = useMemo(() => staffQ.data ?? [], [staffQ.data])
+  const [staffId, setStaffId] = useState<string | null>(salon ? profile.id : null)
+  const [params, setParams] = useSearchParams()
+  const [appointment, setAppointment] = useState<Appointment | null>(null)
+
   // ---------- cart (kept across reloads on this device) ----------
   const cartKey = `kasa.cart.${business.id}.${profile.id}`
   const [cart, setCart] = useState<Cart>(() => {
@@ -123,27 +132,47 @@ export function PosPage() {
 
   const add = useCallback(
     (p: PosProduct, qty = 1) => {
-      setCart((c) => addToCart(c, p, qty))
+      setCart((c) => addToCart(c, p, qty, salon ? staffId : null))
       setError(null)
       if (p.unit === 'kg' && qty === 1) {
         // weight: open the line so the weight can be typed
         setEditLine({ key: p.id, product: p, quantity: (cart.lines.find((l) => l.key === p.id)?.quantity ?? 0) + 1, discount: 0 })
       }
     },
-    [cart.lines],
+    [cart.lines, salon, staffId],
   )
 
   const onScan = useCallback(
     (code: string) => {
       const p = products.find((x) => x.barcode === code.trim())
       if (p) {
-        setCart((c) => addToCart(c, p, 1))
+        setCart((c) => addToCart(c, p, 1, salon ? staffId : null))
         setNotice(`${p.name} u shtua`)
         setError(null)
       } else setError(`Barkodi ${code} nuk u gjet`)
     },
-    [products],
+    [products, salon, staffId],
   )
+
+  // "Paguaj në arkë" from /terminet: the service goes on the bill for that worker.
+  const apptParam = params.get('termin')
+  useEffect(() => {
+    if (!apptParam || products.length === 0) return
+    let cancelled = false
+    void fetchAppointment(apptParam)
+      .then((a) => {
+        if (cancelled || !a) return
+        setAppointment(a)
+        const p = a.product_id ? products.find((x) => x.id === a.product_id) : undefined
+        if (p) setCart((c) => (c.lines.some((l) => l.product.id === p.id && l.staffId === a.staff_id) ? c : addToCart(c, p, 1, a.staff_id)))
+        setStaffId(a.staff_id)
+        setParams({}, { replace: true })
+      })
+      .catch((e: Error) => setError(e.message))
+    return () => {
+      cancelled = true
+    }
+  }, [apptParam, products, setParams])
 
   const submitSearch = () => {
     const q = search.trim()
@@ -176,7 +205,14 @@ export function PosPage() {
       const input: CreateSaleInput = {
         client_id: crypto.randomUUID(),
         register_id: registerId,
-        items: cart.lines.map((l) => ({ product_id: l.product.id, quantity: l.quantity, unit_price: l.product.sale_price, discount: l.discount || undefined })),
+        items: cart.lines.map((l) => ({
+          product_id: l.product.id,
+          quantity: l.quantity,
+          unit_price: l.product.sale_price,
+          discount: l.discount || undefined,
+          staff_id: l.staffId ?? undefined,
+        })),
+        appointment_id: appointment?.id,
         invoice_discount: totals.invoiceDiscount || undefined,
         payment: { method: m, tendered: m === 'card' ? undefined : tenderedAmount, card_amount: m === 'mixed' ? cardAmount : undefined },
         client_created_at: serverDate().toISOString(),
@@ -200,11 +236,15 @@ export function PosPage() {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [cart, totals, registerId, busy, registerName, profile.full_name],
+    [cart, totals, registerId, busy, registerName, profile.full_name, appointment],
   )
 
   const finish = (sale: Sale) => {
     setReceipt(sale)
+    if (appointment) {
+      setAppointment(null)
+      void qc.invalidateQueries({ queryKey: ['appointments'] })
+    }
     if (receiptSettings.data?.settings.auto_print) void print(sale, false, true)
     setCart(emptyCart())
     setTendered('')
@@ -318,13 +358,37 @@ export function PosPage() {
     </div>
   )
 
+  // Salon: the worker new lines are added for (as in the design: "Punëtori: A B D").
+  const staffBar = salon && staff.length > 0 && (
+    <div className="flex items-center gap-2 overflow-x-auto">
+      <span className="shrink-0 text-sm font-medium text-muted">Punëtori:</span>
+      {staff.map((x) => (
+        <button
+          key={x.id}
+          type="button"
+          onClick={() => setStaffId(x.id)}
+          className={cn(
+            'flex shrink-0 items-center gap-2 rounded-full border bg-white py-1 pl-1 pr-3 text-sm font-semibold',
+            staffId === x.id ? 'border-2 border-ink' : 'border-line',
+          )}
+        >
+          <span className="flex h-7 w-7 items-center justify-center rounded-full text-xs text-white" style={{ background: staffColor(x.id, staff) }}>
+            {initials(x.full_name)}
+          </span>
+          {x.full_name.split(' ')[0]}
+        </button>
+      ))}
+    </div>
+  )
+
   const cartLines = (
     <ul className="divide-y divide-line">
       {cart.lines.map((l) => {
         const t = totals.lines.find((x) => x.key === l.key)
         return (
           <li key={l.key} className="flex items-center gap-3 px-5 py-3">
-            <button type="button" onClick={() => setEditLine(l)} className="min-w-0 flex-1 text-left">
+            <div className="min-w-0 flex-1">
+            <button type="button" onClick={() => setEditLine(l)} className="w-full min-w-0 text-left">
               <div className="truncate text-[15px] font-semibold md:text-sm">{l.product.name}</div>
               <div className="text-sm text-muted md:text-xs">
                 {formatEUR(l.product.sale_price)} / {unitLabel(l.product.unit)}
@@ -332,6 +396,26 @@ export function PosPage() {
                 <span className="font-semibold text-ink lg:hidden"> · {formatEUR(t?.total ?? 0)}</span>
               </div>
             </button>
+              {salon && staff.length > 0 && (
+                <span className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-line py-0.5 pl-1 pr-2 text-xs font-semibold">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full text-[10px] text-white" style={{ background: staffColor(l.staffId ?? '', staff) }}>
+                    {initials(staff.find((x) => x.id === l.staffId)?.full_name ?? '?')}
+                  </span>
+                  <select
+                    aria-label={`Kush e kreu: ${l.product.name}`}
+                    value={l.staffId ?? ''}
+                    onChange={(e) => setCart((c) => setLineStaff(c, l.key, e.target.value))}
+                    className="bg-transparent focus:outline-none"
+                  >
+                    {staff.map((x) => (
+                      <option key={x.id} value={x.id}>
+                        {x.full_name.split(' ')[0]}
+                      </option>
+                    ))}
+                  </select>
+                </span>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -552,7 +636,9 @@ export function PosPage() {
             </Button>
             {toolbar}
           </div>
-          {offlineBanner}
+          {staffBar}
+          {staffBar}
+        {offlineBanner}
           {messages}
           <CameraScanner active={camera} onCode={onScan} />
           <div className="flex flex-wrap gap-2">
@@ -604,6 +690,12 @@ export function PosPage() {
                 {cart.lines.length} {cart.lines.length === 1 ? 'produkt' : 'produkte'} · {new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 }).format(totals.itemsCount)} artikuj
                 {registerName && ` · ${registerName}`}
               </div>
+              {appointment && (
+                <div className="mt-1 text-sm font-medium text-brand-600">
+                  Klienti: {appointment.customer_name} · termini{' '}
+                  {new Date(appointment.starts_at).toLocaleTimeString('sq-AL', { timeZone: 'Europe/Belgrade', hour: '2-digit', minute: '2-digit' })}
+                </div>
+              )}
             </div>
             {cart.lines.length > 0 && (
               <button type="button" onClick={() => setCart(emptyCart())} title="Pastro faturën" className="flex h-10 w-10 items-center justify-center rounded-xl border border-line text-muted hover:text-warn-700">

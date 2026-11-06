@@ -18,6 +18,7 @@ const SettingsPage = lazy(() => import('@/features/settings/SettingsPage').then(
 const ReportsPage = lazy(() => import('@/features/reports/ReportsPage').then((m) => ({ default: m.ReportsPage })))
 const AuditPage = lazy(() => import('@/features/reports/AuditPage').then((m) => ({ default: m.AuditPage })))
 const WorkPage = lazy(() => import('@/features/work/WorkPage').then((m) => ({ default: m.WorkPage })))
+const AppointmentsPage = lazy(() => import('@/features/salon/AppointmentsPage').then((m) => ({ default: m.AppointmentsPage })))
 const StockPage = lazy(() => import('@/features/stock/StockPage').then((m) => ({ default: m.StockPage })))
 const ProductsPage = lazy(() => import('@/features/products/ProductsPage').then((m) => ({ default: m.ProductsPage })))
 
@@ -138,7 +139,9 @@ export function AppRoutes() {
           path="terminet"
           element={
             <RequireType type="salon">
-              <ComingSoon title="Terminet" phase="Faza 8a – Sallon" />
+              <Lazy>
+                <AppointmentsPage />
+              </Lazy>
             </RequireType>
           }
         />

@@ -60,7 +60,9 @@ export interface Sale {
 export interface CreateSaleInput {
   client_id: string
   register_id?: string | null
-  items: { product_id: string; quantity: number; unit_price: number; discount?: number }[]
+  items: { product_id: string; quantity: number; unit_price: number; discount?: number; staff_id?: string }[]
+  /** Salon: the appointment being paid ("Paguaj në arkë"). */
+  appointment_id?: string
   invoice_discount?: number
   payment: { method: PaymentMethod; card_amount?: number; tendered?: number }
   offline?: boolean

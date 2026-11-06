@@ -19,11 +19,15 @@ export interface PosProduct {
 }
 
 export interface CartLine {
-  key: string // product id (one line per product)
+  key: string // product id (+ "@staff" in a salon: one line per product and worker)
   product: PosProduct
   quantity: number
   discount: number // amount off the line (EUR)
+  /** Salon: who performs the service / sells the product (commission). */
+  staffId?: string | null
 }
+
+const lineKey = (productId: string, staffId?: string | null) => (staffId ? `${productId}@${staffId}` : productId)
 
 export interface Cart {
   lines: CartLine[]
@@ -36,15 +40,34 @@ export function roundQty(q: number, unit: string): number {
   return unit === 'kg' ? Math.round(q * 1000) / 1000 : Math.round(q)
 }
 
-export function addToCart(cart: Cart, product: PosProduct, quantity = 1): Cart {
-  const existing = cart.lines.find((l) => l.key === product.id)
+export function addToCart(cart: Cart, product: PosProduct, quantity = 1, staffId?: string | null): Cart {
+  const key = lineKey(product.id, staffId)
+  const existing = cart.lines.find((l) => l.key === key)
   if (existing) {
     return {
       ...cart,
-      lines: cart.lines.map((l) => (l.key === product.id ? { ...l, quantity: roundQty(l.quantity + quantity, product.unit) } : l)),
+      lines: cart.lines.map((l) => (l.key === key ? { ...l, quantity: roundQty(l.quantity + quantity, product.unit) } : l)),
     }
   }
-  return { ...cart, lines: [...cart.lines, { key: product.id, product, quantity: roundQty(quantity, product.unit), discount: 0 }] }
+  return { ...cart, lines: [...cart.lines, { key, product, quantity: roundQty(quantity, product.unit), discount: 0, staffId: staffId ?? null }] }
+}
+
+/** Salon: another worker performs this line (merges with an identical line of that worker). */
+export function setLineStaff(cart: Cart, key: string, staffId: string): Cart {
+  const line = cart.lines.find((l) => l.key === key)
+  if (!line) return cart
+  const newKey = lineKey(line.product.id, staffId)
+  if (newKey === key) return cart
+  const other = cart.lines.find((l) => l.key === newKey)
+  if (other) {
+    return {
+      ...cart,
+      lines: cart.lines
+        .filter((l) => l.key !== key)
+        .map((l) => (l.key === newKey ? { ...l, quantity: roundQty(l.quantity + line.quantity, l.product.unit), discount: round2(l.discount + line.discount) } : l)),
+    }
+  }
+  return { ...cart, lines: cart.lines.map((l) => (l.key === key ? { ...l, key: newKey, staffId } : l)) }
 }
 
 export function setQuantity(cart: Cart, key: string, quantity: number): Cart {

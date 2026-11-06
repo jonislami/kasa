@@ -23,6 +23,7 @@ import {
 import { InvoiceDialog } from '@/features/reports/InvoiceDialog'
 import { MyWork } from '@/features/reports/MyWork'
 import { ShiftCard } from '@/features/reports/ShiftCard'
+import { CommissionReport } from '@/features/salon/CommissionReport'
 
 const timeFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })
 const dayTimeFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
@@ -208,6 +209,7 @@ function ManagerWork({ workerTerm, commission }: { workerTerm: string; commissio
             </Table>
           </Card>
         </div>
+        {commission && <CommissionReport />}
       </div>
       <InvoiceDialog saleId={openSale} onClose={() => setOpenSale(null)} />
     </>
