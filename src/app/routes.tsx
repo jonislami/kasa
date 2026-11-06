@@ -9,6 +9,7 @@ import { LoginPage } from '@/features/auth/LoginPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { ComingSoon } from '@/features/ComingSoon'
 import { supabaseConfigured } from '@/lib/supabase'
+import { device } from '@/lib/device'
 
 const PlatformPage = lazy(() => import('@/features/platform/PlatformPage').then((m) => ({ default: m.PlatformPage })))
 const PosPage = lazy(() => import('@/features/pos/PosPage').then((m) => ({ default: m.PosPage })))
@@ -29,8 +30,10 @@ function Home() {
   const { status, ctx } = useAuth()
   const { pathname } = useLocation()
   if (!supabaseConfigured || status === 'anonymous') {
-    // Only "/" itself is the public website; inner screens ask for login.
-    return pathname === '/' ? <LandingPage /> : <Navigate to="/login" replace state={{ from: pathname }} />
+    // Only "/" itself is the public website (in the browser); inner screens ask for login.
+    // The installed apps (Windows, Android, iPhone) open straight on the login screen.
+    if (pathname === '/' && device.platform === 'web') return <LandingPage />
+    return <Navigate to="/login" replace state={pathname === '/' ? undefined : { from: pathname }} />
   }
   if (status === 'loading') return <FullScreenLoader />
   if (ctx?.is_platform_admin && !ctx.profile) return <Navigate to="/platforma" replace />
