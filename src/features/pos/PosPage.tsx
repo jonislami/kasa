@@ -17,6 +17,7 @@ import { CameraScanner, CashDialog, DiscountDialog, LineDialog } from './dialogs
 import { enqueueSale, loadCatalog, loadHeld, nextOfflineNo, saveCatalog, saveHeld, useOfflineQueue, type HeldCart } from './offline'
 import { PrintArea, Receipt } from './Receipt'
 import { SalesDialog } from './SalesDialog'
+import { VariantPicker } from './VariantPicker'
 import { printReceipt } from '@/lib/printer'
 import { serverDate, KOSOVO_TZ } from '@/lib/clock'
 import { fetchReceiptSettings } from '@/features/settings/api'
@@ -31,6 +32,12 @@ function stockClass(p: PosProduct) {
   if (p.stock <= p.min_stock / 2) return 'text-warn-700 font-semibold'
   if (p.stock <= p.min_stock) return 'text-amber-700 font-semibold'
   return 'text-muted'
+}
+
+function variantSummary(p: PosProduct): string {
+  const s = p.variant_sizes?.length ?? 0
+  const c = p.variant_colors?.length ?? 0
+  return [s ? `${s} madhësi` : null, c ? `${c} ngjyra` : null].filter(Boolean).join(' · ') || 'variante'
 }
 
 export function PosPage() {
@@ -80,6 +87,14 @@ export function PosPage() {
   const [staffId, setStaffId] = useState<string | null>(salon ? profile.id : null)
   const [params, setParams] = useSearchParams()
   const [appointment, setAppointment] = useState<Appointment | null>(null)
+  // Exchange: the refunded amount stayed in the drawer; it pays (part of) the new bill as cash.
+  const [exchange, setExchange] = useState<{ credit: number; from: string } | null>(() => {
+    try {
+      return JSON.parse(sessionStorage.getItem('kasa.exchange') ?? 'null') as { credit: number; from: string } | null
+    } catch {
+      return null
+    }
+  })
 
   // ---------- cart (kept across reloads on this device) ----------
   const cartKey = `kasa.cart.${business.id}.${profile.id}`
@@ -124,14 +139,19 @@ export function PosPage() {
   // ---------- search ----------
   const results = useMemo(() => {
     const q = search.trim().toLowerCase()
-    let list = products
+    let list = products.filter((p) => !p.parent_id)
     if (category !== 'all') list = list.filter((p) => p.category_id === category)
     if (q) list = list.filter((p) => p.name.toLowerCase().includes(q) || p.barcode === q || p.barcode?.startsWith(q) || p.substance?.toLowerCase().includes(q))
     return list
   }, [products, search, category])
 
+  const [variantModel, setVariantModel] = useState<PosProduct | null>(null)
   const add = useCallback(
     (p: PosProduct, qty = 1) => {
+      if (p.has_variants) {
+        setVariantModel(p)
+        return
+      }
       setCart((c) => addToCart(c, p, qty, salon ? staffId : null))
       setError(null)
       if (p.unit === 'kg' && qty === 1) {
@@ -153,6 +173,24 @@ export function PosPage() {
     },
     [products, salon, staffId],
   )
+
+  const creditParam = params.get('kredit')
+  useEffect(() => {
+    if (!creditParam) return
+    const credit = round2(Number(creditParam))
+    if (credit > 0) setExchange({ credit, from: params.get('nga') ?? '' })
+    setParams({}, { replace: true })
+  }, [creditParam, params, setParams])
+  useEffect(() => {
+    try {
+      if (exchange) sessionStorage.setItem('kasa.exchange', JSON.stringify(exchange))
+      else sessionStorage.removeItem('kasa.exchange')
+    } catch {
+      /* private mode */
+    }
+  }, [exchange])
+  const credit = exchange?.credit ?? 0
+  const due = round2(Math.max(0, totals.total - credit))
 
   // "Paguaj në arkë" from /terminet: the service goes on the bill for that worker.
   const apptParam = params.get('termin')
@@ -241,6 +279,7 @@ export function PosPage() {
 
   const finish = (sale: Sale) => {
     setReceipt(sale)
+    setExchange(null)
     if (appointment) {
       setAppointment(null)
       void qc.invalidateQueries({ queryKey: ['appointments'] })
@@ -253,18 +292,25 @@ export function PosPage() {
     setCashOpen(false)
   }
 
+  const payCard = () => {
+    // With exchange credit the card pays only the rest; the credit is the cash part.
+    if (credit <= 0) return void pay('card')
+    if (due <= 0) return void pay('cash', credit)
+    void pay('mixed', credit, due)
+  }
+
   const payDesktop = () => {
     const t = parseNum(tendered)
     const c = parseNum(cardPart)
     if (method === 'cash') {
-      if (t != null && (Number.isNaN(t) || t < totals.total)) return setError('Shuma e paguar është më e vogël se totali')
-      return void pay('cash', t ?? totals.total)
+      if (t != null && (Number.isNaN(t) || t < due)) return setError('Shuma e paguar është më e vogël se totali')
+      return void pay('cash', round2((t ?? due) + credit))
     }
-    if (method === 'card') return void pay('card')
-    if (c == null || Number.isNaN(c) || c <= 0 || c >= totals.total) return setError('Shkruaj sa paguhet me kartelë (më pak se totali)')
-    const cash = round2(totals.total - c)
+    if (method === 'card') return payCard()
+    if (c == null || Number.isNaN(c) || c <= 0 || c >= due) return setError('Shkruaj sa paguhet me kartelë (më pak se totali)')
+    const cash = round2(due - c)
     if (t != null && (Number.isNaN(t) || t < cash)) return setError('Keshi i paguar është më i vogël se pjesa me kesh')
-    void pay('mixed', t ?? cash, c)
+    void pay('mixed', round2((t ?? cash) + credit), c)
   }
 
   // ---------- held invoices ----------
@@ -332,9 +378,23 @@ export function PosPage() {
   const change = (() => {
     const t = parseNum(tendered)
     if (t == null || Number.isNaN(t)) return null
-    const cashDue = method === 'mixed' ? round2(totals.total - (parseNum(cardPart) || 0)) : totals.total
+    const cashDue = method === 'mixed' ? round2(due - (parseNum(cardPart) || 0)) : due
     return round2(t - cashDue)
   })()
+
+  const exchangeBanner = exchange && (
+    <div className="flex items-center justify-between gap-2 rounded-ctl bg-brand-100 px-3 py-2 text-sm">
+      <span>
+        Ndërrim{exchange.from && ` nga fatura #${String(exchange.from).padStart(5, '0')}`} · kredi <strong className="tabular-nums">−{formatEUR(credit)}</strong>
+        <span className="block text-xs text-muted">
+          {totals.total >= credit ? `Klienti paguan edhe ${formatEUR(due)}` : `Klientit i kthehen ${formatEUR(round2(credit - totals.total))}`}
+        </span>
+      </span>
+      <button type="button" onClick={() => setExchange(null)} title="Hiqe kredinë" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted hover:text-warn-700">
+        <X className="h-4 w-4" />
+      </button>
+    </div>
+  )
 
   // ---------- render ----------
   const offlineBanner = (offline || queue.pending.length > 0) && (
@@ -558,7 +618,17 @@ export function PosPage() {
           setDiscountOpen(false)
         }}
       />
-      <CashDialog open={cashOpen} total={totals.total} busy={busy} onClose={() => setCashOpen(false)} onPay={(t) => void pay('cash', t)} />
+      <VariantPicker
+        model={variantModel}
+        variants={products}
+        onClose={() => setVariantModel(null)}
+        onPick={(v) => {
+          setVariantModel(null)
+          setCart((c) => addToCart(c, v, 1, salon ? staffId : null))
+          setNotice(`${v.name} u shtua`)
+        }}
+      />
+      <CashDialog open={cashOpen} total={due} busy={busy} onClose={() => setCashOpen(false)} onPay={(t) => void pay('cash', round2(t + credit))} />
       <Dialog open={Boolean(receipt)} onClose={() => setReceipt(null)} width="md:max-w-[440px]">
         {receipt && (
           <div className="flex flex-col gap-4">
@@ -670,7 +740,11 @@ export function PosPage() {
                     <div className="mt-0.5 line-clamp-2 text-[15px] font-semibold leading-tight">{p.name}</div>
                     <div className="mt-auto flex items-end justify-between pt-3">
                       <span className="text-lg font-bold tabular-nums">{formatEUR(p.sale_price)}</span>
-                      {showStock && p.kind === 'product' && <span className={cn('text-xs', stockClass(p))}>{formatQty(p.stock, p.unit)}</span>}
+                      {p.has_variants ? (
+                        <span className="text-xs text-muted">{variantSummary(p)}</span>
+                      ) : (
+                        showStock && p.kind === 'product' && <span className={cn('text-xs', stockClass(p))}>{formatQty(p.stock, p.unit)}</span>
+                      )}
                       {p.kind === 'service' && p.duration_min && <span className="text-xs text-muted">{p.duration_min} min</span>}
                     </div>
                   </button>
@@ -690,6 +764,7 @@ export function PosPage() {
                 {cart.lines.length} {cart.lines.length === 1 ? 'produkt' : 'produkte'} · {new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 }).format(totals.itemsCount)} artikuj
                 {registerName && ` · ${registerName}`}
               </div>
+              {exchangeBanner && <div className="mt-2">{exchangeBanner}</div>}
               {appointment && (
                 <div className="mt-1 text-sm font-medium text-brand-600">
                   Klienti: {appointment.customer_name} · termini{' '}
@@ -774,7 +849,7 @@ export function PosPage() {
                     onChange={(e) => setTendered(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && payDesktop()}
                     inputMode="decimal"
-                    placeholder={formatEUR(method === 'mixed' ? Math.max(0, round2(totals.total - (parseNum(cardPart) || 0))) : totals.total)}
+                    placeholder={formatEUR(method === 'mixed' ? Math.max(0, round2(due - (parseNum(cardPart) || 0))) : due)}
                     className="h-11 rounded-ctl border border-field px-3 tabular-nums"
                   />
                 </div>
@@ -787,7 +862,7 @@ export function PosPage() {
               </div>
             )}
             <Button size="lg" className="h-[58px] text-[18px]" disabled={!cart.lines.length} loading={busy} onClick={payDesktop}>
-              Paguaj {formatEUR(totals.total)} <span className="rounded-md border border-white/40 px-1.5 text-xs font-medium">F12</span>
+              Paguaj {formatEUR(due)} <span className="rounded-md border border-white/40 px-1.5 text-xs font-medium">F12</span>
             </Button>
             <div className="grid grid-cols-3 gap-2">
               <Button variant="secondary" disabled={!cart.lines.length} onClick={() => setDiscountOpen(true)}>
@@ -845,7 +920,11 @@ export function PosPage() {
                 >
                   <span className="min-w-0">
                     <span className="block truncate font-semibold">{p.name}</span>
-                    {showStock && p.kind === 'product' && <span className={cn('text-xs', stockClass(p))}>{formatQty(p.stock, p.unit)}</span>}
+                    {p.has_variants ? (
+                      <span className="text-xs text-muted">{variantSummary(p)}</span>
+                    ) : (
+                      showStock && p.kind === 'product' && <span className={cn('text-xs', stockClass(p))}>{formatQty(p.stock, p.unit)}</span>
+                    )}
                   </span>
                   <span className="shrink-0 font-bold tabular-nums">{formatEUR(p.sale_price)}</span>
                 </button>
@@ -887,6 +966,7 @@ export function PosPage() {
       </div>
 
       <div className="sticky bottom-[calc(60px+env(safe-area-inset-bottom))] z-20 border-t border-line bg-white px-4 py-3">
+        {exchangeBanner && <div className="mb-3">{exchangeBanner}</div>}
         <div className="mb-3 flex items-end justify-between">
           <span className="text-[15px] text-muted">
             Totali <span className="text-sm">(TVSH {formatEUR(totals.vatTotal)} e përfshirë)</span>
@@ -894,7 +974,7 @@ export function PosPage() {
           <span className="text-[34px] font-bold leading-none tabular-nums">{formatEUR(totals.total)}</span>
         </div>
         <div className="grid grid-cols-[1fr_1.6fr] gap-2.5">
-          <Button variant="secondary" size="lg" disabled={!cart.lines.length} loading={busy && !cashOpen} onClick={() => void pay('card')}>
+          <Button variant="secondary" size="lg" disabled={!cart.lines.length} loading={busy && !cashOpen} onClick={payCard}>
             Kartelë
           </Button>
           <Button size="lg" disabled={!cart.lines.length} onClick={() => setCashOpen(true)}>

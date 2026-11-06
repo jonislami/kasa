@@ -19,6 +19,7 @@ const ReportsPage = lazy(() => import('@/features/reports/ReportsPage').then((m)
 const AuditPage = lazy(() => import('@/features/reports/AuditPage').then((m) => ({ default: m.AuditPage })))
 const WorkPage = lazy(() => import('@/features/work/WorkPage').then((m) => ({ default: m.WorkPage })))
 const AppointmentsPage = lazy(() => import('@/features/salon/AppointmentsPage').then((m) => ({ default: m.AppointmentsPage })))
+const VariantsPage = lazy(() => import('@/features/products/VariantsPage').then((m) => ({ default: m.VariantsPage })))
 const StockPage = lazy(() => import('@/features/stock/StockPage').then((m) => ({ default: m.StockPage })))
 const ProductsPage = lazy(() => import('@/features/products/ProductsPage').then((m) => ({ default: m.ProductsPage })))
 
@@ -111,6 +112,16 @@ export function AppRoutes() {
             <RequireManager>
               <Lazy>
                 <ProductsPage />
+              </Lazy>
+            </RequireManager>
+          }
+        />
+        <Route
+          path="produktet/:id"
+          element={
+            <RequireManager>
+              <Lazy>
+                <VariantsPage />
               </Lazy>
             </RequireManager>
           }

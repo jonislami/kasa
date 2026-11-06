@@ -16,6 +16,13 @@ export interface PosProduct {
   min_stock: number
   substance: string | null
   duration_min: number | null
+  parent_id?: string | null
+  has_variants?: boolean
+  variant_size?: string | null
+  variant_color?: string | null
+  color_hex?: string | null
+  variant_sizes?: string[] | null
+  variant_colors?: { name: string; hex: string | null }[] | null
 }
 
 export interface CartLine {
