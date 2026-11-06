@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { BarChart3, Plus, ReceiptText, ShoppingCart } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
@@ -27,6 +27,8 @@ import { BarChart, BarLabels, Delta, RankBars } from '@/features/reports/charts'
 import { InvoiceDialog } from '@/features/reports/InvoiceDialog'
 import { MyWork } from '@/features/reports/MyWork'
 import { ShiftCard } from '@/features/reports/ShiftCard'
+import { ExpiryCard } from '@/features/stock/LotsTab'
+import { fetchLots } from '@/lib/lots'
 
 const dateFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 const timeFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })
@@ -74,10 +76,10 @@ export function DashboardPage() {
     )
   }
 
-  return <ManagerDashboard itemsLabel={info.terms.items} stockOn={hasModule(business.type, 'stock')} />
+  return <ManagerDashboard itemsLabel={info.terms.items} stockOn={hasModule(business.type, 'stock')} lotsOn={hasModule(business.type, 'lots')} />
 }
 
-function ManagerDashboard({ itemsLabel, stockOn }: { itemsLabel: string; stockOn: boolean }) {
+function ManagerDashboard({ itemsLabel, stockOn, lotsOn }: { itemsLabel: string; stockOn: boolean; lotsOn: boolean }) {
   const t = todayISO()
   const [range, setRange] = useState<Range>('week')
   const [openSale, setOpenSale] = useState<string | null>(null)
@@ -93,6 +95,8 @@ function ManagerDashboard({ itemsLabel, stockOn }: { itemsLabel: string; stockOn
   const series = useQuery({ queryKey: ['series', seriesArgs], queryFn: () => fetchSeries(seriesArgs.from, seriesArgs.to, seriesArgs.bucket) })
   const invoices = useQuery({ queryKey: ['invoices', 'today', t], queryFn: () => fetchInvoices(t, t, 6) })
   const products = useQuery({ queryKey: ['products', 'admin'], queryFn: () => fetchProducts(true), enabled: stockOn })
+  const lots = useQuery({ queryKey: ['lots'], queryFn: fetchLots, enabled: lotsOn })
+  const navigate = useNavigate()
 
   const low = useMemo(
     () =>
@@ -207,6 +211,7 @@ function ManagerDashboard({ itemsLabel, stockOn }: { itemsLabel: string; stockOn
       </div>
 
       <div className="grid gap-4 px-4 pb-8 md:px-8 lg:grid-cols-2">
+        {lotsOn && lots.data && <ExpiryCard lots={lots.data} onOpen={() => navigate('/stoku?tab=afatet')} />}
         {stockOn && (
           <Card className="overflow-hidden">
             <CardHeader

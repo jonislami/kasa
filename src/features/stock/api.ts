@@ -114,6 +114,8 @@ export interface StockEntryItem {
   quantity: number
   unit_cost: number
   total: number
+  lot_no?: string | null
+  expires_on?: string | null
 }
 
 export interface EntryInput {
@@ -124,7 +126,7 @@ export interface EntryInput {
   payment: EntryPayment
   due_days: number | null
   note: string
-  items: { product_id: string; quantity: number; unit_cost: number }[]
+  items: { product_id: string; quantity: number; unit_cost: number; lot_no?: string; expires_on?: string }[]
 }
 
 const ENTRY_COLS =
@@ -153,15 +155,16 @@ export async function fetchEntries(limit = 200): Promise<StockEntry[]> {
   return (data ?? []).map((r) => toEntry(r as Record<string, unknown>))
 }
 
+const ITEM_COLS = 'id, position, product_id, name, unit, vat_code, quantity, unit_cost, total'
+
 export async function fetchEntryItems(entryId: string): Promise<StockEntryItem[]> {
-  const { data, error } = await supabase
-    .from('stock_entry_items')
-    .select('id, position, product_id, name, unit, vat_code, quantity, unit_cost, total')
-    .eq('entry_id', entryId)
-    .order('position')
+  const q = (cols: string) => supabase.from('stock_entry_items').select(cols).eq('entry_id', entryId).order('position')
+  let { data, error } = await q(ITEM_COLS + ', lot_no, expires_on')
+  // Before migration 0010 there are no lot columns.
+  if (error?.code === '42703') ({ data, error } = await q(ITEM_COLS))
   if (error) fail(error)
-  return (data ?? []).map((r) => ({
-    ...(r as StockEntryItem),
+  return ((data ?? []) as unknown as Record<string, unknown>[]).map((r) => ({
+    ...(r as unknown as StockEntryItem),
     quantity: Number(r.quantity),
     unit_cost: Number(r.unit_cost),
     total: Number(r.total),
@@ -240,7 +243,7 @@ export async function fetchMovements(opts: { productId?: string; kind?: Movement
   return (data ?? []).map((r) => ({ ...(r as Movement), quantity: Number(r.quantity), stock_after: Number(r.stock_after) }))
 }
 
-export async function adjustStock(p: { product_id: string; quantity: number; reason: AdjustReason; note?: string }): Promise<number> {
+export async function adjustStock(p: { product_id: string; quantity: number; reason: AdjustReason; note?: string; lot_id?: string }): Promise<number> {
   const { data, error } = await supabase.rpc('adjust_stock', { p })
   if (error) fail(error)
   return Number(data)

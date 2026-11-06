@@ -7,7 +7,7 @@ import { formatEUR } from '@/lib/money'
 import { formatQty, UNITS, type UnitCode } from '@/lib/units'
 import { vatBreakdown, VAT_RATES, type VatCode } from '@/lib/vat'
 import { stockLevel, type Product } from '@/features/products/api'
-import { confirmEntry, deleteEntryDraft, lineTotal, saveEntryDraft, type EntryInput, type EntryPayment, type Supplier } from './api'
+import { confirmEntry, deleteEntryDraft, lineTotal, saveEntryDraft, todayISO, type EntryInput, type EntryPayment, type Supplier } from './api'
 import { ProductPicker } from './ProductPicker'
 import { SupplierDialog } from './SuppliersTab'
 
@@ -18,6 +18,8 @@ export interface DraftLine {
   vat_code: VatCode
   quantity: string
   unit_cost: string
+  lot_no?: string
+  expires_on?: string
 }
 
 export interface EntryDraft {
@@ -85,7 +87,13 @@ export function toInput(d: EntryDraft): EntryInput {
     payment: d.payment,
     due_days: d.payment === 'due' ? d.due_days : null,
     note: d.note,
-    items: d.lines.map((l) => ({ product_id: l.product_id, quantity: num(l.quantity), unit_cost: num(l.unit_cost) })),
+    items: d.lines.map((l) => ({
+      product_id: l.product_id,
+      quantity: num(l.quantity),
+      unit_cost: num(l.unit_cost),
+      ...(l.lot_no?.trim() ? { lot_no: l.lot_no.trim() } : {}),
+      ...(l.expires_on ? { expires_on: l.expires_on } : {}),
+    })),
   }
 }
 
@@ -96,6 +104,7 @@ export function EntryEditor({
   suppliers,
   onSuppliersChanged,
   onDone,
+  lots = false,
 }: {
   draft: EntryDraft
   setDraft: (fn: (d: EntryDraft) => EntryDraft) => void
@@ -103,6 +112,8 @@ export function EntryEditor({
   suppliers: Supplier[]
   onSuppliersChanged: () => void
   onDone: (message: string) => void
+  /** Pharmacy: every line has a lot number and an expiry date. */
+  lots?: boolean
 }) {
   const qc = useQueryClient()
   const [error, setError] = useState<string | null>(null)
@@ -130,6 +141,8 @@ export function EntryEditor({
     for (const l of draft.lines) {
       if (num(l.quantity) <= 0) return `Shkruaj sasinë për "${l.name}"`
       if (l.unit_cost.trim() === '' || num(l.unit_cost) < 0) return `Shkruaj koston për "${l.name}"`
+      if (lots && !l.expires_on) return `Shkruaj afatin e skadimit për "${l.name}"`
+      if (lots && l.expires_on && l.expires_on < todayISO()) return `"${l.name}" ka afat që ka kaluar – kontrollo datën`
     }
     return null
   }
@@ -170,6 +183,34 @@ export function EntryEditor({
   const setLine = (i: number, patch: Partial<DraftLine>) =>
     setDraft((d) => ({ ...d, lines: d.lines.map((l, j) => (j === i ? { ...l, ...patch } : l)) }))
   const removeLine = (i: number) => setDraft((d) => ({ ...d, lines: d.lines.filter((_, j) => j !== i) }))
+  // Same product in another lot (different batch / expiry).
+  const splitLine = (i: number) =>
+    setDraft((d) => {
+      const lines = [...d.lines]
+      lines.splice(i + 1, 0, { ...d.lines[i], quantity: '1', lot_no: '', expires_on: '' })
+      return { ...d, lines }
+    })
+  const lotInputs = (l: DraftLine, i: number, phone = false) => [
+      <input
+        key="lot"
+        aria-label={`Seria ${l.name}`}
+        value={l.lot_no ?? ''}
+        placeholder="Seria / LOT"
+        onChange={(e) => setLine(i, { lot_no: e.target.value })}
+        className={phone ? 'mt-1 h-12 w-full rounded-ctl border border-field px-3 text-[16px] text-ink' : 'h-11 w-[110px] rounded-ctl border border-field px-3 focus:border-brand-600 focus:outline-none'}
+      />,
+      <input
+        key="exp"
+        aria-label={`Afati ${l.name}`}
+        type="date"
+        value={l.expires_on ?? ''}
+        onChange={(e) => setLine(i, { expires_on: e.target.value })}
+        className={cn(
+          phone ? 'mt-1 h-12 w-full rounded-ctl border px-3 text-[16px] text-ink' : 'h-11 w-[150px] rounded-ctl border px-2 focus:border-brand-600 focus:outline-none',
+          l.expires_on ? 'border-field' : 'border-amber-700/50',
+        )}
+      />,
+  ]
 
   const stockCell = (l: DraftLine) => {
     const p = byId.get(l.product_id)
@@ -234,6 +275,7 @@ export function EntryEditor({
                   <th className="border-b border-line px-3 py-3 text-right font-semibold">Stoku aktual</th>
                   <th className="border-b border-line px-3 py-3 text-right font-semibold">Sasia hyrëse</th>
                   <th className="border-b border-line px-3 py-3 text-right font-semibold">Kosto / njësi</th>
+                  {lots && <th className="border-b border-line px-3 py-3 font-semibold">Seria · Skadon</th>}
                   <th className="border-b border-line px-3 py-3 font-semibold">TVSH</th>
                   <th className="border-b border-line px-3 py-3 text-right font-semibold">Vlera</th>
                   <th className="w-12 border-b border-line" />
@@ -241,8 +283,15 @@ export function EntryEditor({
               </thead>
               <tbody>
                 {draft.lines.map((l, i) => (
-                  <tr key={l.product_id}>
-                    <td className="border-b border-line px-5 py-2.5 font-semibold">{l.name}</td>
+                  <tr key={i}>
+                    <td className="border-b border-line px-5 py-2.5 font-semibold">
+                      {l.name}
+                      {lots && (
+                        <button type="button" onClick={() => splitLine(i)} className="block text-xs font-medium text-brand-600">
+                          + seri tjetër
+                        </button>
+                      )}
+                    </td>
                     <td className="border-b border-line px-3 py-2.5 text-right tabular-nums">{stockCell(l)}</td>
                     <td className="border-b border-line px-3 py-2.5 text-right">
                       <input
@@ -269,6 +318,11 @@ export function EntryEditor({
                         className="h-11 w-[96px] rounded-ctl border border-field px-3 text-right tabular-nums focus:border-brand-600 focus:outline-none"
                       />
                     </td>
+                    {lots && (
+                      <td className="border-b border-line px-3 py-2.5">
+                        <div className="flex gap-2">{lotInputs(l, i)}</div>
+                      </td>
+                    )}
                     <td className="border-b border-line px-3 py-2.5 tabular-nums">{Math.round(VAT_RATES[l.vat_code] * 100)}%</td>
                     <td className="border-b border-line px-3 py-2.5 text-right font-semibold tabular-nums">{formatEUR(lineTotal(num(l.quantity), num(l.unit_cost)))}</td>
                     <td className="border-b border-line pr-3 text-right">
@@ -285,7 +339,7 @@ export function EntryEditor({
           {/* Phone cards */}
           <ul className="flex flex-col gap-3 bg-bg p-3 md:hidden">
             {draft.lines.map((l, i) => (
-              <li key={l.product_id} className="rounded-card border border-line bg-white p-4">
+              <li key={i} className="rounded-card border border-line bg-white p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="text-[17px] font-semibold">{l.name}</div>
                   <div className="flex items-center gap-1 text-sm">
@@ -323,6 +377,23 @@ export function EntryEditor({
                   </label>
                   <div className="pb-3 text-right text-[17px] font-bold tabular-nums">{formatEUR(lineTotal(num(l.quantity), num(l.unit_cost)))}</div>
                 </div>
+                {lots && (
+                  <>
+                    <div className="mt-3 grid grid-cols-2 gap-3 text-sm text-muted">
+                      <label>
+                        Seria
+                        {lotInputs(l, i, true)[0]}
+                      </label>
+                      <label>
+                        Skadon
+                        {lotInputs(l, i, true)[1]}
+                      </label>
+                    </div>
+                    <button type="button" onClick={() => splitLine(i)} className="mt-2 text-sm font-medium text-brand-600">
+                      + seri tjetër
+                    </button>
+                  </>
+                )}
               </li>
             ))}
           </ul>

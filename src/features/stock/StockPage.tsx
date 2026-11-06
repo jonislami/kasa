@@ -27,11 +27,16 @@ import { EntriesTab } from './EntriesTab'
 import { InventoryTab } from './InventoryTab'
 import { MovementsTab } from './MovementsTab'
 import { SuppliersTab } from './SuppliersTab'
+import { LotsTab, ExpiryCard } from './LotsTab'
+import { useBusiness } from '@/app/AuthProvider'
+import { hasModule } from '@/lib/business'
+import { fetchLots } from '@/lib/lots'
 
-type Tab = 'hyrje' | 'historiku' | 'levizjet' | 'inventarizimi' | 'furnitoret'
+type Tab = 'hyrje' | 'afatet' | 'historiku' | 'levizjet' | 'inventarizimi' | 'furnitoret'
 
 const TABS: { value: Tab; label: string }[] = [
   { value: 'hyrje', label: 'Hyrje e re' },
+  { value: 'afatet', label: 'Seritë & afatet' },
   { value: 'historiku', label: 'Historiku i hyrjeve' },
   { value: 'levizjet', label: 'Lëvizjet e stokut' },
   { value: 'inventarizimi', label: 'Inventarizimi' },
@@ -58,8 +63,11 @@ function suggestedQty(p: Product): number {
 
 export function StockPage() {
   const qc = useQueryClient()
+  const { business } = useBusiness()
+  const lotsOn = hasModule(business.type, 'lots')
+  const tabs = lotsOn ? TABS : TABS.filter((t) => t.value !== 'afatet')
   const [params, setParams] = useSearchParams()
-  const tab = (TABS.some((t) => t.value === params.get('tab')) ? params.get('tab') : 'hyrje') as Tab
+  const tab = (tabs.some((t) => t.value === params.get('tab')) ? params.get('tab') : 'hyrje') as Tab
   const setTab = (t: Tab) => setParams(t === 'hyrje' ? {} : { tab: t }, { replace: true })
 
   const products = useQuery({ queryKey: ['products', 'admin'], queryFn: () => fetchProducts(true) })
@@ -67,6 +75,7 @@ export function StockPage() {
   const suppliers = useQuery({ queryKey: ['stock', 'suppliers'], queryFn: fetchSuppliers })
   const entries = useQuery({ queryKey: ['stock', 'entries'], queryFn: () => fetchEntries() })
   const people = useQuery({ queryKey: ['people'], queryFn: fetchPeople, staleTime: 5 * 60_000 })
+  const lots = useQuery({ queryKey: ['lots'], queryFn: fetchLots, enabled: lotsOn })
 
   const [draft, setDraftState] = useState<EntryDraft>(loadDraft)
   const [notice, setNotice] = useState<string | null>(null)
@@ -132,7 +141,16 @@ export function StockPage() {
       payment: entry.payment,
       due_days: entry.due_days,
       note: entry.note ?? '',
-      lines: items.map((i) => ({ product_id: i.product_id, name: i.name, unit: i.unit, vat_code: i.vat_code, quantity: String(i.quantity), unit_cost: String(i.unit_cost) })),
+      lines: items.map((i) => ({
+        product_id: i.product_id,
+        name: i.name,
+        unit: i.unit,
+        vat_code: i.vat_code,
+        quantity: String(i.quantity),
+        unit_cost: String(i.unit_cost),
+        lot_no: i.lot_no ?? '',
+        expires_on: i.expires_on ?? '',
+      })),
     })
     setTab('hyrje')
   }
@@ -176,7 +194,7 @@ export function StockPage() {
 
       <div className="sticky top-[env(safe-area-inset-top)] z-20 border-b border-line bg-bg md:static md:mx-8">
         <nav className="-mb-px flex gap-1 overflow-x-auto px-4 md:px-0" aria-label="Skedat e stokut">
-          {TABS.map((t) => (
+          {tabs.map((t) => (
             <button
               key={t.value}
               type="button"
@@ -210,11 +228,15 @@ export function StockPage() {
               products={all}
               suppliers={suppliers.data ?? []}
               onSuppliersChanged={() => void qc.invalidateQueries({ queryKey: ['stock', 'suppliers'] })}
+              lots={lotsOn}
               onDone={(msg) => {
+                if (lotsOn) void qc.invalidateQueries({ queryKey: ['lots'] })
                 if (msg !== 'Drafti u ruajt') setDraftState(emptyDraft(todayISO()))
                 if (msg) setNotice(msg)
               }}
             />
+          ) : tab === 'afatet' ? (
+            <LotsTab products={stockProducts} lots={lots.data ?? []} loading={lots.isLoading} />
           ) : tab === 'historiku' ? (
             <EntriesTab entries={entries.data ?? []} suppliers={suppliers.data ?? []} people={peopleMap} onOpenDraft={openDraft} />
           ) : tab === 'levizjet' ? (
@@ -227,6 +249,7 @@ export function StockPage() {
         </div>
 
         <aside className="flex flex-col gap-5 xl:w-[320px] xl:shrink-0">
+          {lotsOn && <ExpiryCard lots={lots.data ?? []} onOpen={() => setTab('afatet')} />}
           <LowStockCard low={low} onAdd={addLowToEntry} />
           <RecentCard entries={entries.data ?? []} />
         </aside>

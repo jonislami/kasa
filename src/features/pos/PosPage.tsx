@@ -18,6 +18,7 @@ import { enqueueSale, loadCatalog, loadHeld, nextOfflineNo, saveCatalog, saveHel
 import { PrintArea, Receipt } from './Receipt'
 import { SalesDialog } from './SalesDialog'
 import { VariantPicker } from './VariantPicker'
+import { expiryStatus, fetchLots, formatExpiry, summarizeLots } from '@/lib/lots'
 import { printReceipt } from '@/lib/printer'
 import { serverDate, KOSOVO_TZ } from '@/lib/clock'
 import { fetchReceiptSettings } from '@/features/settings/api'
@@ -82,6 +83,10 @@ export function PosPage() {
 
   // ---------- salon: who performs each line, appointment being paid ----------
   const salon = hasModule(business.type, 'commission')
+  // Pharmacy: lots with expiry (the sale itself takes them FEFO in the database).
+  const lotsOn = hasModule(business.type, 'lots')
+  const lotsQ = useQuery({ queryKey: ['lots'], queryFn: fetchLots, enabled: lotsOn, retry: false, staleTime: 60_000, networkMode: 'always' })
+  const lotSum = useMemo(() => summarizeLots(lotsQ.data ?? []), [lotsQ.data])
   const staffQ = useQuery({ queryKey: ['staff'], queryFn: fetchStaff, enabled: salon, retry: false, staleTime: 5 * 60_000 })
   const staff = useMemo(() => staffQ.data ?? [], [staffQ.data])
   const [staffId, setStaffId] = useState<string | null>(salon ? profile.id : null)
@@ -146,6 +151,13 @@ export function PosPage() {
   }, [products, search, category])
 
   const [variantModel, setVariantModel] = useState<PosProduct | null>(null)
+  const lotWarning = (p: PosProduct, qty: number): string | null => {
+    const sum = lotsOn ? lotSum.get(p.id) : undefined
+    if (!sum || sum.expired <= 0) return null
+    const inCart = cart.lines.filter((l) => l.product.id === p.id).reduce((t, l) => t + l.quantity, 0)
+    const free = Math.max(0, p.stock - sum.valid - sum.expired)
+    return inCart + qty > sum.valid + free ? `Kujdes: "${p.name}" – në stok ka mbetur vetëm seri e skaduar` : null
+  }
   const add = useCallback(
     (p: PosProduct, qty = 1) => {
       if (p.has_variants) {
@@ -153,13 +165,14 @@ export function PosPage() {
         return
       }
       setCart((c) => addToCart(c, p, qty, salon ? staffId : null))
-      setError(null)
+      setError(lotWarning(p, qty))
       if (p.unit === 'kg' && qty === 1) {
         // weight: open the line so the weight can be typed
         setEditLine({ key: p.id, product: p, quantity: (cart.lines.find((l) => l.key === p.id)?.quantity ?? 0) + 1, discount: 0 })
       }
     },
-    [cart.lines, salon, staffId],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [cart.lines, salon, staffId, lotSum],
   )
 
   const onScan = useCallback(
@@ -168,10 +181,11 @@ export function PosPage() {
       if (p) {
         setCart((c) => addToCart(c, p, 1, salon ? staffId : null))
         setNotice(`${p.name} u shtua`)
-        setError(null)
+        setError(lotWarning(p, 1))
       } else setError(`Barkodi ${code} nuk u gjet`)
     },
-    [products, salon, staffId],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [products, salon, staffId, lotSum, cart.lines],
   )
 
   const creditParam = params.get('kredit')
@@ -260,6 +274,7 @@ export function PosPage() {
         const sale = await createSale(input)
         finish(sale)
         void qc.invalidateQueries({ queryKey: ['pos-products'] })
+        if (lotsOn) void qc.invalidateQueries({ queryKey: ['lots'] })
         void qc.invalidateQueries({ queryKey: ['products'] })
         void qc.invalidateQueries({ queryKey: ['today-sales'] })
       } catch (e) {
@@ -395,6 +410,22 @@ export function PosPage() {
       </button>
     </div>
   )
+
+  const lotLine = (p: PosProduct) => {
+    const sum = lotSum.get(p.id)
+    const st = sum?.next ? expiryStatus(sum.next) : null
+    if (!p.substance && !sum) return null
+    return (
+      <span className="mt-0.5 block truncate text-xs text-muted">
+        {p.substance}
+        {p.substance && sum?.next && ' · '}
+        {sum?.next && (
+          <span className={cn(st === 'soon' ? 'font-semibold text-warn-700' : st === 'near' ? 'font-semibold text-amber-700' : '')}>skadon {formatExpiry(sum.next, true)}</span>
+        )}
+        {sum && sum.valid <= 0 && sum.expired > 0 && <span className="font-semibold text-warn-700"> · vetëm e skaduar</span>}
+      </span>
+    )
+  }
 
   // ---------- render ----------
   const offlineBanner = (offline || queue.pending.length > 0) && (
@@ -738,6 +769,7 @@ export function PosPage() {
                   >
                     <div className="text-xs text-muted">{categories.find((c) => c.id === p.category_id)?.name ?? ' '}</div>
                     <div className="mt-0.5 line-clamp-2 text-[15px] font-semibold leading-tight">{p.name}</div>
+                    {lotsOn && lotLine(p)}
                     <div className="mt-auto flex items-end justify-between pt-3">
                       <span className="text-lg font-bold tabular-nums">{formatEUR(p.sale_price)}</span>
                       {p.has_variants ? (
@@ -920,6 +952,7 @@ export function PosPage() {
                 >
                   <span className="min-w-0">
                     <span className="block truncate font-semibold">{p.name}</span>
+                    {lotsOn && lotLine(p)}
                     {p.has_variants ? (
                       <span className="text-xs text-muted">{variantSummary(p)}</span>
                     ) : (
