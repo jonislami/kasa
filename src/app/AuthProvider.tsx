@@ -11,6 +11,7 @@ export interface Profile {
   full_name: string
   email: string | null
   active: boolean
+  login_kind?: 'email' | 'pin'
 }
 
 export interface Business {
@@ -22,6 +23,8 @@ export interface Business {
   address: string | null
   nui: string | null
   vat_number: string | null
+  phone?: string | null
+  fiscal_number?: string | null
 }
 
 export interface SessionContext {

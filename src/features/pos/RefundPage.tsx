@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, ChevronLeft, Minus, Plus } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
 import { Button, Card, Dialog, Input, Select } from '@/components/ui'
@@ -12,6 +12,8 @@ import { VAT_RATES } from '@/lib/vat'
 import { APPROVAL_MESSAGES, lookupSale, refundSale, type Sale, type SaleItem } from './api'
 import { ApprovalDialog } from './dialogs'
 import { formatDateTime, PrintArea, Receipt } from './Receipt'
+import { printReceipt } from '@/lib/printer'
+import { fetchReceiptSettings } from '@/features/settings/api'
 
 const REASONS = ['Produkt i dëmtuar', 'Afati ka skaduar', 'Gabim në arkë', 'Klienti ndërroi mendje', 'Tjetër']
 
@@ -47,6 +49,7 @@ export function RefundPage() {
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState<Sale | null>(null)
   const [printing, setPrinting] = useState(false)
+  const receiptSettings = useQuery({ queryKey: ['receipt-settings'], queryFn: fetchReceiptSettings, retry: false, staleTime: 5 * 60_000 })
 
   const find = async (raw = number) => {
     const n = Number(raw.replace(/\D/g, ''))
@@ -335,13 +338,20 @@ export function RefundPage() {
               </div>
             </div>
             <div className="max-h-[50dvh] overflow-y-auto rounded-xl border border-line py-2">
-              <Receipt sale={done} business={business} />
+              <Receipt sale={done} business={business} settings={receiptSettings.data} />
             </div>
             <div className="grid grid-cols-2 gap-2.5">
               <Button
                 variant="secondary"
                 size="lg"
-                onClick={() => {
+                onClick={async () => {
+                  if (receiptSettings.data && done) {
+                    try {
+                      if ((await printReceipt(done, business, receiptSettings.data)) === 'printer') return
+                    } catch {
+                      /* fall back to the browser */
+                    }
+                  }
                   setPrinting(true)
                   setTimeout(() => window.print(), 50)
                 }}
@@ -355,7 +365,7 @@ export function RefundPage() {
           </div>
         )}
       </Dialog>
-      {printing && <PrintArea sale={done} business={business} />}
+      {printing && <PrintArea sale={done} business={business} settings={receiptSettings.data} />}
     </div>
   )
 }

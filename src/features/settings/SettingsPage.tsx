@@ -1,26 +1,119 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Hammer, KeyRound } from 'lucide-react'
+import { KeyRound } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
 import { PageHeader } from '@/app/layout/AppLayout'
-import { Badge, Button, Card, EmptyState, Input } from '@/components/ui'
+import { Badge, Button, Card, Input, Select } from '@/components/ui'
 import { isManagerRole } from '@/lib/business'
+import { cn } from '@/lib/cn'
+import { device } from '@/lib/device'
 import { myPinStatus, setOwnPin } from '@/features/pos/api'
+import { BackupSection } from './BackupSection'
+import { BusinessSection } from './BusinessSection'
+import { PrinterSection } from './PrinterSection'
+import { RegistersSection } from './RegistersSection'
+import { UsersSection } from './UsersSection'
 
-/** Phase 3: only "My PIN" (needed for approvals). The full settings screen comes in phase 6. */
+type Section = 'biznesi' | 'printeri' | 'perdoruesit' | 'arkat' | 'tvsh' | 'backup'
+
+const SECTIONS: { value: Section; label: string }[] = [
+  { value: 'biznesi', label: 'Të dhënat e biznesit' },
+  { value: 'printeri', label: 'Printeri & Fatura' },
+  { value: 'perdoruesit', label: 'Përdoruesit & PIN-et' },
+  { value: 'arkat', label: 'Arkat & pajisjet' },
+  { value: 'tvsh', label: 'TVSH & Taksat' },
+  { value: 'backup', label: 'Kopje rezervë (Backup)' },
+]
+
 export function SettingsPage() {
   const { profile } = useBusiness()
   const manager = isManagerRole(profile.role)
+  const [params, setParams] = useSearchParams()
+  const section = (SECTIONS.some((s) => s.value === params.get('s')) ? params.get('s') : manager ? 'biznesi' : 'printeri') as Section
+
+  if (!manager) {
+    return (
+      <>
+        <PageHeader title="Printeri" />
+        <div className="px-4 py-5 md:px-8 md:py-0 md:pb-8">
+          <PrinterSection />
+          <p className="mt-6 text-center text-sm text-muted">Kasa v{device.appVersion}</p>
+        </div>
+      </>
+    )
+  }
+
+  const go = (s: Section) => setParams({ s }, { replace: true })
+
   return (
     <>
-      <PageHeader title={manager ? 'Cilësimet' : 'Printeri'} />
-      <div className="flex max-w-[720px] flex-col gap-4 px-4 py-5 md:px-8 md:py-0">
-        {manager && <PinCard />}
-        <Card>
-          <EmptyState icon={<Hammer className="h-6 w-6" />} title="Cilësimet e tjera po ndërtohen" text="Të dhënat e biznesit, arkat, përdoruesit dhe printeri vijnë në Fazën 6." />
-        </Card>
+      <PageHeader title="Cilësimet" />
+      <p className="-mt-5 hidden px-8 pb-5 text-muted md:block">Menaxho biznesin, printerin, faturën dhe përdoruesit</p>
+      <div className="flex flex-col gap-5 px-4 pb-24 pt-4 md:px-8 md:pb-8 md:pt-0 lg:flex-row lg:items-start">
+        <nav className="hidden w-[220px] shrink-0 flex-col gap-1 lg:flex" aria-label="Seksionet">
+          {SECTIONS.map((s) => (
+            <button
+              key={s.value}
+              type="button"
+              onClick={() => go(s.value)}
+              className={cn('rounded-ctl px-4 py-3 text-left text-[15px]', section === s.value ? 'bg-white font-semibold shadow-sm' : 'text-muted hover:bg-white/60 hover:text-ink')}
+            >
+              {s.label}
+            </button>
+          ))}
+          <p className="mt-4 px-4 text-xs text-muted">Kasa v{device.appVersion}</p>
+        </nav>
+        <div className="lg:hidden">
+          <Select aria-label="Seksioni" value={section} onChange={(e) => go(e.target.value as Section)} options={SECTIONS} />
+        </div>
+        <div className="min-w-0 flex-1">
+          {section === 'biznesi' && <BusinessSection />}
+          {section === 'printeri' && <PrinterSection />}
+          {section === 'perdoruesit' && (
+            <div className="flex flex-col gap-5">
+              <PinCard />
+              <UsersSection />
+            </div>
+          )}
+          {section === 'arkat' && <RegistersSection />}
+          {section === 'tvsh' && <VatSection />}
+          {section === 'backup' && <BackupSection />}
+        </div>
       </div>
     </>
+  )
+}
+
+function VatSection() {
+  const rows = [
+    ['E', '18%', 'Norma standarde – shumica e mallrave dhe shërbimeve'],
+    ['D', '8%', 'Norma e reduktuar – ushqime bazë, ujë, barna, etj. (Ligji 05/L-037)'],
+    ['C', '0%', 'Furnizime me normë zero (eksport, raste të veçanta)'],
+    ['A', 'e liruar', 'Furnizime të liruara nga TVSH-ja'],
+  ]
+  return (
+    <Card className="overflow-hidden">
+      <div className="px-5 pt-5">
+        <h2 className="text-[17px] font-semibold">TVSH & Taksat</h2>
+        <p className="mt-1 text-sm text-muted">
+          Shkronjat sipas ATK-së. Çmimet e shitjes janë me TVSH të përfshirë; TVSH llogaritet një herë për normë mbi shumën e asaj norme. Norma caktohet te çdo produkt.
+        </p>
+      </div>
+      <table className="mt-4 w-full text-sm">
+        <tbody>
+          {rows.map(([code, rate, text]) => (
+            <tr key={code} className="border-t border-line">
+              <td className="w-14 px-5 py-3">
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-[#EEF1EE] font-bold">{code}</span>
+              </td>
+              <td className="w-24 py-3 font-semibold">{rate}</td>
+              <td className="py-3 pr-5 text-muted">{text}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Card>
   )
 }
 

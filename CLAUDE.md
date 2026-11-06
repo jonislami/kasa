@@ -179,7 +179,7 @@ android/ ios/       – projektet e Capacitor (gjenerohen me `npx cap add`)
 supabase/
   schema.sql        – skema e plotë për një projekt të ri (ekzekutohet një herë)
   migrations/       – ndryshimet pas fillimit, një skedar për çdo ndryshim
-  functions/        – Edge Functions (pin-login, platform-admin, më vonë fiscal-relay)
+  functions/        – Edge Functions (platform-admin, business-users, pin-login, më vonë fiscal-relay)
 ```
 
 ## Mënyra e punës

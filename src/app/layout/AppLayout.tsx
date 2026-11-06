@@ -1,9 +1,10 @@
 import { Outlet, useNavigate } from 'react-router-dom'
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
+import { ensureDeviceLinked } from '@/lib/deviceLink'
 import { useAuth, useBusiness } from '@/app/AuthProvider'
 import { navFor, type NavItem } from '@/app/nav'
 import { LogoMark } from '@/components/Logo'
-import { businessType, ROLE_LABELS } from '@/lib/business'
+import { businessType, isManagerRole, ROLE_LABELS } from '@/lib/business'
 import { Sidebar } from './Sidebar'
 import { TabBar } from './TabBar'
 
@@ -49,6 +50,11 @@ export function AppLayout() {
   const { main, bottom } = navFor(business.type, profile.role)
   const info = businessType(business.type)
   const sub = profile.role === 'worker' ? info.terms.worker : ROLE_LABELS[profile.role]
+
+  // Link this device to the business (managers) so workers can sign in here with their PIN.
+  useEffect(() => {
+    void ensureDeviceLinked({ id: business.id, name: business.name }, isManagerRole(profile.role)).catch(() => undefined)
+  }, [business.id, business.name, profile.role])
 
   return (
     <Shell

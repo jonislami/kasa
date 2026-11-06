@@ -4,3 +4,11 @@ project_id = "slleolfhjpvebleqirdm"
 # so the gateway's legacy-secret JWT check is not needed (and fails with the new signing keys).
 [functions.platform-admin]
 verify_jwt = false
+
+# Checks the caller's token itself (auth.getUser) and their role in the business.
+[functions.business-users]
+verify_jwt = false
+
+# Public: the credential is the device secret + the worker's PIN (checked in SQL).
+[functions.pin-login]
+verify_jwt = false

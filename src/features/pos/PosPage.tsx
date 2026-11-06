@@ -16,6 +16,8 @@ import { CameraScanner, CashDialog, DiscountDialog, LineDialog } from './dialogs
 import { enqueueSale, loadCatalog, loadHeld, nextOfflineNo, saveCatalog, saveHeld, useOfflineQueue, type HeldCart } from './offline'
 import { PrintArea, Receipt } from './Receipt'
 import { SalesDialog } from './SalesDialog'
+import { printReceipt } from '@/lib/printer'
+import { fetchReceiptSettings } from '@/features/settings/api'
 
 const parseNum = (s: string) => {
   const n = Number(s.trim().replace(',', '.'))
@@ -57,6 +59,7 @@ export function PosPage() {
   const categories = catalog.data?.categories ?? []
 
   const registers = useQuery({ queryKey: ['registers'], queryFn: fetchRegisters, retry: false })
+  const receiptSettings = useQuery({ queryKey: ['receipt-settings'], queryFn: fetchReceiptSettings, retry: false, staleTime: 5 * 60_000 })
   const [registerId, setRegisterId] = useState<string | null>(() => localStorage.getItem(`kasa.register.${business.id}`))
   useEffect(() => {
     const list = registers.data
@@ -200,6 +203,7 @@ export function PosPage() {
 
   const finish = (sale: Sale) => {
     setReceipt(sale)
+    if (receiptSettings.data?.settings.auto_print) void print(sale, false, true)
     setCart(emptyCart())
     setTendered('')
     setCardPart('')
@@ -268,7 +272,17 @@ export function PosPage() {
     return () => window.removeEventListener('keydown', onKey)
   })
 
-  const print = (sale: Sale, copy = false) => {
+  // Bluetooth/USB printer when connected, otherwise the browser's print dialog (80mm).
+  async function print(sale: Sale, copy = false, afterPayment = false) {
+    const settings = receiptSettings.data
+    if (settings) {
+      try {
+        const how = await printReceipt(sale, business, settings, { copy, openDrawer: afterPayment })
+        if (how === 'printer') return
+      } catch (e) {
+        setError(`Printeri: ${(e as Error).message}. Po printoj nga shfletuesi.`)
+      }
+    }
     setPrintSale({ sale, copy })
     setTimeout(() => window.print(), 50)
   }
@@ -471,10 +485,10 @@ export function PosPage() {
               )}
             </div>
             <div className="max-h-[50dvh] overflow-y-auto rounded-xl border border-line bg-white py-2">
-              <Receipt sale={receipt} business={business} />
+              <Receipt sale={receipt} business={business} settings={receiptSettings.data} />
             </div>
             <div className="grid grid-cols-2 gap-2.5">
-              <Button variant="secondary" size="lg" onClick={() => print(receipt)}>
+              <Button variant="secondary" size="lg" onClick={() => void print(receipt)}>
                 Printo
               </Button>
               <Button size="lg" autoFocus onClick={() => setReceipt(null)}>
@@ -517,10 +531,10 @@ export function PosPage() {
         onClose={() => setSalesOpen(false)}
         pending={queue.pending}
         registerId={registerId}
-        onPrint={(s) => print(s, true)}
+        onPrint={(s) => void print(s, true)}
         onRefund={(nr) => navigate(`/arka/kthim?nr=${nr}`)}
       />
-      <PrintArea sale={printSale?.sale ?? null} copy={printSale?.copy} business={business} />
+      <PrintArea sale={printSale?.sale ?? null} copy={printSale?.copy} business={business} settings={receiptSettings.data} />
     </>
   )
 

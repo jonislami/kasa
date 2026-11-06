@@ -4,6 +4,7 @@ import type { Business } from '@/app/AuthProvider'
 import { cn } from '@/lib/cn'
 import { formatInvoiceNo } from '@/lib/money'
 import type { Sale } from './api'
+import type { ReceiptSettings } from '@/features/settings/api'
 
 const n2 = (v: number) => new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v)
 const qty = (v: number, unit: string) =>
@@ -18,17 +19,35 @@ export function formatDateTime(iso: string) {
 const TITLES = { sale: null, void: 'ANULIM', refund: 'KTHIM MALLI' } as const
 
 /** Receipt as specified by ATK fields we have so far. Fiscal fields (QR, NUIKF…) come in phase 9. */
-export function Receipt({ sale, business, width = 80, copy }: { sale: Sale; business: Business; width?: 58 | 80; copy?: boolean }) {
+export function Receipt({
+  sale,
+  business,
+  width,
+  copy,
+  settings,
+}: {
+  sale: Sale
+  business: Business
+  width?: 58 | 80
+  copy?: boolean
+  settings?: ReceiptSettings
+}) {
+  width = width ?? settings?.paper_width ?? 80
+  const opt = settings?.settings ?? {}
   const title = TITLES[sale.kind]
   const when = sale.client_created_at ?? sale.created_at
   return (
     <div className={cn('mx-auto bg-white font-mono text-[13px] leading-snug text-black', width === 58 ? 'w-[58mm] px-1' : 'w-[80mm] px-3')}>
       <div className="flex flex-col items-center pt-3 text-center">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg border-2 border-black">
-          <Store className="h-5 w-5" />
-        </div>
+        {opt.show_logo !== false && (
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg border-2 border-black">
+            <Store className="h-5 w-5" />
+          </div>
+        )}
         <div className="mt-2 text-[15px] font-semibold uppercase">{business.name}</div>
+        {settings?.receipt_header && <div>{settings.receipt_header}</div>}
         {(business.address || business.city) && <div>{[business.address, business.city].filter(Boolean).join(', ')}</div>}
+        {business.phone && <div>Tel: {business.phone}</div>}
         {business.nui && <div>NUI: {business.nui}</div>}
         {business.vat_number && <div>Nr. TVSH: {business.vat_number}</div>}
       </div>
@@ -66,6 +85,8 @@ export function Receipt({ sale, business, width = 80, copy }: { sale: Sale; busi
       {sale.cash_amount !== 0 && <Row l="Kesh" r={n2(sale.kind === 'sale' && sale.tendered != null ? sale.tendered : sale.cash_amount)} />}
       {sale.card_amount !== 0 && <Row l="Kartelë" r={n2(sale.card_amount)} />}
       {sale.change_amount > 0 && <Row l={<b>Kusuri</b>} r={<b>{n2(sale.change_amount)}</b>} />}
+      {opt.show_vat !== false && (
+      <>
       <Rule />
       <div className="grid grid-cols-3 font-semibold">
         <span>TVSH</span>
@@ -86,9 +107,13 @@ export function Receipt({ sale, business, width = 80, copy }: { sale: Sale; busi
         <span className="text-center">{n2(sale.net_total)}</span>
         <span className="text-right">{n2(sale.vat_total)}</span>
       </div>
+      </>
+      )}
       <Rule />
       {sale.reason && <div className="pb-1">Arsyeja: {sale.reason}</div>}
-      <div className="text-center font-semibold">Faleminderit për blerjen!</div>
+      {(settings ? settings.receipt_footer : 'Faleminderit për blerjen!') && (
+        <div className="text-center font-semibold">{settings ? settings.receipt_footer : 'Faleminderit për blerjen!'}</div>
+      )}
       <div className="pb-4 pt-1 text-center text-[11px]">Kupon jo-fiskal</div>
     </div>
   )
@@ -108,11 +133,11 @@ function Rule() {
 }
 
 /** Renders the receipt only for printing (window.print) – Bluetooth ESC/POS arrives in phase 6. */
-export function PrintArea({ sale, business, copy }: { sale: Sale | null; business: Business; copy?: boolean }) {
+export function PrintArea({ sale, business, copy, settings }: { sale: Sale | null; business: Business; copy?: boolean; settings?: ReceiptSettings }) {
   if (!sale) return null
   return createPortal(
     <div className="print-root hidden">
-      <Receipt sale={sale} business={business} copy={copy} />
+      <Receipt sale={sale} business={business} copy={copy} settings={settings} />
     </div>,
     document.body,
   )

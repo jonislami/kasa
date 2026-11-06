@@ -1,12 +1,14 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link, Navigate, useLocation } from 'react-router-dom'
-import { Check, KeyRound } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { useAuth } from '@/app/AuthProvider'
 import { FullScreenLoader, SetupMissing } from '@/app/AuthGuard'
 import { SafeAreaStrip } from '@/app/layout/AppLayout'
 import { LogoMark } from '@/components/Logo'
 import { Button, Input, Tabs } from '@/components/ui'
 import { supabaseConfigured } from '@/lib/supabase'
+import { getLink } from '@/lib/deviceLink'
+import { PinLogin } from './PinLogin'
 
 type Mode = 'manager' | 'pin'
 
@@ -20,6 +22,13 @@ export function LoginPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showForgot, setShowForgot] = useState(false)
+
+  // A linked device opens on the PIN screen (workers sign in there every day).
+  useEffect(() => {
+    void getLink().then((l) => {
+      if (l) setMode('pin')
+    })
+  }, [])
 
   if (!supabaseConfigured) return <SetupMissing />
   if (status === 'loading' && busy) return <FullScreenLoader />
@@ -130,18 +139,7 @@ export function LoginPage() {
               <p className="text-center text-sm text-muted">Ke problem me hyrjen? Kontakto administratorin e biznesit.</p>
             </form>
           ) : (
-            <div className="mt-6 rounded-card border border-line bg-white p-6 text-center">
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-100 text-brand-600">
-                <KeyRound className="h-6 w-6" />
-              </div>
-              <div className="font-semibold">Kjo pajisje nuk është lidhur ende</div>
-              <p className="mt-2 text-sm text-muted">
-                Hyrja me PIN punon pasi pronari ose menaxheri të hyjë njëherë me email në këtë pajisje dhe ta lidhë me biznesin.
-              </p>
-              <Button className="mt-5" variant="secondary" block onClick={() => setMode('manager')}>
-                Hyr si menaxher
-              </Button>
-            </div>
+            <PinLogin onUseEmail={() => setMode('manager')} />
           )}
         </div>
       </section>
