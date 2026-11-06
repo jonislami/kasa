@@ -8,6 +8,7 @@ import { Badge, Button, Card, Dialog, EmptyState, Input, Tabs } from '@/componen
 import { businessType, hasModule, ROLE_LABELS } from '@/lib/business'
 import { cn } from '@/lib/cn'
 import { createUser, fetchUsers, setUserPassword, setUserPin, SettingsNotMigrated, updateUser, type BusinessUser } from './api'
+import { fetchStaff, setSpecialty } from '@/features/salon/api'
 
 const dtFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 const WEAK = new Set(['0000', '1111', '1234', '2222', '3333', '4444', '5555', '6666', '7777', '8888', '9999', '4321'])
@@ -159,6 +160,8 @@ function UserDialog({
   const [name, setName] = useState('')
   const [role, setRole] = useState<'worker' | 'manager'>('worker')
   const [phone, setPhone] = useState('')
+  const [specialty, setSpecialtyText] = useState('')
+  const staff = useQuery({ queryKey: ['staff'], queryFn: fetchStaff, enabled: open && commission, retry: false })
   const [pct, setPct] = useState('0')
   const [pin, setPin] = useState('')
   const [pin2, setPin2] = useState('')
@@ -173,6 +176,7 @@ function UserDialog({
     setName(user?.full_name ?? '')
     setRole(user?.role === 'manager' ? 'manager' : 'worker')
     setPhone(user?.phone ?? '')
+    setSpecialtyText(user ? (staff.data?.find((s) => s.id === user.id)?.specialty ?? '') : '')
     setPct(String(user?.commission_pct ?? 0))
     setPin('')
     setPin2('')
@@ -181,7 +185,8 @@ function UserDialog({
     setPassword('')
     setNewPassword('')
     setError(null)
-  }, [open, user])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, user, staff.data])
 
   const needsEmail = !user && (role === 'manager' || withEmail)
 
@@ -191,6 +196,7 @@ function UserDialog({
       const commissionPct = Number(pct.replace(',', '.')) || 0
       if (user) {
         await updateUser({ id: user.id, full_name: name, role, phone: phone || null, commission_pct: commissionPct })
+        if (commission) await setSpecialty(user.id, specialty).catch(() => undefined)
         if (newPassword) await setUserPassword(user.id, newPassword)
         return
       }
@@ -199,7 +205,7 @@ function UserDialog({
         if (pe) throw new Error(pe)
       }
       if (needsEmail && password.length < 8) throw new Error('Fjalëkalimi duhet të ketë të paktën 8 shenja')
-      await createUser({
+      const newId = await createUser({
         full_name: name,
         role,
         pin: pin || undefined,
@@ -208,6 +214,7 @@ function UserDialog({
         commission_pct: commissionPct,
         phone: phone || undefined,
       })
+      if (commission && specialty.trim()) await setSpecialty(newId, specialty).catch(() => undefined)
     },
     onSuccess: onSaved,
     onError: (e: Error) => setError(e.message),
@@ -264,6 +271,9 @@ function UserDialog({
             ? `${workerTerm}i shet në arkë dhe sheh vetëm punën e vet. Nuk ndryshon produkte, çmime apo stok.`
             : 'Menaxheri sheh gjithçka të biznesit, miraton anulimet dhe lidh pajisjet e reja me email.'}
         </p>
+        {commission && (
+          <Input label="Shërbimet që kryen" value={specialty} onChange={(e) => setSpecialtyText(e.target.value)} placeholder="p.sh. Flokë, ngjyrosje" hint="Shfaqet te terminet" />
+        )}
         <div className="grid grid-cols-2 gap-3">
           <Input label="Telefoni" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="044 …" />
           {commission && <Input label="Komisioni (%)" inputMode="decimal" type="number" min="0" max="100" step="0.5" value={pct} onChange={(e) => setPct(e.target.value)} />}

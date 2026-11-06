@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Archive, RotateCcw, X } from 'lucide-react'
 import { Button, Input, Select, Tabs } from '@/components/ui'
+import { Link } from 'react-router-dom'
 import { businessType, hasModule, type BusinessType } from '@/lib/business'
 import { cn } from '@/lib/cn'
 import { UNIT_OPTIONS, type UnitCode } from '@/lib/units'
@@ -158,6 +159,15 @@ export function ProductForm({
           <X className="h-5 w-5" />
         </button>
       </div>
+      {product && hasModule(type, 'variants') && !product.parent_id && product.kind === 'product' && (
+        <Link
+          to={`/produktet/${product.id}`}
+          className="flex items-center justify-between rounded-ctl border border-brand-600/30 bg-brand-100 px-4 py-3 text-[15px] font-semibold text-brand-600"
+        >
+          {product.has_variants ? 'Madhësitë, ngjyrat dhe etiketat' : 'Shto madhësi dhe ngjyra'}
+          <span aria-hidden>→</span>
+        </Link>
+      )}
 
       {product && !product.active && (
         <div className="rounded-ctl bg-amber-100 px-4 py-2.5 text-sm text-amber-700">I arkivuar: nuk shfaqet në arkë.</div>

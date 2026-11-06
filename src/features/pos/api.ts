@@ -60,7 +60,9 @@ export interface Sale {
 export interface CreateSaleInput {
   client_id: string
   register_id?: string | null
-  items: { product_id: string; quantity: number; unit_price: number; discount?: number }[]
+  items: { product_id: string; quantity: number; unit_price: number; discount?: number; staff_id?: string }[]
+  /** Salon: the appointment being paid ("Paguaj në arkë"). */
+  appointment_id?: string
   invoice_discount?: number
   payment: { method: PaymentMethod; card_amount?: number; tendered?: number }
   offline?: boolean
@@ -234,12 +236,28 @@ export async function fetchTodaySales(date: string): Promise<SaleRow[]> {
   return (data ?? []).map((r) => ({ ...r, invoice_no: Number(r.invoice_no), total: Number(r.total), items_count: Number(r.items_count) })) as SaleRow[]
 }
 
+const POS_COLS = 'id, kind, name, barcode, category_id, unit, sale_price, vat_code, stock, min_stock, substance, duration_min'
+const POS_VARIANT_COLS = ', parent_id, has_variants, variant_size, variant_color, color_hex, variant_sizes, variant_colors'
+let posVariants = true // false once the database answers that migration 0009 is missing
+
 export async function fetchPosProducts(): Promise<PosProduct[]> {
+  try {
+    return await fetchPosProductsWith(posVariants ? POS_COLS + POS_VARIANT_COLS : POS_COLS)
+  } catch (e) {
+    if (posVariants && /variant|parent_id|has_variants|color_hex/i.test((e as Error).message)) {
+      posVariants = false
+      return fetchPosProductsWith(POS_COLS)
+    }
+    throw e
+  }
+}
+
+async function fetchPosProductsWith(cols: string): Promise<PosProduct[]> {
   const out: PosProduct[] = []
   for (let from = 0; ; from += 1000) {
     const { data, error } = await supabase
       .from('products')
-      .select('id, kind, name, barcode, category_id, unit, sale_price, vat_code, stock, min_stock, substance, duration_min')
+      .select(cols)
       .eq('active', true)
       .eq('show_in_pos', true)
       .order('id')
@@ -249,7 +267,9 @@ export async function fetchPosProducts(): Promise<PosProduct[]> {
       throw new Error(error.message)
     }
     out.push(
-      ...(data ?? []).map((p) => ({ ...p, sale_price: Number(p.sale_price), stock: Number(p.stock), min_stock: Number(p.min_stock) }) as PosProduct),
+      ...((data ?? []) as unknown as Record<string, unknown>[]).map(
+        (p) => ({ ...p, sale_price: Number(p.sale_price), stock: Number(p.stock), min_stock: Number(p.min_stock) }) as unknown as PosProduct,
+      ),
     )
     if (!data || data.length < 1000) break
   }

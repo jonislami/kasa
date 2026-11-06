@@ -44,6 +44,8 @@ export function RefundPage() {
   const [note, setNote] = useState('')
   const [restock, setRestock] = useState(hasModule(business.type, 'stock'))
   const [method, setMethod] = useState<'cash' | 'card'>('cash')
+  // Exchange: the refund stays in the drawer as credit for the new sale (cash refund + cash tender).
+  const [exchange, setExchange] = useState(false)
   const [approve, setApprove] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -113,7 +115,7 @@ export function RefundPage() {
         reason: reason === 'Tjetër' && note.trim() ? note.trim() : reason,
         note: note.trim() || undefined,
         restock,
-        method,
+        method: exchange ? 'cash' : method,
         approver_id: approverId,
         pin,
       })
@@ -277,6 +279,14 @@ export function RefundPage() {
               <span className="font-semibold">Kthehen klientit</span>
               <span className="text-[30px] font-bold tabular-nums">{formatEUR(summary.total)}</span>
             </div>
+            <label className="mb-3 flex cursor-pointer items-start gap-3 rounded-ctl border border-line px-3 py-2.5 text-[15px]">
+              <input type="checkbox" className="mt-0.5 h-5 w-5 accent-brand-600" checked={exchange} onChange={(e) => setExchange(e.target.checked)} />
+              <span>
+                <span className="font-semibold">Ndërrim</span>
+                <span className="block text-xs text-muted">Klienti merr artikull tjetër; shuma kalon si kredi në faturën e re.</span>
+              </span>
+            </label>
+            {!exchange && (
             <Select
               label="Mënyra e kthimit"
               value={method}
@@ -286,6 +296,7 @@ export function RefundPage() {
                 { value: 'card', label: 'Kartelë' },
               ]}
             />
+            )}
             <p className="mt-3 text-xs text-muted">Kthimi lëshon kupon me shuma negative, i lidhur me faturën {formatInvoiceNo(sale.invoice_no)}.</p>
             {error && !approve && <p className="mt-3 rounded-ctl bg-warn-100 px-4 py-2.5 text-sm text-warn-700">{error}</p>}
             <Button
@@ -296,7 +307,7 @@ export function RefundPage() {
               loading={busy && !approve}
               onClick={() => (manager ? void submit() : setApprove(true))}
             >
-              Konfirmo kthimin · {formatEUR(summary.total)}
+              {exchange ? `Konfirmo ndërrimin · ${formatEUR(summary.total)}` : `Konfirmo kthimin · ${formatEUR(summary.total)}`}
             </Button>
             <Button variant="secondary" size="lg" block className="mt-2" onClick={() => navigate('/arka')}>
               Anulo
@@ -309,7 +320,7 @@ export function RefundPage() {
         request={
           approve && sale
             ? {
-                action: 'Kthim malli',
+                action: exchange ? 'Ndërrim artikulli' : 'Kthim malli',
                 details: [
                   { label: 'Fatura', value: formatInvoiceNo(sale.invoice_no) },
                   { label: 'Kthehen', value: formatEUR(summary.total) },
@@ -332,9 +343,10 @@ export function RefundPage() {
         {done && (
           <div className="flex flex-col gap-4">
             <div className="text-center">
-              <div className="text-sm text-muted">Kthimi u krye</div>
+              <div className="text-sm text-muted">{exchange ? 'Artikulli u kthye' : 'Kthimi u krye'}</div>
               <div className="mt-1 text-[28px] font-bold">
-                Jepi klientit <span className="text-warn-700">{formatEUR(Math.abs(done.total))}</span>
+                {exchange ? 'Kredi për ndërrim ' : 'Jepi klientit '}
+                <span className={exchange ? 'text-brand-600' : 'text-warn-700'}>{formatEUR(Math.abs(done.total))}</span>
               </div>
             </div>
             <div className="max-h-[50dvh] overflow-y-auto rounded-xl border border-line py-2">
@@ -358,8 +370,13 @@ export function RefundPage() {
               >
                 Printo
               </Button>
-              <Button size="lg" onClick={() => navigate('/arka')}>
-                Te arka
+              <Button
+                size="lg"
+                onClick={() =>
+                  navigate(exchange ? `/arka?kredit=${Math.abs(done.total).toFixed(2)}&nga=${sale?.invoice_no ?? ''}` : '/arka')
+                }
+              >
+                {exchange ? 'Zgjidh artikullin e ri' : 'Te arka'}
               </Button>
             </div>
           </div>

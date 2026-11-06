@@ -29,6 +29,14 @@ export interface Product {
   updated_at: string
   /** Only for admin/manager (from product_costs); null for workers. */
   purchase_price: number | null
+  /** Boutique variants (migration 0009): a model has variants; a variant points to its model. */
+  parent_id?: string | null
+  has_variants?: boolean
+  variant_size?: string | null
+  variant_color?: string | null
+  color_hex?: string | null
+  variant_sizes?: string[] | null
+  variant_colors?: { name: string; hex: string | null }[] | null
 }
 
 export interface ProductInput {
@@ -79,6 +87,7 @@ function fail(error: { code?: string; message: string }): never {
 
 const PRODUCT_COLS =
   'id, kind, name, barcode, category_id, unit, sale_price, vat_code, stock, min_stock, duration_min, substance, atk_type, show_in_pos, active, updated_at'
+const VARIANT_COLS = ', parent_id, has_variants, variant_size, variant_color, color_hex, variant_sizes, variant_colors'
 
 async function fetchAll<T>(table: string, cols: string, orderBy: string): Promise<T[]> {
   const out: T[] = []
@@ -98,9 +107,19 @@ type ProductRow = Omit<Product, 'purchase_price' | 'sale_price' | 'stock' | 'min
   min_stock: number | string
 }
 
+/** With the variant columns when migration 0009 is there, without them before (live stays working). */
+async function fetchProductRows(): Promise<ProductRow[]> {
+  try {
+    return await fetchAll<ProductRow>('products', PRODUCT_COLS + VARIANT_COLS, 'id')
+  } catch (e) {
+    if (/variant|parent_id|has_variants|color_hex/i.test((e as Error).message)) return fetchAll<ProductRow>('products', PRODUCT_COLS, 'id')
+    throw e
+  }
+}
+
 export async function fetchProducts(withCosts: boolean): Promise<Product[]> {
   const [rows, costs] = await Promise.all([
-    fetchAll<ProductRow>('products', PRODUCT_COLS, 'id'),
+    fetchProductRows(),
     withCosts ? fetchAll<{ product_id: string; purchase_price: number | string }>('product_costs', 'product_id, purchase_price', 'product_id') : Promise.resolve([]),
   ])
   const costMap = new Map(costs.map((c) => [c.product_id, Number(c.purchase_price)]))
@@ -159,6 +178,23 @@ export async function nextInternalBarcode(): Promise<string> {
   if (error) fail(error)
   return data as string
 }
+
+export interface Variant {
+  id: string
+  size: string | null
+  color: string | null
+  barcode: string | null
+  stock: number
+}
+
+export async function saveVariants(p: { product_id: string; sizes: string[]; colors: { name: string; hex: string | null }[] }): Promise<Variant[]> {
+  const { data, error } = await supabase.rpc('save_variants', { p })
+  if (error) fail(error)
+  return (data as Variant[]) ?? []
+}
+
+/** Models (has variants) are not sold or counted themselves – their variants are. */
+export const isModel = (p: Pick<Product, 'has_variants'>) => Boolean(p.has_variants)
 
 export async function importProducts(rows: ImportRow[]): Promise<{ created: number; updated: number }> {
   const { data, error } = await supabase.rpc('import_products', { p_rows: rows })

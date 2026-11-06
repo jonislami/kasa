@@ -174,3 +174,19 @@ export function formatKosovoDateTime(iso: string | number): string {
   const p = (x: number) => String(x).padStart(2, '0')
   return `${p(d)}.${p(m)}.${y} ${p(h)}:${p(min)}`
 }
+
+/** "2026-11-06" + "11:30" in Kosovo → the instant as an ISO string (handles CET/CEST). */
+export function kosovoToIso(date: string, time: string): string {
+  const [y, m, d] = date.split('-').map(Number)
+  const [h, min] = time.split(':').map(Number)
+  const guess = Date.UTC(y, m - 1, d, h, min)
+  const p = kosovoParts(guess)
+  const offset = Date.UTC(p.y, p.m - 1, p.d, p.h, p.min) - guess // Kosovo is ahead of UTC by this much
+  return new Date(guess - offset).toISOString()
+}
+
+/** "11:30" in Kosovo for an instant. */
+export function kosovoTime(iso: string | number): string {
+  const { h, min } = kosovoParts(typeof iso === 'number' ? iso : Date.parse(iso))
+  return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`
+}
