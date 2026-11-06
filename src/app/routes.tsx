@@ -8,14 +8,15 @@ import { DownloadPage } from '@/features/download/DownloadPage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { ComingSoon } from '@/features/ComingSoon'
-import { useBusiness } from './AuthProvider'
-import { isManagerRole } from '@/lib/business'
 import { supabaseConfigured } from '@/lib/supabase'
 
 const PlatformPage = lazy(() => import('@/features/platform/PlatformPage').then((m) => ({ default: m.PlatformPage })))
 const PosPage = lazy(() => import('@/features/pos/PosPage').then((m) => ({ default: m.PosPage })))
 const RefundPage = lazy(() => import('@/features/pos/RefundPage').then((m) => ({ default: m.RefundPage })))
 const SettingsPage = lazy(() => import('@/features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })))
+const ReportsPage = lazy(() => import('@/features/reports/ReportsPage').then((m) => ({ default: m.ReportsPage })))
+const AuditPage = lazy(() => import('@/features/reports/AuditPage').then((m) => ({ default: m.AuditPage })))
+const WorkPage = lazy(() => import('@/features/work/WorkPage').then((m) => ({ default: m.WorkPage })))
 const StockPage = lazy(() => import('@/features/stock/StockPage').then((m) => ({ default: m.StockPage })))
 const ProductsPage = lazy(() => import('@/features/products/ProductsPage').then((m) => ({ default: m.ProductsPage })))
 
@@ -39,17 +40,6 @@ function Home() {
     </RequireBusiness>
   )
 }
-
-function WorkSoon() {
-  const { profile } = useBusiness()
-  return (
-    <ComingSoon
-      title={isManagerRole(profile.role) ? 'Puna e punëtorëve' : 'Puna ime sot'}
-      phase="Faza 5 – Paneli dhe raportet"
-    />
-  )
-}
-
 
 export function AppRoutes() {
   return (
@@ -85,7 +75,24 @@ export function AppRoutes() {
             </Lazy>
           }
         />
-        <Route path="puna" element={<WorkSoon />} />
+        <Route
+          path="puna"
+          element={
+            <Lazy>
+              <WorkPage />
+            </Lazy>
+          }
+        />
+        <Route
+          path="regjistri"
+          element={
+            <RequireManager>
+              <Lazy>
+                <AuditPage />
+              </Lazy>
+            </RequireManager>
+          }
+        />
         <Route
           path="cilesimet"
           element={
@@ -118,7 +125,9 @@ export function AppRoutes() {
           path="raportet"
           element={
             <RequireManager>
-              <ComingSoon title="Raportet" phase="Faza 5 – Paneli dhe raportet" />
+              <Lazy>
+                <ReportsPage />
+              </Lazy>
             </RequireManager>
           }
         />

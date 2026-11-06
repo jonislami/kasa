@@ -51,6 +51,14 @@
   body {
     background: #fff;
   }
+  /* A4 reports (e.g. the audit log as PDF) */
+  .print-a4 {
+    page: a4;
+  }
+}
+@page a4 {
+  size: A4;
+  margin: 12mm;
 }
 
 @layer utilities {

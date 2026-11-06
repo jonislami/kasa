@@ -11,6 +11,7 @@ import {
   Settings,
   Printer,
   ClipboardList,
+  ScrollText,
 } from 'lucide-react'
 import { businessType, hasModule, isManagerRole, type BusinessType, type Role } from '@/lib/business'
 
@@ -48,5 +49,6 @@ export function navFor(type: BusinessType, role: Role): { main: NavItem[]; botto
   if (hasModule(type, 'stock')) main.push({ to: '/stoku', label: 'Stoku & Hyrjet', short: 'Stoku', icon: Truck })
   main.push({ to: '/raportet', label: 'Raportet', icon: BarChart3 })
   main.push({ to: '/puna', label: 'Puna e punëtorëve', short: 'Puna', icon: Users })
+  main.push({ to: '/regjistri', label: 'Regjistri', icon: ScrollText })
   return { main, bottom: [{ to: '/cilesimet', label: 'Cilësimet', icon: Settings }] }
 }
