@@ -27,7 +27,7 @@ export function ProductPicker({
   const [camera, setCamera] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const stockProducts = useMemo(() => products.filter((p) => p.active && p.kind === 'product' && !p.has_variants), [products])
+  const stockProducts = useMemo(() => products.filter((p) => p.active && p.kind === 'product' && !p.has_variants && !p.has_recipe), [products])
   const results = useMemo(() => {
     const s = q.trim().toLowerCase()
     if (!s) return []

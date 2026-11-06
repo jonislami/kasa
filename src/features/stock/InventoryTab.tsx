@@ -52,7 +52,7 @@ export function InventoryTab({ products, categories, people }: { products: Produ
   const [notice, setNotice] = useState<string | null>(null)
   const [openCount, setOpenCount] = useState<InventoryCount | null>(null)
 
-  const stockProducts = useMemo(() => products.filter((p) => p.active && p.kind === 'product' && !p.has_variants), [products])
+  const stockProducts = useMemo(() => products.filter((p) => p.active && p.kind === 'product' && !p.has_variants && !p.has_recipe), [products])
   const byId = useMemo(() => new Map(stockProducts.map((p) => [p.id, p])), [stockProducts])
   const counts = useQuery({ queryKey: ['stock', 'inventory'], queryFn: fetchInventoryCounts })
 

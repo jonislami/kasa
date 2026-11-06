@@ -60,9 +60,11 @@ export interface Sale {
 export interface CreateSaleInput {
   client_id: string
   register_id?: string | null
-  items: { product_id: string; quantity: number; unit_price: number; discount?: number; staff_id?: string }[]
+  items: { product_id: string; quantity: number; unit_price: number; discount?: number; staff_id?: string; order_item_id?: string; addon?: boolean }[]
   /** Salon: the appointment being paid ("Paguaj në arkë"). */
   appointment_id?: string
+  /** Restaurant: the open order (table) being paid – whole or some lines (split bill). */
+  order_id?: string
   invoice_discount?: number
   payment: { method: PaymentMethod; card_amount?: number; tendered?: number }
   offline?: boolean

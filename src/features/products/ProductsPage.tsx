@@ -66,7 +66,7 @@ export function ProductsPage() {
   const all = useMemo(() => {
     const totals = new Map<string, number>()
     for (const p of raw) if (p.parent_id && p.active) totals.set(p.parent_id, (totals.get(p.parent_id) ?? 0) + p.stock)
-    return raw.filter((p) => !p.parent_id).map((p) => (p.has_variants ? { ...p, stock: totals.get(p.id) ?? 0 } : p))
+    return raw.filter((p) => !p.parent_id && !p.addon_of).map((p) => (p.has_variants ? { ...p, stock: totals.get(p.id) ?? 0 } : p))
   }, [raw])
   const cats = categories.data ?? []
   const catName = useMemo(() => new Map(cats.map((c) => [c.id, c.name])), [cats])

@@ -95,7 +95,7 @@ export function StockPage() {
   }, [notice])
 
   const all = products.data ?? []
-  const stockProducts = useMemo(() => all.filter((p) => p.active && p.kind === 'product' && !p.has_variants), [all])
+  const stockProducts = useMemo(() => all.filter((p) => p.active && p.kind === 'product' && !p.has_variants && !p.has_recipe), [all])
   const stockValue = useMemo(() => stockProducts.reduce((s, p) => s + Math.max(p.stock, 0) * (p.purchase_price ?? 0), 0), [stockProducts])
   const low = useMemo(
     () =>

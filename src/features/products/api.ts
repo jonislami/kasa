@@ -32,6 +32,9 @@ export interface Product {
   /** Boutique variants (migration 0009): a model has variants; a variant points to its model. */
   parent_id?: string | null
   has_variants?: boolean
+  /** Restaurant: hidden add-on product of a priced modifier. */
+  addon_of?: string | null
+  has_recipe?: boolean
   variant_size?: string | null
   variant_color?: string | null
   color_hex?: string | null
@@ -108,10 +111,21 @@ type ProductRow = Omit<Product, 'purchase_price' | 'sale_price' | 'stock' | 'min
 }
 
 /** With the variant columns when migration 0009 is there, without them before (live stays working). */
+const RESTAURANT_COLS = ', addon_of, has_recipe'
+
 async function fetchProductRows(): Promise<ProductRow[]> {
   try {
-    return await fetchAll<ProductRow>('products', PRODUCT_COLS + VARIANT_COLS, 'id')
+    return await fetchAll<ProductRow>('products', PRODUCT_COLS + VARIANT_COLS + RESTAURANT_COLS, 'id')
   } catch (e) {
+    // before migration 0011
+    if (/addon_of|has_recipe/i.test((e as Error).message)) {
+      try {
+        return await fetchAll<ProductRow>('products', PRODUCT_COLS + VARIANT_COLS, 'id')
+      } catch (e2) {
+        if (/variant|parent_id|has_variants|color_hex/i.test((e2 as Error).message)) return fetchAll<ProductRow>('products', PRODUCT_COLS, 'id')
+        throw e2
+      }
+    }
     if (/variant|parent_id|has_variants|color_hex/i.test((e as Error).message)) return fetchAll<ProductRow>('products', PRODUCT_COLS, 'id')
     throw e
   }

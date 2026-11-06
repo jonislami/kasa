@@ -3,6 +3,8 @@ import { device } from '@/lib/device'
 import type { Sale } from '@/features/pos/api'
 import type { ReceiptSettings } from '@/features/settings/api'
 import { receiptBytes, testPageBytes } from './receipt'
+import { ticketBytes } from './ticket'
+import type { Ticket } from '@/features/restaurant/api'
 
 export { receiptBytes, testPageBytes }
 
@@ -32,6 +34,13 @@ export async function printReceipt(
   for (let i = 0; i < copies; i++) {
     await device.printer.write(receiptBytes(sale, business, settings, { copy: opts.copy || i > 0, drawer: drawer && i === 0 }), settings.printer_chunk)
   }
+  return 'printer'
+}
+
+/** Kitchen/bar ticket on this device's printer; 'browser' when none is connected. */
+export async function printTicket(ticket: Ticket, settings: ReceiptSettings, reprint = false): Promise<'printer' | 'browser'> {
+  if (!(await printerReady())) return 'browser'
+  await device.printer.write(ticketBytes(ticket, settings, reprint), settings.printer_chunk)
   return 'printer'
 }
 

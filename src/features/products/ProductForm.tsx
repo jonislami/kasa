@@ -169,6 +169,16 @@ export function ProductForm({
         </Link>
       )}
 
+      {product && hasModule(type, 'recipes') && product.kind === 'product' && !product.addon_of && (
+        <Link
+          to={`/produktet/${product.id}`}
+          className="flex items-center justify-between rounded-ctl border border-brand-600/30 bg-brand-100 px-4 py-3 text-[15px] font-semibold text-brand-600"
+        >
+          Receta, opsionet dhe kuzhina/bari
+          <span aria-hidden>→</span>
+        </Link>
+      )}
+
       {product && !product.active && (
         <div className="rounded-ctl bg-amber-100 px-4 py-2.5 text-sm text-amber-700">I arkivuar: nuk shfaqet në arkë.</div>
       )}

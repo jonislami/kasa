@@ -1,13 +1,13 @@
 import { lazy, Suspense, type ReactNode } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { useAuth } from './AuthProvider'
+import { useAuth, useBusiness } from './AuthProvider'
+import { hasModule } from '@/lib/business'
 import { FullScreenLoader, RequireBusiness, RequireManager, RequirePlatformAdmin, RequireType } from './AuthGuard'
 import { AppLayout } from './layout/AppLayout'
 import { LandingPage } from '@/features/landing/LandingPage'
 import { DownloadPage } from '@/features/download/DownloadPage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
-import { ComingSoon } from '@/features/ComingSoon'
 import { supabaseConfigured } from '@/lib/supabase'
 import { device } from '@/lib/device'
 
@@ -19,6 +19,10 @@ const ReportsPage = lazy(() => import('@/features/reports/ReportsPage').then((m)
 const AuditPage = lazy(() => import('@/features/reports/AuditPage').then((m) => ({ default: m.AuditPage })))
 const WorkPage = lazy(() => import('@/features/work/WorkPage').then((m) => ({ default: m.WorkPage })))
 const AppointmentsPage = lazy(() => import('@/features/salon/AppointmentsPage').then((m) => ({ default: m.AppointmentsPage })))
+const TablesPage = lazy(() => import('@/features/restaurant/TablesPage').then((m) => ({ default: m.TablesPage })))
+const OrderPage = lazy(() => import('@/features/restaurant/OrderPage').then((m) => ({ default: m.OrderPage })))
+const KitchenPage = lazy(() => import('@/features/restaurant/KitchenPage').then((m) => ({ default: m.KitchenPage })))
+const MenuItemPage = lazy(() => import('@/features/restaurant/MenuItemPage').then((m) => ({ default: m.MenuItemPage })))
 const VariantsPage = lazy(() => import('@/features/products/VariantsPage').then((m) => ({ default: m.VariantsPage })))
 const StockPage = lazy(() => import('@/features/stock/StockPage').then((m) => ({ default: m.StockPage })))
 const ProductsPage = lazy(() => import('@/features/products/ProductsPage').then((m) => ({ default: m.ProductsPage })))
@@ -44,6 +48,12 @@ function Home() {
       <AppLayout />
     </RequireBusiness>
   )
+}
+
+/** /produktet/:id – boutique: sizes × colours; restaurant: recipe, modifiers, station. */
+function ProductDetails() {
+  const { business } = useBusiness()
+  return hasModule(business.type, 'recipes') ? <MenuItemPage /> : <VariantsPage />
 }
 
 export function AppRoutes() {
@@ -121,7 +131,7 @@ export function AppRoutes() {
           element={
             <RequireManager>
               <Lazy>
-                <VariantsPage />
+                <ProductDetails />
               </Lazy>
             </RequireManager>
           }
@@ -160,7 +170,29 @@ export function AppRoutes() {
           path="tavolinat"
           element={
             <RequireType type="restaurant">
-              <ComingSoon title="Tavolinat" phase="Faza 8d – Restorant" />
+              <Lazy>
+                <TablesPage />
+              </Lazy>
+            </RequireType>
+          }
+        />
+        <Route
+          path="tavolinat/:tableId"
+          element={
+            <RequireType type="restaurant">
+              <Lazy>
+                <OrderPage />
+              </Lazy>
+            </RequireType>
+          }
+        />
+        <Route
+          path="kuzhina"
+          element={
+            <RequireType type="restaurant">
+              <Lazy>
+                <KitchenPage />
+              </Lazy>
             </RequireType>
           }
         />
