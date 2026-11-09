@@ -60,7 +60,7 @@ function SideLink({ item }: { item: NavItem }) {
   return (
     <NavLink
       to={item.to}
-      end={item.to === '/'}
+      end={item.end ?? item.to === '/'}
       className={({ isActive }) =>
         cn(
           'flex min-h-[44px] items-center gap-3 rounded-xl px-3 text-[15px] font-medium transition-colors',

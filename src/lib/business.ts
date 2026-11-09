@@ -2,7 +2,8 @@ import type { LucideIcon } from 'lucide-react'
 import { ShoppingBasket, Coffee, Pill, Shirt, Scissors } from 'lucide-react'
 
 export type BusinessType = 'market' | 'restaurant' | 'pharmacy' | 'boutique' | 'salon'
-export type Role = 'admin' | 'manager' | 'worker'
+/** 'accountant' is an outside person (business_members), never a profiles.role. */
+export type Role = 'admin' | 'manager' | 'worker' | 'accountant'
 
 /** Optional modules switched on per business type. */
 export type Module =
@@ -96,8 +97,14 @@ export const ROLE_LABELS: Record<Role, string> = {
   admin: 'Pronari',
   manager: 'Menaxher',
   worker: 'Punëtor',
+  accountant: 'Kontabilist',
 }
 
 export function isManagerRole(role: Role | null | undefined): boolean {
   return role === 'admin' || role === 'manager'
+}
+
+/** Who may open the books (/kontabiliteti): the owner, a manager or the invited accountant. */
+export function canSeeBooks(role: Role | null | undefined): boolean {
+  return isManagerRole(role) || role === 'accountant'
 }

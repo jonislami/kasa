@@ -33,6 +33,8 @@ export interface SessionContext {
   is_platform_admin: boolean
   profile: Profile | null
   business: Business | null
+  /** Set for an accountant account (migration 0012): how many clients and open invitations it has. */
+  accountant?: { full_name: string; email: string; clients: number; invited: number } | null
   /** true when the server could not be reached and the last known context is used (offline start). */
   offline?: boolean
 }

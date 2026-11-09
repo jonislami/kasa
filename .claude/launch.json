@@ -26,6 +26,15 @@
         "--strictPort"
       ],
       "port": 4173
+    },
+    {
+      "name": "kontabilist-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:kontabilist"
+      ],
+      "port": 5174
     }
   ]
 }

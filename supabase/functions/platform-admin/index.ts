@@ -2,6 +2,8 @@
 // Actions for the platform admin (rows in public.platform_admins):
 //   { action: 'create_business', type, name, city?, owner_name, email, password }
 //   { action: 'reset_password', business_id, password }
+//   { action: 'create_accountant', full_name, office_name?, phone?, email, password }   – account for the "Kasa Kontabilist" program
+//   { action: 'reset_accountant_password', user_id, password }
 // The service role key is used only here, never in the client.
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
@@ -144,6 +146,49 @@ Deno.serve(async (req) => {
     ])
 
     return json({ email: owner.email })
+  }
+
+  // --- accountant account (the separate "Kasa Kontabilist" program) ---
+  if (body.action === 'create_accountant') {
+    const fullName = String(body.full_name ?? '').trim().slice(0, 120)
+    const office = String(body.office_name ?? '').trim().slice(0, 160) || null
+    const phone = String(body.phone ?? '').trim().slice(0, 50) || null
+    const email = String(body.email ?? '').trim().toLowerCase()
+    const password = body.password
+    if (!fullName) return fail('Shkruaj emrin e kontabilistit')
+    if (!EMAIL_RE.test(email)) return fail('Email-i nuk është i saktë')
+    if (!validPassword(password)) return fail('Fjalëkalimi duhet të ketë të paktën 8 shenja')
+
+    const { data: created, error: createErr } = await admin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { full_name: fullName, kasa_login: 'accountant' },
+    })
+    if (createErr || !created.user) {
+      const msg = /already|registered|exists/i.test(createErr?.message ?? '') ? 'Ky email përdoret tashmë' : 'Llogaria nuk u krijua: ' + (createErr?.message ?? '')
+      return fail(msg)
+    }
+    const userId = created.user.id
+    const { error: accErr } = await admin.from('accountants').insert({ user_id: userId, full_name: fullName, email, office_name: office, phone, created_by: caller.id })
+    if (accErr) {
+      await admin.auth.admin.deleteUser(userId)
+      return fail('Kontabilisti nuk u krijua: ' + accErr.message, 500)
+    }
+    await admin.from('audit_log').insert({ business_id: null, user_id: caller.id, action: 'accountant_create', entity: 'accountant', entity_id: userId, details: { name: fullName, email, office } })
+    return json({ user_id: userId, email })
+  }
+
+  if (body.action === 'reset_accountant_password') {
+    const userId = String(body.user_id ?? '')
+    const password = body.password
+    if (!validPassword(password)) return fail('Fjalëkalimi duhet të ketë të paktën 8 shenja')
+    const { data: acc } = await admin.from('accountants').select('user_id, email').eq('user_id', userId).maybeSingle()
+    if (!acc) return fail('Kontabilisti nuk u gjet', 404)
+    const { error } = await admin.auth.admin.updateUserById(userId, { password })
+    if (error) return fail('Fjalëkalimi nuk u ndryshua: ' + error.message, 500)
+    await admin.from('audit_log').insert({ business_id: null, user_id: caller.id, action: 'accountant_password_reset', entity: 'accountant', entity_id: userId, details: {} })
+    return json({ email: acc.email })
   }
 
   return fail('Veprim i panjohur')

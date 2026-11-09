@@ -11,7 +11,7 @@ export function TabBar({ items, onSignOut }: { items: NavItem[]; onSignOut: () =
   // Always 4 tabs at most; "Më shumë" holds the rest and "Dil".
   const visible = items.slice(0, 4)
   const rest = items.slice(4)
-  const restActive = rest.some((i) => location.pathname.startsWith(i.to) && i.to !== '/')
+  const restActive = rest.some((i) => (i.end ? location.pathname === i.to : location.pathname.startsWith(i.to)) && i.to !== '/')
 
   return (
     <>
@@ -52,6 +52,7 @@ export function TabBar({ items, onSignOut }: { items: NavItem[]; onSignOut: () =
                   <NavLink
                     key={item.to}
                     to={item.to}
+                    end={item.end ?? item.to === '/'}
                     onClick={() => setOpen(false)}
                     className={({ isActive }) =>
                       cn('flex min-h-[52px] items-center gap-3 rounded-xl px-3 text-base font-medium', isActive ? 'bg-brand-100 text-brand-600' : 'text-ink')
@@ -84,7 +85,7 @@ function Tab({ item }: { item: NavItem }) {
   return (
     <NavLink
       to={item.to}
-      end={item.to === '/'}
+      end={item.end ?? item.to === '/'}
       className={({ isActive }) =>
         cn(
           'flex min-h-[60px] flex-1 flex-col items-center justify-center gap-1 text-[12px] font-medium',

@@ -12,6 +12,7 @@ import {
   Printer,
   ClipboardList,
   ScrollText,
+  Calculator,
 } from 'lucide-react'
 import { businessType, hasModule, isManagerRole, type BusinessType, type Role } from '@/lib/business'
 
@@ -20,6 +21,7 @@ export interface NavItem {
   label: string
   short?: string // label in the phone tab bar
   icon: LucideIcon
+  end?: boolean // active only on the exact path
 }
 
 /**
@@ -48,6 +50,7 @@ export function navFor(type: BusinessType, role: Role): { main: NavItem[]; botto
   main.push({ to: '/produktet', label: info.terms.catalog, icon: Package })
   if (hasModule(type, 'stock')) main.push({ to: '/stoku', label: 'Stoku & Hyrjet', short: 'Stoku', icon: Truck })
   main.push({ to: '/raportet', label: 'Raportet', icon: BarChart3 })
+  main.push({ to: '/kontabiliteti', label: 'Kontabiliteti', icon: Calculator })
   main.push({ to: '/puna', label: 'Puna e punëtorëve', short: 'Puna', icon: Users })
   main.push({ to: '/regjistri', label: 'Regjistri', icon: ScrollText })
   return { main, bottom: [{ to: '/cilesimet', label: 'Cilësimet', icon: Settings }] }

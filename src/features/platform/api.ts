@@ -60,6 +60,47 @@ export function resetOwnerPassword(business_id: string, password: string) {
   return callPlatformAdmin<{ email: string }>({ action: 'reset_password', business_id, password })
 }
 
+// ---------------------------------------------------------------------------
+// Accountants (the separate "Kasa Kontabilist" program)
+// ---------------------------------------------------------------------------
+export interface PlatformAccountant {
+  user_id: string
+  full_name: string
+  email: string
+  office_name: string | null
+  phone: string | null
+  active: boolean
+  created_at: string
+  clients: number
+  kasa_clients: number
+  last_sign_in_at: string | null
+}
+
+export async function fetchPlatformAccountants(): Promise<PlatformAccountant[]> {
+  const { data, error } = await supabase.rpc('platform_accountants')
+  if (error) {
+    if (['PGRST202', '42883'].includes(error.code ?? '')) throw new Error('Kontabilistët aktivizohen pasi të ekzekutohet migrimi 0013_accountant_app.sql në Supabase.')
+    throw new Error(error.message)
+  }
+  return ((data as PlatformAccountant[]) ?? []).map((a) => ({ ...a, clients: Number(a.clients), kasa_clients: Number(a.kasa_clients) }))
+}
+
+export async function setAccountantActive(userId: string, active: boolean): Promise<void> {
+  const { error } = await supabase.rpc('platform_set_accountant_active', { p_user: userId, p_active: active })
+  if (error) throw new Error(error.message)
+}
+
+export function createAccountant(input: { full_name: string; office_name?: string; phone?: string; email: string; password: string }) {
+  return callPlatformAdmin<{ user_id: string; email: string }>({ action: 'create_accountant', ...input })
+}
+
+export function resetAccountantPassword(user_id: string, password: string) {
+  return callPlatformAdmin<{ email: string }>({ action: 'reset_accountant_password', user_id, password })
+}
+
+/** Where accountants sign in (set VITE_KONTABILIST_URL to the web address of the program). */
+export const KONTABILIST_ADDRESS = (import.meta.env.VITE_KONTABILIST_URL as string | undefined)?.trim() || 'Programi "Kasa Kontabilist"'
+
 /** 10 characters without look-alikes (0/O, 1/l/I), at least one of each class. */
 export function generatePassword(length = 10): string {
   const lower = 'abcdefghijkmnpqrstuvwxyz'

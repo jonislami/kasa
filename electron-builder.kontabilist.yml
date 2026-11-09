@@ -1,0 +1,47 @@
+# "Kasa Kontabilist" – the accountant's program for Windows (NSIS) + auto-update from GitHub Releases.
+# Same Electron main process as Kasa; "kasaApp: kontabilist" makes it load dist-kontabilist/.
+# Updates use the "kontabilist" channel (kontabilist.yml), so they never mix with the till's latest.yml.
+appId: app.kasa.kontabilist
+productName: Kasa Kontabilist
+copyright: Kasa
+directories:
+  output: release
+  buildResources: build
+files:
+  - dist-kontabilist/**/*
+  - dist-electron/**/*
+  - package.json
+  - "!node_modules/{lucide-react,write-excel-file,read-excel-file,react,react-dom,react-router,react-router-dom,scheduler,clsx,cookie,set-cookie-parser,worker-f,unzipper-esm,fflate,archiver*,jszip}/**"
+  - "!node_modules/@tanstack/**"
+  - "!node_modules/@supabase/**"
+  - "!node_modules/@capacitor/**"
+  - "!node_modules/@capacitor-community/**"
+  - "!node_modules/workbox-*/**"
+  - "!**/*.{map,md,ts,tsx}"
+
+extraMetadata:
+  main: dist-electron/main.cjs
+  kasaApp: kontabilist
+asar: true
+compression: maximum
+electronLanguages: [en-US, sq]
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: build/icon.png
+  artifactName: Kasa-Kontabilist-Setup-${version}.${ext}
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: Kasa Kontabilist
+  deleteAppDataOnUninstall: false
+publish:
+  - provider: github
+    owner: jonislami
+    repo: kasa
+    releaseType: release
+    channel: kontabilist

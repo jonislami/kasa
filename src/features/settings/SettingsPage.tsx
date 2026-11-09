@@ -9,6 +9,7 @@ import { isManagerRole } from '@/lib/business'
 import { cn } from '@/lib/cn'
 import { device } from '@/lib/device'
 import { myPinStatus, setOwnPin } from '@/features/pos/api'
+import { AccountantSection } from './AccountantSection'
 import { BackupSection } from './BackupSection'
 import { BusinessSection } from './BusinessSection'
 import { PrinterSection } from './PrinterSection'
@@ -16,12 +17,13 @@ import { RegistersSection } from './RegistersSection'
 import { UsersSection } from './UsersSection'
 import { InstallCard } from '@/app/AppStatus'
 
-type Section = 'biznesi' | 'printeri' | 'perdoruesit' | 'arkat' | 'tvsh' | 'backup'
+type Section = 'biznesi' | 'printeri' | 'perdoruesit' | 'kontabilisti' | 'arkat' | 'tvsh' | 'backup'
 
 const SECTIONS: { value: Section; label: string }[] = [
   { value: 'biznesi', label: 'Të dhënat e biznesit' },
   { value: 'printeri', label: 'Printeri & Fatura' },
   { value: 'perdoruesit', label: 'Përdoruesit & PIN-et' },
+  { value: 'kontabilisti', label: 'Kontabilisti' },
   { value: 'arkat', label: 'Arkat & pajisjet' },
   { value: 'tvsh', label: 'TVSH & Taksat' },
   { value: 'backup', label: 'Kopje rezervë (Backup)' },
@@ -79,6 +81,7 @@ export function SettingsPage() {
               <UsersSection />
             </div>
           )}
+          {section === 'kontabilisti' && <AccountantSection />}
           {section === 'arkat' && <RegistersSection />}
           {section === 'tvsh' && <VatSection />}
           {section === 'backup' && <BackupSection />}

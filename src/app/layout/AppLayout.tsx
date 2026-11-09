@@ -72,6 +72,7 @@ export function AppLayout() {
 
   // Link this device to the business (managers) so workers can sign in here with their PIN.
   useEffect(() => {
+    if (profile.role === 'accountant') return // an outside person never links a till
     void ensureDeviceLinked({ id: business.id, name: business.name }, isManagerRole(profile.role)).catch(() => undefined)
   }, [business.id, business.name, profile.role])
 
@@ -82,7 +83,7 @@ export function AppLayout() {
           <LogoMark size={36} />
           <div className="min-w-0">
             <div className="truncate text-[16px] font-bold leading-tight">{business.name}</div>
-            <div className="truncate text-xs text-white/60">{business.city || info.label}</div>
+            <div className="truncate text-xs text-white/60">{profile.role === 'accountant' ? `Klient · ${info.shortLabel}` : business.city || info.label}</div>
           </div>
         </div>
       }

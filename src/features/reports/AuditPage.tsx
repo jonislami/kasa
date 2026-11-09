@@ -8,6 +8,7 @@ import { PageHeader } from '@/app/layout/AppLayout'
 import { Badge, Button, Card, EmptyState, Select } from '@/components/ui'
 import { formatEUR } from '@/lib/money'
 import { fetchPeople } from '@/features/stock/api'
+import { fetchAccountants } from '@/features/accounting/api'
 import { fetchAudit, periodRange, type AuditRow, type PeriodKey } from './api'
 
 type Tone = 'success' | 'warn' | 'amber' | 'neutral' | 'info'
@@ -34,6 +35,15 @@ const ACTIONS: Record<string, { label: string; tone: Tone }> = {
   shift_end: { label: 'Mbyllje ndërrimi', tone: 'neutral' },
   settings_change: { label: 'Cilësime', tone: 'info' },
   pin_set: { label: 'PIN i ri', tone: 'info' },
+  accountant_request: { label: 'Kërkesë kontabilisti', tone: 'info' },
+  accountant_approve: { label: 'Kontabilisti u miratua', tone: 'success' },
+  accountant_reject: { label: 'Kërkesa u refuzua', tone: 'neutral' },
+  accountant_unlink: { label: 'Kontabilisti u shkëput', tone: 'neutral' },
+  accountant_revoke: { label: 'Qasja e hequr', tone: 'warn' },
+  accountant_open: { label: 'Kontabilisti hapi librat', tone: 'neutral' },
+  expense_save: { label: 'Shpenzim', tone: 'info' },
+  expense_delete: { label: 'Shpenzim i fshirë', tone: 'amber' },
+  period_status: { label: 'Statusi i TVSH-së', tone: 'info' },
 }
 
 const REASONS: Record<string, string> = { damage: 'i dëmtuar', expired: 'skadim', loss: 'humbje', own_use: 'përdorim i brendshëm', return_supplier: 'kthim te furnitori', correction: 'korrigjim', other: 'tjetër' }
@@ -83,6 +93,18 @@ export function describe(a: AuditRow): string {
       return `${String(g('created') ?? 0)} të reja, ${String(g('updated') ?? 0)} të ndryshuara`
     case 'approval_failed':
       return `PIN i gabuar i menaxherit (prova ${String(g('attempt') ?? '')} nga 5)`
+    case 'accountant_request':
+    case 'accountant_approve':
+    case 'accountant_reject':
+    case 'accountant_unlink':
+    case 'accountant_revoke':
+    case 'accountant_open':
+      return [g('name'), g('office'), g('email')].filter(Boolean).map(String).join(' · ')
+    case 'expense_save':
+    case 'expense_delete':
+      return [g('date'), g('category'), eur(g('total'))].filter(Boolean).map(String).join(' · ')
+    case 'period_status':
+      return `${String(g('month') ?? '').slice(0, 7)} · ${g('vat_status') === 'filed' ? 'e dorëzuar' : 'e rihapur'}`
     case 'login':
       return g('method') === 'pin' ? 'Hyri me PIN' : 'Hyri me email'
     default: {
@@ -107,7 +129,13 @@ export function AuditPage() {
     queryKey: ['audit', range.from, range.to, userId, action],
     queryFn: () => fetchAudit({ from: range.from, to: range.to, userId: userId || undefined, action: action || undefined }),
   })
-  const names = people.data ?? new Map<string, string>()
+  // The accountant is not in profiles; without migration 0012 the list is simply empty.
+  const accountants = useQuery({ queryKey: ['accountants', business.id], queryFn: () => fetchAccountants().catch(() => []), staleTime: 5 * 60_000 })
+  const names = useMemo(() => {
+    const m = new Map(people.data ?? [])
+    for (const a of accountants.data ?? []) m.set(a.user_id, `${a.full_name || a.email} (kontabilist)`)
+    return m
+  }, [people.data, accountants.data])
 
   const rows = useMemo(() => {
     const s = q.trim().toLowerCase()

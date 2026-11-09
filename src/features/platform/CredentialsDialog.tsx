@@ -8,6 +8,10 @@ export interface Credentials {
   ownerName: string
   email: string
   password: string
+  /** Who receives them, in the dative: "pronarit" (default) or "kontabilistit". */
+  recipient?: string
+  /** Where to sign in; default: this site's /login. */
+  address?: string
 }
 
 async function copy(text: string): Promise<boolean> {
@@ -53,7 +57,7 @@ function CopyField({ label, value, highlight }: { label: string; value: string; 
 export function CredentialsDialog({ data, onClose }: { data: Credentials | null; onClose: () => void }) {
   const [copiedAll, setCopiedAll] = useState(false)
   if (!data) return null
-  const address = `${window.location.origin}/login`
+  const address = data.address ?? `${window.location.origin}/login`
   const message =
     `Përshëndetje ${data.ownerName},\n\nTë dhënat për hyrje në Kasa:\n` +
     `Adresa: ${address}\nEmail-i: ${data.email}\nFjalëkalimi: ${data.password}\n\n` +
@@ -67,7 +71,7 @@ export function CredentialsDialog({ data, onClose }: { data: Credentials | null;
         </div>
         <h2 className="mt-4 text-[22px] font-semibold">{data.title}</h2>
         <p className="mt-1.5 text-[15px] text-muted">
-          Dërgoja këto të dhëna pronarit, {data.ownerName}. Me to hyn në çdo pajisje.
+          Dërgoja këto të dhëna {data.recipient ?? 'pronarit'}, {data.ownerName}. Me to hyn në çdo pajisje.
         </p>
       </div>
       <div className="mt-6 flex flex-col gap-4">

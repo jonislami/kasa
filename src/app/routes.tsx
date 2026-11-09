@@ -2,7 +2,7 @@ import { lazy, Suspense, type ReactNode } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useAuth, useBusiness } from './AuthProvider'
 import { hasModule } from '@/lib/business'
-import { FullScreenLoader, RequireBusiness, RequireManager, RequirePlatformAdmin, RequireType } from './AuthGuard'
+import { Blocked, FullScreenLoader, RequireBooks, RequireBusiness, RequireManager, RequirePlatformAdmin, RequireStaff, RequireType } from './AuthGuard'
 import { AppLayout } from './layout/AppLayout'
 import { LandingPage } from '@/features/landing/LandingPage'
 import { DownloadPage } from '@/features/download/DownloadPage'
@@ -11,6 +11,7 @@ import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { supabaseConfigured } from '@/lib/supabase'
 import { device } from '@/lib/device'
 
+const AccountantsAdminPage = lazy(() => import('@/features/platform/AccountantsPage').then((m) => ({ default: m.AccountantsPage })))
 const PlatformPage = lazy(() => import('@/features/platform/PlatformPage').then((m) => ({ default: m.PlatformPage })))
 const PosPage = lazy(() => import('@/features/pos/PosPage').then((m) => ({ default: m.PosPage })))
 const RefundPage = lazy(() => import('@/features/pos/RefundPage').then((m) => ({ default: m.RefundPage })))
@@ -25,6 +26,7 @@ const KitchenPage = lazy(() => import('@/features/restaurant/KitchenPage').then(
 const MenuItemPage = lazy(() => import('@/features/restaurant/MenuItemPage').then((m) => ({ default: m.MenuItemPage })))
 const VariantsPage = lazy(() => import('@/features/products/VariantsPage').then((m) => ({ default: m.VariantsPage })))
 const StockPage = lazy(() => import('@/features/stock/StockPage').then((m) => ({ default: m.StockPage })))
+const AccountingPage = lazy(() => import('@/features/accounting/AccountingPage').then((m) => ({ default: m.AccountingPage })))
 const ProductsPage = lazy(() => import('@/features/products/ProductsPage').then((m) => ({ default: m.ProductsPage })))
 
 function Lazy({ children }: { children: ReactNode }) {
@@ -43,11 +45,19 @@ function Home() {
   }
   if (status === 'loading') return <FullScreenLoader />
   if (ctx?.is_platform_admin && !ctx.profile) return <Navigate to="/platforma" replace />
+  // Accountants work in their own program (Kasa Kontabilist), not in the till app.
+  if (ctx?.accountant && ctx.profile?.role !== 'admin' && ctx.profile?.role !== 'manager' && ctx.profile?.role !== 'worker')
+    return <Blocked title="Kjo është llogari kontabilisti" text="Hyr me këtë email në programin Kasa Kontabilist. Ky aplikacion është për arkën e bizneseve." />
   return (
     <RequireBusiness>
       <AppLayout />
     </RequireBusiness>
   )
+}
+
+/** "/" inside a business: the panel; the accountant lands on the books. */
+function Index() {
+  return <DashboardPage />
 }
 
 /** /produktet/:id – boutique: sizes × colours; restaurant: recipe, modifiers, station. */
@@ -72,30 +82,57 @@ export function AppRoutes() {
         }
       />
 
+      <Route
+        path="/platforma/kontabilistet"
+        element={
+          <RequirePlatformAdmin>
+            <Lazy>
+              <AccountantsAdminPage />
+            </Lazy>
+          </RequirePlatformAdmin>
+        }
+      />
+
       <Route path="/" element={<Home />}>
-        <Route index element={<DashboardPage />} />
+        <Route index element={<Index />} />
+        <Route
+          path="kontabiliteti/:tab?"
+          element={
+            <RequireBooks>
+              <Lazy>
+                <AccountingPage />
+              </Lazy>
+            </RequireBooks>
+          }
+        />
         <Route
           path="arka"
           element={
-            <Lazy>
-              <PosPage />
-            </Lazy>
+            <RequireStaff>
+              <Lazy>
+                <PosPage />
+              </Lazy>
+            </RequireStaff>
           }
         />
         <Route
           path="arka/kthim"
           element={
-            <Lazy>
-              <RefundPage />
-            </Lazy>
+            <RequireStaff>
+              <Lazy>
+                <RefundPage />
+              </Lazy>
+            </RequireStaff>
           }
         />
         <Route
           path="puna"
           element={
-            <Lazy>
-              <WorkPage />
-            </Lazy>
+            <RequireStaff>
+              <Lazy>
+                <WorkPage />
+              </Lazy>
+            </RequireStaff>
           }
         />
         <Route
@@ -111,9 +148,11 @@ export function AppRoutes() {
         <Route
           path="cilesimet"
           element={
-            <Lazy>
-              <SettingsPage />
-            </Lazy>
+            <RequireStaff>
+              <Lazy>
+                <SettingsPage />
+              </Lazy>
+            </RequireStaff>
           }
         />
         <Route

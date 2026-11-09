@@ -8,10 +8,25 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import fs from 'node:fs'
 
+// The same main process runs two programs: Kasa (the till) and Kasa Kontabilist (the accountant's
+// program). electron-builder.kontabilist.yml writes "kasaApp": "kontabilist" into package.json;
+// while developing, KASA_APP=kontabilist does the same.
+function appVariant(): 'kasa' | 'kontabilist' {
+  if (process.env.KASA_APP === 'kontabilist') return 'kontabilist'
+  try {
+    const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf-8')) as { kasaApp?: string }
+    return pkg.kasaApp === 'kontabilist' ? 'kontabilist' : 'kasa'
+  } catch {
+    return 'kasa'
+  }
+}
+const VARIANT = appVariant()
+const TITLE = VARIANT === 'kontabilist' ? 'Kasa Kontabilist' : 'Kasa'
+
 const SCHEME = 'app'
-const HOST = 'kasa'
+const HOST = VARIANT === 'kontabilist' ? 'kontabilist' : 'kasa'
 const ORIGIN = `${SCHEME}://${HOST}`
-const DIST = path.join(__dirname, '..', 'dist')
+const DIST = path.join(__dirname, '..', VARIANT === 'kontabilist' ? 'dist-kontabilist' : 'dist')
 
 protocol.registerSchemesAsPrivileged([
   { scheme: SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, stream: true } },
@@ -106,6 +121,8 @@ ipcMain.handle('kasa:safe-decrypt', (_e, b64: string) => {
 // ---------------------------------------------------------------------------
 function wireUpdates(w: BrowserWindow) {
   if (!app.isPackaged) return
+  // Both programs publish to the same GitHub Releases; the accountant program reads kontabilist.yml.
+  if (VARIANT === 'kontabilist') autoUpdater.channel = 'kontabilist'
   autoUpdater.autoDownload = true
   autoUpdater.autoInstallOnAppQuit = true
   autoUpdater.on('update-downloaded', (info) => w.webContents.send('kasa:update', { state: 'ready', version: info.version }))
@@ -122,7 +139,7 @@ function createWindow() {
     height: 860,
     minWidth: 980,
     minHeight: 640,
-    title: 'Kasa',
+    title: TITLE,
     backgroundColor: '#F4F6F3',
     icon: path.join(__dirname, '..', 'build', 'icon.png'),
     autoHideMenuBar: true,

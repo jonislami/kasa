@@ -3,7 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom'
 import { Loader2, ShieldAlert } from 'lucide-react'
 import { useAuth } from './AuthProvider'
 import { Button } from '@/components/ui'
-import { isManagerRole, type BusinessType } from '@/lib/business'
+import { canSeeBooks, isManagerRole, type BusinessType } from '@/lib/business'
 import { supabaseConfigured } from '@/lib/supabase'
 
 export function FullScreenLoader() {
@@ -58,6 +58,7 @@ export function RequireBusiness({ children }: { children: ReactNode }) {
     return <Blocked title="Të dhënat nuk u ngarkuan" text={error ?? 'Provo përsëri pas pak.'} />
   if (!ctx?.profile) {
     if (ctx?.is_platform_admin) return <Navigate to="/platforma" replace />
+    if (ctx?.accountant) return <Blocked title="Kjo është llogari kontabilisti" text="Hyr me këtë email në programin Kasa Kontabilist." />
     return <Blocked title="Llogaria nuk ka biznes" text="Kjo llogari nuk është e lidhur me asnjë biznes. Kontakto administratorin." />
   }
   if (!ctx.business?.active)
@@ -74,10 +75,24 @@ export function RequireManager({ children }: { children: ReactNode }) {
   return <>{children}</>
 }
 
+/** Screens of the people who work in the business (till, own work, printer). Not for the accountant. */
+export function RequireStaff({ children }: { children: ReactNode }) {
+  const { ctx } = useAuth()
+  if (ctx?.profile?.role === 'accountant') return <Navigate to="/kontabiliteti" replace />
+  return <>{children}</>
+}
+
+/** The books: owner, manager or the invited accountant. */
+export function RequireBooks({ children }: { children: ReactNode }) {
+  const { ctx } = useAuth()
+  if (!canSeeBooks(ctx?.profile?.role)) return <Navigate to="/" replace />
+  return <>{children}</>
+}
+
 /** Screens that exist only for one business type (e.g. /terminet for salons). */
 export function RequireType({ type, children }: { type: BusinessType; children: ReactNode }) {
   const { ctx } = useAuth()
-  if (ctx?.business?.type !== type) return <Navigate to="/" replace />
+  if (ctx?.business?.type !== type || ctx?.profile?.role === 'accountant') return <Navigate to="/" replace />
   return <>{children}</>
 }
 

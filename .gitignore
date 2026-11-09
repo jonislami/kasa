@@ -6,3 +6,5 @@ dev-dist
 *.local
 dist-electron/
 release/
+dist-kontabilist
+supabase/.temp/

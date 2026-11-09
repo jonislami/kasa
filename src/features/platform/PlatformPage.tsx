@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Building2, Plus, Search } from 'lucide-react'
+import { Building2, Calculator, Plus, Search } from 'lucide-react'
 import { useAuth } from '@/app/AuthProvider'
 import { PageHeader, Shell } from '@/app/layout/AppLayout'
 import type { NavItem } from '@/app/nav'
@@ -14,7 +14,35 @@ import { CredentialsDialog, type Credentials } from './CredentialsDialog'
 import { NewBusinessDialog } from './NewBusinessDialog'
 
 const PAGE_SIZE = 10
-const platformNav: NavItem[] = [{ to: '/platforma', label: 'Bizneset', icon: Building2 }]
+const platformNav: NavItem[] = [
+  { to: '/platforma', label: 'Bizneset', icon: Building2, end: true },
+  { to: '/platforma/kontabilistet', label: 'Kontabilistët', icon: Calculator },
+]
+
+/** Layout of the platform admin pages. */
+export function PlatformShell({ children }: { children: ReactNode }) {
+  const { ctx, session } = useAuth()
+  const adminName = (session?.user.user_metadata?.full_name as string | undefined) ?? session?.user.email ?? 'Admin'
+  return (
+    <Shell
+      brand={
+        <div className="flex items-center gap-3">
+          <LogoMark size={36} />
+          <div>
+            <div className="text-[16px] font-bold leading-tight">Kasa</div>
+            <div className="text-xs font-semibold text-brand-400">Platforma · Admin</div>
+          </div>
+        </div>
+      }
+      main={platformNav}
+      bottom={[]}
+      userName={adminName}
+      userSub={ctx?.profile ? 'Admin + biznes' : 'Administrator'}
+    >
+      {children}
+    </Shell>
+  )
+}
 
 type Confirm = { kind: 'password' | 'toggle'; business: PlatformBusiness } | null
 
@@ -25,7 +53,6 @@ function StatusBadge({ b }: { b: PlatformBusiness }) {
 }
 
 export function PlatformPage() {
-  const { ctx, session } = useAuth()
   const qc = useQueryClient()
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<BusinessType | 'all'>('all')
@@ -87,24 +114,8 @@ export function PlatformPage() {
     onError: (e: Error) => setActionError(e.message),
   })
 
-  const adminName = (session?.user.user_metadata?.full_name as string | undefined) ?? session?.user.email ?? 'Admin'
-
   return (
-    <Shell
-      brand={
-        <div className="flex items-center gap-3">
-          <LogoMark size={36} />
-          <div>
-            <div className="text-[16px] font-bold leading-tight">Kasa</div>
-            <div className="text-xs font-semibold text-brand-400">Platforma · Admin</div>
-          </div>
-        </div>
-      }
-      main={platformNav}
-      bottom={[]}
-      userName={adminName}
-      userSub={ctx?.profile ? 'Admin + biznes' : 'Administrator'}
-    >
+    <PlatformShell>
       <PageHeader
         eyebrow="Të gjitha bizneset që përdorin Kasa"
         title="Bizneset"
@@ -345,6 +356,6 @@ export function PlatformPage() {
               : 'Përdoruesit e këtij biznesi mund të hyjnë përsëri.'}
         </p>
       </Dialog>
-    </Shell>
+    </PlatformShell>
   )
 }
