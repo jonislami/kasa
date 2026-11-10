@@ -121,7 +121,7 @@ export function ClientsPage({ me }: { me: AccMe }) {
                 ...(all.some((c) => !c.active) ? [{ value: 'archived', label: `Të arkivuara (${all.filter((c) => !c.active).length})` }] : []),
               ]}
             />
-            <Button size="lg" className="h-[48px] bg-bt-600 hover:bg-[#1A43BF]" onClick={() => setNewOpen(true)}>
+            <Button size="lg" className="h-[48px] bg-brand-600 hover:bg-[#0B5C43]" onClick={() => setNewOpen(true)}>
               <Plus className="h-5 w-5" /> Kompani e re
             </Button>
           </div>
@@ -173,7 +173,7 @@ export function ClientsPage({ me }: { me: AccMe }) {
                 <button
                   type="button"
                   onClick={() => setNewOpen(true)}
-                  className="flex min-h-[230px] flex-col items-center justify-center gap-2 rounded-[18px] border-2 border-dashed border-field text-muted hover:border-bt-600 hover:text-bt-600"
+                  className="flex min-h-[230px] flex-col items-center justify-center gap-2 rounded-[18px] border-2 border-dashed border-field text-muted hover:border-brand-600 hover:text-brand-600"
                 >
                   <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm">
                     <Plus className="h-6 w-6" />
@@ -316,22 +316,22 @@ function TopShell({ me, onPassword, children }: { me: AccMe; onPassword: () => v
     navigate('/login', { replace: true })
   }
   return (
-    <div className="min-h-dvh bg-[#F6F7F9]">
-      <div className="fixed inset-x-0 top-0 z-50 h-safe-top bg-white" />
-      <header className="sticky top-0 z-40 border-b border-line bg-white pt-safe">
+    <div className="min-h-dvh bg-bg">
+      <div className="fixed inset-x-0 top-0 z-50 h-safe-top bg-brand-900" />
+      <header className="sticky top-0 z-40 bg-brand-900 pt-safe text-white">
         <div className="flex h-[68px] items-center gap-3 px-4 md:px-8">
           <LogoMark size={36} />
           <div className="min-w-0">
             <div className="truncate text-[17px] font-bold leading-tight">{me.accountant?.office_name || 'Kasa Kontabilist'}</div>
-            <div className="text-xs font-semibold text-brand-600">Kontabilist</div>
+            <div className="text-xs font-semibold text-brand-400">Kontabilist</div>
           </div>
           <div className="flex-1" />
           <div className="relative">
-            <button type="button" onClick={() => setMenu((m) => !m)} aria-label="Llogaria" className="flex h-11 w-11 items-center justify-center rounded-full bg-bt-600 text-[16px] font-bold text-white">
+            <button type="button" onClick={() => setMenu((m) => !m)} aria-label="Llogaria" className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-400 text-[16px] font-bold text-brand-900">
               {initial(name)}
             </button>
             {menu && (
-              <div className="absolute right-0 top-12 z-50 w-[260px] overflow-hidden rounded-card border border-line bg-white shadow-xl" onMouseLeave={() => setMenu(false)}>
+              <div className="absolute right-0 top-12 z-50 w-[260px] overflow-hidden rounded-card border border-line bg-white text-ink shadow-xl" onMouseLeave={() => setMenu(false)}>
                 <div className="border-b border-line px-4 py-3">
                   <div className="truncate font-semibold">{name}</div>
                   <div className="truncate text-sm text-muted">{me.accountant?.email}</div>
@@ -349,7 +349,7 @@ function TopShell({ me, onPassword, children }: { me: AccMe; onPassword: () => v
               </div>
             )}
           </div>
-          <button type="button" onClick={() => void doSignOut()} className="flex h-11 items-center gap-2 rounded-ctl border border-[#FBCFCF] px-4 font-semibold text-[#DC2626] hover:bg-[#FEF2F2]">
+          <button type="button" onClick={() => void doSignOut()} className="flex h-11 items-center gap-2 rounded-ctl bg-white/10 px-4 font-semibold text-white hover:bg-white/20">
             <LogOut className="h-4 w-4" /> <span className="hidden sm:inline">Dil</span>
           </button>
         </div>

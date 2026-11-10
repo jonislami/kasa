@@ -110,7 +110,7 @@ export function DashboardTab({ client, onGo }: { client: Client; onGo: (tab: str
       {/* today */}
       <Card className="overflow-hidden">
         <div className="flex items-center gap-3 border-b border-line px-5 py-4">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E6EDFD] text-bt-600">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E3F1EA] text-brand-600">
             <CalendarClock className="h-5 w-5" />
           </span>
           <div>
@@ -124,7 +124,7 @@ export function DashboardTab({ client, onGo }: { client: Client; onGo: (tab: str
           <ul className="divide-y divide-line">
             {tasks.map((t, i) => (
               <li key={i} className="flex flex-col gap-2 px-5 py-4 md:flex-row md:items-center">
-                <span className={cn('mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full md:mt-0', t.tone === 'warn' ? 'bg-[#DC2626]' : t.tone === 'amber' ? 'bg-[#F59E0B]' : 'bg-bt-600')} />
+                <span className={cn('mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full md:mt-0', t.tone === 'warn' ? 'bg-[#DC2626]' : t.tone === 'amber' ? 'bg-[#F59E0B]' : 'bg-brand-600')} />
                 <div className="min-w-0 flex-1">
                   <div className="font-semibold">{t.title}</div>
                   <div className="text-sm text-muted">{t.sub}</div>
@@ -145,7 +145,7 @@ export function DashboardTab({ client, onGo }: { client: Client; onGo: (tab: str
         {[
           { label: 'Shitje e re', icon: Receipt, tab: 'shitjet?new=1', tone: 'text-brand-600' },
           { label: 'Blerje e re', icon: ShoppingCart, tab: 'blerjet?new=1', tone: 'text-[#EA580C]' },
-          { label: 'Transaksion bankar', icon: Landmark, tab: 'banka', tone: 'text-bt-600' },
+          { label: 'Transaksion bankar', icon: Landmark, tab: 'banka', tone: 'text-brand-600' },
           { label: 'Klient i ri', icon: UserPlus, tab: 'partneret?new=1', tone: 'text-[#7E22CE]' },
         ].map((a) => (
           <button key={a.label} type="button" onClick={() => onGo(a.tab)} className="flex h-10 items-center gap-2 rounded-full border border-line bg-white px-4 text-sm font-semibold shadow-sm hover:bg-bg">
@@ -182,7 +182,7 @@ export function DashboardTab({ client, onGo }: { client: Client; onGo: (tab: str
           </div>
           <div className="mt-4 grid grid-cols-3 gap-3">
             <Legend color="bg-brand-600" label="Të ardhurat" value={formatEUR(yearIn)} />
-            <Legend color="bg-[#F43F5E]" label="Kostot" value={formatEUR(yearOut)} />
+            <Legend color="bg-[#F59E0B]" label="Kostot" value={formatEUR(yearOut)} />
             <Legend label="Diferenca" value={formatEUR(yearIn - yearOut)} red={yearIn - yearOut < 0} />
           </div>
           <div className="mt-4 flex h-[220px] items-end gap-1.5 border-b border-line sm:gap-3">
@@ -191,7 +191,7 @@ export function DashboardTab({ client, onGo }: { client: Client; onGo: (tab: str
               return (
                 <div key={m.month} className="flex h-full min-w-0 flex-1 items-end justify-center gap-0.5" title={`${SHORT[i]}: të ardhurat ${formatEUR(m.sales)} · kostot ${formatEUR(c)}`}>
                   <div className="w-1/2 max-w-[16px] rounded-t bg-brand-600" style={{ height: `${(m.sales / max) * 100}%` }} />
-                  <div className="w-1/2 max-w-[16px] rounded-t bg-[#F43F5E]/85" style={{ height: `${(c / max) * 100}%` }} />
+                  <div className="w-1/2 max-w-[16px] rounded-t bg-[#F59E0B]" style={{ height: `${(c / max) * 100}%` }} />
                 </div>
               )
             })}
@@ -214,12 +214,12 @@ export function DashboardTab({ client, onGo }: { client: Client; onGo: (tab: str
               </h3>
               <p className="text-sm text-muted">Gjendja sot {formatEUR(money)}</p>
             </div>
-            <button type="button" onClick={() => onGo('banka')} className="text-sm font-semibold text-bt-600 hover:underline">
+            <button type="button" onClick={() => onGo('banka')} className="text-sm font-semibold text-brand-600 hover:underline">
               Shiko →
             </button>
           </div>
           {d.accounts.length === 0 ? (
-            <button type="button" onClick={() => onGo('banka')} className="mt-3 flex items-center gap-2 rounded-ctl border border-dashed border-field px-3 py-3 text-sm text-muted hover:border-bt-600 hover:text-bt-600">
+            <button type="button" onClick={() => onGo('banka')} className="mt-3 flex items-center gap-2 rounded-ctl border border-dashed border-field px-3 py-3 text-sm text-muted hover:border-brand-600 hover:text-brand-600">
               <Plus className="h-4 w-4" /> Shto arkën dhe llogaritë bankare
             </button>
           ) : (
@@ -233,20 +233,20 @@ export function DashboardTab({ client, onGo }: { client: Client; onGo: (tab: str
                     </span>
                     <span className={cn('font-semibold tabular-nums', a.balance < 0 && 'text-warn-700')}>{formatEUR(a.balance)}</span>
                   </div>
-                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[#E9EEF5]">
-                    <div className="h-full rounded-full bg-bt-600" style={{ width: `${money > 0 ? Math.max(2, (Math.max(0, a.balance) / money) * 100) : 0}%` }} />
+                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[#E3ECE6]">
+                    <div className="h-full rounded-full bg-brand-600" style={{ width: `${money > 0 ? Math.max(2, (Math.max(0, a.balance) / money) * 100) : 0}%` }} />
                   </div>
                 </li>
               ))}
             </ul>
           )}
           <div className="mt-auto grid grid-cols-2 gap-2 border-t border-line pt-4 text-sm">
-            <button type="button" onClick={() => onGo('borxhet')} className="rounded-ctl bg-[#F4F6F8] p-3 text-left hover:bg-[#ECEFF3]">
+            <button type="button" onClick={() => onGo('borxhet')} className="rounded-ctl bg-[#EEF3EF] p-3 text-left hover:bg-[#E3ECE6]">
               <div className="text-muted">Na detyrohen</div>
               <div className="font-bold tabular-nums">{formatEUR(d.receivable)}</div>
               {d.overdue_receivable > 0 && <div className="text-xs text-[#DC2626]">vonë {formatEUR(d.overdue_receivable)}</div>}
             </button>
-            <button type="button" onClick={() => onGo('borxhet')} className="rounded-ctl bg-[#F4F6F8] p-3 text-left hover:bg-[#ECEFF3]">
+            <button type="button" onClick={() => onGo('borxhet')} className="rounded-ctl bg-[#EEF3EF] p-3 text-left hover:bg-[#E3ECE6]">
               <div className="text-muted">I detyrohemi</div>
               <div className="font-bold tabular-nums">{formatEUR(d.payable)}</div>
               {d.overdue_payable > 0 && <div className="text-xs text-[#DC2626]">vonë {formatEUR(d.overdue_payable)}</div>}
@@ -275,7 +275,7 @@ export function DashboardTab({ client, onGo }: { client: Client; onGo: (tab: str
           <ul className="divide-y divide-line">
             {recent.data.slice(0, 6).map((x: Doc) => (
               <li key={x.id}>
-                <button type="button" onClick={() => onGo(recentKind === 'sale' ? 'shitjet' : 'blerjet')} className="flex w-full items-center gap-3 px-5 py-3 text-left hover:bg-[#F8FAFC]">
+                <button type="button" onClick={() => onGo(recentKind === 'sale' ? 'shitjet' : 'blerjet')} className="flex w-full items-center gap-3 px-5 py-3 text-left hover:bg-[#F6F9F7]">
                   <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl', recentKind === 'sale' ? 'bg-brand-100 text-brand-600' : 'bg-[#FFF1F2] text-[#E11D48]')}>
                     {recentKind === 'sale' ? <ArrowDownRight className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
                   </span>
@@ -304,7 +304,7 @@ const TONES = {
   green: 'bg-brand-100 text-brand-600',
   amber: 'bg-amber-100 text-amber-700',
   red: 'bg-[#FFF1F2] text-[#E11D48]',
-  blue: 'bg-[#E6EDFD] text-bt-600',
+  blue: 'bg-[#E3F1EA] text-brand-600',
 }
 
 function Kpi({ label, sub, value, prev, icon: Icon, tone, inverse }: { label: string; sub: string; value: number; prev?: number; icon: LucideIcon; tone: keyof typeof TONES; inverse?: boolean }) {
