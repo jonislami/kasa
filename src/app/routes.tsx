@@ -2,7 +2,7 @@ import { lazy, Suspense, type ReactNode } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useAuth, useBusiness } from './AuthProvider'
 import { hasModule } from '@/lib/business'
-import { Blocked, FullScreenLoader, RequireBooks, RequireBusiness, RequireManager, RequirePlatformAdmin, RequireStaff, RequireType } from './AuthGuard'
+import { Blocked, FullScreenLoader, RequireBusiness, RequireManager, RequirePlatformAdmin, RequireStaff, RequireType } from './AuthGuard'
 import { AppLayout } from './layout/AppLayout'
 import { LandingPage } from '@/features/landing/LandingPage'
 import { DownloadPage } from '@/features/download/DownloadPage'
@@ -26,7 +26,6 @@ const KitchenPage = lazy(() => import('@/features/restaurant/KitchenPage').then(
 const MenuItemPage = lazy(() => import('@/features/restaurant/MenuItemPage').then((m) => ({ default: m.MenuItemPage })))
 const VariantsPage = lazy(() => import('@/features/products/VariantsPage').then((m) => ({ default: m.VariantsPage })))
 const StockPage = lazy(() => import('@/features/stock/StockPage').then((m) => ({ default: m.StockPage })))
-const AccountingPage = lazy(() => import('@/features/accounting/AccountingPage').then((m) => ({ default: m.AccountingPage })))
 const ProductsPage = lazy(() => import('@/features/products/ProductsPage').then((m) => ({ default: m.ProductsPage })))
 
 function Lazy({ children }: { children: ReactNode }) {
@@ -95,16 +94,6 @@ export function AppRoutes() {
 
       <Route path="/" element={<Home />}>
         <Route index element={<Index />} />
-        <Route
-          path="kontabiliteti/:tab?"
-          element={
-            <RequireBooks>
-              <Lazy>
-                <AccountingPage />
-              </Lazy>
-            </RequireBooks>
-          }
-        />
         <Route
           path="arka"
           element={

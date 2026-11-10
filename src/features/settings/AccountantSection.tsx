@@ -1,21 +1,26 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Calculator } from 'lucide-react'
+import { Calculator, UserPlus } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
-import { Badge, Button, Card, Dialog, EmptyState } from '@/components/ui'
+import { Badge, Button, Card, Dialog, EmptyState, Input } from '@/components/ui'
 import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
 import { formatKosovoDateTime } from '@/lib/clock'
-import { AccountingNotMigrated, fetchAccountants, respondAccountantRequest, revokeAccountant, type BusinessAccountant } from '@/features/accounting/api'
+import { AccountingNotMigrated, addAccountantByEmail, fetchAccountants, respondAccountantRequest, revokeAccountant, type BusinessAccountant } from '@/features/accounting/api'
 
 /**
- * Cilësimet → Kontabilisti. The accountant works in the separate "Kasa Kontabilist" program and asks
- * for access with this business's NUI; the owner approves here and can take the access away.
+ * Cilësimet → Kontabilisti. The accountant works in the separate "Kasa Kontabilist" program. Two ways in:
+ *  - the owner adds the accountant here with the accountant's email → the business appears at once among
+ *    the accountant's clients (already approved);
+ *  - the accountant asks for access with this business's NUI → the owner approves here.
+ * The owner can take the access away at any time.
  */
 export function AccountantSection() {
   const { business, profile } = useBusiness()
   const owner = profile.role === 'admin'
   const qc = useQueryClient()
   const [revoking, setRevoking] = useState<BusinessAccountant | null>(null)
+  const [email, setEmail] = useState('')
+  const [added, setAdded] = useState<string | null>(null)
 
   const list = useQuery({
     queryKey: ['accountants', business.id],
@@ -27,6 +32,14 @@ export function AccountantSection() {
   const respond = useMutation({
     mutationFn: ({ a, approve }: { a: BusinessAccountant; approve: boolean }) => respondAccountantRequest(a.client_id, approve),
     onSuccess: refresh,
+  })
+  const add = useMutation({
+    mutationFn: () => addAccountantByEmail(email),
+    onSuccess: (a) => {
+      setAdded([a.full_name, a.office_name].filter(Boolean).join(' · ') || email.trim())
+      setEmail('')
+      refresh()
+    },
   })
   const revoke = useMutation({
     mutationFn: (a: BusinessAccountant) => revokeAccountant(a.user_id),
@@ -64,12 +77,46 @@ export function AccountantSection() {
         <div className="px-5 pt-5">
           <h2 className="text-[17px] font-semibold">Kontabilisti</h2>
           <p className="mt-1 max-w-2xl text-sm text-muted">
-            Kontabilisti punon me programin <strong>Kasa Kontabilist</strong> dhe kërkon qasje me NUI-n e biznesit tënd. Pasi ta miratosh, ai sheh shitjet, blerjet, stokun, raportet
-            dhe TVSH-në – vetëm lexim. Nuk shet, nuk ndryshon çmime apo stok dhe nuk i sheh punëtorët, PIN-et, arkat e cilësimet.
+            Kontabilisti punon me programin <strong>Kasa Kontabilist</strong>. Shtoje këtu me email-in e tij, ose ai kërkon qasje me NUI-n e biznesit tënd dhe ti e miraton. Me
+            qasje, ai sheh shitjet, blerjet, stokun, raportet dhe TVSH-në – vetëm lexim. Nuk shet, nuk ndryshon çmime apo stok dhe nuk i sheh punëtorët, PIN-et, arkat e cilësimet.
           </p>
           {!business.nui && (
             <p className="mt-3 rounded-ctl bg-amber-100 px-4 py-2.5 text-sm text-amber-700">
-              Biznesi nuk ka NUI te "Të dhënat e biznesit". Pa NUI kontabilisti nuk mund ta gjejë biznesin.
+              Biznesi nuk ka NUI te "Të dhënat e biznesit". Pa NUI kontabilisti nuk mund ta kërkojë qasjen vetë – shtoje me email.
+            </p>
+          )}
+          {owner && (
+            <form
+              className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-end"
+              onSubmit={(e) => {
+                e.preventDefault()
+                setAdded(null)
+                if (email.trim()) add.mutate()
+              }}
+            >
+              <div className="flex-1 sm:max-w-sm">
+                <Input
+                  type="email"
+                  label="Shto kontabilistin me email"
+                  placeholder="email-i i kontabilistit"
+                  autoComplete="off"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value)
+                    add.reset()
+                  }}
+                />
+              </div>
+              <Button type="submit" className="h-[46px]" loading={add.isPending} disabled={!email.trim()}>
+                <UserPlus className="h-4 w-4" />
+                Shto
+              </Button>
+            </form>
+          )}
+          {add.error && <p className="mt-2 rounded-ctl bg-warn-100 px-4 py-2.5 text-sm text-warn-700">{(add.error as Error).message}</p>}
+          {added && (
+            <p className="mt-2 rounded-ctl bg-brand-100 px-4 py-2.5 text-sm text-brand-600">
+              U shtua: <strong>{added}</strong>. Biznesi i del menjëherë te klientët në programin Kasa Kontabilist.
             </p>
           )}
         </div>
@@ -86,7 +133,7 @@ export function AccountantSection() {
           <EmptyState
             icon={<Calculator className="h-6 w-6" />}
             title="Asnjë kontabilist"
-            text={business.nui ? `Jepja kontabilistit NUI-n ${business.nui}. Kur ta kërkojë qasjen, kërkesa del këtu.` : 'Shkruaj NUI-n te "Të dhënat e biznesit", pastaj jepja kontabilistit.'}
+            text={business.nui ? `Shtoje me email më lart, ose jepja kontabilistit NUI-n ${business.nui} – kërkesa e tij del këtu.` : 'Shtoje me email më lart, ose shkruaj NUI-n te "Të dhënat e biznesit" që ai ta kërkojë qasjen.'}
           />
         ) : (
           <div className="mt-4 border-t border-line">
@@ -157,7 +204,7 @@ export function AccountantSection() {
       >
         {revoking && (
           <p className="text-[15px]">
-            <strong>{revoking.full_name || revoking.email}</strong> nuk do t'i shohë më të dhënat e këtij biznesi. Nëse kërkon qasje përsëri, kërkesa del këtu.
+            <strong>{revoking.full_name || revoking.email}</strong> nuk do t'i shohë më të dhënat e këtij biznesi. Mund ta shtosh përsëri kur të duash.
           </p>
         )}
       </Dialog>

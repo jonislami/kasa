@@ -534,6 +534,18 @@ export async function respondAccountantRequest(clientId: string, approve: boolea
   if (error) fail(error)
 }
 
+/** Owner adds the accountant by email: the business appears at once among the accountant's clients (0014). */
+export async function addAccountantByEmail(email: string): Promise<{ full_name: string | null; office_name: string | null }> {
+  const { data, error } = await supabase.rpc('add_accountant_by_email', { p_email: email.trim() })
+  if (error) {
+    if (error.code === 'PGRST202' || error.code === '42883') {
+      throw new Error('Kjo mundësi kërkon migrimin supabase/migrations/0014_owner_adds_accountant.sql në Supabase.')
+    }
+    fail(error)
+  }
+  return data as { full_name: string | null; office_name: string | null }
+}
+
 export async function revokeAccountant(userId: string): Promise<void> {
   const { error } = await supabase.rpc('revoke_accountant', { p_user: userId })
   if (error) fail(error)

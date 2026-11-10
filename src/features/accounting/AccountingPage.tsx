@@ -56,8 +56,8 @@ const TABS: { key: TabKey; label: string; title: string }[] = [
 const PERIOD_KEY = 'kasa.acc.period'
 
 /**
- * Where the shared book screens live: the owner's panel (/kontabiliteti) or one client in the
- * Kasa Kontabilist program. Decides links, how the VAT status is saved and what is refreshed.
+ * Where the shared book screens live: one client in the Kasa Kontabilist program (the owner's
+ * /kontabiliteti page in Kasa is not used any more; AccountingPage stays for a later return). Decides links, how the VAT status is saved and what is refreshed.
  */
 export interface BooksScope {
   link: (tab: string) => string

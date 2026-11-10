@@ -37,6 +37,7 @@ const ACTIONS: Record<string, { label: string; tone: Tone }> = {
   pin_set: { label: 'PIN i ri', tone: 'info' },
   accountant_request: { label: 'Kërkesë kontabilisti', tone: 'info' },
   accountant_approve: { label: 'Kontabilisti u miratua', tone: 'success' },
+  accountant_add: { label: 'Kontabilisti u shtua', tone: 'success' },
   accountant_reject: { label: 'Kërkesa u refuzua', tone: 'neutral' },
   accountant_unlink: { label: 'Kontabilisti u shkëput', tone: 'neutral' },
   accountant_revoke: { label: 'Qasja e hequr', tone: 'warn' },
@@ -95,6 +96,7 @@ export function describe(a: AuditRow): string {
       return `PIN i gabuar i menaxherit (prova ${String(g('attempt') ?? '')} nga 5)`
     case 'accountant_request':
     case 'accountant_approve':
+    case 'accountant_add':
     case 'accountant_reject':
     case 'accountant_unlink':
     case 'accountant_revoke':

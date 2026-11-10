@@ -103,8 +103,3 @@ export const ROLE_LABELS: Record<Role, string> = {
 export function isManagerRole(role: Role | null | undefined): boolean {
   return role === 'admin' || role === 'manager'
 }
-
-/** Who may open the books (/kontabiliteti): the owner, a manager or the invited accountant. */
-export function canSeeBooks(role: Role | null | undefined): boolean {
-  return isManagerRole(role) || role === 'accountant'
-}

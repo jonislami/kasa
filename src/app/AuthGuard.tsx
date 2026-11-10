@@ -3,7 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom'
 import { Loader2, ShieldAlert } from 'lucide-react'
 import { useAuth } from './AuthProvider'
 import { Button } from '@/components/ui'
-import { canSeeBooks, isManagerRole, type BusinessType } from '@/lib/business'
+import { isManagerRole, type BusinessType } from '@/lib/business'
 import { supabaseConfigured } from '@/lib/supabase'
 
 export function FullScreenLoader() {
@@ -78,14 +78,7 @@ export function RequireManager({ children }: { children: ReactNode }) {
 /** Screens of the people who work in the business (till, own work, printer). Not for the accountant. */
 export function RequireStaff({ children }: { children: ReactNode }) {
   const { ctx } = useAuth()
-  if (ctx?.profile?.role === 'accountant') return <Navigate to="/kontabiliteti" replace />
-  return <>{children}</>
-}
-
-/** The books: owner, manager or the invited accountant. */
-export function RequireBooks({ children }: { children: ReactNode }) {
-  const { ctx } = useAuth()
-  if (!canSeeBooks(ctx?.profile?.role)) return <Navigate to="/" replace />
+  if (ctx?.profile?.role === 'accountant') return <Navigate to="/" replace />
   return <>{children}</>
 }
 
