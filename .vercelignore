@@ -1,0 +1,13 @@
+# Not needed by the web build on Vercel
+node_modules
+release
+dist
+dist-kontabilist
+dist-electron
+android
+ios
+design
+docs
+*.exe
+*.apk
+*.aab
