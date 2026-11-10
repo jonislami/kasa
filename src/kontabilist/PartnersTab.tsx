@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useSearchParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { FileText, Pencil, Plus, Printer, Search, Users } from 'lucide-react'
 import { Badge, Button, Card, Dialog, EmptyState, Input, Select, Table, Td, Th } from '@/components/ui'
@@ -18,6 +19,14 @@ export function PartnersTab({ clientId, clientName, from, to }: { clientId: stri
   const [role, setRole] = useState<'all' | 'customer' | 'supplier'>('all')
   const [edit, setEdit] = useState<PartnerInput | null>(null)
   const [statement, setStatement] = useState<Partner | null>(null)
+  const [params, setParams] = useSearchParams()
+  useEffect(() => {
+    if (params.get('new') !== '1') return
+    setEdit({ ...EMPTY_PARTNER })
+    params.delete('new')
+    setParams(params, { replace: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params])
 
   const list = useMemo(() => {
     const s = q.trim().toLowerCase()

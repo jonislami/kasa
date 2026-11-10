@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { NavLink, Navigate, useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Building2, Download, Link2, Pencil, Unlink } from 'lucide-react'
+import { Building2, Download, Link2, Pencil, Unlink } from 'lucide-react'
 import { useAuth } from '@/app/AuthProvider'
-import { PageHeader } from '@/app/layout/AppLayout'
-import { Badge, Button, Card, Dialog, EmptyState, Input, StatCard } from '@/components/ui'
-import { cn } from '@/lib/cn'
+import { Button, Card, Dialog, EmptyState, Input, StatCard } from '@/components/ui'
 import { formatKosovoDateTime, kosovoDateISO } from '@/lib/clock'
 import { formatEUR } from '@/lib/money'
 import { VAT_LABELS } from '@/lib/vat'
@@ -18,7 +16,7 @@ import { BankTab } from './BankTab'
 import { DashboardTab } from './DashboardTab'
 import { DebtsTab } from './DebtsTab'
 import { PartnersTab } from './PartnersTab'
-import { AccShell } from './App'
+import { CompanyShell } from './CompanyShell'
 import { ClientDialog } from './ClientDialog'
 import { DocumentsTab } from './DocumentsTab'
 
@@ -137,76 +135,45 @@ export function ClientPage({ me }: { me: AccMe }) {
     }
   }
 
-  const extra = client ? [{ to: `/klient/${id}`, label: client.name, short: 'Klienti', icon: Building2 }] : []
+  const toolbar =
+    tab.key === 'klienti' || tab.key === 'paneli' ? undefined : (
+      <>
+        <PeriodPicker period={period} onChange={setPeriod} disableNext={isCurrent} />
+        <Button variant="secondary" onClick={() => void exportAll()} disabled={!s} loading={exporting}>
+          <Download className="h-4 w-4" /> Excel
+        </Button>
+      </>
+    )
 
   if (books.error) {
     return (
-      <AccShell me={me}>
-        <PageHeader title="Klienti" />
-        <div className="px-4 py-5 md:px-8 md:py-0">
-          <Card>
-            <EmptyState
-              icon={<Building2 className="h-6 w-6" />}
-              title={books.error instanceof AccountingNotMigrated ? 'Programi nuk është aktivizuar ende' : 'Klienti nuk u hap'}
-              text={(books.error as Error).message}
-              action={<Button onClick={() => navigate('/')}>Te klientët</Button>}
-            />
-          </Card>
-        </div>
-      </AccShell>
+      <CompanyShell me={me} client={null} linked={false} active={tab.key}>
+        <Card>
+          <EmptyState
+            icon={<Building2 className="h-6 w-6" />}
+            title={books.error instanceof AccountingNotMigrated ? 'Programi nuk është aktivizuar ende' : 'Kompania nuk u hap'}
+            text={(books.error as Error).message}
+            action={<Button onClick={() => navigate('/')}>Te kompanitë</Button>}
+          />
+        </Card>
+      </CompanyShell>
     )
   }
 
   return (
-    <AccShell me={me} extra={extra}>
-      <PageHeader
-        eyebrow={
-          <button type="button" onClick={() => navigate('/')} className="inline-flex items-center gap-1 hover:underline">
-            <ArrowLeft className="h-4 w-4" /> Klientët
-          </button>
-        }
-        title={
-          <span className="flex flex-wrap items-center gap-2">
-            {client?.name ?? '…'}
-            {linked && <Badge tone="info">Kasa</Badge>}
-          </span>
-        }
-        actions={
-          tab.key === 'klienti' ? undefined : (
-            <div className="flex flex-wrap items-center gap-2">
-              <PeriodPicker period={period} onChange={setPeriod} disableNext={isCurrent} />
-              <Button variant="secondary" onClick={() => void exportAll()} disabled={!s} loading={exporting}>
-                <Download className="h-4 w-4" /> Excel
-              </Button>
-            </div>
-          )
-        }
-      />
-      <p className="-mt-5 hidden px-8 pb-4 text-muted md:block">
-        {[client?.nui && `NUI ${client.nui}`, client?.vat_registered ? `Nr. TVSH ${client.vat_number || '—'}` : 'jo në TVSH', tab.key !== 'klienti' && `${formatDay(range.from)} – ${formatDay(range.to)}`].filter(Boolean).join(' · ')}
-      </p>
-
-      <nav className="flex gap-2 overflow-x-auto px-4 pb-1 pt-4 md:px-8 md:pt-0" aria-label="Pjesët e klientit">
-        {TABS.filter((t) => !t.kasaOnly || linked).map((t) => (
-          <NavLink
-            key={t.key}
-            to={t.key === 'paneli' ? `/klient/${id}` : `/klient/${id}/${t.key}`}
-            end
-            className={({ isActive }) =>
-              cn('flex h-[40px] shrink-0 items-center whitespace-nowrap rounded-full border px-4 text-sm font-medium', isActive ? 'border-brand-600 bg-brand-100 text-brand-600' : 'border-line bg-white text-muted hover:text-ink')
-            }
-          >
-            {t.label}
-          </NavLink>
-        ))}
-      </nav>
-      {exportError && <p className="mx-4 mt-3 rounded-ctl bg-warn-100 px-4 py-2.5 text-sm text-warn-700 md:mx-8">{exportError}</p>}
+    <CompanyShell me={me} client={client ?? null} linked={linked} active={tab.key} toolbar={toolbar}>
+      {tab.key !== 'klienti' && tab.key !== 'paneli' && (
+        <p className="-mt-1 mb-3 text-sm text-muted">
+          {TABS.find((t) => t.key === tab.key)?.label} · {formatDay(range.from)} – {formatDay(range.to)}
+        </p>
+      )}
+      {exportError && <p className="mb-3 rounded-ctl bg-warn-100 px-4 py-2.5 text-sm text-warn-700">{exportError}</p>}
 
       {!s || !client ? (
         <p className="py-16 text-center text-muted">Duke ngarkuar…</p>
       ) : (
         <BooksScopeProvider value={scope}>
-          <div className="flex flex-col gap-4 px-4 pb-8 pt-4 md:gap-5 md:px-8">
+          <div className="flex flex-col gap-4 md:gap-5">
             {tab.key === 'paneli' && <DashboardTab client={client} onGo={(t) => navigate(`/klient/${id}/${t}`)} />}
             {tab.key === 'pasqyra' && <OverviewTab s={s} period={period} />}
             {tab.key === 'banka' && <BankTab client={client} from={range.from} to={range.to} onChanged={refresh} />}
@@ -259,7 +226,7 @@ export function ClientPage({ me }: { me: AccMe }) {
           </div>
         </BooksScopeProvider>
       )}
-    </AccShell>
+    </CompanyShell>
   )
 }
 

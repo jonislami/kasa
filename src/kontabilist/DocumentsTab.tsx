@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { FileSpreadsheet, Paperclip, Plus, Search } from 'lucide-react'
 import { Badge, Button, Card, EmptyState, Select, Table, Td, Th } from '@/components/ui'
@@ -49,6 +50,15 @@ export function DocumentsTab({ client, kind, from, to, onChanged }: { client: Cl
   }
   const today = kosovoDateISO()
   const start = () => setEdit(newInvoice(kind, today >= from && today <= to ? today : to))
+  // "Shitje e re" / "Blerje e re" from the dashboard
+  const [params, setParams] = useSearchParams()
+  useEffect(() => {
+    if (params.get('new') !== '1') return
+    setEdit(newInvoice(kind, today))
+    params.delete('new')
+    setParams(params, { replace: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params])
 
   return (
     <Card className="overflow-hidden">
