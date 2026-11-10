@@ -8,3 +8,7 @@ dist-electron/
 release/
 dist-kontabilist
 supabase/.temp/
+.vercel
+
+.vercel
+.env*
