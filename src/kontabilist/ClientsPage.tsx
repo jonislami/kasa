@@ -1,75 +1,70 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Building2, ChevronLeft, ChevronRight, KeyRound, Link2, Plus, Search } from 'lucide-react'
-import { PageHeader } from '@/app/layout/AppLayout'
-import { Badge, Button, Card, Dialog, EmptyState, Input, StatCard, Table, Td, Th } from '@/components/ui'
+import { Building2, ChevronLeft, ChevronRight, KeyRound, LayoutGrid, List, LogOut, MoreVertical, Plus, Search } from 'lucide-react'
+import { useAuth } from '@/app/AuthProvider'
+import { Badge, Button, Card, Dialog, EmptyState, Input, Select, Table, Td, Th } from '@/components/ui'
+import { LogoMark } from '@/components/Logo'
 import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
 import { cn } from '@/lib/cn'
 import { kosovoDateISO, serverNow } from '@/lib/clock'
 import { formatEUR } from '@/lib/money'
 import { supabase } from '@/lib/supabase'
 import { AccountingNotMigrated, addMonths, formatDay, monthName, monthStart, vatDueDate } from '@/features/accounting/api'
-import { fetchClients, type ClientRow } from './api'
-import { AccShell } from './App'
+import { fetchClients, type AccMe, type ClientRow } from './api'
 import { ClientDialog, EMPTY_CLIENT } from './ClientDialog'
-import type { AccMe } from './api'
 
-function ago(iso: string | null | undefined): string {
-  if (!iso) return '—'
+function ago(iso: string | null | undefined): string | null {
+  if (!iso) return null
   const min = Math.max(0, Math.round((serverNow() - new Date(iso).getTime()) / 60_000))
   if (min < 60) return min < 1 ? 'tani' : `para ${min} min`
   const h = Math.round(min / 60)
-  if (h < 24) return h === 1 ? 'para 1 ore' : `para ${h} orësh`
+  if (h < 24) return `para ${h} orë`
   const d = Math.round(h / 24)
-  if (d <= 30) return d === 1 ? 'dje' : `para ${d} ditësh`
+  if (d <= 60) return `para ${d} ditë`
   return formatDay(new Date(iso).toISOString().slice(0, 10))
 }
 
 const vatDue = (c: ClientRow) => c.vat_out - c.vat_in
 
-function StatusBadge({ c, late }: { c: ClientRow; late: boolean }) {
-  if (!c.active) return <Badge>Arkivuar</Badge>
-  if (c.vat_status === 'na') return <Badge>Nuk aplikohet</Badge>
-  if (c.vat_status === 'filed') return <Badge tone="success">E dorëzuar</Badge>
-  return <Badge tone={late ? 'warn' : 'amber'}>Për t'u bërë</Badge>
+/** Initials and a steady colour per company (same name → same colour). */
+const AVATAR = ['bg-[#1D4ED8]', 'bg-[#047857]', 'bg-[#C2410C]', 'bg-[#7E22CE]', 'bg-[#BE123C]', 'bg-[#0E7490]', 'bg-[#4338CA]', 'bg-[#B45309]', 'bg-[#0E6B4E]']
+const avatarColor = (name: string) => AVATAR[[...name].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7) % AVATAR.length]
+const initial = (name: string) => (name.trim()[0] ?? '?').toUpperCase()
+
+function VatBadge({ c, late, ended }: { c: ClientRow; late: boolean; ended: boolean }) {
+  if (!c.active || c.vat_status === 'na') return null
+  if (c.vat_status === 'filed') return <Badge tone="success">TVSH e dorëzuar</Badge>
+  if (!ended) return null
+  return <Badge tone={late ? 'warn' : 'amber'}>TVSH për t'u bërë</Badge>
 }
 
 function LinkBadge({ c }: { c: ClientRow }) {
-  if (c.link_status === 'approved') return <Badge tone="info">Kasa</Badge>
-  if (c.link_status === 'pending') return <Badge tone="amber">Kasa · në pritje</Badge>
+  if (c.link_status === 'approved') return <span className="rounded-full border border-[#C7D2FE] bg-[#EEF2FF] px-2.5 py-0.5 text-xs font-semibold text-[#4338CA]">Lidhur me Kasa</span>
+  if (c.link_status === 'pending') return <span className="rounded-full border border-[#FDE68A] bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">Kasa · në pritje</span>
   return null
 }
 
-/** "Klientët" – every client of the accountant with the month's figures. */
+type Filter = 'all' | 'todo' | 'kasa' | 'archived'
+
+/** "Kompanitë" – every client company of the accountant: cards (or a list with the month's figures). */
 export function ClientsPage({ me }: { me: AccMe }) {
   const navigate = useNavigate()
   const qc = useQueryClient()
-  // The month being closed: the one before the current month.
-  const [month, setMonth] = useState(() => addMonths(monthStart(), -1))
+  const [month, setMonth] = useState(() => addMonths(monthStart(), -1)) // the month being closed
   const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState<'all' | 'todo' | 'kasa' | 'archived'>('all')
+  const [filter, setFilter] = useState<Filter>('all')
+  const [view, setView] = useState<'grid' | 'list'>(() => (localStorage.getItem('kasa.acc.view') === 'list' ? 'list' : 'grid'))
   const [newOpen, setNewOpen] = useState(false)
   const [passwordOpen, setPasswordOpen] = useState(false)
+  useEffect(() => localStorage.setItem('kasa.acc.view', view), [view])
 
-  const clients = useQuery({
-    queryKey: ['clients', month],
-    queryFn: () => fetchClients(month),
-    retry: (count, e) => !(e instanceof AccountingNotMigrated) && count < 1,
-  })
+  const clients = useQuery({ queryKey: ['clients', month], queryFn: () => fetchClients(month), retry: (count, e) => !(e instanceof AccountingNotMigrated) && count < 1 })
   const all = clients.data ?? []
   const active = all.filter((c) => c.active)
   const ended = monthStart() > month
   const late = kosovoDateISO() > vatDueDate(month)
   const todo = (c: ClientRow) => c.active && c.vat_status === 'open' && ended
-
-  const stats = {
-    clients: active.length,
-    todo: active.filter(todo).length,
-    vat: active.filter((c) => c.vat_status === 'open').reduce((s, c) => s + Math.max(0, vatDue(c)), 0),
-    sales: active.reduce((s, c) => s + c.sales, 0),
-    kasa: active.filter((c) => c.link_status === 'approved').length,
-  }
 
   const rows = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -80,164 +75,158 @@ export function ClientsPage({ me }: { me: AccMe }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clients.data, search, filter, month])
 
-  const chip = (value: typeof filter, label: string, count?: number) => (
-    <button
-      type="button"
-      onClick={() => setFilter(value)}
-      className={cn('flex h-[40px] shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-4 text-sm font-medium', filter === value ? 'border-ink bg-ink text-white' : 'border-line bg-white text-ink hover:bg-bg')}
-    >
-      {label}
-      {count != null && <span className={cn('text-xs', filter === value ? 'text-white/70' : 'text-muted')}>{count}</span>}
-    </button>
-  )
+  const stats = {
+    todo: active.filter(todo).length,
+    vat: active.filter((c) => c.vat_status === 'open').reduce((s, c) => s + Math.max(0, vatDue(c)), 0),
+    sales: active.reduce((s, c) => s + c.sales, 0),
+  }
 
   return (
-    <AccShell me={me}>
-      <PageHeader
-        eyebrow={me.accountant?.office_name || 'Kasa Kontabilist'}
-        title="Klientët"
-        actions={
-          <div className="flex flex-wrap items-center gap-2 text-ink">
-            <div className="flex items-center overflow-hidden rounded-ctl border border-field bg-white">
-              <button type="button" aria-label="Muaji i kaluar" className="flex h-[44px] w-[40px] items-center justify-center hover:bg-bg" onClick={() => setMonth((m) => addMonths(m, -1))}>
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <span className="min-w-[132px] px-1 text-center text-[15px] font-semibold">{monthName(month)}</span>
-              <button
-                type="button"
-                aria-label="Muaji tjetër"
-                className="flex h-[44px] w-[40px] items-center justify-center hover:bg-bg disabled:text-[#B8C2BC] disabled:hover:bg-white"
-                disabled={month >= monthStart()}
-                onClick={() => setMonth((m) => addMonths(m, 1))}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
+    <TopShell me={me} onPassword={() => setPasswordOpen(true)}>
+      <div className="mx-auto w-full max-w-[1320px] px-4 pb-12 pt-6 md:px-8 md:pt-10">
+        {/* title + tools */}
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+          <h1 className="text-[30px] font-bold leading-tight md:text-[34px] lg:mr-4">Kompanitë</h1>
+          <div className="relative flex-1 lg:max-w-[380px]">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Kërko kompaninë, NUI ose qytetin…"
+              className="h-[48px] w-full rounded-ctl border border-line bg-white pl-10 pr-3 shadow-sm focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-2 lg:ml-auto">
+            <div className="flex h-[48px] items-center gap-1 rounded-ctl border border-line bg-white p-1 shadow-sm">
+              {(['grid', 'list'] as const).map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  aria-label={v === 'grid' ? 'Kartat' : 'Lista'}
+                  onClick={() => setView(v)}
+                  className={cn('flex h-full w-10 items-center justify-center rounded-lg', view === v ? 'bg-bg text-ink' : 'text-muted hover:text-ink')}
+                >
+                  {v === 'grid' ? <LayoutGrid className="h-5 w-5" /> : <List className="h-5 w-5" />}
+                </button>
+              ))}
             </div>
-            <Button variant="secondary" onClick={() => setPasswordOpen(true)}>
-              <KeyRound className="h-4 w-4" /> Fjalëkalimi
-            </Button>
-            <Button onClick={() => setNewOpen(true)}>
-              <Plus className="h-4 w-4" /> Klient i ri
+            <Select
+              value={filter}
+              onChange={(e) => setFilter(e.target.value as Filter)}
+              className="h-[48px] shadow-sm"
+              options={[
+                { value: 'all', label: `Të gjitha (${active.length})` },
+                { value: 'todo', label: `Punët e hapura (${stats.todo})` },
+                { value: 'kasa', label: 'Të lidhura me Kasa' },
+                ...(all.some((c) => !c.active) ? [{ value: 'archived', label: `Të arkivuara (${all.filter((c) => !c.active).length})` }] : []),
+              ]}
+            />
+            <Button size="lg" className="h-[48px] bg-bt-600 hover:bg-[#1A43BF]" onClick={() => setNewOpen(true)}>
+              <Plus className="h-5 w-5" /> Kompani e re
             </Button>
           </div>
-        }
-      />
-
-      {clients.error instanceof AccountingNotMigrated ? (
-        <div className="px-4 py-5 md:px-8 md:py-0">
-          <Card>
-            <EmptyState icon={<Building2 className="h-6 w-6" />} title="Programi nuk është aktivizuar ende" text="Administratori duhet të ekzekutojë migrimin supabase/migrations/0013_accountant_app.sql në Supabase." />
-          </Card>
         </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-2 gap-3 px-4 py-5 md:gap-4 md:px-8 md:py-0 lg:grid-cols-4">
-            <StatCard label="Klientë aktivë" value={stats.clients} sub={stats.kasa ? `${stats.kasa} të lidhur me Kasa` : undefined} />
-            <StatCard label="Me punë për të bërë" value={stats.todo} tone={stats.todo > 0 && late ? 'warn' : 'default'} sub={ended ? `Afati i TVSH-së ${formatDay(vatDueDate(month))}` : 'Muaji është ende i hapur'} />
-            <StatCard label="TVSH për t'u deklaruar" value={formatEUR(stats.vat)} sub={monthName(month)} />
-            <StatCard label="Shitjet e klientëve" value={formatEUR(stats.sales)} sub={monthName(month)} />
+
+        {/* month strip: what the figures and the VAT badges refer to */}
+        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted">
+          <div className="flex items-center overflow-hidden rounded-ctl border border-line bg-white">
+            <button type="button" aria-label="Muaji i kaluar" className="flex h-9 w-9 items-center justify-center hover:bg-bg" onClick={() => setMonth((m) => addMonths(m, -1))}>
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="min-w-[120px] px-1 text-center font-semibold text-ink">{monthName(month)}</span>
+            <button type="button" aria-label="Muaji tjetër" className="flex h-9 w-9 items-center justify-center hover:bg-bg disabled:text-[#B8C2BC]" disabled={month >= monthStart()} onClick={() => setMonth((m) => addMonths(m, 1))}>
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
+          <span>
+            <strong className="text-ink">{stats.todo}</strong> me TVSH për t'u bërë{ended && ` · afati ${formatDay(vatDueDate(month))}`}
+          </span>
+          <span>
+            TVSH për pagesë <strong className="text-ink">{formatEUR(stats.vat)}</strong>
+          </span>
+          <span>
+            Shitjet e klientëve <strong className="text-ink">{formatEUR(stats.sales)}</strong>
+          </span>
+        </div>
 
-          <div className="px-4 pb-8 md:px-8 md:py-5">
-            <Card className="overflow-hidden">
-              <div className="flex flex-col gap-3 border-b border-line p-4 lg:flex-row lg:items-center">
-                <div className="relative lg:w-[380px]">
-                  <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-                  <input
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Kërko me emër, NUI ose qytet"
-                    className="h-[44px] w-full rounded-ctl border border-field pl-10 pr-3 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
-                  />
-                </div>
-                <div className="-mx-4 flex gap-2 overflow-x-auto px-4 lg:mx-0 lg:px-0">
-                  {chip('all', 'Të gjithë', active.length)}
-                  {chip('todo', 'Punët e hapura', stats.todo)}
-                  {chip('kasa', 'Me Kasa', active.filter((c) => c.link_status === 'approved' || c.link_status === 'pending').length)}
-                  {all.some((c) => !c.active) && chip('archived', 'Të arkivuar', all.filter((c) => !c.active).length)}
-                </div>
-              </div>
-
-              {loadState(clients) === 'offline' ? (
-                <OfflineEmpty />
-              ) : loadState(clients) === 'loading' ? (
-                <p className="py-12 text-center text-muted">Duke ngarkuar…</p>
-              ) : loadState(clients) === 'error' ? (
-                <p className="px-5 py-8 text-sm text-warn-700">{(clients.error as Error).message}</p>
-              ) : rows.length === 0 ? (
-                <EmptyState
-                  icon={<Building2 className="h-6 w-6" />}
-                  title={all.length === 0 ? 'Ende pa klientë' : 'Asnjë klient me këto filtra'}
-                  text={all.length === 0 ? 'Shto klientin e parë. Mund të jetë çdo biznes; nëse përdor Kasa, e lidh pastaj me NUI.' : undefined}
-                  action={all.length === 0 ? <Button onClick={() => setNewOpen(true)}>Klient i ri</Button> : undefined}
-                />
-              ) : (
-                <>
-                  <div className="hidden md:block">
-                    <Table>
-                      <thead className="bg-[#F8FAF8]">
-                        <tr>
-                          <Th className="pl-5">Klienti</Th>
-                          <Th>NUI</Th>
-                          <Th>Aktiviteti i fundit</Th>
-                          <Th className="text-right">Shitjet</Th>
-                          <Th className="text-right">Blerjet</Th>
-                          <Th className="text-right">TVSH</Th>
-                          <Th className="pr-5">Statusi i muajit</Th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rows.map((c) => (
-                          <tr key={c.id} onClick={() => navigate(`/klient/${c.id}`)} className="cursor-pointer hover:bg-[#F8FAF8]">
-                            <Td className="pl-5">
-                              <div className="flex items-center gap-2 font-semibold">
-                                {c.name} <LinkBadge c={c} />
-                              </div>
-                              <div className="text-xs text-muted">{[c.city, c.activity, c.note].filter(Boolean).join(' · ') || '—'}</div>
-                            </Td>
-                            <Td>{c.nui || '—'}</Td>
-                            <Td className="whitespace-nowrap">{ago(c.last_activity)}</Td>
-                            <Td className="text-right">{formatEUR(c.sales)}</Td>
-                            <Td className="text-right">{formatEUR(c.purchases)}</Td>
-                            <Td className="text-right">{c.vat_status === 'na' ? '—' : formatEUR(vatDue(c))}</Td>
-                            <Td className="pr-5">
-                              <StatusBadge c={c} late={late} />
-                            </Td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </Table>
-                  </div>
-                  <ul className="divide-y divide-line md:hidden">
-                    {rows.map((c) => (
-                      <li key={c.id}>
-                        <button type="button" onClick={() => navigate(`/klient/${c.id}`)} className="flex w-full flex-col gap-2 p-4 text-left">
-                          <div className="flex w-full items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2 font-semibold">
-                                <span className="truncate">{c.name}</span> <LinkBadge c={c} />
-                              </div>
-                              <div className="text-xs text-muted">{[c.nui && `NUI ${c.nui}`, c.city].filter(Boolean).join(' · ')}</div>
-                            </div>
-                            <StatusBadge c={c} late={late} />
-                          </div>
-                          <div className="text-sm tabular-nums text-muted">
-                            Shitjet <strong className="text-ink">{formatEUR(c.sales)}</strong> · Blerjet {formatEUR(c.purchases)}
-                            {c.vat_status !== 'na' && <> · TVSH {formatEUR(vatDue(c))}</>}
-                          </div>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
+        <div className="mt-6">
+          {clients.error instanceof AccountingNotMigrated ? (
+            <Card>
+              <EmptyState icon={<Building2 className="h-6 w-6" />} title="Programi nuk është aktivizuar ende" text="Administratori duhet të ekzekutojë migrimin supabase/migrations/0013_accountant_app.sql në Supabase." />
             </Card>
-            <p className="mt-4 flex items-center gap-2 text-sm text-muted">
-              <Link2 className="h-4 w-4" /> Klientët që përdorin arkën Kasa i lidh me NUI; pasi pronari ta miratojë, shitjet dhe hyrjet e mallit dalin vetë.
-            </p>
-          </div>
-        </>
-      )}
+          ) : loadState(clients) === 'offline' ? (
+            <OfflineEmpty />
+          ) : loadState(clients) === 'loading' ? (
+            <p className="py-16 text-center text-muted">Duke ngarkuar…</p>
+          ) : loadState(clients) === 'error' ? (
+            <p className="py-8 text-sm text-warn-700">{(clients.error as Error).message}</p>
+          ) : rows.length === 0 && all.length > 0 ? (
+            <Card>
+              <EmptyState icon={<Building2 className="h-6 w-6" />} title="Asnjë kompani me këtë kërkim" />
+            </Card>
+          ) : view === 'grid' ? (
+            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              {rows.map((c) => (
+                <CompanyCard key={c.id} c={c} late={late} ended={ended} onOpen={(tab) => navigate(`/klient/${c.id}${tab ? `/${tab}` : ''}`)} />
+              ))}
+              {filter !== 'archived' && (
+                <button
+                  type="button"
+                  onClick={() => setNewOpen(true)}
+                  className="flex min-h-[230px] flex-col items-center justify-center gap-2 rounded-[18px] border-2 border-dashed border-field text-muted hover:border-bt-600 hover:text-bt-600"
+                >
+                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm">
+                    <Plus className="h-6 w-6" />
+                  </span>
+                  <span className="font-semibold">Shto kompani</span>
+                  <span className="max-w-[240px] text-center text-sm">Çdo biznes – edhe ata që nuk përdorin arkën Kasa.</span>
+                </button>
+              )}
+            </div>
+          ) : (
+            <Card className="overflow-hidden">
+              <Table>
+                <thead className="bg-[#F8FAF8]">
+                  <tr>
+                    <Th className="pl-5">Kompania</Th>
+                    <Th className="hidden md:table-cell">NUI</Th>
+                    <Th className="hidden lg:table-cell">Aktiviteti i fundit</Th>
+                    <Th className="text-right">Shitjet</Th>
+                    <Th className="hidden text-right md:table-cell">Blerjet</Th>
+                    <Th className="hidden text-right md:table-cell">TVSH</Th>
+                    <Th className="pr-5">Muaji</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((c) => (
+                    <tr key={c.id} onClick={() => navigate(`/klient/${c.id}`)} className="cursor-pointer hover:bg-[#F8FAF8]">
+                      <Td className="pl-5">
+                        <div className="flex items-center gap-3">
+                          <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[15px] font-bold text-white', avatarColor(c.name))}>{initial(c.name)}</span>
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2 font-semibold">
+                              {c.name} <LinkBadge c={c} />
+                            </div>
+                            <div className="text-xs text-muted">{[c.city, c.activity].filter(Boolean).join(' · ') || '—'}</div>
+                          </div>
+                        </div>
+                      </Td>
+                      <Td className="hidden md:table-cell">{c.nui || '—'}</Td>
+                      <Td className="hidden whitespace-nowrap lg:table-cell">{ago(c.last_activity) ?? '—'}</Td>
+                      <Td className="text-right">{formatEUR(c.sales)}</Td>
+                      <Td className="hidden text-right md:table-cell">{formatEUR(c.purchases)}</Td>
+                      <Td className="hidden text-right md:table-cell">{c.vat_status === 'na' ? '—' : formatEUR(vatDue(c))}</Td>
+                      <Td className="pr-5">
+                        <VatBadge c={c} late={late} ended={ended} />
+                      </Td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </Card>
+          )}
+        </div>
+      </div>
 
       <ClientDialog
         value={newOpen ? EMPTY_CLIENT : null}
@@ -249,7 +238,124 @@ export function ClientsPage({ me }: { me: AccMe }) {
         }}
       />
       <PasswordDialog open={passwordOpen} onClose={() => setPasswordOpen(false)} />
-    </AccShell>
+    </TopShell>
+  )
+}
+
+function CompanyCard({ c, late, ended, onOpen }: { c: ClientRow; late: boolean; ended: boolean; onOpen: (tab?: string) => void }) {
+  const [menu, setMenu] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!menu) return
+    const close = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setMenu(false)
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [menu])
+  const seen = ago(c.last_activity)
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => onOpen()}
+      onKeyDown={(e) => e.key === 'Enter' && onOpen()}
+      className="group relative flex min-h-[230px] cursor-pointer flex-col rounded-[18px] border border-line bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+    >
+      <div className="flex items-start justify-between">
+        <span className={cn('flex h-14 w-14 items-center justify-center rounded-2xl text-[22px] font-bold text-white', avatarColor(c.name))}>{initial(c.name)}</span>
+        <div ref={ref} className="relative" onClick={(e) => e.stopPropagation()}>
+          <button type="button" aria-label="Veprimet" onClick={() => setMenu((m) => !m)} className="flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-bg hover:text-ink">
+            <MoreVertical className="h-5 w-5" />
+          </button>
+          {menu && (
+            <div className="absolute right-0 top-10 z-20 w-[220px] overflow-hidden rounded-card border border-line bg-white py-1 shadow-xl">
+              {[
+                ['', 'Hape'],
+                ['shitjet', 'Faturat e shitjes'],
+                ['blerjet', 'Blerjet & shpenzimet'],
+                ['borxhet', 'Borxhet'],
+                ['tvsh', 'TVSH'],
+                ['klienti', 'Të dhënat e kompanisë'],
+              ].map(([tab, label]) => (
+                <button key={label} type="button" onClick={() => onOpen(tab || undefined)} className="block w-full px-4 py-2.5 text-left text-[15px] hover:bg-bg">
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="mt-5 text-[20px] font-bold leading-tight">{c.name}</div>
+      <div className="mt-1 text-[15px] text-muted">{[c.city, 'Kosovë'].filter(Boolean).join(', ')}</div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <LinkBadge c={c} />
+        <VatBadge c={c} late={late} ended={ended} />
+      </div>
+      <div className="mt-auto flex items-center justify-between border-t border-line pt-4 text-sm">
+        <span className="flex items-center gap-2 font-semibold">
+          <span className={cn('h-2 w-2 rounded-full', c.active ? 'bg-brand-400' : 'bg-[#B8C2BC]')} />
+          {c.active ? 'Aktiv' : 'Arkivuar'}
+        </span>
+        <span className="flex items-center gap-2 text-muted">
+          {seen && `Hapur ${seen}`}
+          <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+        </span>
+      </div>
+    </div>
+  )
+}
+
+/** The first page has no sidebar: a white bar with the office, the account menu and "Dil". */
+function TopShell({ me, onPassword, children }: { me: AccMe; onPassword: () => void; children: React.ReactNode }) {
+  const { signOut } = useAuth()
+  const navigate = useNavigate()
+  const [menu, setMenu] = useState(false)
+  const name = me.accountant?.full_name || me.accountant?.email || 'Kontabilist'
+  const doSignOut = async () => {
+    await signOut()
+    navigate('/login', { replace: true })
+  }
+  return (
+    <div className="min-h-dvh bg-[#F6F7F9]">
+      <div className="fixed inset-x-0 top-0 z-50 h-safe-top bg-white" />
+      <header className="sticky top-0 z-40 border-b border-line bg-white pt-safe">
+        <div className="flex h-[68px] items-center gap-3 px-4 md:px-8">
+          <LogoMark size={36} />
+          <div className="min-w-0">
+            <div className="truncate text-[17px] font-bold leading-tight">{me.accountant?.office_name || 'Kasa Kontabilist'}</div>
+            <div className="text-xs font-semibold text-brand-600">Kontabilist</div>
+          </div>
+          <div className="flex-1" />
+          <div className="relative">
+            <button type="button" onClick={() => setMenu((m) => !m)} aria-label="Llogaria" className="flex h-11 w-11 items-center justify-center rounded-full bg-bt-600 text-[16px] font-bold text-white">
+              {initial(name)}
+            </button>
+            {menu && (
+              <div className="absolute right-0 top-12 z-50 w-[260px] overflow-hidden rounded-card border border-line bg-white shadow-xl" onMouseLeave={() => setMenu(false)}>
+                <div className="border-b border-line px-4 py-3">
+                  <div className="truncate font-semibold">{name}</div>
+                  <div className="truncate text-sm text-muted">{me.accountant?.email}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenu(false)
+                    onPassword()
+                  }}
+                  className="flex w-full items-center gap-2 px-4 py-3 text-left hover:bg-bg"
+                >
+                  <KeyRound className="h-4 w-4" /> Ndrysho fjalëkalimin
+                </button>
+              </div>
+            )}
+          </div>
+          <button type="button" onClick={() => void doSignOut()} className="flex h-11 items-center gap-2 rounded-ctl border border-[#FBCFCF] px-4 font-semibold text-[#DC2626] hover:bg-[#FEF2F2]">
+            <LogOut className="h-4 w-4" /> <span className="hidden sm:inline">Dil</span>
+          </button>
+        </div>
+      </header>
+      <main>{children}</main>
+    </div>
   )
 }
 
@@ -314,3 +420,4 @@ function PasswordDialog({ open, onClose }: { open: boolean; onClose: () => void 
     </Dialog>
   )
 }
+
