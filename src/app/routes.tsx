@@ -4,6 +4,7 @@ import { useAuth, useBusiness } from './AuthProvider'
 import { hasModule } from '@/lib/business'
 import { Blocked, FullScreenLoader, RequireBusiness, RequireManager, RequirePlatformAdmin, RequireStaff, RequireType } from './AuthGuard'
 import { AppLayout } from './layout/AppLayout'
+import { workerHome } from './nav'
 import { LandingPage } from '@/features/landing/LandingPage'
 import { DownloadPage } from '@/features/download/DownloadPage'
 import { LoginPage } from '@/features/auth/LoginPage'
@@ -56,6 +57,9 @@ function Home() {
 
 /** "/" inside a business: the panel; the accountant lands on the books. */
 function Index() {
+  const { business, profile } = useBusiness()
+  // The worker has no panel: straight to the work (tables, till, appointments).
+  if (profile.role === 'worker') return <Navigate to={workerHome(business.type)} replace />
   return <DashboardPage />
 }
 

@@ -12,6 +12,7 @@ import { LogoMark } from '@/components/Logo'
 import { businessType, isManagerRole, ROLE_LABELS } from '@/lib/business'
 import { Sidebar } from './Sidebar'
 import { TabBar } from './TabBar'
+import { WorkerShell } from './WorkerShell'
 
 /** Fixed dark strip behind the phone's clock/battery (safe area). */
 export function SafeAreaStrip() {
@@ -75,6 +76,16 @@ export function AppLayout() {
     if (profile.role === 'accountant') return // an outside person never links a till
     void ensureDeviceLinked({ id: business.id, name: business.name }, isManagerRole(profile.role)).catch(() => undefined)
   }, [business.id, business.name, profile.role])
+
+  if (profile.role === 'worker') {
+    return (
+      <WorkerShell type={business.type} businessName={business.name} userName={profile.full_name || 'Punëtori'} userSub={sub} tabs={main}>
+        <ClockBar />
+        <OfflineBar />
+        <Outlet />
+      </WorkerShell>
+    )
+  }
 
   return (
     <Shell

@@ -9,8 +9,6 @@ import {
   CalendarDays,
   Armchair,
   Settings,
-  Printer,
-  ClipboardList,
   ScrollText,
 } from 'lucide-react'
 import { businessType, hasModule, isManagerRole, type BusinessType, type Role } from '@/lib/business'
@@ -34,12 +32,8 @@ export function navFor(type: BusinessType, role: Role): { main: NavItem[]; botto
   const manager = isManagerRole(role)
 
   if (!manager) {
-    const main: NavItem[] = [{ to: '/', label: 'Paneli', icon: LayoutGrid }]
-    if (hasModule(type, 'tables')) main.push({ to: '/tavolinat', label: 'Tavolinat', icon: Armchair })
-    if (hasModule(type, 'appointments')) main.push({ to: '/terminet', label: 'Terminet e mia', short: 'Terminet', icon: CalendarDays })
-    main.push({ to: '/arka', label: hasModule(type, 'tables') ? 'Arka' : 'Arka / Shitja', short: 'Arka', icon: ShoppingCart })
-    main.push({ to: '/puna', label: 'Puna ime sot', short: 'Puna ime', icon: ClipboardList })
-    return { main, bottom: [{ to: '/cilesimet', label: 'Printeri', icon: Printer }] }
+    // The worker has no sidebar (WorkerShell); these are the screens of the job, the first one is home.
+    return { main: workerScreens(type), bottom: [] }
   }
 
   const main: NavItem[] = [{ to: '/', label: 'Paneli', icon: LayoutGrid }]
@@ -53,3 +47,22 @@ export function navFor(type: BusinessType, role: Role): { main: NavItem[]; botto
   main.push({ to: '/regjistri', label: 'Regjistri', icon: ScrollText })
   return { main, bottom: [{ to: '/cilesimet', label: 'Cilësimet', icon: Settings }] }
 }
+
+/**
+ * The worker's screens, only what the job needs:
+ *  café / restaurant → the tables (choose a table, add what the guest orders, confirm)
+ *  salon             → own appointments and the till
+ *  market, pharmacy, boutique → the till
+ * "Puna ime sot", the printer and "Dil" are in the worker's menu.
+ */
+export function workerScreens(type: BusinessType): NavItem[] {
+  if (hasModule(type, 'tables')) return [{ to: '/tavolinat', label: 'Tavolinat', icon: Armchair }]
+  if (hasModule(type, 'appointments'))
+    return [
+      { to: '/terminet', label: 'Terminet e mia', short: 'Terminet', icon: CalendarDays },
+      { to: '/arka', label: 'Arka', icon: ShoppingCart },
+    ]
+  return [{ to: '/arka', label: 'Arka', icon: ShoppingCart }]
+}
+
+export const workerHome = (type: BusinessType) => workerScreens(type)[0].to

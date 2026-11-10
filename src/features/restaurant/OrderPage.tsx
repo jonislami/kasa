@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { isManagerRole } from '@/lib/business'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeftRight, ChevronLeft, Minus, Plus, Search, Send, X } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
@@ -46,6 +47,7 @@ export function OrderPage() {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const { business, profile } = useBusiness()
+  const waiter = !isManagerRole(profile.role)
   const takeaway = tableId === 'merr'
 
   const menu = useQuery({ queryKey: ['menu'], queryFn: fetchMenu, staleTime: 60_000 })
@@ -148,7 +150,13 @@ export function OrderPage() {
         }
       }
       const where = [...new Set(r.tickets.map((t) => STATION_LABELS[t.station]))].join(' dhe ')
-      setNotice(where ? `U dërgua në ${where.toLowerCase()}${printed ? ' · u printua' : ''}` : 'U shënua si e dërguar')
+      const msg = where ? `U dërgua në ${where.toLowerCase()}${printed ? ' · u printua' : ''}` : 'U shënua si e dërguar'
+      // The waiter goes straight back to the tables; the owner/manager stays on the bill.
+      if (waiter) {
+        navigate('/tavolinat', { state: { notice: `${order.table_name ? order.table_name + ': ' : ''}porosia u konfirmua · ${msg.toLowerCase()}` } })
+        return null
+      }
+      setNotice(msg)
       return r.order
     })
 
@@ -295,7 +303,7 @@ export function OrderPage() {
         </div>
         <div className="grid grid-cols-2 gap-2.5">
           <Button variant="secondary" size="lg" disabled={!unsent.length} loading={busy && unsent.length > 0} onClick={send}>
-            <Send className="h-4 w-4" /> Dërgo{unsent.length ? ` (${unsent.length})` : ''}
+            <Send className="h-4 w-4" /> {waiter ? 'Konfirmo' : 'Dërgo'}{unsent.length ? ` (${unsent.length})` : ''}
           </Button>
           <Button size="lg" disabled={!order || total <= 0} onClick={() => setPayOpen(true)}>
             Paguaj
@@ -330,7 +338,16 @@ export function OrderPage() {
         />
       </div>
       <div className="mt-4 flex flex-col gap-5 lg:flex-row lg:items-start">
-        <div className={cn('min-w-0 flex-1', pane !== 'menu' && 'hidden lg:block')}>{menuPane}</div>
+        <div className={cn('min-w-0 flex-1', pane !== 'menu' && 'hidden lg:block')}>
+          {menuPane}
+          {unsent.length > 0 && (
+            <div className="sticky bottom-[calc(var(--tabbar,60px)+env(safe-area-inset-bottom)+8px)] z-20 mt-4 lg:hidden">
+              <Button size="lg" className="w-full shadow-lg" loading={busy} onClick={send}>
+                <Send className="h-4 w-4" /> Konfirmo porosinë ({unsent.length}) · {formatEUR(unsent.reduce((a, i) => a + i.quantity * i.unit_price, 0))}
+              </Button>
+            </div>
+          )}
+        </div>
         <div className={cn(pane !== 'order' && 'hidden lg:block')}>{orderPane}</div>
       </div>
 

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Armchair, ChefHat, Plus, ShoppingBag, Trash2 } from 'lucide-react'
+import { Armchair, CheckCircle2, ChefHat, Plus, ShoppingBag, Trash2 } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
 import { PageHeader } from '@/app/layout/AppLayout'
 import { Badge, Button, Card, Dialog, EmptyState, Input, Select } from '@/components/ui'
@@ -35,6 +35,15 @@ export function TablesPage() {
   const orders = useQuery({ queryKey: ['open-orders'], queryFn: fetchOpenOrders, refetchInterval: 8000 })
   const [area, setArea] = useState<string>('')
   const [editing, setEditing] = useState<Draft[] | null>(null)
+  // "Porosia u konfirmua" after the waiter confirmed an order (OrderPage).
+  const location = useLocation()
+  const [notice, setNotice] = useState<string | null>((location.state as { notice?: string } | null)?.notice ?? null)
+  useEffect(() => {
+    if (!notice) return
+    window.history.replaceState({}, '')
+    const t = setTimeout(() => setNotice(null), 4000)
+    return () => clearTimeout(t)
+  }, [notice])
 
   const list = editing ?? (tables.data ?? []).map((t) => ({ ...t, key: t.id }))
   const areas = useMemo(() => {
@@ -76,9 +85,11 @@ export function TablesPage() {
         title="Tavolinat"
         actions={
           <div className="flex gap-2">
-            <Button variant="secondary" onClick={() => navigate('/kuzhina')}>
-              <ChefHat className="h-4 w-4" /> Kuzhina / Bari
-            </Button>
+            {manager && (
+              <Button variant="secondary" onClick={() => navigate('/kuzhina')}>
+                <ChefHat className="h-4 w-4" /> Kuzhina / Bari
+              </Button>
+            )}
             {manager && !editing && (
               <Button variant="secondary" onClick={() => setEditing((tables.data ?? []).map((t) => ({ ...t, key: t.id })))}>
                 Ndrysho planin
@@ -88,6 +99,11 @@ export function TablesPage() {
         }
       />
       <div className="flex flex-col gap-4 px-4 pb-28 pt-2 md:px-8 md:pb-8">
+        {notice && (
+          <p className="flex items-center gap-2 rounded-ctl bg-brand-100 px-4 py-3 text-[15px] font-medium text-brand-600">
+            <CheckCircle2 className="h-5 w-5 shrink-0" /> {notice}
+          </p>
+        )}
         <div className="flex flex-wrap items-center gap-2">
           {areas.map((a) => (
             <button

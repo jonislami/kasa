@@ -916,8 +916,8 @@ export function PosPage() {
 
   // ================= PHONE / TABLET =================
   return (
-    <div className="flex min-h-[calc(100dvh-116px-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex-col">
-      <div className="sticky top-[env(safe-area-inset-top)] z-20 border-b border-line bg-white px-4 pb-3 pt-4">
+    <div className="flex min-h-[calc(100dvh-var(--chrome,116px)-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex-col">
+      <div className="sticky top-[calc(var(--topbar,0px)+env(safe-area-inset-top))] z-20 border-b border-line bg-white px-4 pb-3 pt-4">
         <div className="mb-3 flex items-start justify-between">
           <div>
             <h1 className="text-[26px] font-bold leading-tight">Faturë e re</h1>
@@ -998,7 +998,7 @@ export function PosPage() {
         )}
       </div>
 
-      <div className="sticky bottom-[calc(60px+env(safe-area-inset-bottom))] z-20 border-t border-line bg-white px-4 py-3">
+      <div className="sticky bottom-[calc(var(--tabbar,60px)+env(safe-area-inset-bottom))] z-20 border-t border-line bg-white px-4 py-3">
         {exchangeBanner && <div className="mb-3">{exchangeBanner}</div>}
         <div className="mb-3 flex items-end justify-between">
           <span className="text-[15px] text-muted">
