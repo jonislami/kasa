@@ -1,7 +1,7 @@
 import { Outlet, useNavigate } from 'react-router-dom'
 import { useEffect, type ReactNode } from 'react'
 import { ensureDeviceLinked } from '@/lib/deviceLink'
-import { ClockBar, OfflineBar } from '@/app/AppStatus'
+import { ClockBar, FiscalBar, OfflineBar } from '@/app/AppStatus'
 import { useQueryClient } from '@tanstack/react-query'
 import { fetchCategories, fetchProducts } from '@/features/products/api'
 import { fetchEntries, fetchSuppliers } from '@/features/stock/api'
@@ -94,6 +94,7 @@ export function AppLayout() {
     >
       <ClockBar />
       <OfflineBar />
+      <FiscalBar />
       <Outlet />
     </Shell>
   )

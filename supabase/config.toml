@@ -12,3 +12,7 @@ verify_jwt = false
 # Public: the credential is the device secret + the worker's PIN (checked in SQL).
 [functions.pin-login]
 verify_jwt = false
+
+# Checks the caller's token itself (auth.getUser) and the business; forwards signed data to ATK (no CORS there).
+[functions.fiscal-relay]
+verify_jwt = false

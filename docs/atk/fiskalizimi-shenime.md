@@ -107,3 +107,19 @@ Qëllimi: aplikacioni ruan dhe printon gjithçka që kërkon ligji; lidhja me AT
 
 F1 (databaza + fatura + anulim/kthim + audit) → F2 (çelësi, onboarding, nënshkrimi, dërgimi, offline) →
 F3 (serbishtja, blloku manual, testet në ATK, dokumentet, aplikimi).
+
+---
+
+## Gjendja në Kasa (Faza 9, dega `faza-9`)
+
+- **Libraria** `src/lib/fiscal/`: protobuf (i njëjti me protobufjs), nënshkrimi mbi tekstin base64 me SHA-256 +
+  ECDSA P-256 → DER, QR `citizen|signature`, CSR PKCS#10 (C=RKS, L=Branch, O=NUI, OU=PosId, CN=emri).
+  `npm run test:fiscal` i kontrollon të gjitha; `npx tsx scripts/atk-probe.ts` dërgon një kupon provë në serverin test.
+- **Serveri test i ATK-së** (10.11.2026): pranon formatin tonë – kuponi i lexohet dhe ndalet te
+  `business is not registered` (NUI provë). Nuk lejon thirrje nga shfletuesi (pa CORS) → Edge Function `fiscal-relay`.
+- **Njësitë:** çmimi dhe totali i artikullit ×10000; Total, pagesat, TaxGroups, TotalTax, TotalNoTax, TotalDiscount
+  ×100 (si te CitizenCoupon i shembullit). Shembulli i ATK-së ka `Total: 182000` te PosCoupon, por duhet të jetë i
+  njëjtë me CitizenCoupon (1820) – **konfirmohet në testet me ATK**.
+- **CouponId** = BranchId·10^12 + PosId·10^8 + numri rendor i arkës (unik për NUI, punon edhe offline).
+- **Mbetet:** Application ID nga ATK (te `fiscal_config`), biznes test i regjistruar në portalin e ATK-së, testet
+  "Testo para aplikimit", logoja RKS në faturë, serbishtja, blloku manual, dokumentet e certifikimit.

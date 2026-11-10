@@ -400,8 +400,10 @@ as $$
     'coupon_id', f.coupon_id, 'coupon_type', f.coupon_type, 'verification_no', f.verification_no,
     'issued_at', f.issued_at, 'qr', f.qr, 'status', f.status, 'offline', f.offline,
     'transaction_no', f.transaction_no, 'error', f.error, 'branch_id', f.branch_id, 'pos_id', f.pos_id,
-    'reference_no', f.reference_no, 'env', f.env)
+    'reference_no', f.reference_no, 'env', f.env,
+    'sef_no', f.branch_id || '-' || coalesce(b.nui, '') || '-' || f.pos_id)
   from public.fiscal_coupons f
+  join public.businesses b on b.id = f.business_id
   where f.sale_id = p_sale_id and f.business_id = public.current_business_id()
 $$;
 

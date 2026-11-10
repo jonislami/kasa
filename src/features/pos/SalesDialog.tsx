@@ -4,6 +4,7 @@ import { KOSOVO_TZ } from '@/lib/clock'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronLeft, RefreshCw } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
+import { fiscalizeSale } from './fiscal'
 import { Badge, Button, Dialog, Input } from '@/components/ui'
 import { isManagerRole } from '@/lib/business'
 import { cn } from '@/lib/cn'
@@ -88,7 +89,11 @@ export function SalesDialog({
         return
       }
       setVoidStep(null)
-      setSelected(r.sale)
+      const fiscal = await fiscalizeSale(r.sale, { key: r.sale.id, registerId, operator: profile.full_name, saved: true }).catch((e: Error) => {
+        setError('Kuponi fiskal i anulimit nuk u krijua: ' + e.message)
+        return null
+      })
+      setSelected({ ...r.sale, fiscal })
       void qc.invalidateQueries({ queryKey: ['today-sales'] })
       void qc.invalidateQueries({ queryKey: ['pos-products'] })
       void qc.invalidateQueries({ queryKey: ['products'] })

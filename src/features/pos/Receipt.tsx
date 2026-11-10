@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react'
+import QRCode from 'qrcode'
 import { formatKosovoDateTime } from '@/lib/clock'
 import { createPortal } from 'react-dom'
 import { Store } from 'lucide-react'
@@ -17,7 +19,7 @@ export function formatDateTime(iso: string) {
 
 const TITLES = { sale: null, void: 'ANULIM', refund: 'KTHIM MALLI' } as const
 
-/** Receipt as specified by ATK fields we have so far. Fiscal fields (QR, NUIKF…) come in phase 9. */
+/** Receipt with the fields ATK asks for; a fiscalized sale also shows the SEF number, coupon number, NUIKF and QR. */
 export function Receipt({
   sale,
   business,
@@ -35,6 +37,8 @@ export function Receipt({
   const opt = settings?.settings ?? {}
   const title = TITLES[sale.kind]
   const when = sale.client_created_at ?? sale.created_at
+  const f = sale.fiscal ?? null
+  const offline = sale.offline || Boolean(f?.offline)
   return (
     <div className={cn('mx-auto bg-white font-mono text-[13px] leading-snug text-black', width === 58 ? 'w-[58mm] px-1' : 'w-[80mm] px-3')}>
       <div className="flex flex-col items-center pt-3 text-center">
@@ -53,7 +57,7 @@ export function Receipt({
       <Rule />
       {title && <div className="pb-1 text-center text-[15px] font-semibold">{title}</div>}
       {copy && <div className="pb-1 text-center font-semibold">KOPJE E KUPONIT</div>}
-      {sale.offline && <div className="pb-1 text-center font-semibold">OFFLINE</div>}
+      {offline && <div className="pb-1 text-center font-semibold">OFFLINE</div>}
       <Row l="Fatura:" r={<b>{sale.offline_no && sale.invoice_no === 0 ? sale.offline_no : formatInvoiceNo(sale.invoice_no)}</b>} />
       {sale.ref_invoice_no != null && <Row l="Për faturën:" r={formatInvoiceNo(sale.ref_invoice_no)} />}
       <Row l="Nr. ditor:" r={sale.daily_no || '—'} />
@@ -113,9 +117,37 @@ export function Receipt({
       {(settings ? settings.receipt_footer : 'Faleminderit për blerjen!') && (
         <div className="text-center font-semibold">{settings ? settings.receipt_footer : 'Faleminderit për blerjen!'}</div>
       )}
-      <div className="pb-4 pt-1 text-center text-[11px]">Kupon jo-fiskal</div>
+      {f ? (
+        <>
+          <Rule />
+          <Row l="Nr. SEF:" r={f.sef_no} />
+          <Row l="Nr. kuponit:" r={f.coupon_id} />
+          <Row l="NUIKF:" r={<b>{f.verification_no}</b>} />
+          <QrImage text={f.qr} className={cn('mx-auto my-2', width === 58 ? 'w-[44mm]' : 'w-[52mm]')} />
+          <div className="text-center font-semibold">{f.env === 'test' ? 'KUPON FISKAL – TEST' : 'KUPON FISKAL'}</div>
+          {offline && <div className="text-center text-[11px]">Lëshuar pa lidhje me ATK</div>}
+          {f.status === 'failed' && <div className="text-center text-[11px]">ATK e refuzoi: {f.error}</div>}
+          <div className="pb-4" />
+        </>
+      ) : (
+        <div className="pb-4 pt-1 text-center text-[11px]">Kupon jo-fiskal</div>
+      )}
     </div>
   )
+}
+
+/** QR code as SVG (screen and window.print). */
+export function QrImage({ text, className }: { text: string; className?: string }) {
+  const [svg, setSvg] = useState<string | null>(null)
+  useEffect(() => {
+    let alive = true
+    QRCode.toString(text, { type: 'svg', errorCorrectionLevel: 'M', margin: 1 }).then((s) => alive && setSvg(s), () => alive && setSvg(null))
+    return () => {
+      alive = false
+    }
+  }, [text])
+  if (!svg) return <div className={cn('aspect-square bg-[#F2F5F2]', className)} />
+  return <div className={cn('aspect-square [&>svg]:h-full [&>svg]:w-full', className)} dangerouslySetInnerHTML={{ __html: svg }} />
 }
 
 function Row({ l, r }: { l: React.ReactNode; r: React.ReactNode }) {

@@ -22,6 +22,8 @@ import { expiryStatus, fetchLots, formatExpiry, summarizeLots } from '@/lib/lots
 import { printReceipt } from '@/lib/printer'
 import { serverDate, KOSOVO_TZ } from '@/lib/clock'
 import { fetchReceiptSettings } from '@/features/settings/api'
+import { fetchFiscalContext } from '@/lib/fiscal'
+import { fiscalizeSale } from './fiscal'
 
 const parseNum = (s: string) => {
   const n = Number(s.trim().replace(',', '.'))
@@ -80,6 +82,8 @@ export function PosPage() {
     if (registerId) localStorage.setItem(`kasa.register.${business.id}`, registerId)
   }, [registerId, business.id])
   const registerName = registers.data?.find((r) => r.id === registerId)?.name ?? null
+  // Fiscal data of this register, cached on the device so offline sales can be signed too.
+  useQuery({ queryKey: ['fiscal-context', registerId], queryFn: () => fetchFiscalContext(registerId), enabled: Boolean(registerId), staleTime: 5 * 60_000, retry: false })
 
   // ---------- salon: who performs each line, appointment being paid ----------
   const salon = hasModule(business.type, 'commission')
@@ -272,7 +276,12 @@ export function PosPage() {
       setBusy(true)
       try {
         const sale = await createSale(input)
-        finish(sale)
+        // ATK: the coupon is signed and sent before the receipt is printed.
+        const fiscal = await fiscalizeSale(sale, { key: input.client_id, registerId, operator: profile.full_name, saved: true }).catch((e: Error) => {
+          setError('Kuponi fiskal nuk u krijua: ' + e.message)
+          return null
+        })
+        finish({ ...sale, fiscal })
         void qc.invalidateQueries({ queryKey: ['pos-products'] })
         if (lotsOn) void qc.invalidateQueries({ queryKey: ['lots'] })
         void qc.invalidateQueries({ queryKey: ['products'] })
@@ -282,7 +291,9 @@ export function PosPage() {
           const offlineNo = await nextOfflineNo()
           const queued = { ...input, offline: true, offline_no: offlineNo }
           await enqueueSale(queued)
-          finish(localReceipt(queued, cart, totals, profile.full_name, registerName))
+          const local = localReceipt(queued, cart, totals, profile.full_name, registerName)
+          const fiscal = await fiscalizeSale(local, { key: input.client_id, registerId, operator: profile.full_name, saved: false }).catch(() => null)
+          finish({ ...local, fiscal })
         } else setError((e as Error).message)
       } finally {
         setBusy(false)
