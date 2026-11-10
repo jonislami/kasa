@@ -9,6 +9,7 @@
     "build:kontabilist": "tsc -b && vite build --config vite.kontabilist.config.ts",
     "preview:kontabilist": "vite preview --config vite.kontabilist.config.ts",
     "build": "tsc -b && vite build",
+    "build:vercel": "node scripts/vercel-build.mjs",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
     "electron:compile": "tsc -p electron/tsconfig.json",
