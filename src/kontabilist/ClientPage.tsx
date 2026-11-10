@@ -13,16 +13,21 @@ import { AccountingNotMigrated, fetchPurchases, fetchStockList, formatDay, PAYME
 import { BooksScopeProvider, CashTab, OverviewTab, PeriodPicker, ProfitTab, VatTab, type BooksScope } from '@/features/accounting/AccountingPage'
 import { PurchasesTab, SalesTab, StockTab } from '@/features/accounting/BooksTabs'
 import { downloadWorkbook, profitSheet, purchasesSheet, salesDailySheet, stockSheet, vatSheet, type Cell, type Sheet } from '@/features/accounting/export'
-import { cancelLink, categoryLabel, deleteClient, docNet, fetchClientBooks, fetchDocs, requestLink, saveClient, setClientPeriod, type AccMe, type Client, type Doc, type DocKind } from './api'
+import { cancelLink, categoryLabel, deleteClient, docNet, fetchClientBooks, fetchDocs, PAY_STATUS_LABELS, requestLink, saveClient, setClientPeriod, type AccMe, type Client, type Doc, type DocKind } from './api'
+import { DebtsTab } from './DebtsTab'
+import { PartnersTab } from './PartnersTab'
 import { AccShell } from './App'
 import { ClientDialog } from './ClientDialog'
 import { DocumentsTab } from './DocumentsTab'
 
-type TabKey = 'pasqyra' | 'shitjet' | 'blerjet' | 'tvsh' | 'fitimi' | 'arka' | 'stoku' | 'klienti'
+type TabKey = 'pasqyra' | 'shitjet' | 'proformat' | 'blerjet' | 'partneret' | 'borxhet' | 'tvsh' | 'fitimi' | 'arka' | 'stoku' | 'klienti'
 const TABS: { key: TabKey; label: string; kasaOnly?: boolean }[] = [
   { key: 'pasqyra', label: 'Pasqyra' },
   { key: 'shitjet', label: 'Shitjet' },
+  { key: 'proformat', label: 'Proformat' },
   { key: 'blerjet', label: 'Blerjet & shpenzimet' },
+  { key: 'partneret', label: 'Partnerët' },
+  { key: 'borxhet', label: 'Borxhet' },
   { key: 'tvsh', label: 'TVSH' },
   { key: 'fitimi', label: 'Fitimi' },
   { key: 'arka', label: 'Arka', kasaOnly: true },
@@ -205,9 +210,13 @@ export function ClientPage({ me }: { me: AccMe }) {
                   <StatCard label="Shitjet (me TVSH)" value={formatEUR(s.sales.gross)} sub={`${s.sales.docs} dokumente`} />
                   <StatCard label="Baza (pa TVSH)" value={formatEUR(s.sales.net)} />
                   <StatCard label="TVSH e mbledhur" value={formatEUR(s.sales.vat)} />
-                  <StatCard label="Nga arka Kasa" value={books.data?.kasa ? formatEUR(books.data.kasa.sales.gross) : '—'} sub={books.data?.kasa ? `${books.data.kasa.sales.docs} kuponë` : 'Klienti nuk është lidhur me Kasa'} />
+                  {books.data?.kasa ? (
+                    <StatCard label="Nga arka Kasa" value={formatEUR(books.data.kasa.sales.gross)} sub={`${books.data.kasa.sales.docs} kuponë`} />
+                  ) : (
+                    <StatCard label="Pa arkëtuar (sot)" value={formatEUR(books.data?.receivable ?? 0)} tone={(books.data?.receivable ?? 0) > 0 ? 'warn' : 'default'} sub="nga të gjitha periudhat" />
+                  )}
                 </div>
-                <DocumentsTab clientId={id} kind="sale" from={range.from} to={range.to} onChanged={refresh} />
+                <DocumentsTab client={client} kind="sale" from={range.from} to={range.to} onChanged={refresh} />
                 {kasaOpen && books.data?.kasa && (
                   <>
                     <h2 className="mt-2 text-[19px] font-semibold">Nga arka Kasa · {books.data.kasa.business.name}</h2>
@@ -222,9 +231,9 @@ export function ClientPage({ me }: { me: AccMe }) {
                   <StatCard label="Blerjet e mallit dhe mjeteve" value={formatEUR(s.purchases.gross)} sub={`${s.purchases.docs} fatura`} />
                   <StatCard label="Shpenzimet" value={formatEUR(s.expenses.gross)} sub={`${s.expenses.docs} dokumente`} />
                   <StatCard label="TVSH e zbritshme" value={formatEUR(s.purchases.vat + s.expenses.vat)} />
-                  <StatCard label="Të papaguara (me afat)" value={formatEUR(s.purchases.due + s.expenses.due)} tone={s.purchases.due + s.expenses.due > 0 ? 'warn' : 'default'} />
+                  <StatCard label="Pa paguar furnitorëve (sot)" value={formatEUR(books.data?.payable ?? 0)} tone={(books.data?.payable ?? 0) > 0 ? 'warn' : 'default'} sub="nga të gjitha periudhat" />
                 </div>
-                <DocumentsTab clientId={id} kind="purchase" from={range.from} to={range.to} onChanged={refresh} />
+                <DocumentsTab client={client} kind="purchase" from={range.from} to={range.to} onChanged={refresh} />
                 {kasaOpen && books.data?.kasa && (
                   <>
                     <h2 className="mt-2 text-[19px] font-semibold">Hyrjet e mallit në Kasa · {books.data.kasa.business.name}</h2>
@@ -233,6 +242,9 @@ export function ClientPage({ me }: { me: AccMe }) {
                 )}
               </>
             )}
+            {tab.key === 'proformat' && <DocumentsTab client={client} kind="proforma" from={range.from} to={range.to} onChanged={refresh} />}
+            {tab.key === 'partneret' && <PartnersTab clientId={client.id} clientName={client.name} from={range.from} to={range.to} />}
+            {tab.key === 'borxhet' && <DebtsTab client={client} onChanged={refresh} />}
             {tab.key === 'tvsh' && <VatTab s={s} period={period} />}
             {tab.key === 'fitimi' && <ProfitTab s={s} />}
             {tab.key === 'arka' && linked && <CashTab s={s} />}
@@ -255,13 +267,13 @@ function docsSheet(s: { business: { name: string; nui: string | null }; from: st
   const sum = (f: (d: Doc) => number) => docs.reduce((a, d) => a + f(d), 0)
   return {
     name: kind === 'sale' ? 'Faturat e shitjes' : 'Blerjet dhe shpenzimet',
-    widths: [12, 14, 26, 13, 13, 22, 10, 12, 12, 12, 12, 12, 12, 12],
+    widths: [12, 14, 26, 13, 13, 22, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12],
     rows: [
       [b(kind === 'sale' ? 'Faturat e shitjes (të regjistruara nga kontabilisti)' : 'Faturat e blerjes dhe shpenzimet')],
       [str(s.business.name), str(s.business.nui ? `NUI ${s.business.nui}` : '')],
       [str(`Periudha: ${formatDay(s.from)} – ${formatDay(s.to)}`)],
       [],
-      [b('Data'), b('Nr.'), b(kind === 'sale' ? 'Blerësi' : 'Furnitori'), b('NUI'), b('Nr. TVSH'), b('Kategoria'), b('Pagesa'), b('Baza 18%'), b('TVSH 18%'), b('Baza 8%'), b('TVSH 8%'), b('0%'), b('E liruar'), b('Totali')],
+      [b('Data'), b('Nr.'), b(kind === 'sale' ? 'Blerësi' : 'Furnitori'), b('NUI'), b('Nr. TVSH'), b('Kategoria'), b('Statusi'), b('Baza 18%'), b('TVSH 18%'), b('Baza 8%'), b('TVSH 8%'), b('0%'), b('E liruar'), b('TVSH e pazbritshme'), b('Totali'), b('Mbetet')],
       ...[...docs].reverse().map((d) => [
         str(formatDay(d.doc_date)),
         str(d.doc_no),
@@ -269,16 +281,18 @@ function docsSheet(s: { business: { name: string; nui: string | null }; from: st
         str(d.partner_nui),
         str(d.partner_vat),
         str(categoryLabel(kind, d.category)),
-        str(PAYMENT_LABELS[d.payment]),
+        str(d.pay_status ? PAY_STATUS_LABELS[d.pay_status] : PAYMENT_LABELS[d.payment]),
         num(d.net_e),
         num(d.vat_e),
         num(d.net_d),
         num(d.vat_d),
         num(d.amt_c),
         num(d.amt_a),
+        num(d.vat_nd),
         num(d.total),
+        num(d.open),
       ]),
-      [b('Gjithsej'), null, null, null, null, null, null, num(sum((d) => d.net_e)), num(sum((d) => d.vat_e)), num(sum((d) => d.net_d)), num(sum((d) => d.vat_d)), num(sum((d) => d.amt_c)), num(sum((d) => d.amt_a)), num(sum((d) => d.total))],
+      [b('Gjithsej'), null, null, null, null, null, null, num(sum((d) => d.net_e)), num(sum((d) => d.vat_e)), num(sum((d) => d.net_d)), num(sum((d) => d.vat_d)), num(sum((d) => d.amt_c)), num(sum((d) => d.amt_a)), num(sum((d) => d.vat_nd)), num(sum((d) => d.total)), num(sum((d) => d.open))],
       [str(`Baza gjithsej ${formatEUR(sum(docNet))} · ${VAT_LABELS.E} / ${VAT_LABELS.D}`)],
     ],
   }
@@ -337,6 +351,10 @@ function ClientTab({ client, kasaName, onChanged }: { client: Client; kasaName: 
           {row('Nr. i TVSH-së', client.vat_number)}
           {row('TVSH', client.vat_registered ? 'Në sistemin e TVSH-së' : 'Jo në TVSH')}
           {row('Nr. fiskal', client.fiscal_number)}
+          {row('Forma juridike', client.legal_form)}
+          {row('Përfaqësuesi', client.representative)}
+          {row('Regjistruar më', client.registration_date ? formatDay(client.registration_date) : null)}
+          {row('Banka / IBAN', [client.bank_name, client.iban].filter(Boolean).join(' · '))}
           {row('Veprimtaria', client.activity)}
           {row('Adresa', [client.address, client.city].filter(Boolean).join(', '))}
           {row('Telefoni', client.phone)}

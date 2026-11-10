@@ -74,6 +74,11 @@ export async function fetchClients(month: string): Promise<ClientRow[]> {
 export interface Client {
   id: string
   name: string
+  legal_form?: string | null
+  representative?: string | null
+  registration_date?: string | null
+  bank_name?: string | null
+  iban?: string | null
   nui: string | null
   vat_number: string | null
   fiscal_number: string | null
@@ -91,7 +96,10 @@ export interface Client {
   link_responded_at: string | null
 }
 
-export type ClientInput = Pick<Client, 'name' | 'nui' | 'vat_number' | 'fiscal_number' | 'vat_registered' | 'activity' | 'address' | 'city' | 'phone' | 'email' | 'note'> & { id?: string; active?: boolean }
+export type ClientInput = Pick<
+  Client,
+  'name' | 'nui' | 'vat_number' | 'fiscal_number' | 'vat_registered' | 'activity' | 'address' | 'city' | 'phone' | 'email' | 'note' | 'legal_form' | 'representative' | 'registration_date' | 'bank_name' | 'iban'
+> & { id?: string; active?: boolean }
 
 export async function saveClient(c: ClientInput): Promise<string> {
   const { data, error } = await supabase.rpc('acc_save_client', { p: c })
@@ -140,6 +148,9 @@ export interface ClientBooks {
   kasa: Summary | null
   /** Everything together, in the shape the shared book screens use. */
   summary: Summary
+  /** Open amounts of the accountant's own invoices today (0016): customers owe / owed to suppliers. */
+  receivable: number
+  payable: number
 }
 
 function nums<T>(o: unknown): T {
@@ -288,14 +299,17 @@ export async function fetchClientBooks(clientId: string, from: string, to: strin
     registers: kasa?.registers ?? [],
     periods: ((r.periods as Summary['periods']) ?? []).map((p) => ({ ...p, month: String(p.month).slice(0, 10) })),
   }
-  return { client, kasa, summary }
+  return { client, kasa, summary, receivable: n(m.receivable), payable: n(m.payable) }
 }
 
 // ---------------------------------------------------------------------------
-// Documents
+// Documents (sales, purchases/expenses, proformas)
 // ---------------------------------------------------------------------------
 export type DocKind = 'sale' | 'purchase'
-export type DocCategory = 'goods' | 'services' | 'assets' | ExpenseCategory
+export type AnyDocKind = DocKind | 'proforma'
+export type DocType = 'invoice' | 'credit_note' | 'debit_note'
+export type PayStatus = 'paid' | 'partial' | 'unpaid' | 'applied'
+export type DocCategory = 'goods' | 'services' | 'assets' | ExpenseCategory | 'fuel' | 'vehicles' | 'admin' | 'operating' | 'travel' | 'representation'
 
 export const SALE_CATEGORIES: { value: DocCategory; label: string }[] = [
   { value: 'goods', label: 'Mallra' },
@@ -308,49 +322,87 @@ export const PURCHASE_CATEGORIES: { value: DocCategory; label: string }[] = [
   { value: 'services', label: 'Shërbime profesionale' },
   { value: 'rent', label: 'Qiraja' },
   { value: 'utilities', label: 'Rryma, uji, mbeturinat' },
+  { value: 'telecom', label: 'Telefoni dhe interneti' },
+  { value: 'fuel', label: 'Karburanti' },
+  { value: 'vehicles', label: 'Automjetet (servisi, sigurimi, regjistrimi)' },
+  { value: 'transport', label: 'Transporti' },
   { value: 'wages', label: 'Pagat' },
   { value: 'contributions', label: 'Kontributet pensionale' },
   { value: 'taxes', label: 'Tatime dhe taksa' },
-  { value: 'telecom', label: 'Telefoni dhe interneti' },
-  { value: 'transport', label: 'Transporti dhe derivatet' },
+  { value: 'admin', label: 'Shpenzime administrative' },
+  { value: 'operating', label: 'Shpenzime operative' },
+  { value: 'travel', label: 'Udhëtimet zyrtare' },
+  { value: 'representation', label: 'Përfaqësimi (dreka, dhurata)' },
   { value: 'maintenance', label: 'Mirëmbajtja dhe riparimet' },
   { value: 'marketing', label: 'Reklama' },
   { value: 'bank', label: 'Provizionet bankare' },
   { value: 'other', label: 'Të tjera' },
 ]
 
-export function categoryLabel(kind: DocKind, c: DocCategory): string {
-  return (kind === 'sale' ? SALE_CATEGORIES : PURCHASE_CATEGORIES).find((x) => x.value === c)?.label ?? c
+export const DOC_TYPE_LABELS: Record<DocType, string> = { invoice: 'Faturë', credit_note: 'Faturë kreditore', debit_note: 'Faturë debitore' }
+export const PAY_STATUS_LABELS: Record<PayStatus, string> = { paid: 'E paguar', partial: 'Pjesërisht', unpaid: 'E papaguar', applied: 'E zbritur' }
+
+export function categoryLabel(kind: AnyDocKind, c: DocCategory): string {
+  return (kind === 'purchase' ? PURCHASE_CATEGORIES : SALE_CATEGORIES).find((x) => x.value === c)?.label ?? c
 }
 
 export interface Doc {
   id: string
-  kind: DocKind
+  kind: AnyDocKind
+  doc_type: DocType
   category: DocCategory
   doc_date: string
+  due_date: string | null
   doc_no: string | null
+  auto_number: boolean
+  partner_id: string | null
   partner_name: string | null
   partner_nui: string | null
   partner_vat: string | null
+  partner_address: string | null
   description: string | null
+  note: string | null
   payment: 'cash' | 'bank' | 'due'
+  ref_doc_id: string | null
+  ref_doc_no: string | null
+  export: boolean
   net_e: number
   vat_e: number
   net_d: number
   vat_d: number
   amt_c: number
   amt_a: number
+  vat_nd: number
+  discount_total: number
   total: number
+  has_lines: boolean
+  converted_to: string | null
+  /** From acc_doc_balances (0016); before the migration: derived from `payment`. */
+  paid: number
+  credited: number
+  open: number
+  pay_status: PayStatus | null
+  overdue_days: number | null
+  files: number
 }
 
-export type DocInput = Omit<Doc, 'id' | 'total'> & { id?: string }
+const NUMS = ['net_e', 'vat_e', 'net_d', 'vat_d', 'amt_c', 'amt_a', 'vat_nd', 'discount_total', 'total', 'paid', 'credited', 'open', 'files'] as const
+function toDoc(r: Record<string, unknown>): Doc {
+  const d = { doc_type: 'invoice', vat_nd: 0, discount_total: 0, export: false, has_lines: false, files: 0, ...r } as unknown as Doc
+  for (const k of NUMS) (d as unknown as Record<string, number>)[k] = n(r[k])
+  return d
+}
 
 const DOC_COLS = 'id, kind, category, doc_date, doc_no, partner_name, partner_nui, partner_vat, description, payment, net_e, vat_e, net_d, vat_d, amt_c, amt_a, total'
 
-export async function fetchDocs(clientId: string, kind: DocKind, from: string, to: string): Promise<Doc[]> {
+export async function fetchDocs(clientId: string, kind: AnyDocKind, from: string, to: string): Promise<Doc[]> {
+  const { data, error } = await supabase.rpc('acc_documents_list', { p_client: clientId, p_kind: kind, p_from: from, p_to: to })
+  if (!error) return ((data as Record<string, unknown>[]) ?? []).map(toDoc)
+  if (!['PGRST202', '42883'].includes(error.code ?? '') || kind === 'proforma') fail(error)
+  // Before migration 0016: the plain table, "cash/bank" counts as paid.
   const out: Doc[] = []
   for (let a = 0; a < 30000; a += 1000) {
-    const { data, error } = await supabase
+    const { data: rows, error: e2 } = await supabase
       .from('acc_documents')
       .select(DOC_COLS)
       .eq('client_id', clientId)
@@ -360,23 +412,21 @@ export async function fetchDocs(clientId: string, kind: DocKind, from: string, t
       .order('doc_date', { ascending: false })
       .order('created_at', { ascending: false })
       .range(a, a + 999)
-    if (error) fail(error)
+    if (e2) fail(e2)
     out.push(
-      ...(data ?? []).map((r) => ({
-        ...(r as unknown as Doc),
-        net_e: n(r.net_e),
-        vat_e: n(r.vat_e),
-        net_d: n(r.net_d),
-        vat_d: n(r.vat_d),
-        amt_c: n(r.amt_c),
-        amt_a: n(r.amt_a),
-        total: n(r.total),
-      })),
+      ...(rows ?? []).map((r) => {
+        const d = toDoc(r as Record<string, unknown>)
+        const paid = d.payment === 'due' ? 0 : d.total
+        return { ...d, paid, open: d.total - paid, pay_status: (d.payment === 'due' ? 'unpaid' : 'paid') as PayStatus }
+      }),
     )
-    if ((data ?? []).length < 1000) break
+    if ((rows ?? []).length < 1000) break
   }
   return out
 }
+
+/** Old quick entry (amounts per rate) – still used by the Excel import. */
+export type DocInput = Pick<Doc, 'category' | 'doc_date' | 'doc_no' | 'partner_name' | 'partner_nui' | 'partner_vat' | 'description' | 'payment' | 'net_e' | 'vat_e' | 'net_d' | 'vat_d' | 'amt_c' | 'amt_a'> & { id?: string; kind: DocKind }
 
 export async function saveDoc(clientId: string, d: DocInput): Promise<void> {
   const { error } = await supabase.rpc('acc_save_document', { p: { ...d, client_id: clientId } })
@@ -396,3 +446,298 @@ export async function importDocs(clientId: string, rows: Omit<DocInput, 'id'>[])
 
 export const docVat = (d: Pick<Doc, 'vat_e' | 'vat_d'>) => d.vat_e + d.vat_d
 export const docNet = (d: Pick<Doc, 'net_e' | 'net_d' | 'amt_c' | 'amt_a'>) => d.net_e + d.net_d + d.amt_c + d.amt_a
+
+// ---------------------------------------------------------------------------
+// Invoices with lines (0016)
+// ---------------------------------------------------------------------------
+export interface DocLine {
+  id?: string
+  description: string
+  unit: string
+  quantity: number
+  unit_price: number // without VAT
+  discount_pct: number
+  vat_code: VatCode
+  net?: number
+}
+
+export interface InvoiceInput {
+  id?: string
+  kind: AnyDocKind
+  doc_type: DocType
+  ref_doc_id?: string | null
+  category: DocCategory
+  doc_date: string
+  due_date?: string | null
+  doc_no?: string | null
+  partner_id?: string | null
+  partner_name?: string | null
+  partner_nui?: string | null
+  partner_vat?: string | null
+  description?: string | null
+  note?: string | null
+  export?: boolean
+  vat_deductible?: boolean
+  lines: DocLine[]
+  /** Used when there are no lines: amounts per rate as on the paper invoice. */
+  net_e?: number
+  vat_e?: number
+  net_d?: number
+  vat_d?: number
+  amt_c?: number
+  amt_a?: number
+  paid_now?: { method: 'cash' | 'bank'; reference?: string } | null
+  force?: boolean
+}
+
+export class DuplicateInvoice extends Error {}
+
+export async function saveInvoice(clientId: string, inv: InvoiceInput): Promise<{ id: string; doc_no: string }> {
+  const { data, error } = await supabase.rpc('acc_save_invoice', { p: { ...inv, client_id: clientId } })
+  if (error) {
+    if (error.code === '23505' && (error.hint === 'duplicate' || /regjistruar tashmë/.test(error.message))) throw new DuplicateInvoice(error.message)
+    if (['PGRST202', '42883'].includes(error.code ?? '')) throw new Error('Kjo pjesë kërkon migrimin supabase/migrations/0016_acc_invoices.sql në Supabase.')
+    fail(error)
+  }
+  return data as { id: string; doc_no: string }
+}
+
+export async function convertProforma(id: string, date?: string): Promise<{ id: string; doc_no: string }> {
+  const { data, error } = await supabase.rpc('acc_convert_proforma', { p_id: id, p_date: date ?? null })
+  if (error) fail(error)
+  return data as { id: string; doc_no: string }
+}
+
+export interface Payment {
+  id: string
+  pay_date: string
+  amount: number
+  method: 'cash' | 'bank'
+  reference: string | null
+  note: string | null
+}
+
+export interface DocFile {
+  id: string
+  path: string
+  file_name: string
+  mime: string | null
+  size_bytes: number | null
+  created_at: string
+}
+
+export interface DocDetail extends Doc {
+  lines: (DocLine & { id: string; net: number })[]
+  payments: Payment[]
+  corrections: { id: string; doc_no: string; doc_type: DocType; doc_date: string; total: number }[]
+  ref_doc: { id: string; doc_no: string; doc_date: string; total: number } | null
+  converted_doc_no: string | null
+  files_list: DocFile[]
+  installments: { due_date: string; amount: number }[] | null
+  history: { action: string; details: Record<string, unknown>; created_at: string; user_name: string }[]
+}
+
+export async function fetchDocDetail(id: string): Promise<DocDetail> {
+  const { data, error } = await supabase.rpc('acc_document_detail', { p_id: id })
+  if (error) fail(error)
+  const r = data as Record<string, unknown>
+  const d = toDoc(r)
+  const ref = r.ref_doc as Record<string, unknown> | null
+  return {
+    ...d,
+    lines: ((r.lines as Record<string, unknown>[]) ?? []).map((l) => ({
+      ...(l as unknown as DocLine & { id: string }),
+      quantity: n(l.quantity),
+      unit_price: n(l.unit_price),
+      discount_pct: n(l.discount_pct),
+      net: n(l.net),
+    })),
+    payments: ((r.payments as Record<string, unknown>[]) ?? []).map((x) => ({ ...(x as unknown as Payment), amount: n(x.amount) })),
+    corrections: ((r.corrections as Record<string, unknown>[]) ?? []).map((x) => ({ ...(x as unknown as DocDetail['corrections'][number]), total: n(x.total) })),
+    ref_doc: ref ? { id: ref.id as string, doc_no: ref.doc_no as string, doc_date: ref.doc_date as string, total: n(ref.total) } : null,
+    converted_doc_no: (r.converted_doc_no as string) ?? null,
+    files_list: (r.files as DocFile[]) ?? [],
+    files: ((r.files as unknown[]) ?? []).length,
+    installments: (r.installments as DocDetail['installments']) ?? null,
+    history: (r.history as DocDetail['history']) ?? [],
+  }
+}
+
+export async function savePayment(p: { id?: string; doc_id: string; pay_date: string; amount: number; method: 'cash' | 'bank'; reference?: string; note?: string }): Promise<void> {
+  const { error } = await supabase.rpc('acc_save_payment', { p })
+  if (error) fail(error)
+}
+
+export async function deletePayment(id: string): Promise<void> {
+  const { error } = await supabase.rpc('acc_delete_payment', { p_id: id })
+  if (error) fail(error)
+}
+
+/** Uploads a PDF / photo to the private bucket (folder = client) and links it to the document. */
+export async function uploadDocFile(clientId: string, docId: string | null, file: File): Promise<void> {
+  if (file.size > 20 * 1024 * 1024) throw new Error('Skedari është më i madh se 20 MB')
+  const safe = file.name.normalize('NFD').replace(/[^\w.-]+/g, '_').slice(-80)
+  const path = `${clientId}/${crypto.randomUUID()}-${safe}`
+  const up = await supabase.storage.from('acc-files').upload(path, file, { contentType: file.type || undefined, upsert: false })
+  if (up.error) throw new Error('Skedari nuk u ngarkua: ' + up.error.message)
+  const { error } = await supabase.rpc('acc_add_file', { p: { client_id: clientId, doc_id: docId, path, file_name: file.name, mime: file.type, size_bytes: file.size } })
+  if (error) {
+    await supabase.storage.from('acc-files').remove([path])
+    fail(error)
+  }
+}
+
+export async function openDocFile(path: string): Promise<string> {
+  const { data, error } = await supabase.storage.from('acc-files').createSignedUrl(path, 300)
+  if (error || !data) throw new Error('Skedari nuk u hap')
+  return data.signedUrl
+}
+
+export async function deleteDocFile(id: string): Promise<void> {
+  const { data, error } = await supabase.rpc('acc_delete_file', { p_id: id })
+  if (error) fail(error)
+  await supabase.storage.from('acc-files').remove([data as string])
+}
+
+const round2c = (v: number) => Math.round((v + Number.EPSILON) * 100) / 100
+
+/** Line and invoice amounts exactly as the server computes them (acc_save_invoice). */
+export function computeInvoice(lines: DocLine[], exportSale: boolean) {
+  const by: Record<VatCode, number> = { E: 0, D: 0, C: 0, A: 0 }
+  let discount = 0
+  const nets = lines.map((l) => {
+    const code: VatCode = exportSale ? 'C' : l.vat_code
+    const before = round2c(l.quantity * l.unit_price)
+    const net = round2c(l.quantity * l.unit_price * (1 - (l.discount_pct || 0) / 100))
+    discount += before - net
+    by[code] += net
+    return net
+  })
+  const ve = round2c(by.E * 0.18)
+  const vd = round2c(by.D * 0.08)
+  return {
+    nets,
+    net_e: round2c(by.E),
+    vat_e: ve,
+    net_d: round2c(by.D),
+    vat_d: vd,
+    amt_c: round2c(by.C),
+    amt_a: round2c(by.A),
+    discount: round2c(discount),
+    total: round2c(by.E + ve + by.D + vd + by.C + by.A),
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Partners, debts, statement (0016)
+// ---------------------------------------------------------------------------
+export type PartnerRole = 'customer' | 'supplier' | 'both'
+export const ROLE_LABEL: Record<PartnerRole, string> = { customer: 'Blerës', supplier: 'Furnitor', both: 'Blerës dhe furnitor' }
+
+export interface Partner {
+  id: string
+  role: PartnerRole
+  name: string
+  nui: string | null
+  fiscal_number: string | null
+  vat_number: string | null
+  address: string | null
+  city: string | null
+  country: string
+  phone: string | null
+  email: string | null
+  note: string | null
+  active: boolean
+  receivable: number
+  payable: number
+  overdue: number
+  docs: number
+  last_doc: string | null
+}
+
+export type PartnerInput = Pick<Partner, 'role' | 'name' | 'nui' | 'fiscal_number' | 'vat_number' | 'address' | 'city' | 'country' | 'phone' | 'email' | 'note'> & {
+  id?: string
+  active?: boolean
+}
+
+export async function fetchPartners(clientId: string): Promise<Partner[]> {
+  const { data, error } = await supabase.rpc('acc_partners_list', { p_client: clientId })
+  if (error) fail(error)
+  return ((data as Record<string, unknown>[]) ?? []).map((p) => ({
+    ...(p as unknown as Partner),
+    receivable: n(p.receivable),
+    payable: n(p.payable),
+    overdue: n(p.overdue),
+    docs: n(p.docs),
+  }))
+}
+
+export async function savePartner(clientId: string, p: PartnerInput): Promise<string> {
+  const { data, error } = await supabase.rpc('acc_save_partner', { p: { ...p, client_id: clientId } })
+  if (error) fail(error)
+  return data as string
+}
+
+export async function deletePartner(id: string): Promise<'archived' | 'deleted'> {
+  const { data, error } = await supabase.rpc('acc_delete_partner', { p_id: id })
+  if (error) fail(error)
+  return data as 'archived' | 'deleted'
+}
+
+export interface DebtDoc {
+  id: string
+  doc_no: string | null
+  doc_date: string
+  due_date: string
+  total: number
+  open: number
+  days: number
+}
+
+export interface Debts {
+  as_of: string
+  total: number
+  buckets: { current: number; d30: number; d60: number; d90: number; older: number }
+  partners: { partner_id: string | null; name: string; nui: string | null; open: number; overdue: number; max_days: number; docs: DebtDoc[] }[]
+}
+
+export async function fetchDebts(clientId: string, side: 'receivable' | 'payable', asOf?: string): Promise<Debts> {
+  const { data, error } = await supabase.rpc('acc_debts', { p_client: clientId, p_side: side, p_as_of: asOf ?? null })
+  if (error) fail(error)
+  const r = data as Record<string, unknown>
+  const b = (r.buckets ?? {}) as Record<string, unknown>
+  return {
+    as_of: r.as_of as string,
+    total: n(r.total),
+    buckets: { current: n(b.current), d30: n(b.d30), d60: n(b.d60), d90: n(b.d90), older: n(b.older) },
+    partners: ((r.partners as Record<string, unknown>[]) ?? []).map((p) => ({
+      ...(p as unknown as Debts['partners'][number]),
+      open: n(p.open),
+      overdue: n(p.overdue),
+      max_days: n(p.max_days),
+      docs: ((p.docs as Record<string, unknown>[]) ?? []).map((d) => ({ ...(d as unknown as DebtDoc), total: n(d.total), open: n(d.open), days: n(d.days) })),
+    })),
+  }
+}
+
+export interface StatementRow {
+  date: string
+  type: DocType | 'payment'
+  kind: AnyDocKind
+  doc_id: string
+  doc_no: string | null
+  debit: number
+  credit: number
+  text: string | null
+}
+
+export async function fetchStatement(partnerId: string, from: string, to: string): Promise<{ partner: Partner; opening: number; rows: StatementRow[] }> {
+  const { data, error } = await supabase.rpc('acc_partner_statement', { p_partner: partnerId, p_from: from, p_to: to })
+  if (error) fail(error)
+  const r = data as Record<string, unknown>
+  return {
+    partner: r.partner as Partner,
+    opening: n(r.opening),
+    rows: ((r.rows as Record<string, unknown>[]) ?? []).map((x) => ({ ...(x as unknown as StatementRow), debit: n(x.debit), credit: n(x.credit) })),
+  }
+}

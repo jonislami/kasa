@@ -15,7 +15,14 @@ export const EMPTY_CLIENT: ClientInput = {
   phone: '',
   email: '',
   note: '',
+  legal_form: '',
+  representative: '',
+  registration_date: null,
+  bank_name: '',
+  iban: '',
 }
+
+const LEGAL_FORMS = ['Biznes individual', 'Ortakëri e përgjithshme', 'Ortakëri e kufizuar', 'SH.P.K.', 'SH.A.', 'OJQ', 'Ndërmarrje publike', 'Degë e shoqërisë së huaj']
 
 /** New client / edit client of the accountant (any business, in Kasa or not). */
 export function ClientDialog({ value, onClose, onSaved }: { value: ClientInput | null; onClose: () => void; onSaved: (id: string) => void }) {
@@ -86,11 +93,21 @@ export function ClientDialog({ value, onClose, onSaved }: { value: ClientInput |
           <Toggle checked={form.vat_registered} onChange={(v) => set('vat_registered', v)} />
         </div>
         <Input label="Nr. fiskal" value={form.fiscal_number ?? ''} onChange={(e) => set('fiscal_number', e.target.value)} />
+        <Input label="Forma juridike" list="acc-legal-forms" value={form.legal_form ?? ''} onChange={(e) => set('legal_form', e.target.value)} placeholder="SH.P.K., Biznes individual…" />
+        <datalist id="acc-legal-forms">
+          {LEGAL_FORMS.map((f) => (
+            <option key={f} value={f} />
+          ))}
+        </datalist>
+        <Input label="Përfaqësuesi" value={form.representative ?? ''} onChange={(e) => set('representative', e.target.value)} />
+        <Input label="Data e regjistrimit (ARBK)" type="date" value={form.registration_date ?? ''} onChange={(e) => set('registration_date', e.target.value || null)} />
         <Input label="Veprimtaria" value={form.activity ?? ''} onChange={(e) => set('activity', e.target.value)} placeholder="p.sh. Tregti me pakicë" />
         <Input label="Adresa" value={form.address ?? ''} onChange={(e) => set('address', e.target.value)} />
         <Input label="Qyteti" value={form.city ?? ''} onChange={(e) => set('city', e.target.value)} />
         <Input label="Telefoni" inputMode="tel" value={form.phone ?? ''} onChange={(e) => set('phone', e.target.value)} />
         <Input label="Email-i" type="email" value={form.email ?? ''} onChange={(e) => set('email', e.target.value)} />
+        <Input label="Banka" value={form.bank_name ?? ''} onChange={(e) => set('bank_name', e.target.value)} placeholder="p.sh. ProCredit Bank" />
+        <Input label="IBAN (për faturat)" value={form.iban ?? ''} onChange={(e) => set('iban', e.target.value.toUpperCase())} placeholder="XK05 …" />
         <div className="sm:col-span-2">
           <Input label="Shënim (e sheh vetëm ti)" value={form.note ?? ''} onChange={(e) => set('note', e.target.value)} placeholder="p.sh. Faturat i sjell të hënën" />
         </div>
