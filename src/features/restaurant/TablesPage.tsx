@@ -9,6 +9,7 @@ import { isManagerRole } from '@/lib/business'
 import { serverNow } from '@/lib/clock'
 import { cn } from '@/lib/cn'
 import { formatEUR } from '@/lib/money'
+import { WaiterTables } from './WaiterTables'
 import { fetchOpenOrders, fetchTables, RestaurantNotMigrated, saveTables, type DiningTable, type OpenOrderSummary, type TableShape } from './api'
 
 const COLS = 8
@@ -27,6 +28,12 @@ function since(iso: string) {
 
 /** Floor plan: free / occupied tables, open bills; managers arrange the plan. */
 export function TablesPage() {
+  const { profile } = useBusiness()
+  // The waiter gets the simple tiles screen; owner/manager keep the floor plan and its editor.
+  return isManagerRole(profile.role) ? <FloorPlan /> : <WaiterTables />
+}
+
+function FloorPlan() {
   const { profile } = useBusiness()
   const manager = isManagerRole(profile.role)
   const navigate = useNavigate()
