@@ -14,20 +14,24 @@ import { BooksScopeProvider, CashTab, OverviewTab, PeriodPicker, ProfitTab, VatT
 import { PurchasesTab, SalesTab, StockTab } from '@/features/accounting/BooksTabs'
 import { downloadWorkbook, profitSheet, purchasesSheet, salesDailySheet, stockSheet, vatSheet, type Cell, type Sheet } from '@/features/accounting/export'
 import { cancelLink, categoryLabel, deleteClient, docNet, fetchClientBooks, fetchDocs, PAY_STATUS_LABELS, requestLink, saveClient, setClientPeriod, type AccMe, type Client, type Doc, type DocKind } from './api'
+import { BankTab } from './BankTab'
+import { DashboardTab } from './DashboardTab'
 import { DebtsTab } from './DebtsTab'
 import { PartnersTab } from './PartnersTab'
 import { AccShell } from './App'
 import { ClientDialog } from './ClientDialog'
 import { DocumentsTab } from './DocumentsTab'
 
-type TabKey = 'pasqyra' | 'shitjet' | 'proformat' | 'blerjet' | 'partneret' | 'borxhet' | 'tvsh' | 'fitimi' | 'arka' | 'stoku' | 'klienti'
+type TabKey = 'paneli' | 'pasqyra' | 'banka' | 'shitjet' | 'proformat' | 'blerjet' | 'partneret' | 'borxhet' | 'tvsh' | 'fitimi' | 'arka' | 'stoku' | 'klienti'
 const TABS: { key: TabKey; label: string; kasaOnly?: boolean }[] = [
+  { key: 'paneli', label: 'Paneli' },
   { key: 'pasqyra', label: 'Pasqyra' },
   { key: 'shitjet', label: 'Shitjet' },
   { key: 'proformat', label: 'Proformat' },
   { key: 'blerjet', label: 'Blerjet & shpenzimet' },
   { key: 'partneret', label: 'Partnerët' },
   { key: 'borxhet', label: 'Borxhet' },
+  { key: 'banka', label: 'Arka & banka' },
   { key: 'tvsh', label: 'TVSH' },
   { key: 'fitimi', label: 'Fitimi' },
   { key: 'arka', label: 'Arka', kasaOnly: true },
@@ -98,7 +102,7 @@ export function ClientPage({ me }: { me: AccMe }) {
 
   const scope = useMemo<BooksScope>(
     () => ({
-      link: (t) => (t === 'pasqyra' ? `/klient/${id}` : `/klient/${id}/${t === 'arka' && !linked ? 'pasqyra' : t}`),
+      link: (t) => (t === 'paneli' ? `/klient/${id}` : `/klient/${id}/${t === 'arka' && !linked ? 'pasqyra' : t}`),
       setStatus: (month, status) => setClientPeriod(id, month, status),
       invalidate: refresh,
       kasa: linked,
@@ -107,7 +111,7 @@ export function ClientPage({ me }: { me: AccMe }) {
     [id, linked],
   )
 
-  const tab = TABS.find((t) => t.key === (tabParam ?? 'pasqyra'))
+  const tab = TABS.find((t) => t.key === (tabParam ?? 'paneli'))
   if (!tab || (tab.kasaOnly && books.data && !linked)) return <Navigate to={`/klient/${id}`} replace />
 
   const s = books.data?.summary
@@ -186,7 +190,7 @@ export function ClientPage({ me }: { me: AccMe }) {
         {TABS.filter((t) => !t.kasaOnly || linked).map((t) => (
           <NavLink
             key={t.key}
-            to={t.key === 'pasqyra' ? `/klient/${id}` : `/klient/${id}/${t.key}`}
+            to={t.key === 'paneli' ? `/klient/${id}` : `/klient/${id}/${t.key}`}
             end
             className={({ isActive }) =>
               cn('flex h-[40px] shrink-0 items-center whitespace-nowrap rounded-full border px-4 text-sm font-medium', isActive ? 'border-brand-600 bg-brand-100 text-brand-600' : 'border-line bg-white text-muted hover:text-ink')
@@ -203,7 +207,9 @@ export function ClientPage({ me }: { me: AccMe }) {
       ) : (
         <BooksScopeProvider value={scope}>
           <div className="flex flex-col gap-4 px-4 pb-8 pt-4 md:gap-5 md:px-8">
+            {tab.key === 'paneli' && <DashboardTab client={client} onGo={(t) => navigate(`/klient/${id}/${t}`)} />}
             {tab.key === 'pasqyra' && <OverviewTab s={s} period={period} />}
+            {tab.key === 'banka' && <BankTab client={client} from={range.from} to={range.to} onChanged={refresh} />}
             {tab.key === 'shitjet' && (
               <>
                 <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">

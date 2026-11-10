@@ -13,6 +13,7 @@ import {
   deleteDocFile,
   deletePayment,
   DOC_TYPE_LABELS,
+  fetchAccounts,
   fetchDocDetail,
   openDocFile,
   PAY_STATUS_LABELS,
@@ -52,7 +53,9 @@ export function DocDetailDialog({
   const qc = useQueryClient()
   const doc = useQuery({ queryKey: ['doc', docId], queryFn: () => fetchDocDetail(docId!), enabled: Boolean(docId) })
   const d = doc.data
-  const [pay, setPay] = useState<{ amount: string; date: string; method: 'cash' | 'bank'; reference: string } | null>(null)
+  const [pay, setPay] = useState<{ amount: string; date: string; method: 'cash' | 'bank'; account: string; reference: string } | null>(null)
+  const accounts = useQuery({ queryKey: ['client', client.id, 'accounts'], queryFn: () => fetchAccounts(client.id), enabled: Boolean(docId) })
+  const accList = (accounts.data ?? []).filter((a) => a.active)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [printing, setPrinting] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -75,7 +78,15 @@ export function DocDetailDialog({
     onChanged()
   }
   const addPay = useMutation({
-    mutationFn: () => savePayment({ doc_id: d!.id, amount: Number(pay!.amount.replace(',', '.')), pay_date: pay!.date, method: pay!.method, reference: pay!.reference || undefined }),
+    mutationFn: () =>
+      savePayment({
+        doc_id: d!.id,
+        amount: Number(pay!.amount.replace(',', '.')),
+        pay_date: pay!.date,
+        method: pay!.method,
+        account_id: pay!.account || null,
+        reference: pay!.reference || undefined,
+      }),
     onSuccess: () => {
       setPay(null)
       refresh()
@@ -256,7 +267,10 @@ export function DocDetailDialog({
                 <div className="mb-2 flex items-center justify-between">
                   <h3 className="font-semibold">Pagesat</h3>
                   {canPay && !pay && (
-                    <Button size="sm" variant="secondary" onClick={() => setPay({ amount: String(Math.abs(open)), date: kosovoDateISO(), method: 'bank', reference: '' })}>
+                    <Button size="sm" variant="secondary" onClick={() => {
+                        const acc = accList.find((a) => a.kind === 'bank') ?? accList[0]
+                        setPay({ amount: String(Math.abs(open)), date: kosovoDateISO(), method: acc?.kind ?? 'bank', account: acc?.id ?? '', reference: '' })
+                      }}>
                       <Wallet className="h-4 w-4" /> Regjistro pagesë
                     </Button>
                   )}
@@ -265,7 +279,19 @@ export function DocDetailDialog({
                   <div className="mb-3 grid gap-2 rounded-card border border-line p-3 md:grid-cols-[1fr_1fr_1fr_1.5fr_auto] md:items-end">
                     <Input label="Shuma" inputMode="decimal" value={pay.amount} onChange={(e) => setPay({ ...pay, amount: e.target.value })} />
                     <Input label="Data" type="date" value={pay.date} onChange={(e) => setPay({ ...pay, date: e.target.value })} />
-                    <Select label="Mënyra" value={pay.method} onChange={(e) => setPay({ ...pay, method: e.target.value as 'cash' | 'bank' })} options={[{ value: 'bank', label: 'Bankë' }, { value: 'cash', label: 'Kesh' }]} />
+                    {accList.length ? (
+                      <Select
+                        label="Llogaria"
+                        value={pay.account}
+                        onChange={(e) => {
+                          const a = accList.find((x) => x.id === e.target.value)
+                          setPay({ ...pay, account: e.target.value, method: a?.kind ?? pay.method })
+                        }}
+                        options={accList.map((a) => ({ value: a.id, label: a.name }))}
+                      />
+                    ) : (
+                      <Select label="Mënyra" value={pay.method} onChange={(e) => setPay({ ...pay, method: e.target.value as 'cash' | 'bank' })} options={[{ value: 'bank', label: 'Bankë' }, { value: 'cash', label: 'Kesh' }]} />
+                    )}
                     <Input label="Referenca" value={pay.reference} placeholder="nr. i transferit" onChange={(e) => setPay({ ...pay, reference: e.target.value })} />
                     <div className="flex gap-2">
                       <Button variant="secondary" onClick={() => setPay(null)}>

@@ -563,7 +563,7 @@ export async function fetchDocDetail(id: string): Promise<DocDetail> {
   }
 }
 
-export async function savePayment(p: { id?: string; doc_id: string; pay_date: string; amount: number; method: 'cash' | 'bank'; reference?: string; note?: string }): Promise<void> {
+export async function savePayment(p: { id?: string; doc_id: string; pay_date: string; amount: number; method: 'cash' | 'bank'; account_id?: string | null; reference?: string; note?: string }): Promise<void> {
   const { error } = await supabase.rpc('acc_save_payment', { p })
   if (error) fail(error)
 }
@@ -739,5 +739,268 @@ export async function fetchStatement(partnerId: string, from: string, to: string
     partner: r.partner as Partner,
     opening: n(r.opening),
     rows: ((r.rows as Record<string, unknown>[]) ?? []).map((x) => ({ ...(x as unknown as StatementRow), debit: n(x.debit), credit: n(x.credit) })),
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Cash & bank, statement, loans, cash flow, dashboard (0017)
+// ---------------------------------------------------------------------------
+export type MoneyKind = 'cash' | 'bank'
+export type TxCategory = 'income' | 'owner' | 'loan' | 'interest' | 'wages' | 'taxes' | 'vat' | 'contributions' | 'bank_fee' | 'transfer' | 'other'
+
+export const TX_LABELS: Record<TxCategory | 'customer' | 'supplier', string> = {
+  customer: 'Arkëtim nga klienti',
+  supplier: 'Pagesë furnitorit',
+  income: 'Të hyra të tjera',
+  owner: 'Pronari (kapital / tërheqje)',
+  loan: 'Kredi (marrje / këst)',
+  interest: 'Interesi',
+  wages: 'Pagat',
+  taxes: 'Tatime',
+  vat: 'Pagesa e TVSH-së',
+  contributions: 'Kontributet',
+  bank_fee: 'Provizion bankar',
+  transfer: 'Transfer ndërmjet llogarive',
+  other: 'Tjetër',
+}
+
+export interface MoneyAccount {
+  id: string
+  kind: MoneyKind
+  name: string
+  bank_name: string | null
+  iban: string | null
+  opening_balance: number
+  opening_date: string
+  active: boolean
+  balance: number
+  to_match: number
+}
+
+export async function fetchAccounts(clientId: string, asOf?: string): Promise<MoneyAccount[]> {
+  const { data, error } = await supabase.rpc('acc_accounts_list', { p_client: clientId, p_as_of: asOf ?? null })
+  if (error) {
+    if (['PGRST202', '42883'].includes(error.code ?? '')) return []
+    fail(error)
+  }
+  return ((data as Record<string, unknown>[]) ?? []).map((a) => ({ ...(a as unknown as MoneyAccount), opening_balance: n(a.opening_balance), balance: n(a.balance), to_match: n(a.to_match) }))
+}
+
+export async function saveAccount(clientId: string, a: Partial<MoneyAccount>): Promise<string> {
+  const { data, error } = await supabase.rpc('acc_save_account', { p: { ...a, client_id: clientId } })
+  if (error) fail(error)
+  return data as string
+}
+
+export async function deleteAccount(id: string): Promise<'archived' | 'deleted'> {
+  const { data, error } = await supabase.rpc('acc_delete_account', { p_id: id })
+  if (error) fail(error)
+  return data as 'archived' | 'deleted'
+}
+
+export interface LedgerRow {
+  date: string
+  source: 'payment' | 'tx'
+  id: string
+  doc_id: string | null
+  amount: number
+  text: string
+  reference: string | null
+  category: TxCategory | 'customer' | 'supplier'
+  transfer_group?: string | null
+  loan_id?: string | null
+  partner?: string | null
+}
+
+export async function fetchLedger(accountId: string, from: string, to: string): Promise<{ opening: number; closing: number; rows: LedgerRow[] }> {
+  const { data, error } = await supabase.rpc('acc_account_ledger', { p_account: accountId, p_from: from, p_to: to })
+  if (error) fail(error)
+  const r = data as Record<string, unknown>
+  return { opening: n(r.opening), closing: n(r.closing), rows: ((r.rows as Record<string, unknown>[]) ?? []).map((x) => ({ ...(x as unknown as LedgerRow), amount: n(x.amount) })) }
+}
+
+export async function saveTransaction(t: {
+  account_id: string
+  to_account_id?: string
+  tx_date: string
+  amount: number
+  category: TxCategory
+  description?: string
+  reference?: string
+  partner_id?: string | null
+  loan_id?: string | null
+}): Promise<void> {
+  const { error } = await supabase.rpc('acc_save_transaction', { p: t })
+  if (error) fail(error)
+}
+
+export async function deleteTransaction(id: string): Promise<void> {
+  const { error } = await supabase.rpc('acc_delete_transaction', { p_id: id })
+  if (error) fail(error)
+}
+
+export interface Loan {
+  id: string
+  lender: string
+  principal: number
+  rate_pct: number
+  start_date: string
+  months: number
+  account_id: string | null
+  note: string | null
+  repaid: number
+  interest_paid: number
+}
+
+export async function fetchLoans(clientId: string): Promise<Loan[]> {
+  const { data, error } = await supabase.rpc('acc_loans_list', { p_client: clientId })
+  if (error) fail(error)
+  return ((data as Record<string, unknown>[]) ?? []).map((l) => ({
+    ...(l as unknown as Loan),
+    principal: n(l.principal),
+    rate_pct: n(l.rate_pct),
+    repaid: n(l.repaid),
+    interest_paid: n(l.interest_paid),
+    months: n(l.months),
+  }))
+}
+
+export async function saveLoan(clientId: string, l: Partial<Loan> & { book_receipt?: boolean }): Promise<void> {
+  const { error } = await supabase.rpc('acc_save_loan', { p: { ...l, client_id: clientId } })
+  if (error) fail(error)
+}
+
+export async function deleteLoan(id: string): Promise<void> {
+  const { error } = await supabase.rpc('acc_delete_loan', { p_id: id })
+  if (error) fail(error)
+}
+
+/** Annuity schedule (equal monthly instalments). */
+export function loanSchedule(l: Pick<Loan, 'principal' | 'rate_pct' | 'months' | 'start_date'>) {
+  const r = l.rate_pct / 100 / 12
+  const pay = r ? (l.principal * r) / (1 - Math.pow(1 + r, -l.months)) : l.principal / l.months
+  let bal = l.principal
+  const rows: { no: number; date: string; payment: number; interest: number; principal: number; balance: number }[] = []
+  for (let i = 1; i <= l.months; i++) {
+    const interest = Math.round(bal * r * 100) / 100
+    let principal = Math.round((pay - interest) * 100) / 100
+    if (i === l.months) principal = Math.round(bal * 100) / 100
+    bal = Math.round((bal - principal) * 100) / 100
+    const d = new Date(l.start_date + 'T12:00:00')
+    d.setMonth(d.getMonth() + i)
+    rows.push({ no: i, date: d.toISOString().slice(0, 10), payment: Math.round((principal + interest) * 100) / 100, interest, principal, balance: Math.max(0, bal) })
+  }
+  return rows
+}
+
+export interface BankLine {
+  id: string
+  line_date: string
+  amount: number
+  description: string | null
+  counterparty: string | null
+  reference: string | null
+  status: 'new' | 'matched' | 'ignored'
+  payment_id: string | null
+  tx_id: string | null
+  doc_id: string | null
+  doc_no: string | null
+  suggestions: { doc_id: string; doc_no: string | null; partner: string | null; doc_date: string; open: number; score: number }[]
+}
+
+export async function importBankLines(
+  accountId: string,
+  rows: { date: string; amount: number; description?: string; counterparty?: string; reference?: string }[],
+): Promise<{ added: number; skipped: number }> {
+  const { data, error } = await supabase.rpc('acc_import_bank_lines', { p_account: accountId, p_rows: rows })
+  if (error) fail(error)
+  return data as { added: number; skipped: number }
+}
+
+export async function fetchBankLines(accountId: string, status: 'new' | 'matched' | 'ignored' | 'all'): Promise<BankLine[]> {
+  const { data, error } = await supabase.rpc('acc_bank_lines_list', { p_account: accountId, p_status: status })
+  if (error) fail(error)
+  return ((data as Record<string, unknown>[]) ?? []).map((l) => ({
+    ...(l as unknown as BankLine),
+    amount: n(l.amount),
+    suggestions: ((l.suggestions as BankLine['suggestions']) ?? []).map((s) => ({ ...s, open: n(s.open) })),
+  }))
+}
+
+export async function matchBankLine(lineId: string, docId: string): Promise<void> {
+  const { error } = await supabase.rpc('acc_match_bank_line', { p_line: lineId, p_doc: docId })
+  if (error) fail(error)
+}
+
+export async function bookBankLine(
+  lineId: string,
+  p: { category?: TxCategory; expense_category?: DocCategory; description?: string; partner_id?: string | null; loan_id?: string | null },
+): Promise<void> {
+  const { error } = await supabase.rpc('acc_book_bank_line', { p_line: lineId, p })
+  if (error) fail(error)
+}
+
+export async function setBankLine(lineId: string, status: 'ignored' | 'new' | 'delete'): Promise<void> {
+  const { error } = await supabase.rpc('acc_set_bank_line', { p_line: lineId, p_status: status })
+  if (error) fail(error)
+}
+
+export interface CashFlow {
+  opening: number
+  closing: number
+  months: { month: string; in: number; out: number; groups: Record<string, number> }[]
+  groups: Record<string, number>
+}
+
+const numMap = (o: unknown) => Object.fromEntries(Object.entries((o as Record<string, unknown>) ?? {}).map(([k, v]) => [k, n(v)]))
+
+export async function fetchCashFlow(clientId: string, from: string, to: string): Promise<CashFlow> {
+  const { data, error } = await supabase.rpc('acc_cash_flow', { p_client: clientId, p_from: from, p_to: to })
+  if (error) fail(error)
+  const r = data as Record<string, unknown>
+  return {
+    opening: n(r.opening),
+    closing: n(r.closing),
+    months: ((r.months as Record<string, unknown>[]) ?? []).map((m) => ({ month: String(m.month).slice(0, 10), in: n(m.in), out: n(m.out), groups: numMap(m.groups) })),
+    groups: numMap(r.groups),
+  }
+}
+
+export interface Dashboard {
+  year: number
+  months: { month: string; sales: number; purchases: number; expenses: number; cash_in: number; cash_out: number }[]
+  receivable: number
+  payable: number
+  overdue_receivable: number
+  overdue_payable: number
+  overdue_docs: number
+  accounts: { id: string; name: string; kind: MoneyKind; balance: number; to_match: number }[]
+  vat_prev: { month: string; out: number; in: number; status: VatStatus; due: string }
+  recent: { at: string; action: string; doc_id: string; doc_no: string | null; kind: AnyDocKind; partner: string | null; details: Record<string, unknown> }[]
+}
+
+export async function fetchDashboard(clientId: string, year: number): Promise<Dashboard> {
+  const { data, error } = await supabase.rpc('acc_client_dashboard', { p_client: clientId, p_year: year })
+  if (error) fail(error)
+  const r = data as Record<string, unknown>
+  const v = r.vat_prev as Record<string, unknown>
+  return {
+    year: n(r.year),
+    months: ((r.months as Record<string, unknown>[]) ?? []).map((m) => ({
+      month: String(m.month).slice(0, 10),
+      sales: n(m.sales),
+      purchases: n(m.purchases),
+      expenses: n(m.expenses),
+      cash_in: n(m.cash_in),
+      cash_out: n(m.cash_out),
+    })),
+    receivable: n(r.receivable),
+    payable: n(r.payable),
+    overdue_receivable: n(r.overdue_receivable),
+    overdue_payable: n(r.overdue_payable),
+    overdue_docs: n(r.overdue_docs),
+    accounts: ((r.accounts as Record<string, unknown>[]) ?? []).map((a) => ({ ...(a as unknown as Dashboard['accounts'][number]), balance: n(a.balance), to_match: n(a.to_match) })),
+    vat_prev: { month: String(v.month).slice(0, 10), out: n(v.out), in: n(v.in), status: v.status as VatStatus, due: String(v.due).slice(0, 10) },
+    recent: (r.recent as Dashboard['recent']) ?? [],
   }
 }
