@@ -10,7 +10,7 @@ import { DownloadPage } from '@/features/download/DownloadPage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { supabaseConfigured } from '@/lib/supabase'
-import { device } from '@/lib/device'
+import { isSefApp } from '@/lib/device'
 
 const AccountantsAdminPage = lazy(() => import('@/features/platform/AccountantsPage').then((m) => ({ default: m.AccountantsPage })))
 const RegisterPage = lazy(() => import('@/features/onboarding/RegisterPage').then((m) => ({ default: m.RegisterPage })))
@@ -44,7 +44,7 @@ function Home() {
   if (!supabaseConfigured || status === 'anonymous') {
     // Only "/" itself is the public website (in the browser); inner screens ask for login.
     // The installed apps (Windows, Android, iPhone) open straight on the login screen.
-    if (pathname === '/' && device.platform === 'web') return <LandingPage />
+    if (pathname === '/' && !isSefApp) return <LandingPage />
     return <Navigate to="/login" replace state={pathname === '/' ? undefined : { from: pathname }} />
   }
   if (status === 'loading') return <FullScreenLoader />

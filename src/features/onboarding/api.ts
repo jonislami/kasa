@@ -151,4 +151,6 @@ export const EVENT_LABELS: Record<string, string> = {
   register_request_info: 'Kërkohen të dhëna për arkën',
   device_on: 'Pajisja u aktivizua',
   device_off: 'Pajisja u çaktivizua',
+  activation_key: 'U krijua çelës aktivizimi',
+  device_activated: 'Pajisja u aktivizua me çelës',
 }

@@ -44,6 +44,9 @@ ATK kërkon që SEF të instalohet në pajisje, ta mbajë çelësin privat të s
 - Kodi i ndërfaqes është i njëjti; asnjë `if (electron)` jashtë `src/lib/device/`.
 - Faqja e internetit ka `/shkarko`: Windows (.exe nga GitHub Releases), Android (Play Store + APK), iPhone (App
   Store) dhe "Përdore në shfletues".
+- **Programi SEF (i instaluar) vetëm shet dhe printon** (`isSefApp` te `src/lib/device/`): aktivizohet njëherë me
+  çelës `KASA-XXXX-XXXX-XXXX` që e gjeneron admini i platformës (`activation_keys`, 0030, një pajisje për çelës),
+  pastaj vetëm hyrje me PIN; çdo rol merr panelin e punëtorit. Produktet, stoku, PIN-et, raportet → aplikacioni web.
 - Versioni i aplikacionit (`package.json`) shfaqet te Cilësimet dhe dërgohet me çdo kupon fiskal; çdo version i ri
   që prek fiskalizimin njoftohet te ATK para publikimit.
 

@@ -25,3 +25,11 @@ function pick(): DeviceAdapter {
 }
 
 export const device: DeviceAdapter = pick()
+
+/**
+ * The installed app (Windows, Android, iPhone) is the SEF till: activated with a key from the platform admin,
+ * workers sign in with PIN, and it only sells and prints. Products, stock, PINs and reports stay in the web app.
+ * In development the browser can act as the installed app: localStorage 'kasa.sefMode' = '1'.
+ */
+export const isSefApp: boolean =
+  detectPlatform() !== 'web' || (import.meta.env.DEV && typeof localStorage !== 'undefined' && localStorage.getItem('kasa.sefMode') === '1')

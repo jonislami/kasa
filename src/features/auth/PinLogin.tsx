@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { ChevronLeft, Delete, KeyRound, Lock } from 'lucide-react'
 import { Button } from '@/components/ui'
 import { cn } from '@/lib/cn'
-import { fetchPinWorkers, getLink, pinLogin, PinLoginError, type DeviceLink, type PinWorker } from '@/lib/deviceLink'
+import { activateWithKey, clearLink, fetchPinWorkers, getLink, pinLogin, PinLoginError, type DeviceLink, type PinWorker } from '@/lib/deviceLink'
 
 const COLORS = ['bg-brand-600', 'bg-bt-600', 'bg-[#A16207]', 'bg-[#7C3AED]', 'bg-[#BE123C]', 'bg-[#0F766E]']
 const initials = (n: string) =>
@@ -13,8 +13,11 @@ const initials = (n: string) =>
     .map((s) => s[0]!.toUpperCase())
     .join('')
 
-/** Worker sign-in on a linked device: pick your name, type the 4-digit PIN. */
-export function PinLogin({ onUseEmail }: { onUseEmail: () => void }) {
+/**
+ * Worker sign-in on a linked device: pick your name, type the 4-digit PIN.
+ * Without onUseEmail (the SEF app) an unlinked device asks for the activation key instead of an e-mail sign-in.
+ */
+export function PinLogin({ onUseEmail }: { onUseEmail?: () => void }) {
   const [link, setLink] = useState<DeviceLink | null | undefined>(undefined)
   const [workers, setWorkers] = useState<PinWorker[] | null>(null)
   const [business, setBusiness] = useState<string>('')
@@ -35,8 +38,16 @@ export function PinLogin({ onUseEmail }: { onUseEmail: () => void }) {
         setBusiness(r.business.name)
       })
       .catch((e: Error) => {
+        if (e instanceof PinLoginError && e.code === 'device') {
+          setLink(null)
+          if (!onUseEmail) {
+            // SEF app: the admin turned this device off (or linked it again elsewhere) – a new key is needed
+            void clearLink()
+            setError('Kjo pajisje nuk është më e lidhur me biznesin. Shkruaj një çelës të ri aktivizimi.')
+            return
+          }
+        }
         setError(e.message)
-        if (e instanceof PinLoginError && e.code === 'device') setLink(null)
       })
   }, [link])
 
@@ -49,14 +60,20 @@ export function PinLogin({ onUseEmail }: { onUseEmail: () => void }) {
         await pinLogin(link, selected.id, code)
         // AuthProvider picks up the new session and LoginPage redirects.
       } catch (e) {
-        setError((e as Error).message)
         setPin('')
+        if (e instanceof PinLoginError && e.code === 'device' && !onUseEmail) {
+          void clearLink()
+          setLink(null)
+          setError('Kjo pajisje nuk është më e lidhur me biznesin. Shkruaj një çelës të ri aktivizimi.')
+          return
+        }
+        setError((e as Error).message)
         if (e instanceof PinLoginError && e.code === 'locked') setWorkers((ws) => ws?.map((w) => (w.id === selected.id ? { ...w, locked: true } : w)) ?? null)
       } finally {
         setBusy(false)
       }
     },
-    [link, selected, busy],
+    [link, selected, busy, onUseEmail],
   )
 
   const press = useCallback(
@@ -86,6 +103,8 @@ export function PinLogin({ onUseEmail }: { onUseEmail: () => void }) {
   }, [selected, press])
 
   if (link === undefined) return <p className="mt-8 text-center text-muted">Duke kontrolluar pajisjen…</p>
+
+  if (!link && !onUseEmail) return <ActivationForm error={error} onActivated={(l) => { setError(null); setLink(l) }} />
 
   if (!link) {
     return (
@@ -139,9 +158,11 @@ export function PinLogin({ onUseEmail }: { onUseEmail: () => void }) {
           </ul>
         )}
         {error && <p className="mt-3 rounded-ctl bg-warn-100 px-4 py-3 text-sm text-warn-700">{error}</p>}
-        <button type="button" onClick={onUseEmail} className="mt-5 w-full text-center text-sm font-semibold text-brand-600 underline">
-          Hyr me email
-        </button>
+        {onUseEmail && (
+          <button type="button" onClick={onUseEmail} className="mt-5 w-full text-center text-sm font-semibold text-brand-600 underline">
+            Hyr me email
+          </button>
+        )}
       </div>
     )
   }
@@ -198,5 +219,53 @@ function Key({ children, onClick, disabled, label }: { children: React.ReactNode
     >
       {children}
     </button>
+  )
+}
+
+/** SEF app, first start: the key the platform admin sent (KASA-XXXX-XXXX-XXXX) links this device to the business. */
+function ActivationForm({ error: outerError, onActivated }: { error: string | null; onActivated: (l: DeviceLink) => void }) {
+  const [key, setKey] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const submit = async (e: FormEvent) => {
+    e.preventDefault()
+    if (busy) return
+    setBusy(true)
+    setError(null)
+    try {
+      onActivated(await activateWithKey(key))
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+  const shown = error ?? outerError
+  return (
+    <form onSubmit={submit} className="mt-6 rounded-card border border-line bg-white p-6">
+      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-100 text-brand-600">
+        <KeyRound className="h-6 w-6" />
+      </div>
+      <div className="text-lg font-semibold">Aktivizo arkën</div>
+      <p className="mt-1 text-sm text-muted">Shkruaj çelësin e aktivizimit që të dërgoi administratori i Kasa-s. Kjo bëhet vetëm njëherë në këtë pajisje.</p>
+      <label className="mt-5 block text-sm font-medium" htmlFor="activation-key">
+        Çelësi i aktivizimit
+      </label>
+      <input
+        id="activation-key"
+        value={key}
+        onChange={(e) => setKey(e.target.value.toUpperCase())}
+        placeholder="KASA-XXXX-XXXX-XXXX"
+        autoComplete="off"
+        autoCapitalize="characters"
+        spellCheck={false}
+        autoFocus
+        className="mt-1.5 h-[52px] w-full rounded-ctl border border-field px-4 text-center font-mono text-lg tracking-[0.12em] focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
+      />
+      {shown && <p className="mt-3 rounded-ctl bg-warn-100 px-4 py-3 text-sm text-warn-700">{shown}</p>}
+      <Button type="submit" className="mt-5" size="lg" block loading={busy} disabled={key.replace(/[^A-Za-z0-9]/g, '').length < 12}>
+        Aktivizo
+      </Button>
+    </form>
   )
 }

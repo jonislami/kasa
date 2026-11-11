@@ -89,6 +89,34 @@ export async function ensureDeviceLinked(business: { id: string; name: string },
   return next
 }
 
+/**
+ * SEF app (0030): links this installation with the one-time key the platform admin generated,
+ * without anyone signing in. The result is the same link a manager's e-mail sign-in creates.
+ */
+export async function activateWithKey(key: string): Promise<DeviceLink> {
+  const deviceId = await device.getDeviceId()
+  const { data, error } = await supabase.rpc('activate_device', {
+    p: { key, device_id: deviceId, name: defaultDeviceName(), platform: device.platform, app_version: device.appVersion, user_agent: navigator.userAgent },
+  })
+  if (error) {
+    if (error.hint === 'activation_key' || error.hint === 'license_devices') throw new Error(error.message)
+    if (error.code === 'PGRST202') throw new Error('Aktivizimi me çelës nuk është vendosur ende në server.')
+    if (/fetch|network|load failed/i.test(error.message)) throw new Error('Nuk ka lidhje me internetin. Aktivizimi kërkon internet.')
+    throw new Error(error.message)
+  }
+  const r = data as { device_id: string; secret: string; business_id: string; business_name: string; register_id: string | null }
+  const link: DeviceLink = { device_id: r.device_id, business_id: r.business_id, business_name: r.business_name, secret: r.secret, linked_at: new Date().toISOString() }
+  await device.storage.set(KEY, link)
+  if (r.register_id) {
+    try {
+      localStorage.setItem(`kasa.register.${r.business_id}`, r.register_id)
+    } catch {
+      /* storage unavailable */
+    }
+  }
+  return link
+}
+
 // ---------------------------------------------------------------------------
 // PIN login (Edge Function pin-login)
 // ---------------------------------------------------------------------------

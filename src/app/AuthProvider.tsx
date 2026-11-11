@@ -1,4 +1,5 @@
 import { setLicense } from '@/lib/license'
+import { isSefApp } from '@/lib/device'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -200,10 +201,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     else if (ctxQuery.isError) status = 'error'
     else if (!ctxQuery.data) status = 'loading'
     else status = 'ready'
+    // The SEF app only sells and prints: owners and managers who sign in there with their PIN
+    // get the worker's panel too (catalog, stock, users and reports are in the web app).
+    let ctx = ctxQuery.data ?? null
+    if (isSefApp && ctx?.profile && (ctx.profile.role === 'admin' || ctx.profile.role === 'manager'))
+      ctx = { ...ctx, profile: { ...ctx.profile, role: 'worker' } }
     return {
       status,
       session,
-      ctx: ctxQuery.data ?? null,
+      ctx,
       error: ctxQuery.error ? (ctxQuery.error as Error).message : null,
       signIn,
       signOut,

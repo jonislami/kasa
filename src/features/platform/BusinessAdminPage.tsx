@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronLeft, CreditCard, MonitorSmartphone, ShieldCheck, Trash2 } from 'lucide-react'
+import { Check, ChevronLeft, Copy, CreditCard, KeyRound, MonitorSmartphone, ShieldCheck, Trash2 } from 'lucide-react'
 import { PageHeader } from '@/app/layout/AppLayout'
 import { Badge, Button, Card, Dialog, Input, Select } from '@/components/ui'
 import { businessType } from '@/lib/business'
@@ -9,7 +9,21 @@ import { formatKosovoDateTime, kosovoDateISO } from '@/lib/clock'
 import { cn } from '@/lib/cn'
 import { formatEUR } from '@/lib/money'
 import { APP_STATUS, DEVICE_LABELS, EVENT_LABELS, LICENSE_LABELS, PRINTER_LABELS, STATUS_LABELS, type RegisterApplication } from '@/features/onboarding/api'
-import { confirmPayment, decide, decideRegister, deletePayment, fetchAdminDetail, fetchPlatformSettings, saveLicense, setDevice, type Decision } from './onboardingApi'
+import {
+  confirmPayment,
+  createActivationKey,
+  decide,
+  decideRegister,
+  deletePayment,
+  fetchActivationKeys,
+  fetchAdminDetail,
+  fetchPlatformSettings,
+  revokeActivationKey,
+  saveLicense,
+  setDevice,
+  type ActivationKey,
+  type Decision,
+} from './onboardingApi'
 import { PlatformShell } from './PlatformPage'
 import { statusTone } from './ApplicationsPage'
 
@@ -120,6 +134,7 @@ export function BusinessAdminPage() {
 
             <PaymentsCard d={d} onChanged={refresh} />
             <RegistersCard d={d} onChanged={refresh} />
+            <ActivationKeysCard d={d} onChanged={refresh} />
             <DevicesCard d={d} onChanged={refresh} />
 
             <Card className="p-5">
@@ -437,6 +452,157 @@ function DevicesCard({ d, onChanged }: { d: AdminDetailT; onChanged: () => void 
           ))}
         </ul>
       )}
+    </Card>
+  )
+}
+
+const KEY_STATUS: Record<ActivationKey['status'], [string, 'success' | 'info' | 'warn' | 'amber']> = {
+  open: ['Pret përdorimin', 'info'],
+  used: ['Përdorur', 'success'],
+  expired: ['Skaduar', 'amber'],
+  revoked: ['Anuluar', 'warn'],
+}
+
+/** Keys for the installed SEF app: the client types the key once, then workers sign in with PIN. */
+function ActivationKeysCard({ d, onChanged }: { d: AdminDetailT; onChanged: () => void }) {
+  const qc = useQueryClient()
+  const id = d.business.id
+  const keys = useQuery({ queryKey: ['activation-keys', id], queryFn: () => fetchActivationKeys(id) })
+  const [open, setOpen] = useState(false)
+  const [register, setRegister] = useState('')
+  const [label, setLabel] = useState('')
+  const [days, setDays] = useState('30')
+  const [created, setCreated] = useState<{ key: string; expires_at: string } | null>(null)
+  const [copied, setCopied] = useState(false)
+  const reload = () => {
+    void qc.invalidateQueries({ queryKey: ['activation-keys', id] })
+    onChanged()
+  }
+  const create = useMutation({
+    mutationFn: () => createActivationKey({ business: id, register: register || null, label, days: Number(days) || 30 }),
+    onSuccess: (r) => {
+      setCreated(r)
+      reload()
+    },
+  })
+  const revoke = useMutation({ mutationFn: revokeActivationKey, onSuccess: reload })
+  const close = () => {
+    setOpen(false)
+    setCreated(null)
+    setCopied(false)
+    setLabel('')
+    setRegister('')
+    create.reset()
+  }
+  const copy = async () => {
+    if (!created) return
+    try {
+      await navigator.clipboard.writeText(created.key)
+      setCopied(true)
+    } catch {
+      /* clipboard not allowed: the key stays on screen to copy by hand */
+    }
+  }
+  const active = d.business.status === 'active'
+  return (
+    <Card className="p-5">
+      <div className="flex flex-wrap items-center gap-3">
+        <h2 className="flex-1 text-[17px] font-semibold">Çelësat e aktivizimit (programi SEF)</h2>
+        <Button size="sm" disabled={!active} onClick={() => setOpen(true)}>
+          <KeyRound className="h-4 w-4" /> Gjenero çelës
+        </Button>
+      </div>
+      <p className="mt-1 text-sm text-muted">
+        {active
+          ? 'Klienti instalon programin, shkruan çelësin njëherë dhe arka hapet me PIN-et e punëtorëve. Një çelës vlen për një pajisje.'
+          : 'Çelësi jepet pasi biznesi të jetë aktiv (i aprovuar dhe i paguar).'}
+      </p>
+      {keys.error ? (
+        <p className="mt-2 text-sm text-warn-700">{(keys.error as Error).message}</p>
+      ) : (keys.data ?? []).length > 0 ? (
+        <ul className="mt-2 divide-y divide-line">
+          {(keys.data ?? []).map((k) => (
+            <li key={k.id} className={cn('flex flex-wrap items-center gap-3 py-2 text-sm', (k.status === 'expired' || k.status === 'revoked') && 'opacity-60')}>
+              <span className="font-mono">…{k.hint}</span>
+              <span className="min-w-0 flex-1 text-muted">
+                {[
+                  k.label,
+                  k.register,
+                  `krijuar ${formatKosovoDateTime(k.created_at)}`,
+                  k.used_at ? `përdorur ${formatKosovoDateTime(k.used_at)}${k.device ? ` në ${k.device}` : ''}` : `vlen deri ${formatKosovoDateTime(k.expires_at)}`,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </span>
+              <Badge tone={KEY_STATUS[k.status][1]}>{KEY_STATUS[k.status][0]}</Badge>
+              {k.status === 'open' && (
+                <Button size="sm" variant="secondary" loading={revoke.isPending && revoke.variables === k.id} onClick={() => revoke.mutate(k.id)}>
+                  Anulo
+                </Button>
+              )}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {revoke.error && <p className="mt-2 text-sm text-warn-700">{(revoke.error as Error).message}</p>}
+
+      <Dialog
+        open={open}
+        onClose={close}
+        title={created ? 'Çelësi u krijua' : 'Gjenero çelës aktivizimi'}
+        subtitle={d.business.name}
+        width="md:max-w-[520px]"
+        footer={
+          <div className="flex justify-end gap-2">
+            {created ? (
+              <Button onClick={close}>Mbyll</Button>
+            ) : (
+              <>
+                <Button variant="secondary" onClick={close}>
+                  Anulo
+                </Button>
+                <Button loading={create.isPending} onClick={() => create.mutate()}>
+                  Gjenero
+                </Button>
+              </>
+            )}
+          </div>
+        }
+      >
+        {created ? (
+          <div>
+            <p className="text-sm text-muted">Dërgoja klientit. Çelësi shfaqet vetëm tani; nëse humbet, gjenero një të ri.</p>
+            <div className="mt-4 flex items-center gap-2 rounded-card border border-line bg-bg p-4">
+              <span className="flex-1 select-all text-center font-mono text-xl font-semibold tracking-[0.1em]">{created.key}</span>
+              <Button size="sm" variant="secondary" onClick={() => void copy()}>
+                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} {copied ? 'U kopjua' : 'Kopjo'}
+              </Button>
+            </div>
+            <p className="mt-3 text-sm text-muted">Vlen deri më {formatKosovoDateTime(created.expires_at)}, për një pajisje.</p>
+          </div>
+        ) : (
+          <div className="grid gap-3">
+            <Select
+              label="Arka"
+              value={register}
+              onChange={(e) => setRegister(e.target.value)}
+              options={[{ value: '', label: 'Pa caktuar (zgjidhet në arkë)' }, ...d.registers.filter((r) => r.active).map((r) => ({ value: r.id, label: r.name }))]}
+            />
+            <Input label="Shënim (opsional)" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="p.sh. Kompjuteri te banaku" />
+            <Select
+              label="Vlen"
+              value={days}
+              onChange={(e) => setDays(e.target.value)}
+              options={[
+                { value: '7', label: '7 ditë' },
+                { value: '30', label: '30 ditë' },
+                { value: '90', label: '90 ditë' },
+              ]}
+            />
+            {create.error && <p className="text-sm text-warn-700">{(create.error as Error).message}</p>}
+          </div>
+        )}
+      </Dialog>
     </Card>
   )
 }
