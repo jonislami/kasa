@@ -180,6 +180,9 @@ end $$;
 revoke execute on function public._activation_key_norm(text), public._activation_key_hash(text) from public, anon, authenticated;
 revoke execute on function public.platform_activation_key_create(uuid, uuid, text, int), public.platform_activation_keys(uuid),
   public.platform_activation_key_revoke(uuid), public.activate_device(jsonb) from public;
+-- Supabase grants new functions to anon by default: the admin functions are for signed-in admins only
+revoke execute on function public.platform_activation_key_create(uuid, uuid, text, int), public.platform_activation_keys(uuid),
+  public.platform_activation_key_revoke(uuid) from anon;
 grant execute on function public.platform_activation_key_create(uuid, uuid, text, int), public.platform_activation_keys(uuid),
   public.platform_activation_key_revoke(uuid) to authenticated;
 grant execute on function public.activate_device(jsonb) to anon, authenticated;
