@@ -14,10 +14,9 @@ const initials = (n: string) =>
     .join('')
 
 /**
- * Worker sign-in on a linked device: pick your name, type the 4-digit PIN.
- * Without onUseEmail (the SEF app) an unlinked device asks for the activation key instead of an e-mail sign-in.
+ * SEF app sign-in: an unlinked device asks for the activation key once; then pick your name, type the 4-digit PIN.
  */
-export function PinLogin({ onUseEmail }: { onUseEmail?: () => void }) {
+export function PinLogin() {
   const [link, setLink] = useState<DeviceLink | null | undefined>(undefined)
   const [workers, setWorkers] = useState<PinWorker[] | null>(null)
   const [business, setBusiness] = useState<string>('')
@@ -39,13 +38,9 @@ export function PinLogin({ onUseEmail }: { onUseEmail?: () => void }) {
       })
       .catch((e: Error) => {
         if (e instanceof PinLoginError && e.code === 'device') {
+          // the admin turned this device off (or it was linked again elsewhere) – a new key is needed
+          void clearLink()
           setLink(null)
-          if (!onUseEmail) {
-            // SEF app: the admin turned this device off (or linked it again elsewhere) – a new key is needed
-            void clearLink()
-            setError('Kjo pajisje nuk është më e lidhur me biznesin. Shkruaj një çelës të ri aktivizimi.')
-            return
-          }
         }
         setError(e.message)
       })
@@ -61,11 +56,9 @@ export function PinLogin({ onUseEmail }: { onUseEmail?: () => void }) {
         // AuthProvider picks up the new session and LoginPage redirects.
       } catch (e) {
         setPin('')
-        if (e instanceof PinLoginError && e.code === 'device' && !onUseEmail) {
+        if (e instanceof PinLoginError && e.code === 'device') {
           void clearLink()
           setLink(null)
-          setError('Kjo pajisje nuk është më e lidhur me biznesin. Shkruaj një çelës të ri aktivizimi.')
-          return
         }
         setError((e as Error).message)
         if (e instanceof PinLoginError && e.code === 'locked') setWorkers((ws) => ws?.map((w) => (w.id === selected.id ? { ...w, locked: true } : w)) ?? null)
@@ -73,7 +66,7 @@ export function PinLogin({ onUseEmail }: { onUseEmail?: () => void }) {
         setBusy(false)
       }
     },
-    [link, selected, busy, onUseEmail],
+    [link, selected, busy],
   )
 
   const press = useCallback(
@@ -104,25 +97,16 @@ export function PinLogin({ onUseEmail }: { onUseEmail?: () => void }) {
 
   if (link === undefined) return <p className="mt-8 text-center text-muted">Duke kontrolluar pajisjen…</p>
 
-  if (!link && !onUseEmail) return <ActivationForm error={error} onActivated={(l) => { setError(null); setLink(l) }} />
-
-  if (!link) {
+  if (!link)
     return (
-      <div className="mt-6 rounded-card border border-line bg-white p-6 text-center">
-        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-100 text-brand-600">
-          <KeyRound className="h-6 w-6" />
-        </div>
-        <div className="font-semibold">Kjo pajisje nuk është lidhur ende</div>
-        <p className="mt-2 text-sm text-muted">
-          Hyrja me PIN punon pasi pronari ose menaxheri të hyjë njëherë me email në këtë pajisje. Pastaj punëtorët hyjnë vetëm me PIN.
-        </p>
-        {error && <p className="mt-3 text-sm text-warn-700">{error}</p>}
-        <Button className="mt-5" variant="secondary" block onClick={onUseEmail}>
-          Hyr si menaxher
-        </Button>
-      </div>
+      <ActivationForm
+        error={error}
+        onActivated={(l) => {
+          setError(null)
+          setLink(l)
+        }}
+      />
     )
-  }
 
   if (!selected) {
     return (
@@ -158,11 +142,6 @@ export function PinLogin({ onUseEmail }: { onUseEmail?: () => void }) {
           </ul>
         )}
         {error && <p className="mt-3 rounded-ctl bg-warn-100 px-4 py-3 text-sm text-warn-700">{error}</p>}
-        {onUseEmail && (
-          <button type="button" onClick={onUseEmail} className="mt-5 w-full text-center text-sm font-semibold text-brand-600 underline">
-            Hyr me email
-          </button>
-        )}
       </div>
     )
   }

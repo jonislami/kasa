@@ -150,7 +150,7 @@ async function callPin(body: Record<string, unknown>): Promise<Record<string, un
     payload = null
   }
   const code = String(payload?.error ?? '')
-  if (code === 'device') throw new PinLoginError('device', 'Kjo pajisje nuk është më e lidhur me biznesin. Hyr njëherë me email.')
+  if (code === 'device') throw new PinLoginError('device', 'Kjo pajisje nuk është më e lidhur me biznesin. Shkruaj një çelës të ri aktivizimi.')
   if (code === 'wrong_pin') {
     const left = Number(payload?.left ?? 0)
     throw new PinLoginError('wrong_pin', left ? `PIN-i është gabim. Të mbetën ${left} prova.` : 'PIN-i është gabim.', left)
