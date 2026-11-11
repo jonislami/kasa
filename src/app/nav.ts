@@ -12,6 +12,7 @@ import {
   ScrollText,
  BadgeCheck } from 'lucide-react'
 import { businessType, hasModule, isManagerRole, type BusinessType, type Role } from '@/lib/business'
+import { isSefApp } from '@/lib/device'
 
 export interface NavItem {
   to: string
@@ -37,9 +38,10 @@ export function navFor(type: BusinessType, role: Role): { main: NavItem[]; botto
   }
 
   const main: NavItem[] = [{ to: '/', label: 'Paneli', icon: LayoutGrid }]
-  if (hasModule(type, 'tables')) main.push({ to: '/tavolinat', label: 'Tavolinat', icon: Armchair })
+  // Selling happens only in the installed SEF app; the web app manages the business and shows how it goes.
+  if (hasModule(type, 'tables')) main.push({ to: '/tavolinat', label: isSefApp ? 'Tavolinat' : 'Plani i tavolinave', short: 'Tavolinat', icon: Armchair })
   if (hasModule(type, 'appointments')) main.push({ to: '/terminet', label: 'Terminet', icon: CalendarDays })
-  main.push({ to: '/arka', label: 'Arka / Shitja', short: 'Arka', icon: ShoppingCart })
+  if (isSefApp) main.push({ to: '/arka', label: 'Arka / Shitja', short: 'Arka', icon: ShoppingCart })
   main.push({ to: '/produktet', label: info.terms.catalog, icon: Package })
   if (hasModule(type, 'stock')) main.push({ to: '/stoku', label: 'Stoku & Hyrjet', short: 'Stoku', icon: Truck })
   main.push({ to: '/raportet', label: 'Raportet', icon: BarChart3 })

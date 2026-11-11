@@ -5,6 +5,7 @@ import { useAuth } from './AuthProvider'
 import { Button } from '@/components/ui'
 import { isManagerRole, type BusinessType } from '@/lib/business'
 import { supabaseConfigured } from '@/lib/supabase'
+import { isSefApp } from '@/lib/device'
 
 export function FullScreenLoader() {
   return (
@@ -70,6 +71,9 @@ export function RequireBusiness({ children }: { children: ReactNode }) {
   }
   if (!ctx.profile.active)
     return <Blocked title="Llogaria është çaktivizuar" text="Kontakto pronarin ose menaxherin e biznesit." />
+  // The web app is for managing the business; workers sell with their PIN in the till program (SEF).
+  if (!isSefApp && ctx.profile.role === 'worker')
+    return <Blocked title="Punëtorët punojnë në programin e arkës" text="Hyr me PIN-in tënd në programin Kasa të instaluar në arkë. Aplikacioni web është për pronarin dhe menaxherët." />
   return <>{children}</>
 }
 
