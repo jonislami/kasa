@@ -37,6 +37,12 @@ function Lazy({ children }: { children: ReactNode }) {
   return <Suspense fallback={<FullScreenLoader />}>{children}</Suspense>
 }
 
+/** Till, refunds, orders and the kitchen screen: only in the installed SEF app. The web app does not sell. */
+function SefOnly({ children }: { children: ReactNode }) {
+  if (!isSefApp) return <Navigate to="/" replace />
+  return <>{children}</>
+}
+
 /** "/" – visitors see the website, signed-in users their panel. */
 function Home() {
   const { status, ctx } = useAuth()
@@ -143,21 +149,25 @@ export function AppRoutes() {
         <Route
           path="arka"
           element={
-            <RequireStaff>
-              <Lazy>
-                <PosPage />
-              </Lazy>
-            </RequireStaff>
+            <SefOnly>
+              <RequireStaff>
+                <Lazy>
+                  <PosPage />
+                </Lazy>
+              </RequireStaff>
+            </SefOnly>
           }
         />
         <Route
           path="arka/kthim"
           element={
-            <RequireStaff>
-              <Lazy>
-                <RefundPage />
-              </Lazy>
-            </RequireStaff>
+            <SefOnly>
+              <RequireStaff>
+                <Lazy>
+                  <RefundPage />
+                </Lazy>
+              </RequireStaff>
+            </SefOnly>
           }
         />
         <Route
@@ -253,21 +263,25 @@ export function AppRoutes() {
         <Route
           path="tavolinat/:tableId"
           element={
-            <RequireType type="restaurant">
-              <Lazy>
-                <OrderPage />
-              </Lazy>
-            </RequireType>
+            <SefOnly>
+              <RequireType type="restaurant">
+                <Lazy>
+                  <OrderPage />
+                </Lazy>
+              </RequireType>
+            </SefOnly>
           }
         />
         <Route
           path="kuzhina"
           element={
-            <RequireType type="restaurant">
-              <Lazy>
-                <KitchenPage />
-              </Lazy>
-            </RequireType>
+            <SefOnly>
+              <RequireType type="restaurant">
+                <Lazy>
+                  <KitchenPage />
+                </Lazy>
+              </RequireType>
+            </SefOnly>
           }
         />
       </Route>

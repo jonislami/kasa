@@ -9,6 +9,7 @@ import { isManagerRole } from '@/lib/business'
 import { serverNow } from '@/lib/clock'
 import { cn } from '@/lib/cn'
 import { formatEUR } from '@/lib/money'
+import { isSefApp } from '@/lib/device'
 import { WaiterTables } from './WaiterTables'
 import { fetchOpenOrders, fetchTables, RestaurantNotMigrated, saveTables, type DiningTable, type OpenOrderSummary, type TableShape } from './api'
 
@@ -92,7 +93,7 @@ function FloorPlan() {
         title="Tavolinat"
         actions={
           <div className="flex gap-2">
-            {manager && (
+            {manager && isSefApp && (
               <Button variant="secondary" onClick={() => navigate('/kuzhina')}>
                 <ChefHat className="h-4 w-4" /> Kuzhina / Bari
               </Button>
@@ -122,7 +123,7 @@ function FloorPlan() {
               {a}
             </button>
           ))}
-          {!editing && (
+          {!editing && isSefApp && (
             <Button variant="secondary" className="ml-auto" onClick={() => navigate('/tavolinat/merr')}>
               <ShoppingBag className="h-4 w-4" /> Për të marrë
             </Button>
@@ -154,7 +155,7 @@ function FloorPlan() {
               style={{ gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))`, gridAutoRows: '112px' }}
             >
               {inArea.map((t) => (
-                <TableTile key={t.key} t={t} order={t.id ? byTable.get(t.id) : undefined} style={{ gridColumn: t.x + 1, gridRow: t.y + 1 }} onClick={() => navigate(`/tavolinat/${t.id}`)} />
+                <TableTile key={t.key} t={t} order={t.id ? byTable.get(t.id) : undefined} style={{ gridColumn: t.x + 1, gridRow: t.y + 1 }} onClick={isSefApp ? () => navigate(`/tavolinat/${t.id}`) : undefined} />
               ))}
             </div>
             {/* Phone: tiles in plan order */}
@@ -162,7 +163,7 @@ function FloorPlan() {
               {[...inArea]
                 .sort((a, b) => a.y - b.y || a.x - b.x)
                 .map((t) => (
-                  <TableTile key={t.key} t={t} order={t.id ? byTable.get(t.id) : undefined} onClick={() => navigate(`/tavolinat/${t.id}`)} className="h-[104px]" />
+                  <TableTile key={t.key} t={t} order={t.id ? byTable.get(t.id) : undefined} onClick={isSefApp ? () => navigate(`/tavolinat/${t.id}`) : undefined} className="h-[104px]" />
                 ))}
             </div>
           </>
@@ -174,7 +175,7 @@ function FloorPlan() {
             <ul className="mt-2 flex flex-wrap gap-2">
               {takeaway.map((o) => (
                 <li key={o.id}>
-                  <button type="button" onClick={() => navigate(`/tavolinat/merr?order=${o.id}`)} className="rounded-ctl border border-line px-4 py-2.5 text-left hover:border-brand-600">
+                  <button type="button" disabled={!isSefApp} onClick={() => navigate(`/tavolinat/merr?order=${o.id}`)} className="rounded-ctl border border-line px-4 py-2.5 text-left enabled:hover:border-brand-600">
                     <div className="font-semibold">#{o.order_no}</div>
                     <div className="text-sm text-muted tabular-nums">
                       {formatEUR(o.total)} · {since(o.opened_at)}
@@ -190,17 +191,18 @@ function FloorPlan() {
   )
 }
 
-function TableTile({ t, order, onClick, style, className }: { t: Draft; order?: OpenOrderSummary; onClick: () => void; style?: React.CSSProperties; className?: string }) {
+function TableTile({ t, order, onClick, style, className }: { t: Draft; order?: OpenOrderSummary; onClick?: () => void; style?: React.CSSProperties; className?: string }) {
   const busy = Boolean(order)
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={!onClick}
       style={style}
       className={cn(
         'relative flex flex-col items-center justify-center gap-0.5 border-2 p-2 text-center transition-colors',
         t.shape === 'round' ? 'rounded-full' : 'rounded-card',
-        busy ? 'border-brand-600 bg-brand-100' : 'border-line bg-[#FAFBFA] hover:border-brand-600',
+        busy ? 'border-brand-600 bg-brand-100' : 'border-line bg-[#FAFBFA] enabled:hover:border-brand-600',
         className,
       )}
     >

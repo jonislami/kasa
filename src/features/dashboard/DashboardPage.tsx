@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { BarChart3, Plus, ReceiptText, ShoppingCart } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
+import { isSefApp } from '@/lib/device'
 import { PageHeader } from '@/app/layout/AppLayout'
 import { Badge, Button, Card, CardHeader, EmptyState, StatCard, Tabs } from '@/components/ui'
 import { businessType, hasModule, isManagerRole } from '@/lib/business'
@@ -131,11 +132,13 @@ function ManagerDashboard({ itemsLabel, stockOn, lotsOn }: { itemsLabel: string;
                 </Button>
               </Link>
             )}
-            <Link to="/arka" className="hidden md:block">
-              <Button>
-                <ShoppingCart className="h-4 w-4" /> Shitje e re
-              </Button>
-            </Link>
+            {isSefApp && (
+              <Link to="/arka" className="hidden md:block">
+                <Button>
+                  <ShoppingCart className="h-4 w-4" /> Shitje e re
+                </Button>
+              </Link>
+            )}
           </>
         }
       />

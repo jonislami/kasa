@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { isSefApp } from '@/lib/device'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CalendarDays, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
@@ -340,9 +341,11 @@ function AppointmentDialog({
       footer={
         appt && !locked ? (
           <div className="flex flex-col gap-2.5">
-            <Button size="lg" block onClick={() => navigate(`/arka?termin=${appt.id}`)}>
-              Paguaj në arkë · {formatEUR(appt.price)}
-            </Button>
+            {isSefApp && (
+              <Button size="lg" block onClick={() => navigate(`/arka?termin=${appt.id}`)}>
+                Paguaj në arkë · {formatEUR(appt.price)}
+              </Button>
+            )}
             <div className="grid grid-cols-3 gap-2.5">
               <Button variant="secondary" loading={status.isPending} onClick={() => status.mutate(appt.status === 'arrived' ? 'done' : 'arrived')}>
                 {appt.status === 'arrived' ? 'I kryer' : 'Erdhi'}

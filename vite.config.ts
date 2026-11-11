@@ -36,7 +36,7 @@ export default defineConfig({
           { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
         ],
         shortcuts: [
-          { name: 'Arka', short_name: 'Arka', url: '/arka', icons: [{ src: '/icon-192.png', sizes: '192x192' }] },
+          { name: 'Raportet', short_name: 'Raportet', url: '/raportet', icons: [{ src: '/icon-192.png', sizes: '192x192' }] },
           { name: 'Stoku', short_name: 'Stoku', url: '/stoku', icons: [{ src: '/icon-192.png', sizes: '192x192' }] },
         ],
       },
