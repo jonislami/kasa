@@ -24,6 +24,8 @@ export interface PortalClient {
   office_phone: string | null
   unread: number
   open_requests: number
+  office_logo?: string | null
+  shared_files?: number
 }
 export interface PortalMe {
   user_id: string
@@ -214,3 +216,21 @@ export interface InboxRow {
   last_at: string | null
 }
 export const fetchInbox = () => rpc<InboxRow[]>('acc_portal_inbox').then((r) => (r ?? []).map((x) => ({ ...x, unread: n(x.unread), uploads: n(x.uploads) })))
+
+export interface SharedFile {
+  id: string
+  path: string
+  file_name: string
+  mime: string | null
+  category: string
+  title: string | null
+  period: string | null
+  note: string | null
+  created_at: string
+}
+export const fetchSharedFiles = (clientId: string) => rpc<SharedFile[]>('portal_files', { p_client: clientId }).then((r) => r ?? [])
+export async function openFile(path: string): Promise<string> {
+  const { data, error } = await supabase.storage.from('acc-files').createSignedUrl(path, 300)
+  if (error || !data) throw new Error('Skedari nuk u hap')
+  return data.signedUrl
+}

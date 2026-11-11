@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Briefcase, Building2, ChevronLeft, ChevronRight, KeyRound, LayoutGrid, List, LogOut, MoreVertical, Plus, Search, Users } from 'lucide-react'
+import { Archive, Briefcase, Building2, ChevronLeft, ChevronRight, KeyRound, LayoutGrid, List, LogOut, MoreVertical, Plus, Search, Users } from 'lucide-react'
 import { useAuth } from '@/app/AuthProvider'
 import { Badge, Button, Card, Dialog, EmptyState, Input, Select, Table, Td, Th } from '@/components/ui'
 import { LogoMark } from '@/components/Logo'
@@ -15,6 +15,7 @@ import { fetchClients, type AccMe, type ClientRow } from './api'
 import { ClientDialog, EMPTY_CLIENT } from './ClientDialog'
 import { DeadlineRow } from './TaxesTab'
 import { fetchCalendar } from './vat'
+import { fetchOfficeProfile } from './work'
 
 function ago(iso: string | null | undefined): string | null {
   if (!iso) return null
@@ -345,6 +346,7 @@ export function TopShell({ me, onPassword, children }: { me: AccMe; onPassword: 
   const { signOut } = useAuth()
   const navigate = useNavigate()
   const [menu, setMenu] = useState(false)
+  const logo = useQuery({ queryKey: ['acc-office-profile'], queryFn: fetchOfficeProfile, staleTime: 5 * 60_000, retry: false })
   const name = me.accountant?.full_name || me.accountant?.email || 'Kontabilist'
   const doSignOut = async () => {
     await signOut()
@@ -355,12 +357,15 @@ export function TopShell({ me, onPassword, children }: { me: AccMe; onPassword: 
       <div className="fixed inset-x-0 top-0 z-50 h-safe-top bg-brand-900" />
       <header className="sticky top-0 z-40 bg-brand-900 pt-safe text-white">
         <div className="flex h-[68px] items-center gap-3 px-4 md:px-8">
-          <LogoMark size={36} />
+          {logo.data?.logo ? <img src={logo.data.logo} alt="" className="h-9 w-9 rounded-lg bg-white object-contain p-0.5" /> : <LogoMark size={36} />}
           <div className="min-w-0">
             <div className="truncate text-[17px] font-bold leading-tight">{me.accountant?.office_name || 'Kasa Kontabilist'}</div>
             <div className="text-xs font-semibold text-brand-400">Kontabilist</div>
           </div>
           <div className="flex-1" />
+          <button type="button" onClick={() => navigate('/arkiva')} className="hidden h-11 items-center gap-2 rounded-ctl px-3 font-semibold text-white/80 hover:bg-white/10 hover:text-white md:flex">
+            <Archive className="h-4 w-4" /> Arkiva
+          </button>
           <button type="button" onClick={() => navigate('/puna')} className="flex h-11 items-center gap-2 rounded-ctl px-3 font-semibold text-white/80 hover:bg-white/10 hover:text-white">
             <Briefcase className="h-4 w-4" /> <span className="hidden sm:inline">Puna</span>
           </button>

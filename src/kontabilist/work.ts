@@ -26,6 +26,8 @@ export interface OfficeProfile {
   phone: string | null
   bank: string | null
   iban: string | null
+  /** 0025: small image (data URL). */
+  logo?: string | null
 }
 export const fetchOfficeProfile = () => rpc<OfficeProfile>('acc_office_profile')
 export const saveOfficeProfile = (p: Partial<OfficeProfile>) => rpc<void>('acc_office_profile_save', { p })
