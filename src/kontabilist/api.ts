@@ -18,7 +18,19 @@ const n = (v: unknown) => (v == null ? 0 : Number(v))
 export interface AccMe {
   is_accountant: boolean
   has_business: boolean
-  accountant: { full_name: string; email: string; office_name: string | null; phone: string | null; active: boolean } | null
+  accountant: {
+    full_name: string
+    email: string
+    office_name: string | null
+    phone: string | null
+    active: boolean
+    /** 0022: role in the office (older databases: absent = single admin). */
+    role?: 'admin' | 'accountant' | 'assistant'
+    is_owner?: boolean
+    office_id?: string
+  } | null
+  /** 0022: the office requires two-factor login and this session has not passed it. */
+  mfa_required?: boolean
 }
 
 export async function fetchMe(): Promise<AccMe> {
