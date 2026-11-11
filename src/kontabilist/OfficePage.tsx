@@ -29,6 +29,8 @@ import {
 } from './office'
 import { downloadSheets } from './xls'
 import { fetchOfficeProfile, saveOfficeProfile, type OfficeProfile } from './work'
+import { deviceOf, downloadJson, fetchClientBackup, fetchSessions, logoDataUrl, revokeSession } from './archive'
+import { supabase } from '@/lib/supabase'
 
 type Tab = 'ekipi' | 'historiku' | 'siguria'
 
@@ -380,7 +382,9 @@ function SecurityTab({ requireMfa, officeName, admin }: { requireMfa: boolean; o
         </div>
       </Card>
 
+      <SessionsCard admin={admin} />
       {admin && <OfficeProfileCard />}
+      {admin && <OfficeBackupCard />}
       {admin && (
         <Card className="p-5">
           <h2 className="text-[17px] font-semibold">Cilësimet e zyrës</h2>
@@ -427,7 +431,7 @@ function OfficeProfileCard() {
     if (profile.data) setF(profile.data)
   }, [profile.data])
   const save = useMutation({
-    mutationFn: () => saveOfficeProfile({ nui: f.nui ?? '', vat_no: f.vat_no ?? '', address: f.address ?? '', city: f.city ?? '', email: f.email ?? '', phone: f.phone ?? '', bank: f.bank ?? '', iban: f.iban ?? '' }),
+    mutationFn: () => saveOfficeProfile({ logo: f.logo ?? '', nui: f.nui ?? '', vat_no: f.vat_no ?? '', address: f.address ?? '', city: f.city ?? '', email: f.email ?? '', phone: f.phone ?? '', bank: f.bank ?? '', iban: f.iban ?? '' }),
     onSuccess: () => {
       setSaved(true)
       void qc.invalidateQueries({ queryKey: ['acc-office-profile'] })
@@ -438,7 +442,40 @@ function OfficeProfileCard() {
   )
   return (
     <Card className="p-5 lg:col-span-2">
-      <h2 className="text-[17px] font-semibold">Të dhënat e zyrës për faturat</h2>
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-card border border-line bg-white">
+          {f.logo ? <img src={f.logo} alt="Logoja" className="max-h-full max-w-full object-contain" /> : <span className="text-xs text-muted">Logo</span>}
+        </div>
+        <div className="flex-1">
+          <h2 className="text-[17px] font-semibold">Të dhënat e zyrës për faturat</h2>
+          <div className="mt-1 flex gap-2">
+            <label className="cursor-pointer text-sm font-semibold text-brand-600 hover:underline">
+              {f.logo ? 'Ndrysho logon' : 'Ngarko logon'}
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0]
+                  e.target.value = ''
+                  if (!file) return
+                  try {
+                    setF({ ...f, logo: await logoDataUrl(file) })
+                    setSaved(false)
+                  } catch (err) {
+                    alert((err as Error).message)
+                  }
+                }}
+              />
+            </label>
+            {f.logo && (
+              <button type="button" className="text-sm text-muted hover:text-warn-700" onClick={() => (setF({ ...f, logo: null }), setSaved(false))}>
+                Hiqe
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
       <p className="text-sm text-muted">Dalin në faturat që zyra u lëshon klientëve (Puna → Faturimi).</p>
       {profile.error ? (
         <p className="mt-3 text-sm text-warn-700">{(profile.error as Error).message}</p>
@@ -461,6 +498,88 @@ function OfficeProfileCard() {
         {saved && <span className="text-sm text-brand-600">U ruajt.</span>}
         {save.error && <span className="text-sm text-warn-700">{(save.error as Error).message}</span>}
       </div>
+    </Card>
+  )
+}
+
+/** Open sessions (devices) of the office; an admin sees and closes everyone's. */
+function SessionsCard({ admin }: { admin: boolean }) {
+  const qc = useQueryClient()
+  const sessions = useQuery({ queryKey: ['acc-sessions'], queryFn: fetchSessions })
+  const refresh = () => void qc.invalidateQueries({ queryKey: ['acc-sessions'] })
+  const revoke = useMutation({ mutationFn: revokeSession, onSuccess: refresh })
+  const others = useMutation({ mutationFn: async () => void (await supabase.auth.signOut({ scope: 'others' })), onSuccess: refresh })
+  return (
+    <Card className="p-5 lg:col-span-2">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-[17px] font-semibold">Seancat e hapura</h2>
+          <p className="text-sm text-muted">{admin ? 'Pajisjet ku janë të kyçur anëtarët e zyrës.' : 'Pajisjet ku je i kyçur.'} Hyrjet shënohen te Historiku i veprimeve.</p>
+        </div>
+        <Button variant="secondary" size="sm" loading={others.isPending} onClick={() => confirm('Të dalësh nga të gjitha pajisjet e tjera?') && others.mutate()}>
+          Dil nga pajisjet e tjera
+        </Button>
+      </div>
+      {sessions.error ? (
+        <p className="mt-3 text-sm text-warn-700">{(sessions.error as Error).message}</p>
+      ) : (
+        <ul className="mt-3 divide-y divide-line">
+          {(sessions.data ?? []).map((s) => (
+            <li key={s.id} className="flex flex-wrap items-center gap-3 py-2.5">
+              <div className="min-w-0 flex-1">
+                <div className="font-semibold">
+                  {deviceOf(s.user_agent)}
+                  {admin && s.user_name && <span className="font-normal text-muted"> · {s.user_name}</span>}
+                </div>
+                <div className="text-xs text-muted">
+                  {[s.ip && `IP ${s.ip}`, `hyrë ${formatKosovoDateTime(s.created_at)}`, s.last_used && `përdorur ${formatKosovoDateTime(s.last_used)}`, s.aal === 'aal2' && 'me dy faktorë'].filter(Boolean).join(' · ')}
+                </div>
+              </div>
+              {s.current ? (
+                <Badge tone="success">Kjo pajisje</Badge>
+              ) : (
+                <Button size="sm" variant="secondary" loading={revoke.isPending && revoke.variables === s.id} onClick={() => revoke.mutate(s.id)}>
+                  Mbylle
+                </Button>
+              )}
+            </li>
+          ))}
+          {sessions.data && sessions.data.length === 0 && <li className="py-2 text-sm text-muted">Asnjë seancë.</li>}
+        </ul>
+      )}
+      {(revoke.error || others.error) && <p className="mt-2 text-sm text-warn-700">{((revoke.error ?? others.error) as Error).message}</p>}
+    </Card>
+  )
+}
+
+/** Backup of every client of the office in one JSON file. */
+function OfficeBackupCard() {
+  const [state, setState] = useState<string | null>(null)
+  const run = useMutation({
+    mutationFn: async () => {
+      const clients = await fetchClients(monthStart())
+      const all: unknown[] = []
+      let i = 0
+      for (const c of clients) {
+        i++
+        setState(`Duke përgatitur ${i}/${clients.length}: ${c.name}`)
+        all.push(await fetchClientBackup(c.id))
+      }
+      downloadJson(`backup-zyra-${kosovoDateISO()}.json`, { format: 'kasa-kontabilist-office-backup', version: 1, created_at: new Date().toISOString(), clients: all })
+      setState(`U shkarkua backup-i i ${clients.length} klientëve.`)
+    },
+    onError: (e) => setState((e as Error).message),
+  })
+  return (
+    <Card className="p-5">
+      <h2 className="text-[17px] font-semibold">Backup i zyrës</h2>
+      <p className="mt-1 text-sm text-muted">
+        Të gjitha të dhënat e të gjithë klientëve (faturat, pagesat, TVSH, pagat, ditari, lista e skedarëve, detyrat, mesazhet) në një skedar JSON. Ruaje në kompjuter ose në një disk tjetër, p.sh. çdo muaj. Skedarët (PDF/foto) mbeten në arkivë.
+      </p>
+      <Button className="mt-4" loading={run.isPending} onClick={() => run.mutate()}>
+        Shkarko backup-in
+      </Button>
+      {state && <p className="mt-2 text-sm text-muted">{state}</p>}
     </Card>
   )
 }

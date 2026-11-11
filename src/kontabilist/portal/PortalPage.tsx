@@ -18,6 +18,8 @@ import {
   fetchOverview,
   fetchPortalMe,
   fetchRequests,
+  fetchSharedFiles,
+  openFile,
   sendMessage,
   uploadToOffice,
   type PortalClient,
@@ -66,7 +68,7 @@ export function PortalPage() {
       <div className="fixed inset-x-0 top-0 z-50 h-safe-top bg-brand-900" />
       <header className="sticky top-0 z-40 bg-brand-900 pt-safe text-white">
         <div className="mx-auto flex h-[64px] max-w-[1100px] items-center gap-3 px-4 md:px-6">
-          <LogoMark size={34} />
+          {client.office_logo ? <img src={client.office_logo} alt="" className="h-9 w-9 rounded-lg bg-white object-contain p-0.5" /> : <LogoMark size={34} />}
           <div className="min-w-0 flex-1">
             {clients.length > 1 ? (
               <select
@@ -466,6 +468,8 @@ function Documents({ clientId }: { clientId: string }) {
         )}
       </Card>
 
+      <SharedFilesCard clientId={clientId} />
+
       {uploads.length > 0 && (
         <Card className="overflow-hidden">
           <h2 className="px-5 pt-4 text-[17px] font-semibold">Të dërguarat</h2>
@@ -641,5 +645,44 @@ function OfficeTab({ clientId }: { clientId: string }) {
         )}
       </Card>
     </div>
+  )
+}
+
+const SHARED_LABELS: Record<string, string> = {
+  invoice: 'Faturë',
+  contract: 'Kontratë',
+  declaration: 'Deklaratë',
+  bank: 'Banka',
+  payroll: 'Pagat',
+  correspondence: 'Letër',
+  other: 'Dokument',
+}
+
+/** Documents the office shared with the client (declarations, contracts, reports). */
+function SharedFilesCard({ clientId }: { clientId: string }) {
+  const files = useQuery({ queryKey: ['portal-files', clientId], queryFn: () => fetchSharedFiles(clientId) })
+  const list = files.data ?? []
+  if (!list.length) return null
+  return (
+    <Card className="overflow-hidden">
+      <h2 className="px-5 pt-4 text-[17px] font-semibold">Nga zyra</h2>
+      <ul className="mt-2 divide-y divide-line">
+        {list.map((f) => (
+          <li key={f.id}>
+            <button type="button" onClick={async () => window.open(await openFile(f.path), '_blank', 'noopener')} className="flex w-full items-center gap-3 px-5 py-2.5 text-left hover:bg-bg">
+              <FileText className="h-5 w-5 shrink-0 text-brand-600" />
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-medium text-brand-600">{f.title ?? f.file_name}</div>
+                <div className="text-xs text-muted">
+                  {SHARED_LABELS[f.category] ?? 'Dokument'}
+                  {f.period && ` · ${monthName(f.period)}`}
+                  {f.note && ` · ${f.note}`}
+                </div>
+              </div>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </Card>
   )
 }

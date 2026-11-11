@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import {
+  Archive,
   ArrowLeftRight,
   Briefcase,
   BookOpen,
@@ -87,7 +88,7 @@ export const MENU: { group: string; icon: LucideIcon; items: MenuItem[] }[] = [
       { key: 'stoku', label: 'Stoku', icon: Package, kasaOnly: true },
     ],
   },
-  { group: 'Kompania', icon: Building2, items: [{ key: 'klienti', label: 'Të dhënat e kompanisë', icon: Building2 }, { key: 'zyra', label: 'Zyra: kontrata, detyrat, kërkesat', icon: Briefcase }] },
+  { group: 'Kompania', icon: Building2, items: [{ key: 'klienti', label: 'Të dhënat e kompanisë', icon: Building2 }, { key: 'zyra', label: 'Zyra: kontrata, detyrat, kërkesat', icon: Briefcase }, { key: 'arkiva', label: 'Arkiva e dokumenteve', icon: Archive }] },
 ]
 
 const longDate = new Intl.DateTimeFormat('sq-AL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Belgrade' })

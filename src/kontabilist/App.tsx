@@ -1,4 +1,4 @@
-import { lazy, Suspense, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, type ReactNode } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Building2 } from 'lucide-react'
@@ -12,9 +12,11 @@ import { fetchMe, type AccMe } from './api'
 import { LoginPage } from './LoginPage'
 import { MfaGate } from './MfaGate'
 import { mfaStatus } from './office'
+import { logLogin } from './archive'
 
 const ClientsPage = lazy(() => import('./ClientsPage').then((m) => ({ default: m.ClientsPage })))
 const ClientPage = lazy(() => import('./ClientPage').then((m) => ({ default: m.ClientPage })))
+const ArchivePage = lazy(() => import('./ArchivePanel').then((m) => ({ default: m.ArchivePage })))
 const WorkPage = lazy(() => import('./WorkPage').then((m) => ({ default: m.WorkPage })))
 const PortalPage = lazy(() => import('./portal/PortalPage').then((m) => ({ default: m.PortalPage })))
 const OfficePage = lazy(() => import('./OfficePage').then((m) => ({ default: m.OfficePage })))
@@ -26,6 +28,10 @@ function RequireAccountant({ children }: { children: (me: AccMe) => ReactNode })
   const qc = useQueryClient()
   const me = useQuery({ queryKey: ['acc-me', session?.user.id], queryFn: fetchMe, enabled: Boolean(session), staleTime: 5 * 60_000 })
   // Two-factor login: asked whenever the account has it, required when the office says so.
+  const accOk = Boolean(me.data?.accountant?.active && me.data.is_accountant)
+  useEffect(() => {
+    if (accOk) void logLogin()
+  }, [accOk, session?.access_token])
   const mfa = useQuery({ queryKey: ['mfa', session?.user.id], queryFn: mfaStatus, enabled: Boolean(session), staleTime: 60_000, retry: false })
   if (!supabaseConfigured) return <SetupMissing />
   if (status === 'anonymous') return <Navigate to="/login" replace state={{ from: location.pathname }} />
@@ -122,6 +128,18 @@ export function App() {
               <PortalPage />
             </Lazy>
           </RequireSession>
+        }
+      />
+      <Route
+        path="/arkiva"
+        element={
+          <RequireAccountant>
+            {(me) => (
+              <Lazy>
+                <ArchivePage me={me} />
+              </Lazy>
+            )}
+          </RequireAccountant>
         }
       />
       <Route

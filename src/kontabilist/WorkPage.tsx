@@ -746,6 +746,7 @@ function OfficeInvoicePrint({ invoices, office }: { invoices: OfficeInvoice[]; o
         <div key={i.id} style={{ breakAfter: k < invoices.length - 1 ? 'page' : 'auto' }}>
           <div className="flex justify-between border-b-2 border-black pb-3">
             <div>
+              {office.logo && <img src={office.logo} alt="" className="mb-2 max-h-14 max-w-[160px] object-contain" />}
               <div className="text-[16px] font-bold">{office.office_name ?? 'Zyra e kontabilitetit'}</div>
               <div>{[office.address, office.city].filter(Boolean).join(', ')}</div>
               {office.nui && <div>NUI {office.nui}{office.vat_no ? ` · TVSH ${office.vat_no}` : ''}</div>}
