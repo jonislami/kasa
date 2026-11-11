@@ -28,6 +28,7 @@ import {
   ShoppingCart,
   Store,
   TrendingUp,
+  UserCog,
   Users,
   X,
   type LucideIcon,
@@ -66,6 +67,7 @@ export const MENU: { group: string; icon: LucideIcon; items: MenuItem[] }[] = [
       { key: 'mbyllja', label: 'Mbyllja e muajit', icon: Lock },
     ],
   },
+  { group: 'Burimet njerëzore', icon: UserCog, items: [{ key: 'pagat', label: 'Pagat dhe punëtorët', icon: UserCog }] },
   {
     group: 'Administrata tatimore',
     icon: Percent,
