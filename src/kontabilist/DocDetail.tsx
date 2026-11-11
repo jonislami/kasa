@@ -26,6 +26,7 @@ import {
 
 const HISTORY: Record<string, string> = {
   create: 'U krijua',
+  scan: 'U skanua me AI dhe u konfirmua',
   update: 'U ndryshua',
   payment: 'Pagesë',
   payment_deleted: 'Pagesa u fshi',
