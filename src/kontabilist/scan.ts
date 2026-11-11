@@ -77,6 +77,10 @@ export interface Scan {
   confirmed_at: string | null
   scanned_by_name: string | null
   confirmed_by_name: string | null
+  /** 0024: uploaded by the client from the portal. */
+  source?: 'office' | 'portal'
+  note?: string | null
+  request_title?: string | null
 }
 
 export async function fetchScans(clientId: string): Promise<Scan[]> {
@@ -91,7 +95,7 @@ const MAX_SIDE = 2400
  * Photos from a phone are large: scale down to at most 2400 px on the long side as JPEG (enough for the AI
  * to read small print, and well under its image limit). PDFs and small images are kept as they are.
  */
-async function prepare(file: File): Promise<Blob & { name?: string }> {
+export async function prepareUpload(file: File): Promise<Blob & { name?: string }> {
   if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) return file
   const heic = /hei[cf]/i.test(file.type) || /\.hei[cf]$/i.test(file.name)
   let bmp: ImageBitmap
@@ -121,7 +125,7 @@ async function prepare(file: File): Promise<Blob & { name?: string }> {
 
 /** Uploads one file to the client folder and registers it; returns the scan id. */
 export async function uploadScan(clientId: string, file: File): Promise<string> {
-  const ready = await prepare(file)
+  const ready = await prepareUpload(file)
   if (ready.size > 20 * 1024 * 1024) throw new Error(`${file.name}: më i madh se 20 MB`)
   const pdf = ready.type === 'application/pdf' || /\.pdf$/i.test(file.name)
   const base = file.name.replace(/\.[^.]+$/, '').normalize('NFD').replace(/[^\w.-]+/g, '_').slice(-60) || 'fature'

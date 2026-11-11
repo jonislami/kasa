@@ -31,6 +31,8 @@ export interface AccMe {
   } | null
   /** 0022: the office requires two-factor login and this session has not passed it. */
   mfa_required?: boolean
+  /** 0024: companies this account can open in the client portal. */
+  portal_clients?: number
 }
 
 export async function fetchMe(): Promise<AccMe> {

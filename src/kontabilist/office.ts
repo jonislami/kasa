@@ -111,6 +111,11 @@ export const ENTITY_LABELS: Record<string, string> = {
   acc_scans: 'Skanim',
   acc_loans: 'Kredi / hua',
   accountants: 'Ekipi',
+  acc_portal_users: 'Portali i klientit',
+  acc_tasks: 'Detyra',
+  acc_doc_requests: 'Kërkesë për dokumente',
+  acc_client_notes: 'Shënim',
+  acc_contracts: 'Kontrata',
   office: 'Zyra',
 }
 export const ACTION_LABELS: Record<Activity['action'], string> = { insert: 'shtoi', update: 'ndryshoi', delete: 'fshiu' }

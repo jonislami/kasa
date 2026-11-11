@@ -16,6 +16,7 @@ import { mfaStatus } from './office'
 const ClientsPage = lazy(() => import('./ClientsPage').then((m) => ({ default: m.ClientsPage })))
 const ClientPage = lazy(() => import('./ClientPage').then((m) => ({ default: m.ClientPage })))
 const WorkPage = lazy(() => import('./WorkPage').then((m) => ({ default: m.WorkPage })))
+const PortalPage = lazy(() => import('./portal/PortalPage').then((m) => ({ default: m.PortalPage })))
 const OfficePage = lazy(() => import('./OfficePage').then((m) => ({ default: m.OfficePage })))
 
 /** Signed-in, active accountant account; anything else gets a clear message. */
@@ -38,10 +39,23 @@ function RequireAccountant({ children }: { children: (me: AccMe) => ReactNode })
   if (me.data?.mfa_required) return <MfaGate mode={mfa.data?.factorId ? 'verify' : 'enroll'} factorId={mfa.data?.factorId ?? null} onDone={mfaDone} />
   if (me.error) return <Blocked title="Programi nuk është aktivizuar ende" text={(me.error as Error).message} />
   const m = me.data!
+  // A client company's account (0024): its own portal instead of the office program.
+  if (!m.accountant && (m.portal_clients ?? 0) > 0) return <Navigate to="/portal" replace />
   if (m.has_business) return <Blocked title="Kjo është llogari biznesi" text="Ky program është për kontabilistët. Bizneset hyjnë në aplikacionin Kasa." />
   if (!m.accountant) return <Blocked title="Llogaria nuk është kontabilist" text="Llogarinë e kontabilistit e krijon administratori i Kasa-s." />
   if (!m.accountant.active) return <Blocked title="Llogaria është çaktivizuar" text="Kontakto administratorin e Kasa-s." />
   return <>{children(m)}</>
+}
+
+/** Signed in; the portal itself checks which companies the account may open. */
+function RequireSession({ children }: { children: ReactNode }) {
+  const { status, error } = useAuth()
+  const location = useLocation()
+  if (!supabaseConfigured) return <SetupMissing />
+  if (status === 'anonymous') return <Navigate to="/login" replace state={{ from: location.pathname }} />
+  if (status === 'error') return <Blocked title="Të dhënat nuk u ngarkuan" text={error ?? 'Provo përsëri pas pak.'} />
+  if (status === 'loading') return <FullScreenLoader />
+  return <>{children}</>
 }
 
 function Lazy({ children }: { children: ReactNode }) {
@@ -98,6 +112,16 @@ export function App() {
               </Lazy>
             )}
           </RequireAccountant>
+        }
+      />
+      <Route
+        path="/portal"
+        element={
+          <RequireSession>
+            <Lazy>
+              <PortalPage />
+            </Lazy>
+          </RequireSession>
         }
       />
       <Route
