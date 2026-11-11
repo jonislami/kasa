@@ -2,6 +2,7 @@ import { Outlet, useNavigate } from 'react-router-dom'
 import { useEffect, type ReactNode } from 'react'
 import { ensureDeviceLinked } from '@/lib/deviceLink'
 import { ClockBar, OfflineBar } from '@/app/AppStatus'
+import { LicenseBanner } from '@/app/LicenseBanner'
 import { useQueryClient } from '@tanstack/react-query'
 import { fetchCategories, fetchProducts } from '@/features/products/api'
 import { fetchEntries, fetchSuppliers } from '@/features/stock/api'
@@ -44,7 +45,10 @@ export function Shell({
     <div className="flex min-h-dvh">
       <SafeAreaStrip />
       <Sidebar brand={brand} main={main} bottom={bottom} userName={userName} userSub={userSub} onSignOut={doSignOut} />
-      <main className="min-w-0 flex-1 pb-[calc(76px+env(safe-area-inset-bottom))] pt-safe md:pb-0 md:pt-0">{children}</main>
+      <main className="min-w-0 flex-1 pb-[calc(76px+env(safe-area-inset-bottom))] pt-safe md:pb-0 md:pt-0">
+        <LicenseBanner />
+        {children}
+      </main>
       <TabBar items={[...main, ...bottom]} onSignOut={doSignOut} />
     </div>
   )

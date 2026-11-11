@@ -136,7 +136,12 @@ export function LoginPage() {
               <Button type="submit" size="lg" block loading={busy}>
                 Hyr
               </Button>
-              <p className="text-center text-sm text-muted">Ke problem me hyrjen? Kontakto administratorin e biznesit.</p>
+              <p className="text-center text-sm text-muted">
+                Biznes i ri?{' '}
+                <Link to="/regjistrohu" className="font-semibold text-brand-600 hover:underline">
+                  Regjistro biznesin
+                </Link>
+              </p>
             </form>
           ) : (
             <PinLogin onUseEmail={() => setMode('manager')} />

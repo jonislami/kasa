@@ -53,6 +53,9 @@ export function PublicHeader() {
             <a href="/#perfshihet" className="hidden hover:text-white md:inline">Çfarë përfshihet</a>
             <a href="/#si-fillohet" className="hidden hover:text-white md:inline">Si fillohet</a>
             <Link to="/shkarko" className="hidden hover:text-white sm:inline">Shkarko</Link>
+            <Link to="/regjistrohu" className="hidden h-10 items-center rounded-ctl border border-white/25 px-4 font-semibold text-white hover:bg-brand-800 sm:flex">
+              Regjistrohu
+            </Link>
             <Link to="/login" className="flex h-10 items-center rounded-ctl bg-white px-5 font-semibold text-ink hover:bg-bg">
               Hyr
             </Link>
@@ -156,9 +159,9 @@ export function LandingPage() {
               interneti, dhe printon faturën me Bluetooth.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <a href="/#si-fillohet" className="flex h-[52px] items-center rounded-ctl bg-brand-400 px-6 font-semibold text-brand-900 hover:brightness-105">
-                Kërko demonstrim
-              </a>
+              <Link to="/regjistrohu" className="flex h-[52px] items-center rounded-ctl bg-brand-400 px-6 font-semibold text-brand-900 hover:brightness-105">
+                Regjistro biznesin
+              </Link>
               <Link to="/shkarko" className="flex h-[52px] items-center rounded-ctl border border-white/20 px-6 font-semibold hover:bg-brand-800">
                 Shkarko aplikacionin
               </Link>

@@ -1,6 +1,8 @@
+import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Globe, Monitor, Smartphone, Tablet, type LucideIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '@/app/AuthProvider'
 import { PublicFooter, PublicHeader } from '@/features/landing/LandingPage'
 import { Badge, Button } from '@/components/ui'
 import { cn } from '@/lib/cn'
@@ -39,10 +41,14 @@ export function DownloadPage() {
   const release = useQuery({ queryKey: ['latest-release'], queryFn: latestRelease, staleTime: 10 * 60_000, retry: 1 })
   const r = release.data
   const version = r?.tag_name.replace(/^v/, '') ?? null
-  const exe = r?.assets.find((a) => /\.exe$/i.test(a.name) && !/blockmap/i.test(a.name))
-  const apk = r?.assets.find((a) => /\.apk$/i.test(a.name))
-  const appUrl = typeof window !== 'undefined' ? window.location.origin : ''
-  const notYet = release.isSuccess && !r
+  const { ctx, refresh } = useAuth()
+  // businesses made before SEF have no can_install: an active business may install
+  const allowed = Boolean(ctx?.business && (ctx.business.can_install ?? ctx.business.active))
+  const signedInBusiness = Boolean(ctx?.business)
+  // the admin may have just approved the till: check again instead of trusting the saved context
+  useEffect(() => {
+    if (signedInBusiness && !allowed) refresh()
+  }, [signedInBusiness, allowed, refresh])
 
   return (
     <div className="min-h-dvh bg-bg">
@@ -63,7 +69,59 @@ export function DownloadPage() {
         </div>
       </section>
 
-      <main className="mx-auto -mt-16 grid max-w-[1200px] gap-5 px-5 pb-16 md:grid-cols-2">
+      <main className="mx-auto -mt-16 max-w-[1200px] px-5 pb-16">
+        {allowed ? (
+          <DownloadCards />
+        ) : (
+          <div className="rounded-[20px] border border-line bg-white p-7 shadow-sm md:p-9">
+            <h2 className="text-[22px] font-bold">Shkarkimi hapet pas aktivizimit</h2>
+            <p className="mt-2 max-w-2xl text-muted">
+              Kasa instalohet pasi të regjistrohet biznesi, të aprovohet llogaria, të konfirmohet pagesa dhe të aprovohet aplikimi për arkë. Pastaj butoni
+              <b> Install SEF</b> të del te paneli yt, me programin e duhur për llojin e biznesit.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              {ctx?.profile ? (
+                <Link to="/llogaria">
+                  <Button size="lg">Shiko statusin e llogarisë</Button>
+                </Link>
+              ) : (
+                <>
+                  <Link to="/regjistrohu">
+                    <Button size="lg">Regjistro biznesin</Button>
+                  </Link>
+                  <Link to="/login">
+                    <Button size="lg" variant="secondary">
+                      Hyr
+                    </Button>
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </main>
+      <PublicFooter />
+    </div>
+  )
+}
+
+/** The download cards (Windows, Android, iPhone, browser) – on /shkarko and in the owner's panel (Install SEF). */
+export function DownloadCards({ businessLabel }: { businessLabel?: string }) {
+  const release = useQuery({ queryKey: ['latest-release'], queryFn: latestRelease, staleTime: 10 * 60_000, retry: 1 })
+  const r = release.data
+  const version = r?.tag_name.replace(/^v/, '') ?? null
+  const exe = r?.assets.find((a) => /\.exe$/i.test(a.name) && !/blockmap/i.test(a.name))
+  const apk = r?.assets.find((a) => /\.apk$/i.test(a.name))
+  const appUrl = typeof window !== 'undefined' ? window.location.origin : ''
+  const notYet = release.isSuccess && !r
+  return (
+    <>
+      {businessLabel && (
+        <p className="mb-4 rounded-ctl bg-brand-100 px-4 py-3 text-sm text-brand-600">
+          Programi hapet vetë si <b>{businessLabel}</b> pasi të hysh me llogarinë e biznesit – pa module që nuk të duhen.
+        </p>
+      )}
+      <div className="grid gap-5 md:grid-cols-2">
         <PlatformCard
           icon={Monitor}
           title="Windows"
@@ -166,9 +224,8 @@ export function DownloadPage() {
           ]}
           note="Printeri me Bluetooth punon në Chrome dhe Edge. Në Safari përdor aplikacionin për iPhone."
         />
-      </main>
-      <PublicFooter />
-    </div>
+            </div>
+    </>
   )
 }
 
