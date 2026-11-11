@@ -21,6 +21,7 @@ import { PayrollTab } from './PayrollTab'
 import { ScanTab } from './ScanTab'
 import { ClientOfficeTab } from './ClientOfficeTab'
 import { ArchivePanel } from './ArchivePanel'
+import { InventoryTab } from './InventoryTab'
 import { downloadJson, fetchClientBackup, slug } from './archive'
 import { VatFormTab } from './VatFormTab'
 import { PartnersTab } from './PartnersTab'
@@ -28,7 +29,7 @@ import { CompanyShell } from './CompanyShell'
 import { ClientDialog } from './ClientDialog'
 import { DocumentsTab } from './DocumentsTab'
 
-type TabKey = 'arkiva' | 'zyra' | 'skanimi' | 'pagat' | 'konto' | 'ditari' | 'libri' | 'bilanci' | 'pasqyrat' | 'asetet' | 'mbyllja' | 'paneli' | 'pasqyra' | 'banka' | 'tatimet' | 'tvsh_permbledhje' | 'shitjet' | 'proformat' | 'blerjet' | 'partneret' | 'borxhet' | 'tvsh' | 'fitimi' | 'arka' | 'stoku' | 'klienti'
+type TabKey = 'inventari' | 'arkiva' | 'zyra' | 'skanimi' | 'pagat' | 'konto' | 'ditari' | 'libri' | 'bilanci' | 'pasqyrat' | 'asetet' | 'mbyllja' | 'paneli' | 'pasqyra' | 'banka' | 'tatimet' | 'tvsh_permbledhje' | 'shitjet' | 'proformat' | 'blerjet' | 'partneret' | 'borxhet' | 'tvsh' | 'fitimi' | 'arka' | 'stoku' | 'klienti'
 const TABS: { key: TabKey; label: string; kasaOnly?: boolean }[] = [
   { key: 'paneli', label: 'Paneli' },
   { key: 'pasqyra', label: 'Pasqyra' },
@@ -43,6 +44,7 @@ const TABS: { key: TabKey; label: string; kasaOnly?: boolean }[] = [
   { key: 'skanimi', label: 'Skanimi me AI' },
   { key: 'zyra', label: 'Zyra' },
   { key: 'arkiva', label: 'Arkiva' },
+  { key: 'inventari', label: 'Inventari' },
   { key: 'konto', label: 'Plani kontabël' },
   { key: 'ditari', label: 'Ditari' },
   { key: 'libri', label: 'Libri kryesor' },
@@ -157,7 +159,7 @@ export function ClientPage({ me }: { me: AccMe }) {
   }
 
   const toolbar =
-    ['klienti', 'paneli', 'pagat', 'skanimi', 'zyra', 'arkiva', 'tvsh', 'tatimet', 'borxhet', 'konto', 'asetet', 'mbyllja'].includes(tab.key) ? undefined : (
+    ['klienti', 'paneli', 'pagat', 'skanimi', 'zyra', 'arkiva', 'inventari', 'tvsh', 'tatimet', 'borxhet', 'konto', 'asetet', 'mbyllja'].includes(tab.key) ? undefined : (
       <>
         <PeriodPicker period={period} onChange={setPeriod} disableNext={isCurrent} />
         <Button variant="secondary" onClick={() => void exportAll()} disabled={!s} loading={exporting}>
@@ -183,7 +185,7 @@ export function ClientPage({ me }: { me: AccMe }) {
 
   return (
     <CompanyShell me={me} client={client ?? null} linked={linked} active={tab.key} toolbar={toolbar}>
-      {!['klienti', 'paneli', 'pagat', 'skanimi', 'zyra', 'arkiva', 'tvsh', 'tatimet', 'borxhet', 'konto', 'asetet', 'mbyllja'].includes(tab.key) && (
+      {!['klienti', 'paneli', 'pagat', 'skanimi', 'zyra', 'arkiva', 'inventari', 'tvsh', 'tatimet', 'borxhet', 'konto', 'asetet', 'mbyllja'].includes(tab.key) && (
         <p className="-mt-1 mb-3 text-sm text-muted">
           {TABS.find((t) => t.key === tab.key)?.label} · {formatDay(range.from)} – {formatDay(range.to)}
         </p>
@@ -248,6 +250,7 @@ export function ClientPage({ me }: { me: AccMe }) {
             {tab.key === 'pasqyrat' && <StatementsTab client={client} from={range.from} to={range.to} />}
             {tab.key === 'asetet' && <AssetsTab client={client} />}
             {tab.key === 'mbyllja' && <CloseTab client={client} />}
+            {tab.key === 'inventari' && <InventoryTab client={client} kasaLinked={client.link_status === 'approved'} />}
             {tab.key === 'arkiva' && <ArchivePanel clientId={client.id} clientName={client.name} canBackup={me.accountant?.role !== 'assistant'} />}
             {tab.key === 'zyra' && <ClientOfficeTab client={client} me={me} />}
             {tab.key === 'skanimi' && <ScanTab client={client} />}
