@@ -16,6 +16,7 @@ import { logLogin } from './archive'
 
 const ClientsPage = lazy(() => import('./ClientsPage').then((m) => ({ default: m.ClientsPage })))
 const ClientPage = lazy(() => import('./ClientPage').then((m) => ({ default: m.ClientPage })))
+const PasswordPage = lazy(() => import('./PasswordPage').then((m) => ({ default: m.PasswordPage })))
 const ArchivePage = lazy(() => import('./ArchivePanel').then((m) => ({ default: m.ArchivePage })))
 const WorkPage = lazy(() => import('./WorkPage').then((m) => ({ default: m.WorkPage })))
 const PortalPage = lazy(() => import('./portal/PortalPage').then((m) => ({ default: m.PortalPage })))
@@ -118,6 +119,16 @@ export function App() {
               </Lazy>
             )}
           </RequireAccountant>
+        }
+      />
+      <Route
+        path="/fjalekalimi"
+        element={
+          <RequireSession>
+            <Lazy>
+              <PasswordPage />
+            </Lazy>
+          </RequireSession>
         }
       />
       <Route

@@ -31,6 +31,7 @@ import { downloadSheets } from './xls'
 import { fetchOfficeProfile, saveOfficeProfile, type OfficeProfile } from './work'
 import { deviceOf, downloadJson, fetchClientBackup, fetchSessions, logoDataUrl, revokeSession } from './archive'
 import { supabase } from '@/lib/supabase'
+import { EMAIL_KINDS, fetchEmailLog, fetchNotifySettings, saveNotifySettings, type NotifySettings } from './notify'
 
 type Tab = 'ekipi' | 'historiku' | 'siguria'
 
@@ -385,6 +386,7 @@ function SecurityTab({ requireMfa, officeName, admin }: { requireMfa: boolean; o
       <SessionsCard admin={admin} />
       {admin && <OfficeProfileCard />}
       {admin && <OfficeBackupCard />}
+      {admin && <EmailSettingsCard />}
       {admin && (
         <Card className="p-5">
           <h2 className="text-[17px] font-semibold">Cilësimet e zyrës</h2>
@@ -580,6 +582,59 @@ function OfficeBackupCard() {
         Shkarko backup-in
       </Button>
       {state && <p className="mt-2 text-sm text-muted">{state}</p>}
+    </Card>
+  )
+}
+
+/** Which e-mails the office sends, and what was sent. */
+function EmailSettingsCard() {
+  const qc = useQueryClient()
+  const settings = useQuery({ queryKey: ['acc-notify-settings'], queryFn: fetchNotifySettings })
+  const log = useQuery({ queryKey: ['acc-email-log'], queryFn: fetchEmailLog })
+  const save = useMutation({ mutationFn: saveNotifySettings, onSuccess: () => void qc.invalidateQueries({ queryKey: ['acc-notify-settings'] }) })
+  const s = settings.data
+  const toggle = (k: keyof NotifySettings, label: string, help: string) => (
+    <label className="flex items-start gap-3">
+      <input type="checkbox" className="mt-0.5 h-5 w-5 accent-brand-600" checked={Boolean(s?.[k])} disabled={!s || save.isPending} onChange={(e) => save.mutate({ [k]: e.target.checked })} />
+      <span>
+        <span className="font-semibold">{label}</span>
+        <span className="block text-sm text-muted">{help}</span>
+      </span>
+    </label>
+  )
+  return (
+    <Card className="p-5 lg:col-span-2">
+      <h2 className="text-[17px] font-semibold">Email-et</h2>
+      {settings.error ? (
+        <p className="mt-2 text-sm text-warn-700">{(settings.error as Error).message}</p>
+      ) : (
+        <div className="mt-3 grid gap-4 md:grid-cols-2">
+          {toggle('messages', 'Njoftime për mesazhet e reja', 'Klienti merr email kur i shkruan zyra, zyra kur shkruan klienti (më së shumti një në 30 minuta).')}
+          {toggle('reports', 'Raporti mujor automatik', 'Më 2 të çdo muaji, raporti i muajit të kaluar te çdo klient me email (kërkon planifikimin në Supabase).')}
+          {toggle('requests', 'Kujtesat për dokumente', 'Butoni i email-it te kërkesat i dërgon vetë nga zyra.')}
+          {toggle('invoices', 'Faturat e zyrës', 'Butoni i email-it te faturimi i dërgon faturat te klientët.')}
+        </div>
+      )}
+      <h3 className="mt-6 text-[15px] font-semibold">Të dërguarat e fundit</h3>
+      {log.error ? (
+        <p className="mt-2 text-sm text-warn-700">{(log.error as Error).message}</p>
+      ) : (log.data ?? []).length === 0 ? (
+        <p className="mt-2 text-sm text-muted">Asnjë email ende.</p>
+      ) : (
+        <ul className="mt-2 max-h-[320px] divide-y divide-line overflow-auto rounded-card border border-line">
+          {log.data!.map((l) => (
+            <li key={l.id} className="flex flex-wrap items-center gap-2 px-3 py-2 text-sm">
+              <span className="w-[130px] text-muted">{formatKosovoDateTime(l.created_at)}</span>
+              <span className="min-w-0 flex-1 truncate">
+                <b>{EMAIL_KINDS[l.kind] ?? l.kind}</b>
+                {l.client_name && ` · ${l.client_name}`} · {l.recipients.join(', ')}
+                {l.error && <span className="block text-xs text-warn-700">{l.error}</span>}
+              </span>
+              <Badge tone={l.status === 'sent' ? 'success' : l.status === 'failed' ? 'warn' : 'neutral'}>{l.status === 'sent' ? 'Dërguar' : l.status === 'failed' ? 'Dështoi' : 'Në pritje'}</Badge>
+            </li>
+          ))}
+        </ul>
+      )}
     </Card>
   )
 }

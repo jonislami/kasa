@@ -2,7 +2,8 @@
 // Team of an accounting office. Only an office admin (the owner or a member with role admin) may call it.
 //   { action: 'create_member', full_name, email, password, role: 'admin'|'accountant'|'assistant', phone?, all_clients?, clients?: uuid[] }
 //   { action: 'set_password', user_id, password }      – for a member of the same office (not the owner)
-//   { action: 'create_portal_user', client_id, full_name, email, password? }   – admin or accountant (client portal, K7)
+//   { action: 'create_portal_user', client_id, full_name, email, password?, send_invite? }   – admin or accountant (client portal, K7)
+//       send_invite: e-mail (Resend) with a link where the client sets the password; then no password is needed here
 //       an existing account with this e-mail (e.g. the owner who uses Kasa) is linked and keeps its password
 //   { action: 'set_portal_password', portal_id, password }  – only for accounts created for the portal
 // Roles, access to clients and (de)activation are changed with the RPC acc_office_save_member (caller's JWT).
@@ -19,6 +20,44 @@ const fail = (message: string, status = 400) => json({ error: message }, status)
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const ROLES = ['admin', 'accountant', 'assistant']
 const validPassword = (p: unknown) => typeof p === 'string' && p.length >= 8 && p.length <= 72
+const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!)
+
+function randomSecret(bytes = 24): string {
+  const a = new Uint8Array(bytes)
+  crypto.getRandomValues(a)
+  return Array.from(a, (b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+/** Invitation e-mail through Resend (same secrets as acc-notify). Returns an error text or null. */
+async function sendInvite(to: string, officeName: string | null, officeEmail: string | null, clientName: string, link: string, linked: boolean): Promise<string | null> {
+  const key = Deno.env.get('RESEND_API_KEY')
+  const from = Deno.env.get('EMAIL_FROM')
+  if (!key || !from) return 'Email-et nuk janë konfiguruar (RESEND_API_KEY / EMAIL_FROM në Supabase)'
+  const office = officeName ?? 'Zyra e kontabilitetit'
+  const text = linked
+    ? `${office} ju hapi portalin e kompanisë ${clientName}. Hyni me email-in dhe fjalëkalimin që përdorni në Kasa.`
+    : `${office} ju hapi portalin e kompanisë ${clientName}: faturat, deklaratat, dërgimi i dokumenteve dhe mesazhet me kontabilistin. Klikoni lidhjen dhe vendosni fjalëkalimin tuaj.`
+  const html = `<!doctype html><html><body style="margin:0;background:#F4F6F3;font-family:Inter,Segoe UI,Arial,sans-serif;color:#14201A">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:24px 12px"><tr><td align="center">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border:1px solid #E2E7E3;border-radius:14px;overflow:hidden">
+<tr><td style="background:#10241B;color:#fff;padding:18px 24px;font-size:17px;font-weight:700">${esc(office)}</td></tr>
+<tr><td style="padding:24px"><h1 style="margin:0 0 14px;font-size:20px">Portali i kompanisë suaj</h1><p style="margin:0 0 12px">${esc(text)}</p>
+<p style="margin:20px 0 0"><a href="${esc(link)}" style="display:inline-block;background:#0E6B4E;color:#fff;text-decoration:none;font-weight:600;padding:12px 20px;border-radius:10px">${linked ? 'Hap portalin' : 'Vendos fjalëkalimin'}</a></p>
+${linked ? '' : '<p style="margin:16px 0 0;font-size:13px;color:#56645C">Lidhja vlen një herë dhe skadon pas pak orësh. Nëse skadon, kërkojini zyrës një ftesë të re.</p>'}
+</td></tr><tr><td style="padding:16px 24px;border-top:1px solid #E2E7E3;font-size:12px;color:#56645C">Dërguar nga programi Kasa Kontabilist.</td></tr></table></td></tr></table></body></html>`
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from: `${office.replace(/["<>]/g, '').slice(0, 60)} <${from}>`, to: [to], subject: `Portali i ${clientName}`, html, text: `${text}\n\n${link}`, ...(officeEmail ? { reply_to: officeEmail } : {}) }),
+  })
+  if (res.ok) return null
+  try {
+    const b = await res.json()
+    return `Resend ${res.status}: ${(b.message ?? '').slice(0, 200)}`
+  } catch {
+    return `Resend ${res.status}`
+  }
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
@@ -39,7 +78,7 @@ Deno.serve(async (req) => {
   if (!me || !me.active) return fail('Vetëm për zyrën e kontabilitetit', 403)
   const officeId: string = me.office_id ?? me.user_id
   const role: string = me.office_id ? me.role : 'admin'
-  const { data: office } = await admin.from('accountants').select('user_id, active, office_name, require_mfa').eq('user_id', officeId).maybeSingle()
+  const { data: office } = await admin.from('accountants').select('user_id, active, office_name, require_mfa, office_email, email').eq('user_id', officeId).maybeSingle()
   if (!office?.active) return fail('Zyra është çaktivizuar', 403)
   if (office.require_mfa) {
     // The JWT carries the assurance level; a required second factor must have been passed.
@@ -151,10 +190,10 @@ Deno.serve(async (req) => {
       userId = existing as string
       linked = true
     } else {
-      if (!validPassword(body.password)) return fail('Fjalëkalimi duhet të ketë 8–72 shenja')
+      if (!body.send_invite && !validPassword(body.password)) return fail('Fjalëkalimi duhet të ketë 8–72 shenja')
       const { data: created, error: createErr } = await admin.auth.admin.createUser({
         email,
-        password: body.password as string,
+        password: validPassword(body.password) ? (body.password as string) : randomSecret(),
         email_confirm: true,
         user_metadata: { full_name: fullName, kasa_login: 'portal' },
       })
@@ -171,7 +210,22 @@ Deno.serve(async (req) => {
       return fail('Qasja nuk u krijua: ' + (puErr?.message ?? ''), 500)
     }
     await admin.from('acc_activity').insert({ office_id: officeId, client_id: clientId, user_id: callerId, entity: 'acc_portal_users', entity_id: row.id, action: 'insert', label: `Portali: ${fullName} (${email})`.slice(0, 200) })
-    return json({ id: row.id, linked })
+
+    let invited = false
+    let inviteError: string | null = null
+    if (body.send_invite) {
+      const appUrl = (Deno.env.get('APP_URL') ?? req.headers.get('origin') ?? 'https://kasa-kontabilist.vercel.app').replace(/\/$/, '')
+      let link = `${appUrl}/login`
+      if (!linked) {
+        const { data: gen, error: genErr } = await admin.auth.admin.generateLink({ type: 'recovery', email, options: { redirectTo: `${appUrl}/fjalekalimi` } })
+        if (genErr || !gen?.properties?.action_link) inviteError = 'Lidhja nuk u krijua: ' + (genErr?.message ?? '')
+        else link = gen.properties.action_link
+      }
+      if (!inviteError) inviteError = await sendInvite(email, office.office_name, office.office_email ?? office.email, client.name, link, linked)
+      invited = !inviteError
+      await admin.from('acc_email_log').insert({ office_id: officeId, client_id: clientId, kind: 'invite', ref_id: row.id, recipients: [email], subject: `Portali i ${client.name}`, status: invited ? 'sent' : 'failed', error: inviteError, sent_by: callerId })
+    }
+    return json({ id: row.id, linked, invited, invite_error: inviteError })
   }
 
   if (body.action === 'set_portal_password') {

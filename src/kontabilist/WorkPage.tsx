@@ -48,6 +48,7 @@ import {
 import { ContractsPanel } from './ContractsPanel'
 import { downloadSheets } from './xls'
 import { fetchInbox } from './portal/api'
+import { EmailNotConfigured, sendNotify } from './notify'
 
 type Tab = 'detyrat' | 'kerkesat' | 'faturimi' | 'kontratat'
 
@@ -291,7 +292,23 @@ export function RequestsPanel({ clientId, clientEmail, clientPhone }: { clientId
   const list = reqs.data ?? []
 
   const text = (r: DocRequest) => reminderText(r, profile.data?.office_name ?? null, r.period ? monthName(r.period) : undefined, r.due_date ? formatDay(r.due_date) : undefined)
-  const remind = (r: DocRequest, how: 'email' | 'wa') => {
+  const [mailMsg, setMailMsg] = useState<string | null>(null)
+  const remind = async (r: DocRequest, how: 'email' | 'wa') => {
+    if (how === 'email') {
+      setMailMsg(null)
+      try {
+        const res = await sendNotify('request', r.id)
+        setMailMsg(res.skipped ? res.skipped : `Kujtesa u dërgua me email te ${res.to?.join(', ')}.`)
+        refresh()
+        return
+      } catch (e) {
+        if (!(e instanceof EmailNotConfigured)) {
+          setMailMsg((e as Error).message)
+          return
+        }
+        // e-mails not set up yet: the accountant's own mail program opens instead
+      }
+    }
     const email = clientEmail ?? r.client_email
     const phone = clientPhone ?? r.client_phone
     const link = how === 'email' ? (email ? mailtoLink(email, `Kërkesë për dokumente: ${r.title}`, text(r)) : null) : phone ? whatsappLink(phone, text(r)) : null
@@ -299,6 +316,7 @@ export function RequestsPanel({ clientId, clientEmail, clientPhone }: { clientId
     window.open(link, '_blank', 'noopener')
     set.mutate({ id: r.id, s: 'reminded' })
   }
+  const mailNote = mailMsg && <p className="border-t border-line px-5 py-3 text-sm text-muted">{mailMsg}</p>
 
   return (
     <Card className="overflow-hidden">
@@ -342,10 +360,10 @@ export function RequestsPanel({ clientId, clientEmail, clientPhone }: { clientId
                 </div>
                 {r.status === 'requested' && (
                   <div className="flex flex-wrap gap-1">
-                    <Button size="sm" variant="secondary" title="Kujtesë me email" onClick={() => remind(r, 'email')}>
+                    <Button size="sm" variant="secondary" title="Kujtesë me email" onClick={() => void remind(r, 'email')}>
                       <Mail className="h-4 w-4" />
                     </Button>
-                    <Button size="sm" variant="secondary" title="Kujtesë me WhatsApp" onClick={() => remind(r, 'wa')}>
+                    <Button size="sm" variant="secondary" title="Kujtesë me WhatsApp" onClick={() => void remind(r, 'wa')}>
                       <MessageCircle className="h-4 w-4" />
                     </Button>
                     <Button size="sm" onClick={() => set.mutate({ id: r.id, s: 'received' })}>
@@ -371,6 +389,7 @@ export function RequestsPanel({ clientId, clientEmail, clientPhone }: { clientId
           <Bell className="h-4 w-4" /> Kujtesa hap email-in ose WhatsApp-in tënd me mesazhin gati; numërohet te kërkesa.
         </p>
       )}
+      {mailNote}
       <RequestDialog open={add} clientId={clientId} onClose={() => setAdd(false)} onSaved={refresh} />
     </Card>
   )
@@ -604,6 +623,22 @@ function BillingPanel() {
                   {i.status === 'open' && (
                     <Button size="sm" onClick={() => setPay(i)}>
                       Pagesë
+                    </Button>
+                  )}
+                  {i.status === 'open' && i.client_id && (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      aria-label="Dërgo me email"
+                      title="Dërgo faturën me email te klienti"
+                      onClick={() =>
+                        void sendNotify('invoice', i.id).then(
+                          (r) => setMsg(r.skipped ?? `Fatura ${i.inv_no} u dërgua te ${r.to?.join(', ')}.`),
+                          (e: Error) => setMsg(e.message),
+                        )
+                      }
+                    >
+                      <Mail className="h-4 w-4" />
                     </Button>
                   )}
                   {i.status !== 'cancelled' && (

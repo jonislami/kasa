@@ -11,6 +11,7 @@ import { RequestsPanel, TasksPanel } from './WorkPage'
 import { deleteNote, fetchClientContract, fetchNotes, NOTE_KINDS, saveNote, type NoteKind } from './work'
 import { createPortalUser, fetchOfficeMessages, fetchPortalUsers, sendOfficeMessage, setPortalPassword, setPortalUserActive, type PortalUser } from './portal/api'
 import { MessageThread } from './portal/MessageThread'
+import { notifyQuietly, sendNotify } from './notify'
 
 /** Zyra (per client): service contract and what the client owes the office, tasks, document requests, communication. */
 export function ClientOfficeTab({ client, me }: { client: Client; me: AccMe }) {
@@ -28,13 +29,17 @@ export function ClientOfficeTab({ client, me }: { client: Client; me: AccMe }) {
           <MessageThread
             queryKey={['acc-messages', client.id]}
             load={() => fetchOfficeMessages(client.id)}
-            send={(b) => sendOfficeMessage(client.id, b)}
+            send={async (b) => {
+              await sendOfficeMessage(client.id, b)
+              notifyQuietly('office_message', client.id)
+            }}
             side="office"
             emptyText="Klienti i sheh mesazhet te portali dhe ju përgjigjet këtu."
           />
         </Card>
         <PortalUsersCard client={client} canManage={(me.accountant?.role ?? 'admin') !== 'assistant'} />
       </div>
+      <ReportEmailCard client={client} />
       <NotesCard client={client} />
     </div>
   )
@@ -205,16 +210,20 @@ function PortalUsersCard({ client, canManage }: { client: Client; canManage: boo
 function AddPortalUserDialog({ open, client, onClose, onSaved }: { open: boolean; client: Client; onClose: () => void; onSaved: () => void }) {
   const [f, setF] = useState({ full_name: '', email: client.email ?? '', password: '' })
   const [linked, setLinked] = useState<boolean | null>(null)
+  const [invite, setInvite] = useState(true)
+  const [result, setResult] = useState<{ invited: boolean; invite_error: string | null } | null>(null)
   const save = useMutation({
-    mutationFn: () => createPortalUser({ client_id: client.id, full_name: f.full_name, email: f.email, password: f.password || undefined }),
+    mutationFn: () => createPortalUser({ client_id: client.id, full_name: f.full_name, email: f.email, password: f.password || undefined, send_invite: invite }),
     onSuccess: (r) => {
       setLinked(r.linked)
+      setResult({ invited: r.invited, invite_error: r.invite_error })
       onSaved()
     },
   })
   const close = () => {
     setF({ full_name: '', email: client.email ?? '', password: '' })
     setLinked(null)
+    setResult(null)
     save.reset()
     onClose()
   }
@@ -244,13 +253,19 @@ function AddPortalUserDialog({ open, client, onClose, onSaved }: { open: boolean
             ? 'Ky email kishte tashmë llogari (p.sh. në Kasa): klienti hyn në portal me fjalëkalimin e vet.'
             : 'U krijua llogaria. Jepja klientit email-in dhe fjalëkalimin; mund ta ndryshojë vetë pas hyrjes.'}{' '}
           Adresa: <b>{window.location.origin}/login</b>
+          {result?.invited && <span className="mt-2 block font-semibold text-brand-600">Ftesa u dërgua me email te {f.email}.</span>}
+          {result?.invite_error && <span className="mt-2 block text-warn-700">Ftesa me email nuk u dërgua: {result.invite_error}</span>}
         </p>
       ) : (
         <div className="grid gap-3">
           <Input label="Emri dhe mbiemri" value={f.full_name} onChange={(e) => setF({ ...f, full_name: e.target.value })} />
           <Input label="Email" type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} />
+          <label className="flex items-center gap-2 text-[15px]">
+            <input type="checkbox" className="h-5 w-5 accent-brand-600" checked={invite} onChange={(e) => setInvite(e.target.checked)} />
+            Dërgo ftesë me email (klienti vendos vetë fjalëkalimin)
+          </label>
           <Input
-            label="Fjalëkalimi (të paktën 8 shenja)"
+            label={invite ? 'Fjalëkalimi (opsional)' : 'Fjalëkalimi (të paktën 8 shenja)'}
             type="text"
             autoComplete="new-password"
             value={f.password}
@@ -288,5 +303,37 @@ function PortalPasswordDialog({ user, onClose }: { user: PortalUser | null; onCl
       <Input label="Fjalëkalimi i ri" type="text" autoComplete="new-password" value={p} onChange={(e) => setP(e.target.value)} />
       {save.error && <p className="mt-3 text-sm text-warn-700">{(save.error as Error).message}</p>}
     </Dialog>
+  )
+}
+
+/** Monthly report to the client by e-mail (sales, purchases, VAT, payroll, open amounts, documents still missing). */
+function ReportEmailCard({ client }: { client: Client }) {
+  const months = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date()
+    d.setDate(1)
+    d.setMonth(d.getMonth() - 1 - i)
+    return d.toISOString().slice(0, 8) + '01'
+  })
+  const [month, setMonth] = useState(months[0])
+  const [msg, setMsg] = useState<string | null>(null)
+  const send = useMutation({
+    mutationFn: () => sendNotify('report', client.id, month),
+    onSuccess: (r) => setMsg(r.skipped ?? `Raporti u dërgua te ${r.to?.join(', ')}.`),
+    onError: (e) => setMsg((e as Error).message),
+  })
+  return (
+    <Card className="p-5">
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="min-w-[220px] flex-1">
+          <h2 className="text-[17px] font-semibold">Raporti mujor me email</h2>
+          <p className="text-sm text-muted">Shitjet, blerjet, TVSH, pagat, borxhet dhe dokumentet që mungojnë – te email-i i kompanisë dhe përdoruesit e portalit.</p>
+        </div>
+        <Select value={month} onChange={(e) => setMonth(e.target.value)} options={months.map((m) => ({ value: m, label: new Intl.DateTimeFormat('sq-AL', { month: 'long', year: 'numeric' }).format(new Date(m + 'T12:00:00')) }))} />
+        <Button loading={send.isPending} onClick={() => (setMsg(null), send.mutate())}>
+          <Mail className="h-4 w-4" /> Dërgo
+        </Button>
+      </div>
+      {msg && <p className="mt-2 text-sm text-muted">{msg}</p>}
+    </Card>
   )
 }
