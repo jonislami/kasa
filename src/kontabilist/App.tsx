@@ -15,6 +15,7 @@ import { mfaStatus } from './office'
 
 const ClientsPage = lazy(() => import('./ClientsPage').then((m) => ({ default: m.ClientsPage })))
 const ClientPage = lazy(() => import('./ClientPage').then((m) => ({ default: m.ClientPage })))
+const WorkPage = lazy(() => import('./WorkPage').then((m) => ({ default: m.WorkPage })))
 const OfficePage = lazy(() => import('./OfficePage').then((m) => ({ default: m.OfficePage })))
 
 /** Signed-in, active accountant account; anything else gets a clear message. */
@@ -94,6 +95,18 @@ export function App() {
             {(me) => (
               <Lazy>
                 <ClientPage me={me} />
+              </Lazy>
+            )}
+          </RequireAccountant>
+        }
+      />
+      <Route
+        path="/puna"
+        element={
+          <RequireAccountant>
+            {(me) => (
+              <Lazy>
+                <WorkPage me={me} />
               </Lazy>
             )}
           </RequireAccountant>

@@ -28,6 +28,7 @@ import {
   type OfficeRole,
 } from './office'
 import { downloadSheets } from './xls'
+import { fetchOfficeProfile, saveOfficeProfile, type OfficeProfile } from './work'
 
 type Tab = 'ekipi' | 'historiku' | 'siguria'
 
@@ -379,6 +380,7 @@ function SecurityTab({ requireMfa, officeName, admin }: { requireMfa: boolean; o
         </div>
       </Card>
 
+      {admin && <OfficeProfileCard />}
       {admin && (
         <Card className="p-5">
           <h2 className="text-[17px] font-semibold">Cilësimet e zyrës</h2>
@@ -412,5 +414,53 @@ function SecurityTab({ requireMfa, officeName, admin }: { requireMfa: boolean; o
         </Card>
       )}
     </div>
+  )
+}
+
+/** Details of the office printed on its invoices to clients. */
+function OfficeProfileCard() {
+  const qc = useQueryClient()
+  const profile = useQuery({ queryKey: ['acc-office-profile'], queryFn: fetchOfficeProfile })
+  const [f, setF] = useState<Partial<OfficeProfile>>({})
+  const [saved, setSaved] = useState(false)
+  useEffect(() => {
+    if (profile.data) setF(profile.data)
+  }, [profile.data])
+  const save = useMutation({
+    mutationFn: () => saveOfficeProfile({ nui: f.nui ?? '', vat_no: f.vat_no ?? '', address: f.address ?? '', city: f.city ?? '', email: f.email ?? '', phone: f.phone ?? '', bank: f.bank ?? '', iban: f.iban ?? '' }),
+    onSuccess: () => {
+      setSaved(true)
+      void qc.invalidateQueries({ queryKey: ['acc-office-profile'] })
+    },
+  })
+  const field = (k: keyof OfficeProfile, label: string, extra?: { inputMode?: 'numeric'; maxLength?: number }) => (
+    <Input label={label} value={(f[k] as string | null) ?? ''} onChange={(e) => (setSaved(false), setF({ ...f, [k]: e.target.value }))} {...extra} />
+  )
+  return (
+    <Card className="p-5 lg:col-span-2">
+      <h2 className="text-[17px] font-semibold">Të dhënat e zyrës për faturat</h2>
+      <p className="text-sm text-muted">Dalin në faturat që zyra u lëshon klientëve (Puna → Faturimi).</p>
+      {profile.error ? (
+        <p className="mt-3 text-sm text-warn-700">{(profile.error as Error).message}</p>
+      ) : (
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {field('nui', 'NUI', { inputMode: 'numeric', maxLength: 9 })}
+          {field('vat_no', 'Nr. i TVSH-së')}
+          {field('address', 'Adresa')}
+          {field('city', 'Qyteti')}
+          {field('phone', 'Telefoni')}
+          {field('email', 'Email')}
+          {field('bank', 'Banka')}
+          {field('iban', 'IBAN')}
+        </div>
+      )}
+      <div className="mt-4 flex items-center gap-3">
+        <Button loading={save.isPending} onClick={() => save.mutate()}>
+          Ruaj
+        </Button>
+        {saved && <span className="text-sm text-brand-600">U ruajt.</span>}
+        {save.error && <span className="text-sm text-warn-700">{(save.error as Error).message}</span>}
+      </div>
+    </Card>
   )
 }

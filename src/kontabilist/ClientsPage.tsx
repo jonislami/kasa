@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Building2, ChevronLeft, ChevronRight, KeyRound, LayoutGrid, List, LogOut, MoreVertical, Plus, Search, Users } from 'lucide-react'
+import { Briefcase, Building2, ChevronLeft, ChevronRight, KeyRound, LayoutGrid, List, LogOut, MoreVertical, Plus, Search, Users } from 'lucide-react'
 import { useAuth } from '@/app/AuthProvider'
 import { Badge, Button, Card, Dialog, EmptyState, Input, Select, Table, Td, Th } from '@/components/ui'
 import { LogoMark } from '@/components/Logo'
@@ -361,6 +361,9 @@ export function TopShell({ me, onPassword, children }: { me: AccMe; onPassword: 
             <div className="text-xs font-semibold text-brand-400">Kontabilist</div>
           </div>
           <div className="flex-1" />
+          <button type="button" onClick={() => navigate('/puna')} className="flex h-11 items-center gap-2 rounded-ctl px-3 font-semibold text-white/80 hover:bg-white/10 hover:text-white">
+            <Briefcase className="h-4 w-4" /> <span className="hidden sm:inline">Puna</span>
+          </button>
           <button type="button" onClick={() => navigate('/zyra')} className="hidden h-11 items-center gap-2 rounded-ctl px-3 font-semibold text-white/80 hover:bg-white/10 hover:text-white md:flex">
             <Users className="h-4 w-4" /> Zyra
           </button>
