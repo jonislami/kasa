@@ -32,7 +32,7 @@ export function RegistersSection() {
         <div className="flex items-center justify-between gap-3 px-5 pt-5">
           <div>
             <h2 className="text-[17px] font-semibold">Arkat</h2>
-            <p className="text-sm text-muted">Çdo arkë merr më vonë POS ID nga ATK (Faza 9).</p>
+            <p className="text-sm text-muted">POS ID-në dhe regjistrimin në ATK i bën te faqja Fiskalizimi.</p>
           </div>
           <Button size="sm" onClick={() => setEditReg('new')}>
             <Plus className="h-4 w-4" /> Arkë e re

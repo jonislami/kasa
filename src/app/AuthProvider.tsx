@@ -15,6 +15,8 @@ export interface Profile {
   email: string | null
   active: boolean
   login_kind?: 'email' | 'pin'
+  /** SEF app: the role in the database when the panel shows the worker's screens (owner/manager signed in with PIN). */
+  actual_role?: Role
 }
 
 export interface Business {
@@ -205,7 +207,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // get the worker's panel too (catalog, stock, users and reports are in the web app).
     let ctx = ctxQuery.data ?? null
     if (isSefApp && ctx?.profile && (ctx.profile.role === 'admin' || ctx.profile.role === 'manager'))
-      ctx = { ...ctx, profile: { ...ctx.profile, role: 'worker' } }
+      ctx = { ...ctx, profile: { ...ctx.profile, role: 'worker', actual_role: ctx.profile.role } }
     return {
       status,
       session,

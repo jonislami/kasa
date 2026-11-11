@@ -10,7 +10,9 @@ import {
   Armchair,
   Settings,
   ScrollText,
- BadgeCheck } from 'lucide-react'
+  BadgeCheck,
+  ShieldCheck,
+} from 'lucide-react'
 import { businessType, hasModule, isManagerRole, type BusinessType, type Role } from '@/lib/business'
 import { isSefApp } from '@/lib/device'
 
@@ -47,6 +49,7 @@ export function navFor(type: BusinessType, role: Role): { main: NavItem[]; botto
   main.push({ to: '/raportet', label: 'Raportet', icon: BarChart3 })
   main.push({ to: '/puna', label: 'Puna e punëtorëve', short: 'Puna', icon: Users })
   main.push({ to: '/regjistri', label: 'Regjistri', icon: ScrollText })
+  main.push({ to: '/fiskalizimi', label: 'Fiskalizimi', icon: ShieldCheck })
   const bottom: NavItem[] = [{ to: '/cilesimet', label: 'Cilësimet', icon: Settings }]
   if (role === 'admin') bottom.unshift({ to: '/llogaria', label: 'Llogaria dhe abonimi', short: 'Llogaria', icon: BadgeCheck })
   return { main, bottom }
