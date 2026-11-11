@@ -2,6 +2,9 @@
 // Team of an accounting office. Only an office admin (the owner or a member with role admin) may call it.
 //   { action: 'create_member', full_name, email, password, role: 'admin'|'accountant'|'assistant', phone?, all_clients?, clients?: uuid[] }
 //   { action: 'set_password', user_id, password }      – for a member of the same office (not the owner)
+//   { action: 'create_portal_user', client_id, full_name, email, password? }   – admin or accountant (client portal, K7)
+//       an existing account with this e-mail (e.g. the owner who uses Kasa) is linked and keeps its password
+//   { action: 'set_portal_password', portal_id, password }  – only for accounts created for the portal
 // Roles, access to clients and (de)activation are changed with the RPC acc_office_save_member (caller's JWT).
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
@@ -31,10 +34,11 @@ Deno.serve(async (req) => {
   if (userErr || !userData.user) return fail('Seanca ka skaduar, hyr përsëri', 401)
   const callerId = userData.user.id
 
-  // Caller: an active office admin; the office (owner) must be active too.
-  const { data: me } = await admin.from('accountants').select('user_id, office_id, role, active, full_name').eq('user_id', callerId).maybeSingle()
-  if (!me || !me.active || (me.office_id && me.role !== 'admin')) return fail('Vetëm administratori i zyrës', 403)
+  // Caller: an active member of an active office; team actions only for admins.
+  const { data: me } = await admin.from('accountants').select('user_id, office_id, role, active, full_name, all_clients').eq('user_id', callerId).maybeSingle()
+  if (!me || !me.active) return fail('Vetëm për zyrën e kontabilitetit', 403)
   const officeId: string = me.office_id ?? me.user_id
+  const role: string = me.office_id ? me.role : 'admin'
   const { data: office } = await admin.from('accountants').select('user_id, active, office_name, require_mfa').eq('user_id', officeId).maybeSingle()
   if (!office?.active) return fail('Zyra është çaktivizuar', 403)
   if (office.require_mfa) {
@@ -52,6 +56,20 @@ Deno.serve(async (req) => {
     body = await req.json()
   } catch {
     return fail('Kërkesë e pavlefshme')
+  }
+  const portalAction = body.action === 'create_portal_user' || body.action === 'set_portal_password'
+  if (portalAction ? role === 'assistant' : role !== 'admin') {
+    return fail(portalAction ? 'Ky veprim kërkon kontabilistin ose administratorin e zyrës' : 'Vetëm administratori i zyrës', 403)
+  }
+  // A client of this office that the caller may see (0022: all clients, or the ones given to the member).
+  const clientOf = async (clientId: string) => {
+    const { data: c } = await admin.from('acc_clients').select('id, name, active').eq('id', clientId).eq('accountant_id', officeId).maybeSingle()
+    if (!c) return null
+    if (role !== 'admin' && !me.all_clients) {
+      const { data: g } = await admin.from('acc_member_clients').select('client_id').eq('member_id', callerId).eq('client_id', clientId).maybeSingle()
+      if (!g) return null
+    }
+    return c
   }
 
   const log = (label: string, entityId: string) =>
@@ -111,6 +129,65 @@ Deno.serve(async (req) => {
     const { error } = await admin.auth.admin.updateUserById(userId, { password: body.password as string })
     if (error) return fail('Fjalëkalimi nuk u ndryshua: ' + error.message, 500)
     await log(`Fjalëkalim i ri për ${m.full_name}`, userId)
+    return json({ ok: true })
+  }
+
+  if (body.action === 'create_portal_user') {
+    const clientId = String(body.client_id ?? '')
+    const fullName = String(body.full_name ?? '').trim().slice(0, 120)
+    const email = String(body.email ?? '').trim().toLowerCase()
+    if (!/^[0-9a-f-]{36}$/i.test(clientId)) return fail('Zgjidh kompaninë')
+    const client = await clientOf(clientId)
+    if (!client) return fail('Kompania nuk u gjet', 404)
+    if (!fullName) return fail('Shkruaj emrin')
+    if (!EMAIL_RE.test(email)) return fail('Email-i nuk është i saktë')
+
+    let userId: string | null = null
+    let linked = false
+    const { data: existing } = await admin.rpc('_auth_user_id_by_email', { p_email: email })
+    if (existing) {
+      const { data: acc } = await admin.from('accountants').select('user_id').eq('user_id', existing).maybeSingle()
+      if (acc) return fail('Ky email është llogari kontabilisti; për portalin përdor email-in e klientit')
+      userId = existing as string
+      linked = true
+    } else {
+      if (!validPassword(body.password)) return fail('Fjalëkalimi duhet të ketë 8–72 shenja')
+      const { data: created, error: createErr } = await admin.auth.admin.createUser({
+        email,
+        password: body.password as string,
+        email_confirm: true,
+        user_metadata: { full_name: fullName, kasa_login: 'portal' },
+      })
+      if (createErr || !created.user) return fail('Llogaria nuk u krijua: ' + (createErr?.message ?? ''))
+      userId = created.user.id
+    }
+    const { data: row, error: puErr } = await admin
+      .from('acc_portal_users')
+      .upsert({ office_id: officeId, client_id: clientId, user_id: userId, full_name: fullName, email, active: true, created_by: callerId }, { onConflict: 'client_id,user_id' })
+      .select('id')
+      .single()
+    if (puErr || !row) {
+      if (!linked && userId) await admin.auth.admin.deleteUser(userId)
+      return fail('Qasja nuk u krijua: ' + (puErr?.message ?? ''), 500)
+    }
+    await admin.from('acc_activity').insert({ office_id: officeId, client_id: clientId, user_id: callerId, entity: 'acc_portal_users', entity_id: row.id, action: 'insert', label: `Portali: ${fullName} (${email})`.slice(0, 200) })
+    return json({ id: row.id, linked })
+  }
+
+  if (body.action === 'set_portal_password') {
+    const portalId = String(body.portal_id ?? '')
+    if (!validPassword(body.password)) return fail('Fjalëkalimi duhet të ketë 8–72 shenja')
+    const { data: pu } = await admin.from('acc_portal_users').select('id, user_id, client_id, full_name').eq('id', portalId).eq('office_id', officeId).maybeSingle()
+    if (!pu || !(await clientOf(pu.client_id))) return fail('Përdoruesi nuk u gjet', 404)
+    // Only accounts made for the portal: never the password of a Kasa owner or of an accountant.
+    const [{ data: prof }, { data: acc }] = await Promise.all([
+      admin.from('profiles').select('id').eq('id', pu.user_id).maybeSingle(),
+      admin.from('accountants').select('user_id').eq('user_id', pu.user_id).maybeSingle(),
+    ])
+    if (prof || acc) return fail('Kjo llogari përdoret edhe në Kasa; fjalëkalimin e ndryshon vetë pronari')
+    const { error } = await admin.auth.admin.updateUserById(pu.user_id, { password: body.password as string })
+    if (error) return fail('Fjalëkalimi nuk u ndryshua: ' + error.message, 500)
+    await admin.from('acc_activity').insert({ office_id: officeId, client_id: pu.client_id, user_id: callerId, entity: 'acc_portal_users', entity_id: pu.id, action: 'update', label: `Portali: fjalëkalim i ri për ${pu.full_name}`.slice(0, 200) })
     return json({ ok: true })
   }
 

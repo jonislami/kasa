@@ -47,6 +47,7 @@ import {
 } from './work'
 import { ContractsPanel } from './ContractsPanel'
 import { downloadSheets } from './xls'
+import { fetchInbox } from './portal/api'
 
 type Tab = 'detyrat' | 'kerkesat' | 'faturimi' | 'kontratat'
 
@@ -58,6 +59,7 @@ export function WorkPage({ me }: { me: AccMe }) {
   const [pw, setPw] = useState(false)
   const summary = useQuery({ queryKey: ['acc-work-summary'], queryFn: fetchWorkSummary })
   const s = summary.data
+  const inbox = useQuery({ queryKey: ['acc-portal-inbox'], queryFn: fetchInbox, refetchInterval: 60_000 })
   const tabs: [Tab, string, number | null][] = [
     ['detyrat', 'Detyrat', s?.my_tasks ?? null],
     ['kerkesat', 'Kërkesat për dokumente', s?.open_requests ?? null],
@@ -75,6 +77,28 @@ export function WorkPage({ me }: { me: AccMe }) {
             {s.my_tasks} detyra të mia · {s.overdue_tasks > 0 && <span className="font-semibold text-warn-700">{s.overdue_tasks} me afat të kaluar · </span>}
             {s.open_requests} dokumente në pritje{s.unpaid != null && ` · klientët i detyrohen zyrës ${formatEUR(s.unpaid)}`}
           </p>
+        )}
+        {(inbox.data?.length ?? 0) > 0 && (
+          <Card className="mt-4 overflow-hidden">
+            <h2 className="px-5 pt-4 text-[15px] font-semibold">Nga portali i klientëve</h2>
+            <ul className="mt-2 divide-y divide-line">
+              {inbox.data!.map((r) => (
+                <li key={r.client_id} className="flex flex-wrap items-center gap-2 px-5 py-2.5">
+                  <span className="min-w-0 flex-1 truncate font-medium">{r.client_name}</span>
+                  {r.unread > 0 && (
+                    <Button size="sm" variant="secondary" onClick={() => navigate(`/klient/${r.client_id}/zyra`)}>
+                      {r.unread} mesazh{r.unread > 1 ? 'e' : ''}
+                    </Button>
+                  )}
+                  {r.uploads > 0 && (
+                    <Button size="sm" onClick={() => navigate(`/klient/${r.client_id}/skanimi`)}>
+                      {r.uploads} dokument{r.uploads > 1 ? 'e' : ''} për regjistrim
+                    </Button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </Card>
         )}
         <div className="mt-5 flex flex-wrap gap-2">
           {tabs.map(([k, l, c]) => (

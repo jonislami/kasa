@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Mail, MessageSquare, Phone, Trash2, Users } from 'lucide-react'
-import { Badge, Button, Card, Select } from '@/components/ui'
+import { KeyRound, Mail, MessageSquare, Phone, Trash2, UserPlus, Users } from 'lucide-react'
+import { Badge, Button, Card, Dialog, Input, Select } from '@/components/ui'
 import { formatKosovoDateTime } from '@/lib/clock'
 import { formatEUR } from '@/lib/money'
 import { formatDay } from '@/features/accounting/api'
@@ -9,6 +9,8 @@ import type { AccMe, Client } from './api'
 import { ContractDialog } from './ContractsPanel'
 import { RequestsPanel, TasksPanel } from './WorkPage'
 import { deleteNote, fetchClientContract, fetchNotes, NOTE_KINDS, saveNote, type NoteKind } from './work'
+import { createPortalUser, fetchOfficeMessages, fetchPortalUsers, sendOfficeMessage, setPortalPassword, setPortalUserActive, type PortalUser } from './portal/api'
+import { MessageThread } from './portal/MessageThread'
 
 /** Zyra (per client): service contract and what the client owes the office, tasks, document requests, communication. */
 export function ClientOfficeTab({ client, me }: { client: Client; me: AccMe }) {
@@ -19,6 +21,19 @@ export function ClientOfficeTab({ client, me }: { client: Client; me: AccMe }) {
       <div className="grid gap-4 lg:grid-cols-2">
         <TasksPanel clientId={client.id} />
         <RequestsPanel clientId={client.id} clientEmail={client.email} clientPhone={client.phone} />
+      </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card className="p-5">
+          <h2 className="mb-3 text-[17px] font-semibold">Mesazhet me klientin (portali)</h2>
+          <MessageThread
+            queryKey={['acc-messages', client.id]}
+            load={() => fetchOfficeMessages(client.id)}
+            send={(b) => sendOfficeMessage(client.id, b)}
+            side="office"
+            emptyText="Klienti i sheh mesazhet te portali dhe ju përgjigjet këtu."
+          />
+        </Card>
+        <PortalUsersCard client={client} canManage={(me.accountant?.role ?? 'admin') !== 'assistant'} />
       </div>
       <NotesCard client={client} />
     </div>
@@ -130,5 +145,148 @@ function NotesCard({ client }: { client: Client }) {
         {notes.data && notes.data.length === 0 && <li className="text-sm text-muted">Asnjë shënim ende.</li>}
       </ul>
     </Card>
+  )
+}
+
+/** Who of the client company may open the portal. */
+function PortalUsersCard({ client, canManage }: { client: Client; canManage: boolean }) {
+  const qc = useQueryClient()
+  const users = useQuery({ queryKey: ['acc-portal-users', client.id], queryFn: () => fetchPortalUsers(client.id) })
+  const [add, setAdd] = useState(false)
+  const [pw, setPw] = useState<PortalUser | null>(null)
+  const refresh = () => void qc.invalidateQueries({ queryKey: ['acc-portal-users', client.id] })
+  const toggle = useMutation({ mutationFn: ({ id, active }: { id: string; active: boolean }) => setPortalUserActive(id, active), onSuccess: refresh })
+  const portalUrl = `${window.location.origin}/login`
+  return (
+    <Card className="p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-[17px] font-semibold">Portali i klientit</h2>
+          <p className="text-sm text-muted">Klienti hyn te {portalUrl} dhe sheh faturat, deklaratat, dërgon dokumente dhe mesazhe.</p>
+        </div>
+        {canManage && (
+          <Button size="sm" onClick={() => setAdd(true)}>
+            <UserPlus className="h-4 w-4" /> Jep qasje
+          </Button>
+        )}
+      </div>
+      <ul className="mt-3 divide-y divide-line">
+        {(users.data ?? []).map((u) => (
+          <li key={u.id} className={u.active ? 'flex flex-wrap items-center gap-2 py-2.5' : 'flex flex-wrap items-center gap-2 py-2.5 opacity-50'}>
+            <div className="min-w-0 flex-1">
+              <div className="font-semibold">{u.full_name}</div>
+              <div className="truncate text-xs text-muted">
+                {u.email}
+                {u.kasa_owner && ' · llogari Kasa'}
+                {u.last_seen_at ? ` · parë së fundi ${formatKosovoDateTime(u.last_seen_at)}` : ' · nuk ka hyrë ende'}
+              </div>
+            </div>
+            {canManage && !u.kasa_owner && (
+              <Button size="sm" variant="secondary" aria-label="Fjalëkalim i ri" onClick={() => setPw(u)}>
+                <KeyRound className="h-4 w-4" />
+              </Button>
+            )}
+            {canManage && (
+              <Button size="sm" variant="secondary" onClick={() => toggle.mutate({ id: u.id, active: !u.active })}>
+                {u.active ? 'Hiqi qasjen' : 'Riaktivizo'}
+              </Button>
+            )}
+          </li>
+        ))}
+        {users.data && users.data.length === 0 && <li className="py-2 text-sm text-muted">Askush nga kompania nuk ka qasje ende.</li>}
+        {users.error && <li className="py-2 text-sm text-warn-700">{(users.error as Error).message}</li>}
+      </ul>
+      <AddPortalUserDialog open={add} client={client} onClose={() => setAdd(false)} onSaved={refresh} />
+      <PortalPasswordDialog user={pw} onClose={() => setPw(null)} />
+    </Card>
+  )
+}
+
+function AddPortalUserDialog({ open, client, onClose, onSaved }: { open: boolean; client: Client; onClose: () => void; onSaved: () => void }) {
+  const [f, setF] = useState({ full_name: '', email: client.email ?? '', password: '' })
+  const [linked, setLinked] = useState<boolean | null>(null)
+  const save = useMutation({
+    mutationFn: () => createPortalUser({ client_id: client.id, full_name: f.full_name, email: f.email, password: f.password || undefined }),
+    onSuccess: (r) => {
+      setLinked(r.linked)
+      onSaved()
+    },
+  })
+  const close = () => {
+    setF({ full_name: '', email: client.email ?? '', password: '' })
+    setLinked(null)
+    save.reset()
+    onClose()
+  }
+  return (
+    <Dialog
+      open={open}
+      onClose={close}
+      title="Qasje në portal"
+      subtitle={client.name}
+      width="md:max-w-[480px]"
+      footer={
+        <div className="flex justify-end gap-2">
+          <Button variant="secondary" onClick={close}>
+            {linked != null ? 'Mbyll' : 'Anulo'}
+          </Button>
+          {linked == null && (
+            <Button loading={save.isPending} onClick={() => save.mutate()}>
+              Jep qasje
+            </Button>
+          )}
+        </div>
+      }
+    >
+      {linked != null ? (
+        <p className="text-[15px]">
+          {linked
+            ? 'Ky email kishte tashmë llogari (p.sh. në Kasa): klienti hyn në portal me fjalëkalimin e vet.'
+            : 'U krijua llogaria. Jepja klientit email-in dhe fjalëkalimin; mund ta ndryshojë vetë pas hyrjes.'}{' '}
+          Adresa: <b>{window.location.origin}/login</b>
+        </p>
+      ) : (
+        <div className="grid gap-3">
+          <Input label="Emri dhe mbiemri" value={f.full_name} onChange={(e) => setF({ ...f, full_name: e.target.value })} />
+          <Input label="Email" type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} />
+          <Input
+            label="Fjalëkalimi (të paktën 8 shenja)"
+            type="text"
+            autoComplete="new-password"
+            value={f.password}
+            onChange={(e) => setF({ ...f, password: e.target.value })}
+          />
+          <p className="text-xs text-muted">Nëse email-i ka tashmë llogari (pronari që përdor Kasa), lidhet ajo dhe fjalëkalimi nuk ndryshohet.</p>
+        </div>
+      )}
+      {save.error && <p className="mt-3 text-sm text-warn-700">{(save.error as Error).message}</p>}
+    </Dialog>
+  )
+}
+
+function PortalPasswordDialog({ user, onClose }: { user: PortalUser | null; onClose: () => void }) {
+  const [p, setP] = useState('')
+  const save = useMutation({ mutationFn: () => setPortalPassword(user!.id, p), onSuccess: () => (setP(''), onClose()) })
+  return (
+    <Dialog
+      open={Boolean(user)}
+      onClose={onClose}
+      title="Fjalëkalim i ri për portalin"
+      subtitle={user?.email}
+      width="md:max-w-[420px]"
+      footer={
+        <div className="flex justify-end gap-2">
+          <Button variant="secondary" onClick={onClose}>
+            Anulo
+          </Button>
+          <Button loading={save.isPending} disabled={p.length < 8} onClick={() => save.mutate()}>
+            Vendos
+          </Button>
+        </div>
+      }
+    >
+      <Input label="Fjalëkalimi i ri" type="text" autoComplete="new-password" value={p} onChange={(e) => setP(e.target.value)} />
+      {save.error && <p className="mt-3 text-sm text-warn-700">{(save.error as Error).message}</p>}
+    </Dialog>
   )
 }

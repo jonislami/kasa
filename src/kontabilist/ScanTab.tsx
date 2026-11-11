@@ -166,7 +166,9 @@ export function ScanTab({ client }: { client: Client }) {
                         {[
                           x?.doc_date && formatDay(x.doc_date),
                           x?.summary,
-                          `skanuar ${formatKosovoDateTime(s.created_at)}${s.scanned_by_name ? ` nga ${s.scanned_by_name}` : ''}`,
+                          `${s.source === 'portal' ? 'dërguar nga klienti' : 'skanuar'} ${formatKosovoDateTime(s.created_at)}${s.scanned_by_name ? ` nga ${s.scanned_by_name}` : ''}`,
+                          s.request_title && `për: ${s.request_title}`,
+                          s.note,
                           s.confirmed_at && `konfirmuar${s.confirmed_by_name ? ` nga ${s.confirmed_by_name}` : ''}${s.doc_no ? ` → ${s.doc_no}` : ''}`,
                         ]
                           .filter(Boolean)
