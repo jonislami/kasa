@@ -2,7 +2,7 @@ import { lazy, Suspense, type ReactNode } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useAuth, useBusiness } from './AuthProvider'
 import { hasModule } from '@/lib/business'
-import { Blocked, FullScreenLoader, RequireBusiness, RequireManager, RequirePlatformAdmin, RequireStaff, RequireType } from './AuthGuard'
+import { Blocked, FullScreenLoader, RequireBusiness, RequireManager, RequireOwner, RequirePlatformAdmin, RequireStaff, RequireType } from './AuthGuard'
 import { AppLayout } from './layout/AppLayout'
 import { workerHome } from './nav'
 import { LandingPage } from '@/features/landing/LandingPage'
@@ -13,6 +13,10 @@ import { supabaseConfigured } from '@/lib/supabase'
 import { device } from '@/lib/device'
 
 const AccountantsAdminPage = lazy(() => import('@/features/platform/AccountantsPage').then((m) => ({ default: m.AccountantsPage })))
+const RegisterPage = lazy(() => import('@/features/onboarding/RegisterPage').then((m) => ({ default: m.RegisterPage })))
+const AccountPage = lazy(() => import('@/features/onboarding/AccountPage').then((m) => ({ default: m.AccountPage })))
+const ApplicationsPage = lazy(() => import('@/features/platform/ApplicationsPage').then((m) => ({ default: m.ApplicationsPage })))
+const BusinessAdminPage = lazy(() => import('@/features/platform/BusinessAdminPage').then((m) => ({ default: m.BusinessAdminPage })))
 const PlatformPage = lazy(() => import('@/features/platform/PlatformPage').then((m) => ({ default: m.PlatformPage })))
 const PosPage = lazy(() => import('@/features/pos/PosPage').then((m) => ({ default: m.PosPage })))
 const RefundPage = lazy(() => import('@/features/pos/RefundPage').then((m) => ({ default: m.RefundPage })))
@@ -75,6 +79,24 @@ export function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/shkarko" element={<DownloadPage />} />
       <Route
+        path="/regjistrohu"
+        element={
+          <Suspense fallback={<FullScreenLoader />}>
+            <RegisterPage />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/llogaria"
+        element={
+          <RequireOwner>
+            <Suspense fallback={<FullScreenLoader />}>
+              <AccountPage />
+            </Suspense>
+          </RequireOwner>
+        }
+      />
+      <Route
         path="/platforma"
         element={
           <RequirePlatformAdmin>
@@ -91,6 +113,26 @@ export function AppRoutes() {
           <RequirePlatformAdmin>
             <Lazy>
               <AccountantsAdminPage />
+            </Lazy>
+          </RequirePlatformAdmin>
+        }
+      />
+      <Route
+        path="/platforma/aplikimet"
+        element={
+          <RequirePlatformAdmin>
+            <Lazy>
+              <ApplicationsPage />
+            </Lazy>
+          </RequirePlatformAdmin>
+        }
+      />
+      <Route
+        path="/platforma/biznes/:id"
+        element={
+          <RequirePlatformAdmin>
+            <Lazy>
+              <BusinessAdminPage />
             </Lazy>
           </RequirePlatformAdmin>
         }

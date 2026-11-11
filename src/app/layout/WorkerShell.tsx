@@ -1,3 +1,4 @@
+import { LicenseBanner } from '@/app/LicenseBanner'
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -143,7 +144,10 @@ export function WorkerShell({
           </div>
         </header>
 
-        <main className="min-w-0 pb-safe">{children}</main>
+        <main className="min-w-0 pb-safe">
+          <LicenseBanner />
+          {children}
+        </main>
       </div>
 
       {/* ---------- menu: Puna ime sot, kitchen, printer, close the day, sign out ---------- */}

@@ -254,6 +254,20 @@ begin
                             'license', public._license_state(v_business));
 end $$;
 
+-- May the business install / use the apps: active, and a till application approved (or a business made before SEF).
+create or replace function public._can_install(p_business uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select b.active and b.status = 'active'
+     and (b.applied_at is null
+          or exists (select 1 from public.register_applications r where r.business_id = b.id and r.status = 'approved'))
+  from public.businesses b where b.id = p_business
+$$;
+
 do $$
 declare
   def text := pg_get_functiondef('public.my_context()'::regprocedure);
@@ -263,7 +277,7 @@ begin
     n := (length(def) - length(replace(def, '''fiscal_number'', b.fiscal_number)', ''))) / length('''fiscal_number'', b.fiscal_number)');
     if n = 0 then raise exception 'my_context: business object not found'; end if;
     execute replace(def, '''fiscal_number'', b.fiscal_number)',
-                    '''fiscal_number'', b.fiscal_number, ''status'', b.status, ''status_note'', b.status_note, ''license'', public._license_state(b.id))');
+                    '''fiscal_number'', b.fiscal_number, ''status'', b.status, ''status_note'', b.status_note, ''license'', public._license_state(b.id), ''can_install'', public._can_install(b.id))');
   end if;
 end $$;
 
@@ -309,6 +323,7 @@ begin
                from public.business_events e where e.business_id = b.id),
     'register_applications', (select coalesce(jsonb_agg(to_jsonb(r) - 'created_by' - 'decided_by' order by r.created_at desc), '[]'::jsonb)
                               from public.register_applications r where r.business_id = b.id),
+    'can_install', public._can_install(b.id),
     'payment_info', jsonb_build_object('bank_name', s.bank_name, 'iban', s.iban, 'account_holder', s.account_holder, 'monthly_price', s.monthly_price,
                                        'yearly_price', s.yearly_price, 'payment_note', s.payment_note, 'grace_days', s.grace_days)
   );
@@ -673,7 +688,7 @@ begin
   perform public.platform_decide(p_business_id, case when p_active then 'reactivate' else 'suspend' end, null);
 end $$;
 
-revoke execute on function public._business_license_row(), public._license_state(uuid), public._business_sync_active(uuid), public._sales_license_guard(),
+revoke execute on function public._business_license_row(), public._license_state(uuid), public._can_install(uuid), public._business_sync_active(uuid), public._sales_license_guard(),
   public._devices_license_guard(), public._owner_business(), public._require_platform_admin() from public, anon, authenticated;
 revoke execute on function public.onboarding_state(), public.onboarding_update(jsonb), public.register_application_submit(jsonb),
   public.platform_onboarding_list(text), public.platform_onboarding_detail(uuid), public.platform_decide(uuid, text, text),

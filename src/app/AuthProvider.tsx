@@ -1,3 +1,4 @@
+import { setLicense } from '@/lib/license'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -26,6 +27,17 @@ export interface Business {
   vat_number: string | null
   phone?: string | null
   fiscal_number?: string | null
+  /** 0029 (SEF): registration status, license, whether the apps may be installed. Absent on older databases. */
+  status?: 'pending' | 'needs_info' | 'approved' | 'active' | 'rejected' | 'suspended'
+  status_note?: string | null
+  license?: {
+    state: 'active' | 'expiring' | 'grace' | 'expired' | 'suspended' | 'cancelled'
+    expires_on: string | null
+    grace_until: string | null
+    days_left: number | null
+    max_devices: number
+  }
+  can_install?: boolean
 }
 
 export interface SessionContext {
@@ -129,6 +141,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     },
   })
+
+  // SEF license (0029): the till checks it before every sale.
+  useEffect(() => {
+    setLicense(ctxQuery.data?.business?.license)
+  }, [ctxQuery.data?.business?.license])
 
   // Back online after an offline start: load the fresh context.
   useEffect(() => {

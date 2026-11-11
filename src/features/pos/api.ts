@@ -1,3 +1,4 @@
+import { assertCanSell } from '@/lib/license'
 import { supabase } from '@/lib/supabase'
 import { kosovoDateISO, serverDate } from '@/lib/clock'
 import type { VatCode } from '@/lib/vat'
@@ -137,6 +138,7 @@ async function rpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
 }
 
 export async function createSale(input: CreateSaleInput): Promise<Sale> {
+  assertCanSell()
   return toSale(await rpc('create_sale', { p: input }))
 }
 

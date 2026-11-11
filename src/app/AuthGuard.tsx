@@ -61,8 +61,13 @@ export function RequireBusiness({ children }: { children: ReactNode }) {
     if (ctx?.accountant) return <Blocked title="Kjo është llogari kontabilisti" text="Hyr me këtë email në programin Kasa Kontabilist." />
     return <Blocked title="Llogaria nuk ka biznes" text="Kjo llogari nuk është e lidhur me asnjë biznes. Kontakto administratorin." />
   }
-  if (!ctx.business?.active)
+  if (!ctx.business?.active) {
+    // SEF (0029): the owner of a business that waits (or is suspended) sees the status and the next steps
+    if (ctx.profile.role === 'admin' && ctx.business?.status && ctx.business.status !== 'active') return <Navigate to="/llogaria" replace />
+    if (ctx.business?.status === 'pending' || ctx.business?.status === 'needs_info' || ctx.business?.status === 'approved')
+      return <Blocked title="Biznesi nuk është aktivizuar ende" text="Pronari i biznesit e sheh statusin e aktivizimit te llogaria e tij." />
     return <Blocked title="Biznesi është çaktivizuar" text="Qasja në këtë biznes është ndalur. Kontakto administratorin e platformës." />
+  }
   if (!ctx.profile.active)
     return <Blocked title="Llogaria është çaktivizuar" text="Kontakto pronarin ose menaxherin e biznesit." />
   return <>{children}</>
@@ -95,5 +100,17 @@ export function RequirePlatformAdmin({ children }: { children: ReactNode }) {
   if (status === 'loading') return <FullScreenLoader />
   if (status === 'anonymous') return <Navigate to="/login" replace state={{ from: '/platforma' }} />
   if (!ctx?.is_platform_admin) return <Navigate to="/" replace />
+  return <>{children}</>
+}
+
+/** /llogaria: the signed-in owner of a business, active or not (SEF registration, payment, license, Install SEF). */
+export function RequireOwner({ children }: { children: ReactNode }) {
+  const { status, ctx, error } = useAuth()
+  const location = useLocation()
+  if (!supabaseConfigured) return <SetupMissing />
+  if (status === 'loading') return <FullScreenLoader />
+  if (status === 'anonymous') return <Navigate to="/login" replace state={{ from: location.pathname }} />
+  if (status === 'error') return <Blocked title="Të dhënat nuk u ngarkuan" text={error ?? 'Provo përsëri pas pak.'} />
+  if (!ctx?.profile || ctx.profile.role !== 'admin') return <Navigate to="/" replace />
   return <>{children}</>
 }

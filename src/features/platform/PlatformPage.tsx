@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Building2, Calculator, Plus, Search } from 'lucide-react'
+import { Building2, Calculator, ClipboardCheck, Plus, Search } from 'lucide-react'
 import { useAuth } from '@/app/AuthProvider'
 import { PageHeader, Shell } from '@/app/layout/AppLayout'
 import type { NavItem } from '@/app/nav'
@@ -15,6 +16,7 @@ import { NewBusinessDialog } from './NewBusinessDialog'
 
 const PAGE_SIZE = 10
 const platformNav: NavItem[] = [
+  { to: '/platforma/aplikimet', label: 'Aplikimet', icon: ClipboardCheck },
   { to: '/platforma', label: 'Bizneset', icon: Building2, end: true },
   { to: '/platforma/kontabilistet', label: 'Kontabilistët', icon: Calculator },
 ]
@@ -54,6 +56,7 @@ function StatusBadge({ b }: { b: PlatformBusiness }) {
 
 export function PlatformPage() {
   const qc = useQueryClient()
+  const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<BusinessType | 'all'>('all')
   const [page, setPage] = useState(0)
@@ -234,6 +237,9 @@ export function PlatformPage() {
                           </Td>
                           <Td>
                             <div className="flex gap-2">
+                              <Button size="sm" onClick={() => navigate(`/platforma/biznes/${b.id}`)}>
+                                Detajet
+                              </Button>
                               <Button size="sm" variant="secondary" onClick={() => setConfirm({ kind: 'password', business: b })}>
                                 Fjalëkalim i ri
                               </Button>
@@ -276,6 +282,7 @@ export function PlatformPage() {
                       <StatusBadge b={b} />
                     </div>
                     <div className="mt-3 grid grid-cols-2 gap-2">
+                      <Button onClick={() => navigate(`/platforma/biznes/${b.id}`)}>Detajet</Button>
                       <Button variant="secondary" onClick={() => setConfirm({ kind: 'password', business: b })}>
                         Fjalëkalim i ri
                       </Button>
