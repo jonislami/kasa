@@ -30,9 +30,9 @@ export function ScanTab({ client }: { client: Client }) {
   const camRef = useRef<HTMLInputElement>(null)
   const refresh = () => void qc.invalidateQueries({ queryKey: ['client', client.id, 'scans'] })
 
-  const read = async (id: string) => {
-    setBusy((b) => ({ ...b, [id]: 'Duke lexuar me AI…' }))
-    const r = await readScan(id)
+  const read = async (id: string, strong = false) => {
+    setBusy((b) => ({ ...b, [id]: strong ? 'Duke lexuar me AI më të fortë…' : 'Duke lexuar me AI…' }))
+    const r = await readScan(id, strong)
     if (r.status === 'failed' && r.error) setErrors((e) => [...e, r.error!])
     setBusy(({ [id]: _, ...rest }) => rest)
     refresh()
@@ -197,6 +197,11 @@ export function ScanTab({ client }: { client: Client }) {
                         <RefreshCw className="h-4 w-4" /> Lexo
                       </Button>
                     )}
+                    {['failed', 'read', 'review'].includes(s.status) && !working && (
+                      <Button size="sm" variant="secondary" title="Lexo përsëri me AI më të fortë (për fatura të vështira, kushton më shumë)" onClick={() => void read(s.id, true)}>
+                        <Sparkles className="h-4 w-4" /> <span className="hidden sm:inline">AI më i fortë</span>
+                      </Button>
+                    )}
                     {s.status !== 'confirmed' && !working && (
                       <button type="button" aria-label="Fshi" onClick={() => confirm('Ta fshij këtë skanim?') && del.mutate(s.id)} className="flex h-9 w-9 items-center justify-center rounded-ctl text-muted hover:bg-warn-100 hover:text-warn-700">
                         <Trash2 className="h-4 w-4" />
@@ -210,7 +215,13 @@ export function ScanTab({ client }: { client: Client }) {
         )}
       </Card>
 
-      <ScanReview client={client} scan={open} onClose={() => setOpen(null)} onDone={() => { setOpen(null); refresh() }} />
+      <ScanReview
+        client={client}
+        scan={open}
+        onClose={() => setOpen(null)}
+        onDone={() => { setOpen(null); refresh() }}
+        onReread={(id) => { setOpen(null); void read(id, true) }}
+      />
     </div>
   )
 }
@@ -264,7 +275,7 @@ function formOf(s: Scan): Form {
   }
 }
 
-function ScanReview({ client, scan, onClose, onDone }: { client: Client; scan: Scan | null; onClose: () => void; onDone: () => void }) {
+function ScanReview({ client, scan, onClose, onDone, onReread }: { client: Client; scan: Scan | null; onClose: () => void; onDone: () => void; onReread: (id: string) => void }) {
   const qc = useQueryClient()
   const [f, setF] = useState<Form | null>(null)
   const [url, setUrl] = useState<string | null>(null)
@@ -369,6 +380,11 @@ function ScanReview({ client, scan, onClose, onDone }: { client: Client; scan: S
             <Button variant="secondary" onClick={onClose}>
               Mbyll
             </Button>
+            {scan.model !== 'claude-opus-5-5' && (
+              <Button variant="secondary" title="Për fatura të vështira; kushton më shumë" onClick={() => onReread(scan.id)}>
+                <Sparkles className="h-4 w-4" /> Rilexo me AI më të fortë
+              </Button>
+            )}
             <Button loading={save.isPending && !dupe} disabled={!total} onClick={() => save.mutate(false)}>
               <CheckCircle2 className="h-4 w-4" /> Konfirmo dhe regjistro
             </Button>

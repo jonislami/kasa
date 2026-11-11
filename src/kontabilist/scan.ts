@@ -138,9 +138,9 @@ export async function uploadScan(clientId: string, file: File): Promise<string> 
   return data as string
 }
 
-/** Asks the Edge Function to read the scan with AI. */
-export async function readScan(scanId: string): Promise<{ status: ScanStatus; error?: string }> {
-  const { data, error } = await supabase.functions.invoke('acc-scan', { body: { scan_id: scanId } })
+/** Asks the Edge Function to read the scan with AI (fast, cheap model; strong = the more capable one). */
+export async function readScan(scanId: string, strong = false): Promise<{ status: ScanStatus; error?: string }> {
+  const { data, error } = await supabase.functions.invoke('acc-scan', { body: { scan_id: scanId, strong } })
   if (error) {
     let msg = error.message
     const ctx = (error as { context?: Response }).context

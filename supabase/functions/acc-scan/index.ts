@@ -1,7 +1,7 @@
 // Edge Function: acc-scan (Kasa Kontabilist, phase K6)
 // Reads a supplier invoice (photo or PDF already uploaded to bucket acc-files and registered with acc_scan_add)
 // with Claude and stores what it read with the RPC acc_scan_result.
-//   POST { scan_id }  →  { status: 'read' | 'failed', extracted?, suggest?, error? }
+//   POST { scan_id, strong? }  →  { status: 'read' | 'failed', extracted?, suggest?, error? }
 // Runs entirely with the caller's own JWT (anon key + Authorization header): the scan row, the client and the
 // file are reachable only through RLS / storage policies of that accountant. No service role is used.
 // Secret needed in Supabase: ANTHROPIC_API_KEY.
@@ -9,7 +9,9 @@ import Anthropic from 'npm:@anthropic-ai/sdk'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { encodeBase64 } from 'jsr:@std/encoding@1/base64'
 
-const MODEL = 'claude-opus-5-5'
+// Claude Haiku 5.5 reads ordinary invoices for a fraction of a cent; "strong" re-reads a hard one with Opus 5.5.
+const MODEL_FAST = 'claude-haiku-5-5'
+const MODEL_STRONG = 'claude-opus-5-5'
 const MAX_BYTES = 20 * 1024 * 1024
 
 const cors = {
@@ -148,8 +150,11 @@ Deno.serve(async (req) => {
   })
 
   let scanId: string
+  let strong = false
   try {
-    scanId = String(((await req.json()) as { scan_id?: string }).scan_id ?? '')
+    const body = (await req.json()) as { scan_id?: string; strong?: boolean }
+    scanId = String(body.scan_id ?? '')
+    strong = body.strong === true
   } catch {
     return json({ error: 'Kërkesë e pavlefshme' }, 400)
   }
@@ -159,6 +164,7 @@ Deno.serve(async (req) => {
   if (scanErr || !scan) return json({ error: 'Skanimi nuk u gjet' }, 404)
   if (scan.status === 'confirmed') return json({ error: 'Skanimi është konfirmuar tashmë' }, 409)
 
+  const MODEL = strong ? MODEL_STRONG : MODEL_FAST
   const store = async (p: Record<string, unknown>) => {
     const { data, error } = await db.rpc('acc_scan_result', { p_id: scanId, p })
     if (error) throw new Error(error.message)
@@ -187,29 +193,31 @@ Deno.serve(async (req) => {
 
   const anthropic = new Anthropic({ apiKey })
   try {
-    const response = await anthropic.beta.messages.create({
+    const params = {
       model: MODEL,
       max_tokens: 16000,
-      // On a policy decline the API re-runs the request on a fallback model inside the same call.
-      betas: ['server-side-fallback-2026-07-01'],
-      fallbacks: 'default',
-      output_config: { effort: 'medium', format: { type: 'json_schema', schema: SCHEMA } },
+      output_config: { effort: 'medium' as const, format: { type: 'json_schema' as const, schema: SCHEMA } },
       system: systemPrompt(client?.name ?? 'klienti', client?.nui ?? null),
       messages: [
         {
-          role: 'user',
+          role: 'user' as const,
           content: [
             type === 'application/pdf'
-              ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data } }
-              : { type: 'image', source: { type: 'base64', media_type: type, data } },
-            { type: 'text', text: 'Read this document and return the JSON.' },
+              ? { type: 'document' as const, source: { type: 'base64' as const, media_type: 'application/pdf' as const, data } }
+              : { type: 'image' as const, source: { type: 'base64' as const, media_type: type, data } },
+            { type: 'text' as const, text: 'Read this document and return the JSON.' },
           ],
         },
       ],
-      stream: false,
-    } as Parameters<typeof anthropic.beta.messages.create>[0] & { stream: false })
+      stream: false as const,
+    }
+    // Opus: on a policy decline the API re-runs the request on a fallback model inside the same call.
+    // Haiku has no server-side fallback; a declined scan can be re-read with the strong model.
+    const response = strong
+      ? await anthropic.beta.messages.create({ ...params, betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' } as Parameters<typeof anthropic.beta.messages.create>[0] & { stream: false })
+      : await anthropic.beta.messages.create(params as Parameters<typeof anthropic.beta.messages.create>[0] & { stream: false })
 
-    if (response.stop_reason === 'refusal') return failWith('Shërbimi AI nuk e lexoi këtë dokument.')
+    if (response.stop_reason === 'refusal') return failWith(strong ? 'Shërbimi AI nuk e lexoi këtë dokument.' : 'Shërbimi AI nuk e lexoi këtë dokument. Provo "Lexo me AI më të fortë".')
     if (response.stop_reason === 'max_tokens') return failWith('Dokumenti është shumë i gjatë për t’u lexuar njëherësh.')
     const text = response.content.flatMap((b) => (b.type === 'text' ? [b.text] : [])).join('')
     let extracted: Record<string, unknown>
