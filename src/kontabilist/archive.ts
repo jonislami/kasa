@@ -140,3 +140,31 @@ export async function logoDataUrl(file: File): Promise<string> {
   if (url.length > 300000) throw new Error('Logoja është shumë e madhe')
   return url
 }
+
+// ---------------------------------------------------------------------------
+// Restore (0028): a backup becomes a new client of the office
+// ---------------------------------------------------------------------------
+export interface RestoreResult {
+  client_id: string
+  name: string
+  nui_kept: boolean
+  counts: Record<string, number>
+}
+export async function restoreClient(backup: Record<string, unknown>, name?: string): Promise<RestoreResult> {
+  const { data, error } = await supabase.rpc('acc_restore_client', { p: backup, p_name: name ?? null })
+  if (error) fail(error)
+  return data as RestoreResult
+}
+
+/** Reads a backup file: one client (acc_client_backup) or the whole office (list of clients). */
+export async function readBackupFile(file: File): Promise<{ created_at: string | null; clients: Record<string, unknown>[] }> {
+  let j: Record<string, unknown>
+  try {
+    j = JSON.parse(await file.text())
+  } catch {
+    throw new Error('Skedari nuk është JSON i vlefshëm')
+  }
+  if (j.format === 'kasa-kontabilist-backup') return { created_at: (j.created_at as string) ?? null, clients: [j] }
+  if (j.format === 'kasa-kontabilist-office-backup' && Array.isArray(j.clients)) return { created_at: (j.created_at as string) ?? null, clients: j.clients as Record<string, unknown>[] }
+  throw new Error('Ky skedar nuk është backup i Kasa Kontabilist')
+}
