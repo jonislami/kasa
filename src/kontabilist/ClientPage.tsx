@@ -14,6 +14,7 @@ import { downloadWorkbook, profitSheet, purchasesSheet, salesDailySheet, stockSh
 import { cancelLink, categoryLabel, deleteClient, docNet, fetchClientBooks, fetchDocs, PAY_STATUS_LABELS, requestLink, saveClient, setClientPeriod, type AccMe, type Client, type Doc, type DocKind } from './api'
 import { BankTab } from './BankTab'
 import { DashboardTab } from './DashboardTab'
+import { AssetsTab, CloseTab, CoaTab, JournalTab, LedgerTab, StatementsTab, TrialBalanceTab } from './BooksTabs'
 import { DebtsTab } from './DebtsTab'
 import { TaxesTab } from './TaxesTab'
 import { VatFormTab } from './VatFormTab'
@@ -22,7 +23,7 @@ import { CompanyShell } from './CompanyShell'
 import { ClientDialog } from './ClientDialog'
 import { DocumentsTab } from './DocumentsTab'
 
-type TabKey = 'paneli' | 'pasqyra' | 'banka' | 'tatimet' | 'tvsh_permbledhje' | 'shitjet' | 'proformat' | 'blerjet' | 'partneret' | 'borxhet' | 'tvsh' | 'fitimi' | 'arka' | 'stoku' | 'klienti'
+type TabKey = 'konto' | 'ditari' | 'libri' | 'bilanci' | 'pasqyrat' | 'asetet' | 'mbyllja' | 'paneli' | 'pasqyra' | 'banka' | 'tatimet' | 'tvsh_permbledhje' | 'shitjet' | 'proformat' | 'blerjet' | 'partneret' | 'borxhet' | 'tvsh' | 'fitimi' | 'arka' | 'stoku' | 'klienti'
 const TABS: { key: TabKey; label: string; kasaOnly?: boolean }[] = [
   { key: 'paneli', label: 'Paneli' },
   { key: 'pasqyra', label: 'Pasqyra' },
@@ -33,6 +34,13 @@ const TABS: { key: TabKey; label: string; kasaOnly?: boolean }[] = [
   { key: 'borxhet', label: 'Borxhet' },
   { key: 'banka', label: 'Arka & banka' },
   { key: 'tatimet', label: 'Tatimet e tjera dhe afatet' },
+  { key: 'konto', label: 'Plani kontabël' },
+  { key: 'ditari', label: 'Ditari' },
+  { key: 'libri', label: 'Libri kryesor' },
+  { key: 'bilanci', label: 'Bilanci provues' },
+  { key: 'pasqyrat', label: 'Pasqyrat financiare' },
+  { key: 'asetet', label: 'Mjetet themelore' },
+  { key: 'mbyllja', label: 'Mbyllja e muajit' },
   { key: 'tvsh_permbledhje', label: 'TVSH sipas normave' },
   { key: 'tvsh', label: 'TVSH' },
   { key: 'fitimi', label: 'Fitimi' },
@@ -140,7 +148,7 @@ export function ClientPage({ me }: { me: AccMe }) {
   }
 
   const toolbar =
-    ['klienti', 'paneli', 'tvsh', 'tatimet', 'borxhet'].includes(tab.key) ? undefined : (
+    ['klienti', 'paneli', 'tvsh', 'tatimet', 'borxhet', 'konto', 'asetet', 'mbyllja'].includes(tab.key) ? undefined : (
       <>
         <PeriodPicker period={period} onChange={setPeriod} disableNext={isCurrent} />
         <Button variant="secondary" onClick={() => void exportAll()} disabled={!s} loading={exporting}>
@@ -166,7 +174,7 @@ export function ClientPage({ me }: { me: AccMe }) {
 
   return (
     <CompanyShell me={me} client={client ?? null} linked={linked} active={tab.key} toolbar={toolbar}>
-      {!['klienti', 'paneli', 'tvsh', 'tatimet', 'borxhet'].includes(tab.key) && (
+      {!['klienti', 'paneli', 'tvsh', 'tatimet', 'borxhet', 'konto', 'asetet', 'mbyllja'].includes(tab.key) && (
         <p className="-mt-1 mb-3 text-sm text-muted">
           {TABS.find((t) => t.key === tab.key)?.label} · {formatDay(range.from)} – {formatDay(range.to)}
         </p>
@@ -224,6 +232,13 @@ export function ClientPage({ me }: { me: AccMe }) {
             {tab.key === 'borxhet' && <DebtsTab client={client} onChanged={refresh} />}
             {tab.key === 'tvsh' && <VatFormTab client={client} />}
             {tab.key === 'tvsh_permbledhje' && <VatTab s={s} period={period} />}
+            {tab.key === 'konto' && <CoaTab client={client} />}
+            {tab.key === 'ditari' && <JournalTab client={client} from={range.from} to={range.to} />}
+            {tab.key === 'libri' && <LedgerTab client={client} from={range.from} to={range.to} />}
+            {tab.key === 'bilanci' && <TrialBalanceTab client={client} from={range.from} to={range.to} />}
+            {tab.key === 'pasqyrat' && <StatementsTab client={client} from={range.from} to={range.to} />}
+            {tab.key === 'asetet' && <AssetsTab client={client} />}
+            {tab.key === 'mbyllja' && <CloseTab client={client} />}
             {tab.key === 'tatimet' && <TaxesTab client={client} onGo={(t) => navigate(`/klient/${id}/${t}`)} />}
             {tab.key === 'fitimi' && <ProfitTab s={s} />}
             {tab.key === 'arka' && linked && <CashTab s={s} />}

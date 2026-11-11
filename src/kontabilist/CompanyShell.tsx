@@ -2,6 +2,12 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import {
   ArrowLeftRight,
+  BookOpen,
+  BookText,
+  Boxes,
+  ListTree,
+  Lock,
+  Scale,
   Building2,
   Calculator,
   CalendarDays,
@@ -50,7 +56,14 @@ export const MENU: { group: string; icon: LucideIcon; items: MenuItem[] }[] = [
     items: [
       { key: 'banka', label: 'Arka dhe banka', icon: Landmark },
       { key: 'borxhet', label: 'Llogaritë e arkëtueshme & pagueshme', icon: HandCoins },
-      { key: 'fitimi', label: 'Fitimi dhe humbja', icon: TrendingUp },
+      { key: 'fitimi', label: 'Fitimi dhe humbja (përmbledhje)', icon: TrendingUp },
+      { key: 'konto', label: 'Plani kontabël', icon: ListTree },
+      { key: 'ditari', label: 'Ditari', icon: BookOpen },
+      { key: 'libri', label: 'Libri kryesor', icon: BookText },
+      { key: 'bilanci', label: 'Bilanci provues', icon: Scale },
+      { key: 'pasqyrat', label: 'Pasqyrat financiare', icon: FileBarChart },
+      { key: 'asetet', label: 'Mjetet themelore', icon: Boxes },
+      { key: 'mbyllja', label: 'Mbyllja e muajit', icon: Lock },
     ],
   },
   {
