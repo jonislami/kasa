@@ -25,7 +25,8 @@ import {
   type RegisterApplication,
 } from './api'
 
-const day = (d: string | null | undefined) => (d ? new Intl.DateTimeFormat('sq-AL', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(d.slice(0, 10) + 'T12:00:00')) : '')
+// dd.mm.yyyy: browsers without Albanian locale data would print English month names
+const day = (d: string | null | undefined) => (d ? d.slice(0, 10).split('-').reverse().join('.') : '')
 
 /**
  * /llogaria – the owner's panel: status of the registration, data, payment, license, application for a till,
@@ -34,11 +35,13 @@ const day = (d: string | null | undefined) => (d ? new Intl.DateTimeFormat('sq-A
 export function AccountPage() {
   const { ctx, signOut, refresh } = useAuth()
   const qc = useQueryClient()
-  const state = useQuery({ queryKey: ['onboarding'], queryFn: fetchOnboarding, refetchInterval: 60_000 })
+  const state = useQuery({ queryKey: ['onboarding'], queryFn: fetchOnboarding, staleTime: 0, refetchOnWindowFocus: true, refetchInterval: 60_000 })
   const s = state.data
   // when the admin activates the business, the session context must follow
   useEffect(() => {
-    if (s && ctx?.business && s.business.active !== ctx.business.active) refresh()
+    if (!s || !ctx?.business) return
+    const b = ctx.business
+    if (s.business.active !== b.active || s.can_install !== (b.can_install ?? s.can_install) || (b.license && s.license.state !== b.license.state)) refresh()
   }, [s, ctx?.business, refresh])
 
   const reload = () => {
@@ -247,12 +250,19 @@ function PaymentCard({ s }: { s: OnboardingState }) {
           {p.payment_note && <div className="mt-2 text-sm">{p.payment_note}</div>}
         </div>
         <div className="rounded-card bg-bg p-4 text-[15px]">
-          <div className="flex justify-between">
-            <span className="text-muted">Mujore</span> <b>{formatEUR(p.monthly_price)}</b>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted">Vjetore</span> <b>{formatEUR(p.yearly_price)}</b>
-          </div>
+          {Number(p.monthly_price) > 0 && (
+            <div className="flex justify-between">
+              <span className="text-muted">Mujore</span> <b>{formatEUR(p.monthly_price)}</b>
+            </div>
+          )}
+          {Number(p.yearly_price) > 0 && (
+            <div className="flex justify-between">
+              <span className="text-muted">Vjetore</span> <b>{formatEUR(p.yearly_price)}</b>
+            </div>
+          )}
+          {!(Number(p.monthly_price) > 0) && !(Number(p.yearly_price) > 0) && !(price != null && Number(price) > 0) && (
+            <div className="text-sm text-muted">Çmimin ta tregon administratori.</div>
+          )}
           {price != null && Number(price) > 0 && (
             <div className="mt-2 flex justify-between border-t border-line pt-2">
               <span className="text-muted">Çmimi yt</span> <b>{formatEUR(Number(price))}</b>

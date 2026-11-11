@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Globe, Monitor, Smartphone, Tablet, type LucideIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
@@ -40,9 +41,14 @@ export function DownloadPage() {
   const release = useQuery({ queryKey: ['latest-release'], queryFn: latestRelease, staleTime: 10 * 60_000, retry: 1 })
   const r = release.data
   const version = r?.tag_name.replace(/^v/, '') ?? null
-  const { ctx } = useAuth()
+  const { ctx, refresh } = useAuth()
   // businesses made before SEF have no can_install: an active business may install
   const allowed = Boolean(ctx?.business && (ctx.business.can_install ?? ctx.business.active))
+  const signedInBusiness = Boolean(ctx?.business)
+  // the admin may have just approved the till: check again instead of trusting the saved context
+  useEffect(() => {
+    if (signedInBusiness && !allowed) refresh()
+  }, [signedInBusiness, allowed, refresh])
 
   return (
     <div className="min-h-dvh bg-bg">

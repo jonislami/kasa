@@ -49,7 +49,12 @@ export function RegisterPage() {
       await registerBusiness({ ...f, nui: f.nui.replace(/\D/g, '') })
       setDone(true)
       // sign in right away: the owner sees the status of the application at /llogaria
-      const err = await signIn(f.email, f.password, true)
+      // one retry: a brief network drop must not leave the owner on the "Hyr" screen
+      let err = await signIn(f.email, f.password, true)
+      if (err) {
+        await new Promise((r) => setTimeout(r, 1500))
+        err = await signIn(f.email, f.password, true)
+      }
       if (!err) navigate('/llogaria', { replace: true })
     } catch (err) {
       setError((err as Error).message)

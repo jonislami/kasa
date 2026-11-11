@@ -117,6 +117,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     networkMode: 'always', // falls back to the last known context offline
     enabled: Boolean(userId),
     staleTime: 5 * 60_000,
+    // a till stays open for days: keep the license and the business status current
+    refetchInterval: 30 * 60_000,
     retry: (count, e) => !isNetworkError(e) && count < 1,
     queryFn: async () => {
       try {
