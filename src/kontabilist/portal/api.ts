@@ -202,9 +202,9 @@ async function callOffice(body: Record<string, unknown>): Promise<Record<string,
   }
   return data as Record<string, unknown>
 }
-export async function createPortalUser(p: { client_id: string; full_name: string; email: string; password?: string }): Promise<{ linked: boolean }> {
+export async function createPortalUser(p: { client_id: string; full_name: string; email: string; password?: string; send_invite?: boolean }): Promise<{ linked: boolean; invited: boolean; invite_error: string | null }> {
   const r = await callOffice({ action: 'create_portal_user', ...p })
-  return { linked: Boolean(r.linked) }
+  return { linked: Boolean(r.linked), invited: Boolean(r.invited), invite_error: (r.invite_error as string) ?? null }
 }
 export const setPortalPassword = (portalId: string, password: string) => callOffice({ action: 'set_portal_password', portal_id: portalId, password }).then(() => undefined)
 

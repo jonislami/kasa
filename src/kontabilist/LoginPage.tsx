@@ -6,7 +6,7 @@ import { FullScreenLoader, SetupMissing } from '@/app/AuthGuard'
 import { SafeAreaStrip } from '@/app/layout/AppLayout'
 import { LogoMark } from '@/components/Logo'
 import { Button, Input } from '@/components/ui'
-import { supabaseConfigured } from '@/lib/supabase'
+import { supabase, supabaseConfigured } from '@/lib/supabase'
 
 export function LoginPage() {
   const { status, signIn } = useAuth()
@@ -71,10 +71,33 @@ export function LoginPage() {
             <Button type="submit" size="lg" block loading={busy}>
               Hyr
             </Button>
-            <p className="text-center text-sm text-muted">Llogarinë dhe fjalëkalimin e ri i jep administratori i Kasa-s.</p>
+            <ForgotPassword email={email} />
           </form>
         </div>
       </section>
+    </div>
+  )
+}
+
+/** "Forgot password": Supabase sends a link to /fjalekalimi where a new password is set. */
+function ForgotPassword({ email }: { email: string }) {
+  const [state, setState] = useState<'idle' | 'busy' | 'sent' | string>('idle')
+  const send = async () => {
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) return setState('Shkruaj email-in lart, pastaj kliko këtu.')
+    setState('busy')
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/fjalekalimi` })
+    setState(error ? (/rate|seconds/i.test(error.message) ? 'Prit pak minuta para se ta kërkosh përsëri.' : error.message) : 'sent')
+  }
+  return (
+    <div className="text-center text-sm text-muted">
+      {state === 'sent' ? (
+        <span className="text-brand-600">Nëse llogaria ekziston, të erdhi një email me lidhjen për fjalëkalimin e ri.</span>
+      ) : (
+        <button type="button" className="font-semibold text-brand-600 hover:underline disabled:opacity-60" disabled={state === 'busy'} onClick={() => void send()}>
+          Ke harruar fjalëkalimin?
+        </button>
+      )}
+      {state !== 'idle' && state !== 'busy' && state !== 'sent' && <div className="mt-1 text-warn-700">{state}</div>}
     </div>
   )
 }

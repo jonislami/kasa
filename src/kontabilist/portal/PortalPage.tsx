@@ -26,6 +26,7 @@ import {
   type PortalUpload,
 } from './api'
 import { MessageThread } from './MessageThread'
+import { notifyQuietly } from '../notify'
 
 type Tab = 'permbledhje' | 'faturat' | 'dokumentet' | 'mesazhet' | 'deklaratat' | 'zyra'
 const TABS: { key: Tab; label: string; icon: typeof LayoutGrid }[] = [
@@ -112,7 +113,10 @@ export function PortalPage() {
             <MessageThread
               queryKey={['portal-messages', client.client_id]}
               load={() => fetchMessages(client.client_id)}
-              send={(b) => sendMessage(client.client_id, b)}
+              send={async (b) => {
+                await sendMessage(client.client_id, b)
+                notifyQuietly('client_message', client.client_id)
+              }}
               side="client"
               emptyText="Shkruaji kontabilistit këtu: pyetje, sqarime, dokumente që mungojnë."
             />
