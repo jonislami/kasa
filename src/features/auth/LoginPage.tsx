@@ -1,56 +1,61 @@
-import { useEffect, useState, type FormEvent } from 'react'
-import { Link, Navigate, useLocation } from 'react-router-dom'
-import { Check } from 'lucide-react'
-import { useAuth } from '@/app/AuthProvider'
-import { FullScreenLoader, SetupMissing } from '@/app/AuthGuard'
-import { SafeAreaStrip } from '@/app/layout/AppLayout'
-import { LogoMark } from '@/components/Logo'
-import { Button, Input, Tabs } from '@/components/ui'
-import { supabaseConfigured } from '@/lib/supabase'
-import { getLink } from '@/lib/deviceLink'
-import { PinLogin } from './PinLogin'
+import { useEffect, useState, type FormEvent } from "react";
+import { Link, Navigate, useLocation } from "react-router-dom";
+import { Check } from "lucide-react";
+import { useAuth } from "@/app/AuthProvider";
+import { FullScreenLoader, SetupMissing } from "@/app/AuthGuard";
+import { SafeAreaStrip } from "@/app/layout/AppLayout";
+import { LogoMark } from "@/components/Logo";
+import { Button, Input, Tabs } from "@/components/ui";
+import { supabaseConfigured } from "@/lib/supabase";
+import { getLink } from "@/lib/deviceLink";
+import { isSefApp } from "@/lib/device";
+import { PinLogin } from "./PinLogin";
 
-type Mode = 'manager' | 'pin'
+type Mode = "manager" | "pin";
 
 export function LoginPage() {
-  const { status, ctx, signIn } = useAuth()
-  const location = useLocation()
-  const [mode, setMode] = useState<Mode>('manager')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [remember, setRemember] = useState(true)
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [showForgot, setShowForgot] = useState(false)
+  const { status, ctx, signIn } = useAuth();
+  const location = useLocation();
+  const [mode, setMode] = useState<Mode>("manager");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showForgot, setShowForgot] = useState(false);
 
   // A linked device opens on the PIN screen (workers sign in there every day).
   useEffect(() => {
     void getLink().then((l) => {
-      if (l) setMode('pin')
-    })
-  }, [])
+      if (l) setMode("pin");
+    });
+  }, []);
 
-  if (!supabaseConfigured) return <SetupMissing />
-  if (status === 'loading' && busy) return <FullScreenLoader />
-  if (status === 'ready' && ctx) {
-    const from = (location.state as { from?: string } | null)?.from
-    const target = ctx.is_platform_admin && !ctx.profile ? '/platforma' : from && from !== '/login' ? from : '/'
-    return <Navigate to={target} replace />
+  if (!supabaseConfigured) return <SetupMissing />;
+  if (status === "loading" && busy) return <FullScreenLoader />;
+  if (status === "ready" && ctx) {
+    const from = (location.state as { from?: string } | null)?.from;
+    const target =
+      ctx.is_platform_admin && !ctx.profile
+        ? "/platforma"
+        : from && from !== "/login"
+          ? from
+          : "/";
+    return <Navigate to={target} replace />;
   }
 
   const onSubmit = async (e: FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!email.trim() || !password) {
-      setError('Shkruaj email-in dhe fjalëkalimin')
-      return
+      setError("Shkruaj email-in dhe fjalëkalimin");
+      return;
     }
-    setBusy(true)
-    setError(null)
-    const err = await signIn(email, password, remember)
-    setBusy(false)
-    if (err) setError(err)
-
-  }
+    setBusy(true);
+    setError(null);
+    const err = await signIn(email, password, remember);
+    setBusy(false);
+    if (err) setError(err);
+  };
 
   return (
     <div className="flex min-h-dvh flex-col md:flex-row">
@@ -66,11 +71,16 @@ export function LoginPage() {
             Shitja, stoku dhe raportet në një vend.
           </h1>
           <p className="mt-4 hidden max-w-md text-[17px] leading-relaxed text-white/70 md:block">
-            Arka e shpejtë me barkod, hyrjet e mallit nga furnitorët dhe pasqyra e ditës – nga kompjuteri ose telefoni.
+            Arka e shpejtë me barkod, hyrjet e mallit nga furnitorët dhe pasqyra
+            e ditës – nga kompjuteri ose telefoni.
           </p>
         </div>
         <ul className="mt-auto hidden flex-wrap gap-x-6 gap-y-2 text-sm text-white/70 md:flex">
-          {['Punon edhe pa internet', 'Printer me Bluetooth', 'Disa arka e përdorues'].map((t) => (
+          {[
+            "Punon edhe pa internet",
+            "Printer me Bluetooth",
+            "Disa arka e përdorues",
+          ].map((t) => (
             <li key={t} className="flex items-center gap-2">
               <Check className="h-4 w-4 text-brand-400" /> {t}
             </li>
@@ -81,73 +91,105 @@ export function LoginPage() {
       {/* Form */}
       <section className="flex flex-1 items-start justify-center bg-bg px-6 py-8 md:items-center md:py-12">
         <div className="w-full max-w-[420px]">
-          <h2 className="text-[28px] font-bold tracking-tight">Mirë se erdhe</h2>
-          <p className="mt-1 text-muted">Hyr në llogarinë tënde për të vazhduar</p>
-
-          <Tabs
-            className="mt-6 w-full"
-            value={mode}
-            onChange={setMode}
-            options={[
-              { value: 'manager', label: 'Menaxher' },
-              { value: 'pin', label: 'Arkëtar (PIN)' },
-            ]}
-          />
-
-          {mode === 'manager' ? (
-            <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-5" noValidate>
-              <Input
-                label="Email"
-                type="email"
-                autoComplete="username"
-                inputMode="email"
-                placeholder="emri@biznesi.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-              <Input
-                label="Fjalëkalimi"
-                type="password"
-                autoComplete="current-password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                labelRight={
-                  <button type="button" onClick={() => setShowForgot((v) => !v)} className="text-sm font-semibold text-brand-600 underline">
-                    Harrove fjalëkalimin?
-                  </button>
-                }
-              />
-              {showForgot && (
-                <p className="rounded-ctl bg-amber-100 px-4 py-3 text-sm text-amber-700">
-                  Fjalëkalimin e ri ta jep administratori i Kasa-s (pronari) ose pronari i biznesit (menaxherët).
-                </p>
-              )}
-              <label className="flex cursor-pointer items-center gap-3 text-[15px]">
-                <input
-                  type="checkbox"
-                  checked={remember}
-                  onChange={(e) => setRemember(e.target.checked)}
-                  className="h-5 w-5 rounded accent-brand-600"
-                />
-                Më mbaj të kyçur në këtë pajisje
-              </label>
-              {error && <p className="rounded-ctl bg-warn-100 px-4 py-3 text-sm text-warn-700">{error}</p>}
-              <Button type="submit" size="lg" block loading={busy}>
-                Hyr
-              </Button>
-              <p className="text-center text-sm text-muted">
-                Biznes i ri?{' '}
-                <Link to="/regjistrohu" className="font-semibold text-brand-600 hover:underline">
-                  Regjistro biznesin
-                </Link>
+          <h2 className="text-[28px] font-bold tracking-tight">
+            Mirë se erdhe
+          </h2>
+          {isSefApp ? (
+            // SEF app: activation key once, then only the PIN. Everything else is managed in the web app.
+            <>
+              <p className="mt-1 text-muted">
+                Hyr me PIN-in tënd për të shitur
               </p>
-            </form>
+              <PinLogin />
+            </>
           ) : (
-            <PinLogin onUseEmail={() => setMode('manager')} />
+            <>
+              <p className="mt-1 text-muted">
+                Hyr në llogarinë tënde për të vazhduar
+              </p>
+
+              <Tabs
+                className="mt-6 w-full"
+                value={mode}
+                onChange={setMode}
+                options={[
+                  { value: "manager", label: "Menaxher" },
+                  { value: "pin", label: "Arkëtar (PIN)" },
+                ]}
+              />
+
+              {mode === "manager" ? (
+                <form
+                  onSubmit={onSubmit}
+                  className="mt-6 flex flex-col gap-5"
+                  noValidate
+                >
+                  <Input
+                    label="Email"
+                    type="email"
+                    autoComplete="username"
+                    inputMode="email"
+                    placeholder="emri@biznesi.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                  <Input
+                    label="Fjalëkalimi"
+                    type="password"
+                    autoComplete="current-password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    labelRight={
+                      <button
+                        type="button"
+                        onClick={() => setShowForgot((v) => !v)}
+                        className="text-sm font-semibold text-brand-600 underline"
+                      >
+                        Harrove fjalëkalimin?
+                      </button>
+                    }
+                  />
+                  {showForgot && (
+                    <p className="rounded-ctl bg-amber-100 px-4 py-3 text-sm text-amber-700">
+                      Fjalëkalimin e ri ta jep administratori i Kasa-s (pronari)
+                      ose pronari i biznesit (menaxherët).
+                    </p>
+                  )}
+                  <label className="flex cursor-pointer items-center gap-3 text-[15px]">
+                    <input
+                      type="checkbox"
+                      checked={remember}
+                      onChange={(e) => setRemember(e.target.checked)}
+                      className="h-5 w-5 rounded accent-brand-600"
+                    />
+                    Më mbaj të kyçur në këtë pajisje
+                  </label>
+                  {error && (
+                    <p className="rounded-ctl bg-warn-100 px-4 py-3 text-sm text-warn-700">
+                      {error}
+                    </p>
+                  )}
+                  <Button type="submit" size="lg" block loading={busy}>
+                    Hyr
+                  </Button>
+                  <p className="text-center text-sm text-muted">
+                    Biznes i ri?{" "}
+                    <Link
+                      to="/regjistrohu"
+                      className="font-semibold text-brand-600 hover:underline"
+                    >
+                      Regjistro biznesin
+                    </Link>
+                  </p>
+                </form>
+              ) : (
+                <PinLogin onUseEmail={() => setMode("manager")} />
+              )}
+            </>
           )}
         </div>
       </section>
     </div>
-  )
+  );
 }

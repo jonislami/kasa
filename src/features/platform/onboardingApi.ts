@@ -113,3 +113,32 @@ export async function fetchPlatformSettings(): Promise<PlatformSettings> {
   return { ...r, monthly_price: Number(r.monthly_price ?? 0), yearly_price: Number(r.yearly_price ?? 0), grace_days: Number(r.grace_days ?? 7) }
 }
 export const savePlatformSettings = (p: Partial<Record<keyof PlatformSettings, string | number | null>>) => rpc<void>('platform_settings_save', { p })
+
+// ---------------------------------------------------------------------------
+// Activation keys for the installed SEF app (0030)
+// ---------------------------------------------------------------------------
+export interface ActivationKey {
+  id: string
+  hint: string
+  label: string | null
+  register: string | null
+  created_at: string
+  expires_at: string
+  used_at: string | null
+  device: string | null
+  device_active: boolean | null
+  status: 'open' | 'used' | 'expired' | 'revoked'
+}
+
+async function keysRpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
+  const { data, error } = await supabase.rpc(fn, args)
+  if (error) {
+    if (['PGRST202', '42883'].includes(error.code ?? '')) throw new Error('Çelësat kërkojnë migrimin supabase/migrations/0030_activation_keys.sql në Supabase.')
+    throw new Error(error.message)
+  }
+  return data as T
+}
+export const fetchActivationKeys = (businessId: string) => keysRpc<ActivationKey[]>('platform_activation_keys', { p_business: businessId })
+export const createActivationKey = (p: { business: string; register: string | null; label: string; days: number }) =>
+  keysRpc<{ id: string; key: string; expires_at: string }>('platform_activation_key_create', { p_business: p.business, p_register: p.register, p_label: p.label || null, p_days: p.days })
+export const revokeActivationKey = (id: string) => keysRpc<void>('platform_activation_key_revoke', { p_id: id })
