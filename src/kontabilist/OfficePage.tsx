@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronLeft, FileSpreadsheet, History, KeyRound, ShieldCheck, UserPlus, Users } from 'lucide-react'
@@ -29,7 +29,7 @@ import {
 } from './office'
 import { downloadSheets } from './xls'
 import { fetchOfficeProfile, saveOfficeProfile, type OfficeProfile } from './work'
-import { deviceOf, downloadJson, fetchClientBackup, fetchSessions, logoDataUrl, revokeSession } from './archive'
+import { deviceOf, downloadJson, fetchClientBackup, fetchSessions, logoDataUrl, readBackupFile, restoreClient, revokeSession, type RestoreResult } from './archive'
 import { supabase } from '@/lib/supabase'
 import { EMAIL_KINDS, fetchEmailLog, fetchNotifySettings, saveNotifySettings, type NotifySettings } from './notify'
 
@@ -386,6 +386,7 @@ function SecurityTab({ requireMfa, officeName, admin }: { requireMfa: boolean; o
       <SessionsCard admin={admin} />
       {admin && <OfficeProfileCard />}
       {admin && <OfficeBackupCard />}
+      {admin && <RestoreCard />}
       {admin && <EmailSettingsCard />}
       {admin && (
         <Card className="p-5">
@@ -633,6 +634,118 @@ function EmailSettingsCard() {
               <Badge tone={l.status === 'sent' ? 'success' : l.status === 'failed' ? 'warn' : 'neutral'}>{l.status === 'sent' ? 'Dërguar' : l.status === 'failed' ? 'Dështoi' : 'Në pritje'}</Badge>
             </li>
           ))}
+        </ul>
+      )}
+    </Card>
+  )
+}
+
+/** Restore: each chosen client of a backup file opens as a new client of the office. */
+function RestoreCard() {
+  const qc = useQueryClient()
+  const navigate = useNavigate()
+  const input = useRef<HTMLInputElement>(null)
+  const [file, setFile] = useState<{ created_at: string | null; clients: Record<string, unknown>[] } | null>(null)
+  const [pick, setPick] = useState<Record<number, boolean>>({})
+  const [names, setNames] = useState<Record<number, string>>({})
+  const [err, setErr] = useState<string | null>(null)
+  const [state, setState] = useState<string | null>(null)
+  const [done, setDone] = useState<(RestoreResult | { error: string; name: string })[]>([])
+  const clientOf = (b: Record<string, unknown>) => (b.client as Record<string, unknown>) ?? {}
+  const read = async (f: File) => {
+    setErr(null)
+    setDone([])
+    try {
+      const r = await readBackupFile(f)
+      setFile(r)
+      setPick(Object.fromEntries(r.clients.map((_, i) => [i, r.clients.length === 1])))
+      setNames(Object.fromEntries(r.clients.map((b, i) => [i, `${String(clientOf(b).name ?? 'Klienti')} (rikthyer)`])))
+    } catch (e) {
+      setFile(null)
+      setErr((e as Error).message)
+    }
+  }
+  const run = useMutation({
+    mutationFn: async () => {
+      const chosen = file!.clients.map((b, i) => [b, i] as const).filter(([, i]) => pick[i])
+      const out: (RestoreResult | { error: string; name: string })[] = []
+      let k = 0
+      for (const [b, i] of chosen) {
+        k++
+        setState(`Duke rikthyer ${k}/${chosen.length}: ${names[i]}`)
+        try {
+          out.push(await restoreClient(b, names[i]))
+        } catch (e) {
+          out.push({ error: (e as Error).message, name: names[i] })
+        }
+        setDone([...out])
+      }
+      setState(null)
+      void qc.invalidateQueries({ queryKey: ['clients'] })
+      void qc.invalidateQueries({ queryKey: ['acc-clients-min'] })
+    },
+  })
+  const count = (b: Record<string, unknown>, k: string) => (Array.isArray(b[k]) ? (b[k] as unknown[]).length : 0)
+  return (
+    <Card className="p-5 lg:col-span-2">
+      <h2 className="text-[17px] font-semibold">Rikthe nga backup-i</h2>
+      <p className="mt-1 text-sm text-muted">
+        Çdo klient i zgjedhur hapet si <b>klient i ri</b> i zyrës, me faturat, pagesat, arkën dhe bankën, TVSH-në, pagat, ditarin, mjetet themelore, detyrat dhe mesazhet. Klientët ekzistues nuk preken.
+        Nuk rikthehen skedarët PDF/foto, skanimet dhe faturat e zyrës.
+      </p>
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <Button variant="secondary" onClick={() => input.current?.click()} disabled={run.isPending}>
+          Zgjidh skedarin e backup-it (.json)
+        </Button>
+        <input ref={input} type="file" accept="application/json,.json" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void read(f) }} />
+        {file?.created_at && <span className="text-sm text-muted">Backup i {formatKosovoDateTime(file.created_at)}</span>}
+      </div>
+      {err && <p className="mt-2 text-sm text-warn-700">{err}</p>}
+      {file && (
+        <>
+          <ul className="mt-3 max-h-[320px] divide-y divide-line overflow-auto rounded-card border border-line">
+            {file.clients.map((b, i) => (
+              <li key={i} className="flex flex-wrap items-center gap-3 px-3 py-2">
+                <input type="checkbox" className="h-5 w-5 accent-brand-600" checked={Boolean(pick[i])} onChange={(e) => setPick({ ...pick, [i]: e.target.checked })} />
+                <input
+                  value={names[i] ?? ''}
+                  onChange={(e) => setNames({ ...names, [i]: e.target.value })}
+                  className="h-9 min-w-[200px] flex-1 rounded-lg border border-field px-2 focus:border-brand-600 focus:outline-none"
+                />
+                <span className="text-xs text-muted">
+                  {[clientOf(b).nui && `NUI ${clientOf(b).nui}`, `${count(b, 'documents')} fatura`, `${count(b, 'transactions')} lëvizje parash`, `${count(b, 'employees')} punëtorë`].filter(Boolean).join(' · ')}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-3 flex items-center gap-3">
+            <Button loading={run.isPending} disabled={!Object.values(pick).some(Boolean)} onClick={() => confirm('Të rikthej klientët e zgjedhur si klientë të rinj?') && run.mutate()}>
+              Rikthe ({Object.values(pick).filter(Boolean).length})
+            </Button>
+            {state && <span className="text-sm text-muted">{state}</span>}
+          </div>
+        </>
+      )}
+      {done.length > 0 && (
+        <ul className="mt-3 flex flex-col gap-1 text-sm">
+          {done.map((d, i) =>
+            'error' in d ? (
+              <li key={i} className="text-warn-700">
+                {d.name}: {d.error}
+              </li>
+            ) : (
+              <li key={i}>
+                <button type="button" className="font-semibold text-brand-600 hover:underline" onClick={() => navigate(`/klient/${d.client_id}`)}>
+                  {d.name}
+                </button>{' '}
+                <span className="text-muted">
+                  – {d.counts.documents ?? 0} fatura, {d.counts.transactions ?? 0} lëvizje, {d.counts.employees ?? 0} punëtorë
+                  {!d.nui_kept && ' · NUI-ja u la bosh (ekziston te një klient tjetër)'}
+                  {d.counts.files_not_restored ? ` · ${d.counts.files_not_restored} skedarë nuk u rikthyen` : ''}
+                </span>
+              </li>
+            ),
+          )}
         </ul>
       )}
     </Card>
