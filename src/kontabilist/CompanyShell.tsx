@@ -32,6 +32,7 @@ import {
   Store,
   TrendingUp,
   UserCog,
+  Warehouse,
   Users,
   X,
   type LucideIcon,
@@ -80,6 +81,7 @@ export const MENU: { group: string; icon: LucideIcon; items: MenuItem[] }[] = [
       { key: 'tatimet', label: 'Tatimet e tjera dhe afatet', icon: CalendarDays },
     ],
   },
+  { group: 'Inventari', icon: Warehouse, items: [{ key: 'inventari', label: 'Artikujt, stoku dhe depot', icon: Warehouse }] },
   {
     group: 'Arka Kasa',
     icon: Store,
