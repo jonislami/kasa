@@ -1,6 +1,7 @@
 import { Outlet, useNavigate } from 'react-router-dom'
 import { useEffect, type ReactNode } from 'react'
 import { ensureDeviceLinked } from '@/lib/deviceLink'
+import { isSefApp } from '@/lib/device'
 import { ClockBar, OfflineBar } from '@/app/AppStatus'
 import { LicenseBanner } from '@/app/LicenseBanner'
 import { useQueryClient } from '@tanstack/react-query'
@@ -75,9 +76,10 @@ export function AppLayout() {
     }
   }, [qc, profile.role, business.type])
 
-  // Link this device to the business (managers) so workers can sign in here with their PIN.
+  // The installed SEF app keeps its link alive (heartbeat, register of the till). The web app has no PIN
+  // sign-in, so browsers are never linked as devices (they would take the license's device slots).
   useEffect(() => {
-    if (profile.role === 'accountant') return // an outside person never links a till
+    if (!isSefApp || profile.role === 'accountant') return
     void ensureDeviceLinked({ id: business.id, name: business.name }, isManagerRole(profile.role)).catch(() => undefined)
   }, [business.id, business.name, profile.role])
 
