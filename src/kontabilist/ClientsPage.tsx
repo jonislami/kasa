@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Building2, ChevronLeft, ChevronRight, KeyRound, LayoutGrid, List, LogOut, MoreVertical, Plus, Search } from 'lucide-react'
+import { Building2, ChevronLeft, ChevronRight, KeyRound, LayoutGrid, List, LogOut, MoreVertical, Plus, Search, Users } from 'lucide-react'
 import { useAuth } from '@/app/AuthProvider'
 import { Badge, Button, Card, Dialog, EmptyState, Input, Select, Table, Td, Th } from '@/components/ui'
 import { LogoMark } from '@/components/Logo'
@@ -123,9 +123,11 @@ export function ClientsPage({ me }: { me: AccMe }) {
                 ...(all.some((c) => !c.active) ? [{ value: 'archived', label: `Të arkivuara (${all.filter((c) => !c.active).length})` }] : []),
               ]}
             />
-            <Button size="lg" className="h-[48px] bg-brand-600 hover:bg-[#0B5C43]" onClick={() => setNewOpen(true)}>
-              <Plus className="h-5 w-5" /> Kompani e re
-            </Button>
+            {me.accountant?.role !== 'assistant' && (
+              <Button size="lg" className="h-[48px] bg-brand-600 hover:bg-[#0B5C43]" onClick={() => setNewOpen(true)}>
+                <Plus className="h-5 w-5" /> Kompani e re
+              </Button>
+            )}
           </div>
         </div>
 
@@ -339,7 +341,7 @@ function CompanyCard({ c, late, ended, onOpen }: { c: ClientRow; late: boolean; 
 }
 
 /** The first page has no sidebar: a white bar with the office, the account menu and "Dil". */
-function TopShell({ me, onPassword, children }: { me: AccMe; onPassword: () => void; children: React.ReactNode }) {
+export function TopShell({ me, onPassword, children }: { me: AccMe; onPassword: () => void; children: React.ReactNode }) {
   const { signOut } = useAuth()
   const navigate = useNavigate()
   const [menu, setMenu] = useState(false)
@@ -359,6 +361,9 @@ function TopShell({ me, onPassword, children }: { me: AccMe; onPassword: () => v
             <div className="text-xs font-semibold text-brand-400">Kontabilist</div>
           </div>
           <div className="flex-1" />
+          <button type="button" onClick={() => navigate('/zyra')} className="hidden h-11 items-center gap-2 rounded-ctl px-3 font-semibold text-white/80 hover:bg-white/10 hover:text-white md:flex">
+            <Users className="h-4 w-4" /> Zyra
+          </button>
           <div className="relative">
             <button type="button" onClick={() => setMenu((m) => !m)} aria-label="Llogaria" className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-400 text-[16px] font-bold text-brand-900">
               {initial(name)}
@@ -379,6 +384,16 @@ function TopShell({ me, onPassword, children }: { me: AccMe; onPassword: () => v
                 >
                   <KeyRound className="h-4 w-4" /> Ndrysho fjalëkalimin
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenu(false)
+                    navigate('/zyra')
+                  }}
+                  className="flex w-full items-center gap-2 border-t border-line px-4 py-3 text-left hover:bg-bg"
+                >
+                  <Users className="h-4 w-4" /> Zyra, ekipi dhe siguria
+                </button>
               </div>
             )}
           </div>
@@ -392,7 +407,7 @@ function TopShell({ me, onPassword, children }: { me: AccMe; onPassword: () => v
   )
 }
 
-function PasswordDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function PasswordDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [a, setA] = useState('')
   const [b, setB] = useState('')
   const [done, setDone] = useState(false)

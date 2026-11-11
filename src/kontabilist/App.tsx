@@ -1,6 +1,6 @@
 import { lazy, Suspense, type ReactNode } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Building2 } from 'lucide-react'
 import { useAuth } from '@/app/AuthProvider'
 import { Blocked, FullScreenLoader, SetupMissing } from '@/app/AuthGuard'
@@ -10,19 +10,31 @@ import { LogoMark } from '@/components/Logo'
 import { supabaseConfigured } from '@/lib/supabase'
 import { fetchMe, type AccMe } from './api'
 import { LoginPage } from './LoginPage'
+import { MfaGate } from './MfaGate'
+import { mfaStatus } from './office'
 
 const ClientsPage = lazy(() => import('./ClientsPage').then((m) => ({ default: m.ClientsPage })))
 const ClientPage = lazy(() => import('./ClientPage').then((m) => ({ default: m.ClientPage })))
+const OfficePage = lazy(() => import('./OfficePage').then((m) => ({ default: m.OfficePage })))
 
 /** Signed-in, active accountant account; anything else gets a clear message. */
 function RequireAccountant({ children }: { children: (me: AccMe) => ReactNode }) {
   const { status, session, error } = useAuth()
   const location = useLocation()
+  const qc = useQueryClient()
   const me = useQuery({ queryKey: ['acc-me', session?.user.id], queryFn: fetchMe, enabled: Boolean(session), staleTime: 5 * 60_000 })
+  // Two-factor login: asked whenever the account has it, required when the office says so.
+  const mfa = useQuery({ queryKey: ['mfa', session?.user.id], queryFn: mfaStatus, enabled: Boolean(session), staleTime: 60_000, retry: false })
   if (!supabaseConfigured) return <SetupMissing />
   if (status === 'anonymous') return <Navigate to="/login" replace state={{ from: location.pathname }} />
   if (status === 'error') return <Blocked title="Të dhënat nuk u ngarkuan" text={error ?? 'Provo përsëri pas pak.'} />
-  if (status === 'loading' || me.isLoading) return <FullScreenLoader />
+  if (status === 'loading' || me.isLoading || mfa.isLoading) return <FullScreenLoader />
+  const mfaDone = () => {
+    void qc.invalidateQueries({ queryKey: ['mfa'] })
+    void qc.invalidateQueries({ queryKey: ['acc-me'] })
+  }
+  if (mfa.data?.factorId && mfa.data.next === 'aal2' && mfa.data.current !== 'aal2') return <MfaGate mode="verify" factorId={mfa.data.factorId} onDone={mfaDone} />
+  if (me.data?.mfa_required) return <MfaGate mode={mfa.data?.factorId ? 'verify' : 'enroll'} factorId={mfa.data?.factorId ?? null} onDone={mfaDone} />
   if (me.error) return <Blocked title="Programi nuk është aktivizuar ende" text={(me.error as Error).message} />
   const m = me.data!
   if (m.has_business) return <Blocked title="Kjo është llogari biznesi" text="Ky program është për kontabilistët. Bizneset hyjnë në aplikacionin Kasa." />
@@ -82,6 +94,18 @@ export function App() {
             {(me) => (
               <Lazy>
                 <ClientPage me={me} />
+              </Lazy>
+            )}
+          </RequireAccountant>
+        }
+      />
+      <Route
+        path="/zyra"
+        element={
+          <RequireAccountant>
+            {(me) => (
+              <Lazy>
+                <OfficePage me={me} />
               </Lazy>
             )}
           </RequireAccountant>
