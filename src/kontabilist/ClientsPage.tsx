@@ -13,6 +13,8 @@ import { supabase } from '@/lib/supabase'
 import { AccountingNotMigrated, addMonths, formatDay, monthName, monthStart, vatDueDate } from '@/features/accounting/api'
 import { fetchClients, type AccMe, type ClientRow } from './api'
 import { ClientDialog, EMPTY_CLIENT } from './ClientDialog'
+import { DeadlineRow } from './TaxesTab'
+import { fetchCalendar } from './vat'
 
 function ago(iso: string | null | undefined): string | null {
   if (!iso) return null
@@ -149,6 +151,8 @@ export function ClientsPage({ me }: { me: AccMe }) {
           </span>
         </div>
 
+        <UpcomingDeadlines onOpen={(clientId, tab) => navigate(`/klient/${clientId}/${tab}`)} />
+
         <div className="mt-6">
           {clients.error instanceof AccountingNotMigrated ? (
             <Card>
@@ -239,6 +243,35 @@ export function ClientsPage({ me }: { me: AccMe }) {
       />
       <PasswordDialog open={passwordOpen} onClose={() => setPasswordOpen(false)} />
     </TopShell>
+  )
+}
+
+/** Deadlines of all companies: late ones and the next 30 days that are not filed yet. */
+function UpcomingDeadlines({ onOpen }: { onOpen: (clientId: string, tab: string) => void }) {
+  const today = kosovoDateISO()
+  const plus = (n: number) => {
+    const x = new Date(today + 'T12:00:00')
+    x.setDate(x.getDate() + n)
+    return x.toISOString().slice(0, 10)
+  }
+  const cal = useQuery({ queryKey: ['calendar', 'all', today], queryFn: () => fetchCalendar(plus(-60), plus(30)) })
+  const open = (cal.data ?? []).filter((d) => d.status === 'open' || d.status === 'draft')
+  if (!open.length) return null
+  const late = open.filter((d) => d.due < today).length
+  return (
+    <Card className="mt-5 overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-3.5">
+        <h2 className="font-semibold">Afatet tatimore të afërta</h2>
+        <span className={cn('text-sm', late ? 'font-semibold text-[#DC2626]' : 'text-muted')}>
+          {open.length} për t'u bërë{late ? ` · ${late} me vonesë` : ''}
+        </span>
+      </div>
+      <ul className="max-h-[300px] divide-y divide-line overflow-y-auto">
+        {open.slice(0, 12).map((d) => (
+          <DeadlineRow key={d.client_id + d.kind + d.period} d={d} today={today} showClient onOpen={() => onOpen(d.client_id, d.kind === 'vat' ? 'tvsh' : 'tatimet')} />
+        ))}
+      </ul>
+    </Card>
   )
 }
 

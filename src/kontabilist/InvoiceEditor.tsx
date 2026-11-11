@@ -20,6 +20,7 @@ import {
   type InvoiceInput,
 } from './api'
 import { EMPTY_PARTNER, PartnerDialog } from './PartnersTab'
+import { VAT_FLAG_LABELS, type VatFlag } from './vat'
 
 const UNITS = ['copë', 'orë', 'ditë', 'muaj', 'kg', 'litër', 'm', 'm²', 'm³', 'pako', 'shërbim']
 const VAT_OPTIONS: { value: VatCode; label: string }[] = [
@@ -347,6 +348,16 @@ export function InvoiceEditor({ clientId, value, onClose, onSaved }: { clientId:
             <div className="flex flex-col gap-3">
               <Input label="Përshkrimi" value={f.description ?? ''} onChange={(e) => setF({ ...f, description: e.target.value })} />
               <Input label="Shënim në faturë" value={f.note ?? ''} placeholder="p.sh. kushtet e pagesës" onChange={(e) => setF({ ...f, note: e.target.value })} />
+              {kind !== 'proforma' && (
+                <Select
+                  label="Lloji për TVSH (formulari i ATK-së)"
+                  value={f.vat_flag ?? 'none'}
+                  onChange={(e) => setF({ ...f, vat_flag: e.target.value as VatFlag })}
+                  options={(Object.keys(VAT_FLAG_LABELS) as VatFlag[])
+                    .filter((k) => (purchase ? ['none', 'reverse_charge', 'import', 'farmer'] : ['none', 'service_abroad', 'reverse_charge', 'exempt_credit']).includes(k))
+                    .map((k) => ({ value: k, label: VAT_FLAG_LABELS[k] }))}
+                />
+              )}
               {!f.id && kind !== 'proforma' && f.doc_type !== 'credit_note' && (
                 <Select
                   label="Pagesa"

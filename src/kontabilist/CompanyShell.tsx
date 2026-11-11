@@ -53,7 +53,15 @@ export const MENU: { group: string; icon: LucideIcon; items: MenuItem[] }[] = [
       { key: 'fitimi', label: 'Fitimi dhe humbja', icon: TrendingUp },
     ],
   },
-  { group: 'Administrata tatimore', icon: Percent, items: [{ key: 'tvsh', label: 'Formulari i TVSH-së', icon: Percent }] },
+  {
+    group: 'Administrata tatimore',
+    icon: Percent,
+    items: [
+      { key: 'tvsh', label: 'Formulari i TVSH-së dhe librat', icon: Percent },
+      { key: 'tvsh_permbledhje', label: 'TVSH sipas normave', icon: FileBarChart },
+      { key: 'tatimet', label: 'Tatimet e tjera dhe afatet', icon: CalendarDays },
+    ],
+  },
   {
     group: 'Arka Kasa',
     icon: Store,

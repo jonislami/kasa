@@ -381,9 +381,10 @@ begin
     ), items as (
       -- VAT
       select c.id as client_id, c.name, 'vat' as kind, mo.m as period, (mo.m + interval '1 month')::date + 19 as due,
-             coalesce(r.status, 'open') as status, (r.boxes->>'72')::numeric as amount
+             coalesce(r.status, case when ap.vat_status = 'filed' then 'filed' end, 'open') as status, (r.boxes->>'72')::numeric as amount
       from public.acc_clients c cross join months mo
       left join public.acc_vat_returns r on r.client_id = c.id and r.month = mo.m
+      left join public.acc_periods ap on ap.client_id = c.id and ap.month = mo.m
       where c.accountant_id = v_me and c.active and c.vat_registered
       union all
       -- rent tax: only months with rent invoices

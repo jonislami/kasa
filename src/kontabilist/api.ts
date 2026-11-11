@@ -377,6 +377,7 @@ export interface Doc {
   total: number
   has_lines: boolean
   converted_to: string | null
+  vat_flag?: InvoiceInput['vat_flag']
   /** From acc_doc_balances (0016); before the migration: derived from `payment`. */
   paid: number
   credited: number
@@ -488,6 +489,8 @@ export interface InvoiceInput {
   amt_a?: number
   paid_now?: { method: 'cash' | 'bank'; reference?: string } | null
   force?: boolean
+  /** How the document enters the VAT form (0018). */
+  vat_flag?: 'none' | 'service_abroad' | 'reverse_charge' | 'exempt_credit' | 'import' | 'farmer'
 }
 
 export class DuplicateInvoice extends Error {}
@@ -499,7 +502,12 @@ export async function saveInvoice(clientId: string, inv: InvoiceInput): Promise<
     if (['PGRST202', '42883'].includes(error.code ?? '')) throw new Error('Kjo pjesë kërkon migrimin supabase/migrations/0016_acc_invoices.sql në Supabase.')
     fail(error)
   }
-  return data as { id: string; doc_no: string }
+  const r = data as { id: string; doc_no: string }
+  if (inv.vat_flag && (inv.vat_flag !== 'none' || inv.id)) {
+    const f = await supabase.rpc('acc_set_vat_flag', { p_doc: r.id, p_flag: inv.vat_flag })
+    if (f.error && !['PGRST202', '42883'].includes(f.error.code ?? '')) fail(f.error)
+  }
+  return r
 }
 
 export async function convertProforma(id: string, date?: string): Promise<{ id: string; doc_no: string }> {

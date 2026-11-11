@@ -15,12 +15,14 @@ import { cancelLink, categoryLabel, deleteClient, docNet, fetchClientBooks, fetc
 import { BankTab } from './BankTab'
 import { DashboardTab } from './DashboardTab'
 import { DebtsTab } from './DebtsTab'
+import { TaxesTab } from './TaxesTab'
+import { VatFormTab } from './VatFormTab'
 import { PartnersTab } from './PartnersTab'
 import { CompanyShell } from './CompanyShell'
 import { ClientDialog } from './ClientDialog'
 import { DocumentsTab } from './DocumentsTab'
 
-type TabKey = 'paneli' | 'pasqyra' | 'banka' | 'shitjet' | 'proformat' | 'blerjet' | 'partneret' | 'borxhet' | 'tvsh' | 'fitimi' | 'arka' | 'stoku' | 'klienti'
+type TabKey = 'paneli' | 'pasqyra' | 'banka' | 'tatimet' | 'tvsh_permbledhje' | 'shitjet' | 'proformat' | 'blerjet' | 'partneret' | 'borxhet' | 'tvsh' | 'fitimi' | 'arka' | 'stoku' | 'klienti'
 const TABS: { key: TabKey; label: string; kasaOnly?: boolean }[] = [
   { key: 'paneli', label: 'Paneli' },
   { key: 'pasqyra', label: 'Pasqyra' },
@@ -30,6 +32,8 @@ const TABS: { key: TabKey; label: string; kasaOnly?: boolean }[] = [
   { key: 'partneret', label: 'Partnerët' },
   { key: 'borxhet', label: 'Borxhet' },
   { key: 'banka', label: 'Arka & banka' },
+  { key: 'tatimet', label: 'Tatimet e tjera dhe afatet' },
+  { key: 'tvsh_permbledhje', label: 'TVSH sipas normave' },
   { key: 'tvsh', label: 'TVSH' },
   { key: 'fitimi', label: 'Fitimi' },
   { key: 'arka', label: 'Arka', kasaOnly: true },
@@ -136,7 +140,7 @@ export function ClientPage({ me }: { me: AccMe }) {
   }
 
   const toolbar =
-    tab.key === 'klienti' || tab.key === 'paneli' ? undefined : (
+    ['klienti', 'paneli', 'tvsh', 'tatimet', 'borxhet'].includes(tab.key) ? undefined : (
       <>
         <PeriodPicker period={period} onChange={setPeriod} disableNext={isCurrent} />
         <Button variant="secondary" onClick={() => void exportAll()} disabled={!s} loading={exporting}>
@@ -162,7 +166,7 @@ export function ClientPage({ me }: { me: AccMe }) {
 
   return (
     <CompanyShell me={me} client={client ?? null} linked={linked} active={tab.key} toolbar={toolbar}>
-      {tab.key !== 'klienti' && tab.key !== 'paneli' && (
+      {!['klienti', 'paneli', 'tvsh', 'tatimet', 'borxhet'].includes(tab.key) && (
         <p className="-mt-1 mb-3 text-sm text-muted">
           {TABS.find((t) => t.key === tab.key)?.label} · {formatDay(range.from)} – {formatDay(range.to)}
         </p>
@@ -218,7 +222,9 @@ export function ClientPage({ me }: { me: AccMe }) {
             {tab.key === 'proformat' && <DocumentsTab client={client} kind="proforma" from={range.from} to={range.to} onChanged={refresh} />}
             {tab.key === 'partneret' && <PartnersTab clientId={client.id} clientName={client.name} from={range.from} to={range.to} />}
             {tab.key === 'borxhet' && <DebtsTab client={client} onChanged={refresh} />}
-            {tab.key === 'tvsh' && <VatTab s={s} period={period} />}
+            {tab.key === 'tvsh' && <VatFormTab client={client} />}
+            {tab.key === 'tvsh_permbledhje' && <VatTab s={s} period={period} />}
+            {tab.key === 'tatimet' && <TaxesTab client={client} onGo={(t) => navigate(`/klient/${id}/${t}`)} />}
             {tab.key === 'fitimi' && <ProfitTab s={s} />}
             {tab.key === 'arka' && linked && <CashTab s={s} />}
             {tab.key === 'stoku' && linked && (kasaOpen && books.data?.kasa ? <StockTab s={books.data.kasa} /> : <p className="py-10 text-center text-muted">Duke hapur të dhënat e Kasa-s…</p>)}
