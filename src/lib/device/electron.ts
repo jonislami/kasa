@@ -55,7 +55,7 @@ function storageKey(): Promise<CryptoKey> {
 }
 
 /** DPAPI key store in the main process; an older main process without it falls back to WebCrypto. */
-const dpapiKeys: KeyStore | null = bridge.keySign
+const dpapiKeys: KeyStore | null = bridge?.keySign
   ? {
       ensureKey: (alias) => bridge.keyEnsure!(alias),
       hasKey: (alias) => bridge.keyHas!(alias),
