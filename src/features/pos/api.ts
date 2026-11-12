@@ -1,4 +1,5 @@
 import { assertCanSell } from '@/lib/license'
+import type { FiscalReceipt } from '@/lib/fiscal'
 import { supabase } from '@/lib/supabase'
 import { kosovoDateISO, serverDate } from '@/lib/clock'
 import type { VatCode } from '@/lib/vat'
@@ -56,6 +57,8 @@ export interface Sale {
   items: SaleItem[]
   voided: boolean
   has_refunds: boolean
+  /** Fiscal coupon (ATK) of this sale on this receipt – phase 9. */
+  fiscal?: FiscalReceipt | null
 }
 
 export interface CreateSaleInput {
@@ -194,7 +197,10 @@ export async function lookupSale(invoiceNo: number): Promise<Sale | null> {
 
 export async function getSale(id: string): Promise<Sale | null> {
   const r = await rpc<unknown>('sale_json', { p_sale_id: id })
-  return r ? toSale(r) : null
+  if (!r) return null
+  // Fiscal coupon for reprints (null before phase 9 / for non-fiscal sales).
+  const { data } = await supabase.rpc('sale_fiscal', { p_sale_id: id })
+  return { ...toSale(r), fiscal: (data as FiscalReceipt | null) ?? null }
 }
 
 export interface Approver {

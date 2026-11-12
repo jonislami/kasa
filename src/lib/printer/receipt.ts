@@ -30,11 +30,13 @@ export function receiptBytes(sale: Sale, business: Business, s: ReceiptSettings,
   p.align('left').rule()
 
   const title = TITLES[sale.kind]
-  if (title || opts.copy || sale.offline) {
+  const f = sale.fiscal ?? null
+  const offline = sale.offline || Boolean(f?.offline)
+  if (title || opts.copy || offline) {
     p.align('center').bold(true)
     if (title) p.line(title)
     if (opts.copy) p.line('KOPJE E KUPONIT')
-    if (sale.offline) p.line('OFFLINE')
+    if (offline) p.line('OFFLINE')
     p.bold(false).align('left')
   }
   p.pair('Fatura:', sale.offline_no && sale.invoice_no === 0 ? sale.offline_no : formatInvoiceNo(sale.invoice_no))
@@ -69,8 +71,21 @@ export function receiptBytes(sale: Sale, business: Business, s: ReceiptSettings,
   if (sale.reason) p.wrap(`Arsyeja: ${sale.reason}`)
   p.align('center')
   if (s.receipt_footer) p.bold(true).wrap(s.receipt_footer).bold(false)
-  if (opt.show_barcode && sale.invoice_no) p.feed(1).barcode128(String(sale.invoice_no)).raw(0x0a)
-  p.line('Kupon jo-fiskal')
+  if (opt.show_barcode && sale.invoice_no && !f) p.feed(1).barcode128(String(sale.invoice_no)).raw(0x0a)
+  if (f) {
+    // ATK: QR (citizen coupon + signature), NUIKF, SEF number, coupon number and type.
+    p.align('left').rule()
+    // RKS mark (ATK asks for the RKS logo; text until the official image is printed as a bitmap)
+    p.align('center').bold(true).size(2).line('RKS').size(1).bold(false).align('left')
+    p.pair('Nr. SEF:', f.sef_no)
+    p.pair('Nr. kuponit:', f.coupon_id)
+    p.pair('NUIKF:', f.verification_no)
+    p.align('center').feed(1).qr(f.qr, s.paper_width === 58 ? 3 : 4).raw(0x0a)
+    p.bold(true).line(f.env === 'test' ? 'KUPON FISKAL - TEST' : 'KUPON FISKAL').bold(false)
+    if (offline) p.line('Leshuar pa lidhje me ATK')
+  } else {
+    p.line('Kupon jo-fiskal')
+  }
   p.align('left')
   if (opt.cut !== false) p.cut()
   else p.feed(4)

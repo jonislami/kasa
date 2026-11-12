@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, ChevronLeft, Minus, Plus } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
+import { fiscalizeSale } from './fiscal'
 import { Button, Card, Dialog, Input, Select } from '@/components/ui'
 import { hasModule, isManagerRole } from '@/lib/business'
 import { cn } from '@/lib/cn'
@@ -32,6 +33,8 @@ function refundLineTotal(i: SaleItem, qty: number): number {
 export function RefundPage() {
   const { business, profile } = useBusiness()
   const manager = isManagerRole(profile.role)
+  // The till's register on this device (the return coupon is issued by it).
+  const registerId = localStorage.getItem(`kasa.register.${business.id}`)
   const navigate = useNavigate()
   const qc = useQueryClient()
   const [params] = useSearchParams()
@@ -118,6 +121,7 @@ export function RefundPage() {
         method: exchange ? 'cash' : method,
         approver_id: approverId,
         pin,
+        register_id: registerId,
       })
       if (!r.ok) {
         setError(APPROVAL_MESSAGES[r.error])
@@ -125,7 +129,11 @@ export function RefundPage() {
         return
       }
       setApprove(false)
-      setDone(r.sale)
+      const fiscal = await fiscalizeSale(r.sale, { key: r.sale.id, registerId, operator: profile.full_name, saved: true }).catch((e: Error) => {
+        setError('Kuponi fiskal i kthimit nuk u krijua: ' + e.message)
+        return null
+      })
+      setDone({ ...r.sale, fiscal })
       void qc.invalidateQueries({ queryKey: ['today-sales'] })
       void qc.invalidateQueries({ queryKey: ['pos-products'] })
       void qc.invalidateQueries({ queryKey: ['products'] })

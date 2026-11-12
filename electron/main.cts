@@ -7,6 +7,7 @@ import { autoUpdater } from 'electron-updater'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import fs from 'node:fs'
+import crypto from 'node:crypto'
 
 // The same main process runs two programs: Kasa (the till) and Kasa Kontabilist (the accountant's
 // program). electron-builder.kontabilist.yml writes "kasaApp": "kontabilist" into package.json;
@@ -113,6 +114,76 @@ ipcMain.handle('kasa:safe-encrypt', (_e, text: string) => {
 ipcMain.handle('kasa:safe-decrypt', (_e, b64: string) => {
   if (!safeStorage.isEncryptionAvailable()) return null
   return safeStorage.decryptString(Buffer.from(b64, 'base64'))
+})
+
+// ---------------------------------------------------------------------------
+// ATK signing key of the till (fiscalization). ECDSA P-256 created here, in the main process; the
+// private key is stored only encrypted with Windows DPAPI (safeStorage) in the user's app data and
+// never reaches the page – the page asks for a public key or a signature.
+// ---------------------------------------------------------------------------
+const ATK_ALIAS = /^atk:[0-9a-f-]{36}$/i
+const atkKeyFile = () => path.join(app.getPath('userData'), 'atk-keys.json')
+
+function trustedSender(e: Electron.IpcMainInvokeEvent): boolean {
+  const url = e.senderFrame?.url ?? ''
+  const dev = process.env.KASA_DEV_URL
+  return url.startsWith(ORIGIN + '/') || url === ORIGIN || Boolean(dev && url.startsWith(dev))
+}
+function readAtkKeys(): Record<string, string> {
+  try {
+    return JSON.parse(fs.readFileSync(atkKeyFile(), 'utf-8')) as Record<string, string>
+  } catch {
+    return {}
+  }
+}
+function writeAtkKeys(keys: Record<string, string>) {
+  const tmp = atkKeyFile() + '.tmp'
+  fs.writeFileSync(tmp, JSON.stringify(keys), { mode: 0o600 })
+  fs.renameSync(tmp, atkKeyFile())
+}
+function atkCheck(e: Electron.IpcMainInvokeEvent, alias: unknown): string {
+  if (!trustedSender(e)) throw new Error('Kërkesë e palejuar')
+  if (typeof alias !== 'string' || !ATK_ALIAS.test(alias)) throw new Error('Emër i pavlefshëm i çelësit')
+  if (!safeStorage.isEncryptionAvailable()) throw new Error('Windows nuk lejon ruajtjen e sigurt të çelësit (DPAPI)')
+  return alias
+}
+function atkPrivate(alias: string): crypto.KeyObject | null {
+  const sealed = readAtkKeys()[alias]
+  if (!sealed) return null
+  return crypto.createPrivateKey(safeStorage.decryptString(Buffer.from(sealed, 'base64')))
+}
+const atkSpki = (priv: crypto.KeyObject) => (crypto.createPublicKey(priv).export({ type: 'spki', format: 'der' }) as Buffer).toString('base64')
+
+ipcMain.handle('kasa:key-ensure', (e, alias: unknown) => {
+  const a = atkCheck(e, alias)
+  const existing = atkPrivate(a)
+  if (existing) return atkSpki(existing)
+  const { privateKey } = crypto.generateKeyPairSync('ec', { namedCurve: 'prime256v1' })
+  const pem = privateKey.export({ type: 'pkcs8', format: 'pem' }) as string
+  const keys = readAtkKeys()
+  keys[a] = safeStorage.encryptString(pem).toString('base64')
+  writeAtkKeys(keys)
+  return atkSpki(privateKey)
+})
+ipcMain.handle('kasa:key-has', (e, alias: unknown) => Boolean(readAtkKeys()[atkCheck(e, alias)]))
+ipcMain.handle('kasa:key-public', (e, alias: unknown) => {
+  const priv = atkPrivate(atkCheck(e, alias))
+  return priv ? atkSpki(priv) : null
+})
+// SHA-256 + ECDSA over the bytes; raw r||s (IEEE P1363), the same format WebCrypto returns.
+ipcMain.handle('kasa:key-sign', (e, alias: unknown, dataB64: unknown) => {
+  const priv = atkPrivate(atkCheck(e, alias))
+  if (!priv) throw new Error('Çelësi i arkës nuk ekziston në këtë pajisje')
+  if (typeof dataB64 !== 'string') throw new Error('Të dhëna të pavlefshme')
+  return crypto.sign('sha256', Buffer.from(dataB64, 'base64'), { key: priv, dsaEncoding: 'ieee-p1363' }).toString('base64')
+})
+ipcMain.handle('kasa:key-delete', (e, alias: unknown) => {
+  const a = atkCheck(e, alias)
+  const keys = readAtkKeys()
+  if (keys[a]) {
+    delete keys[a]
+    writeAtkKeys(keys)
+  }
 })
 
 // ---------------------------------------------------------------------------

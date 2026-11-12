@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { isSefApp } from '@/lib/device'
+import { TillFiscalCard } from '@/features/fiscal/TillFiscalCard'
 import { useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { KeyRound } from 'lucide-react'
@@ -41,6 +43,11 @@ export function SettingsPage() {
         <PageHeader title="Printeri" />
         <div className="px-4 py-5 md:px-8 md:py-0 md:pb-8">
           <InstallCard className="mb-5" />
+          {isSefApp && (
+            <div className="mb-5">
+              <TillFiscalCard />
+            </div>
+          )}
           <PrinterSection />
           <p className="mt-6 text-center text-sm text-muted">Kasa v{device.appVersion}</p>
         </div>

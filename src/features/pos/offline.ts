@@ -1,6 +1,7 @@
 import { useEffect, useSyncExternalStore } from 'react'
 import { onlineManager } from '@tanstack/react-query'
 import { device } from '@/lib/device'
+import { attachSaleId, flushFiscal } from '@/lib/fiscal'
 import { serverDate } from '@/lib/clock'
 import { createSale, NetworkError, type CreateSaleInput, type Sale } from './api'
 import type { Cart, PosProduct } from './cart'
@@ -72,6 +73,7 @@ export function syncQueue(onSent?: (s: Sale) => void): Promise<void> {
         try {
           const sale = await createSale(q.input)
           await device.storage.remove(PREFIX + q.input.client_id)
+          await attachSaleId(q.input.client_id, sale.id) // its fiscal coupon can now go to ATK
           onSent?.(sale)
           set({ online: true })
         } catch (e) {
@@ -89,6 +91,7 @@ export function syncQueue(onSent?: (s: Sale) => void): Promise<void> {
         }
       }
       set({ lastSync: serverDate().toISOString() })
+      if (state.online) void flushFiscal()
     } finally {
       await loadPending()
       set({ syncing: false })
@@ -122,10 +125,15 @@ export function useOfflineQueue(onSent?: (s: Sale) => void) {
     const t = window.setInterval(() => {
       if (state.pending.some((p) => !p.rejected)) void syncQueue(onSent)
     }, 30_000)
+    // Fiscal coupons ATK has not confirmed yet (no answer at the time of the sale).
+    const f = window.setInterval(() => {
+      if (state.online && !state.pending.length) void flushFiscal()
+    }, 120_000)
     return () => {
       window.removeEventListener('online', goOnline)
       window.removeEventListener('offline', goOffline)
       window.clearInterval(t)
+      window.clearInterval(f)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

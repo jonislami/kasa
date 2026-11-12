@@ -10,6 +10,7 @@ import { formatEUR } from '@/lib/money'
 import { promptInstall, useInstallState } from '@/lib/pwa'
 import { checkClock, formatDrift, serverNow, useClock, KOSOVO_TZ } from '@/lib/clock'
 import { syncQueue, useOfflineQueue } from '@/features/pos/offline'
+import { fiscalQueueState, flushFiscal, hoursLeft, onFiscalQueueChange, type FiscalQueueState } from '@/lib/fiscal'
 
 const timeFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })
 
@@ -273,6 +274,49 @@ export function ClockBar() {
           </button>
         </div>
       )}
+    </div>
+  )
+}
+
+/**
+ * Fiscal coupons this device has signed but ATK has not confirmed (no answer at the time of the sale,
+ * or the sale itself was offline). ATK allows 48 hours; shown on every screen, the till included.
+ */
+export function FiscalBar() {
+  const [state, setState] = useState<FiscalQueueState | null>(null)
+  useEffect(() => {
+    const load = () => void fiscalQueueState().then(setState, () => setState(null))
+    load()
+    const off = onFiscalQueueChange(load)
+    const t = setInterval(load, 60_000)
+    return () => {
+      off()
+      clearInterval(t)
+    }
+  }, [])
+  const flush = useCallback(() => void flushFiscal().then(() => fiscalQueueState().then(setState)), [])
+  if (!state || (state.waiting === 0 && state.failed === 0)) return null
+  const left = hoursLeft(state.oldest)
+  const urgent = state.failed > 0 || (left !== null && left < 12)
+  return (
+    <div className="px-4 pt-3 md:px-8 md:pt-5 print:hidden">
+      <div className={cn('flex flex-wrap items-center gap-3 rounded-card border px-4 py-3 text-sm', urgent ? 'border-[#F3C5A8] bg-warn-100 text-warn-700' : 'border-[#F5D98B] bg-amber-100 text-amber-700')}>
+        <AlertTriangle className="h-5 w-5 shrink-0" />
+        <div className="min-w-0 flex-1">
+          <div className="font-semibold">
+            {state.waiting > 0 && `${state.waiting} ${state.waiting === 1 ? 'kupon fiskal' : 'kuponë fiskalë'} pa u dërguar në ATK`}
+            {state.waiting > 0 && state.failed > 0 && ' · '}
+            {state.failed > 0 && `${state.failed} të refuzuar nga ATK`}
+          </div>
+          {left !== null && state.waiting > 0 && <div>{left > 0 ? `Duhen dërguar brenda ${Math.floor(left)} orëve (afati 48 orë).` : 'Afati 48 orë ka kaluar – njofto ATK-në.'}</div>}
+          {state.failed > 0 && <div>Shiko Fiskalizimi për gabimin.</div>}
+        </div>
+        {state.waiting > 0 && (
+          <Button size="sm" variant="secondary" onClick={flush}>
+            Dërgo tani
+          </Button>
+        )}
+      </div>
     </div>
   )
 }

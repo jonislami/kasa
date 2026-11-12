@@ -2,8 +2,9 @@ import { Outlet, useNavigate } from 'react-router-dom'
 import { useEffect, type ReactNode } from 'react'
 import { ensureDeviceLinked } from '@/lib/deviceLink'
 import { isSefApp } from '@/lib/device'
-import { ClockBar, OfflineBar } from '@/app/AppStatus'
+import { ClockBar, FiscalBar, OfflineBar } from '@/app/AppStatus'
 import { LicenseBanner } from '@/app/LicenseBanner'
+import { TillFiscalBanner } from '@/features/fiscal/TillFiscalCard'
 import { useQueryClient } from '@tanstack/react-query'
 import { fetchCategories, fetchProducts } from '@/features/products/api'
 import { fetchEntries, fetchSuppliers } from '@/features/stock/api'
@@ -88,6 +89,8 @@ export function AppLayout() {
       <WorkerShell type={business.type} businessName={business.name} userName={profile.full_name || 'Punëtori'} userSub={sub} tabs={main}>
         <ClockBar />
         <OfflineBar />
+        {isSefApp && <FiscalBar />}
+        {isSefApp && <TillFiscalBanner />}
         <Outlet />
       </WorkerShell>
     )

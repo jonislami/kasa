@@ -22,6 +22,7 @@ const PosPage = lazy(() => import('@/features/pos/PosPage').then((m) => ({ defau
 const RefundPage = lazy(() => import('@/features/pos/RefundPage').then((m) => ({ default: m.RefundPage })))
 const SettingsPage = lazy(() => import('@/features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })))
 const ReportsPage = lazy(() => import('@/features/reports/ReportsPage').then((m) => ({ default: m.ReportsPage })))
+const FiscalPage = lazy(() => import('@/features/fiscal/FiscalPage').then((m) => ({ default: m.FiscalPage })))
 const AuditPage = lazy(() => import('@/features/reports/AuditPage').then((m) => ({ default: m.AuditPage })))
 const WorkPage = lazy(() => import('@/features/work/WorkPage').then((m) => ({ default: m.WorkPage })))
 const AppointmentsPage = lazy(() => import('@/features/salon/AppointmentsPage').then((m) => ({ default: m.AppointmentsPage })))
@@ -178,6 +179,16 @@ export function AppRoutes() {
                 <WorkPage />
               </Lazy>
             </RequireStaff>
+          }
+        />
+        <Route
+          path="fiskalizimi"
+          element={
+            <RequireManager>
+              <Lazy>
+                <FiscalPage />
+              </Lazy>
+            </RequireManager>
           }
         />
         <Route

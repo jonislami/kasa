@@ -1,12 +1,32 @@
-import type { DeviceAdapter, PrinterTransport } from './types'
-import { getDeviceId, keys, storage } from './web'
+import { Capacitor, registerPlugin } from '@capacitor/core'
+import type { DeviceAdapter, KeyStore, PrinterTransport } from './types'
+import { getDeviceId, keys as webKeys, storage } from './web'
 
 /**
  * Android / iPhone app (Capacitor). The page runs in the system WebView; Bluetooth printing goes
  * through the native BLE plugin (@capacitor-community/bluetooth-le), which also works on iPhone
- * where Safari has no Web Bluetooth. Keys and the sealed store use the WebView's WebCrypto +
- * IndexedDB (app-private storage); phase 9 moves the ATK key into Android Keystore / iOS Keychain.
+ * where Safari has no Web Bluetooth. The sealed store uses the WebView's WebCrypto + IndexedDB
+ * (app-private storage). The ATK key lives in the Android Keystore (AtkKeyPlugin.java); where the
+ * native plugin is missing (iPhone for now) it stays a non-extractable WebCrypto key.
  */
+
+interface AtkKeyNative {
+  ensureKey(o: { alias: string }): Promise<{ publicKey: string }>
+  hasKey(o: { alias: string }): Promise<{ value: boolean }>
+  getPublicKey(o: { alias: string }): Promise<{ publicKey: string | null }>
+  sign(o: { alias: string; data: string }): Promise<{ signature: string }>
+  deleteKey(o: { alias: string }): Promise<void>
+}
+const AtkKey = registerPlugin<AtkKeyNative>('AtkKey')
+const b64 = (bytes: Uint8Array) => btoa(String.fromCharCode(...bytes))
+
+const nativeKeys: KeyStore = {
+  ensureKey: async (alias) => (await AtkKey.ensureKey({ alias })).publicKey,
+  hasKey: async (alias) => (await AtkKey.hasKey({ alias })).value,
+  getPublicKey: async (alias) => (await AtkKey.getPublicKey({ alias })).publicKey,
+  sign: async (alias, data) => (await AtkKey.sign({ alias, data: b64(data) })).signature,
+  deleteKey: (alias) => AtkKey.deleteKey({ alias }),
+}
 const PRINTER_SERVICES = [
   '000018f0-0000-1000-8000-00805f9b34fb',
   '0000ff00-0000-1000-8000-00805f9b34fb',
@@ -89,7 +109,7 @@ export const capacitorDevice: DeviceAdapter = {
   platform: 'capacitor',
   appVersion: __APP_VERSION__,
   getDeviceId,
-  keys,
+  keys: Capacitor.isPluginAvailable('AtkKey') ? nativeKeys : webKeys,
   storage,
   printer,
 }

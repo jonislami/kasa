@@ -16,6 +16,12 @@ contextBridge.exposeInMainWorld('kasaElectron', {
   },
   safeEncrypt: (text: string) => ipcRenderer.invoke('kasa:safe-encrypt', text) as Promise<string | null>,
   safeDecrypt: (b64: string) => ipcRenderer.invoke('kasa:safe-decrypt', b64) as Promise<string | null>,
+  // ATK key: created and kept (DPAPI) in the main process; the page only gets the public key and signatures
+  keyEnsure: (alias: string) => ipcRenderer.invoke('kasa:key-ensure', alias) as Promise<string>,
+  keyHas: (alias: string) => ipcRenderer.invoke('kasa:key-has', alias) as Promise<boolean>,
+  keyPublic: (alias: string) => ipcRenderer.invoke('kasa:key-public', alias) as Promise<string | null>,
+  keySign: (alias: string, dataB64: string) => ipcRenderer.invoke('kasa:key-sign', alias, dataB64) as Promise<string>,
+  keyDelete: (alias: string) => ipcRenderer.invoke('kasa:key-delete', alias) as Promise<void>,
   onUpdate(cb: (info: UpdateInfo) => void) {
     const h = (_e: IpcRendererEvent, info: UpdateInfo) => cb(info)
     ipcRenderer.on('kasa:update', h)

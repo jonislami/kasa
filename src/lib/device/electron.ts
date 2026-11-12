@@ -1,5 +1,5 @@
-import type { AppUpdates, DeviceAdapter, DeviceChooser } from './types'
-import { createSecureStore, getDeviceId, keys, printer } from './web'
+import type { AppUpdates, DeviceAdapter, DeviceChooser, KeyStore } from './types'
+import { createSecureStore, getDeviceId, keys as webKeys, printer } from './web'
 
 /**
  * Windows app (Electron). Same Chromium as the web version, plus:
@@ -7,8 +7,8 @@ import { createSecureStore, getDeviceId, keys, printer } from './web'
  *    (Electron safeStorage) – it cannot be read from another Windows account or machine
  *  - Bluetooth / USB device lists come from the main process (no system picker in Electron)
  *  - updates come from GitHub Releases
- * The ATK signing key stays a non-extractable WebCrypto key (same as web); phase 9 may move it
- * behind DPAPI as well.
+ *  - the ATK signing key is created and kept in the main process, sealed with DPAPI; the page only
+ *    receives the public key and signatures (electron/main.cts, kasa:key-*)
  */
 interface Bridge {
   onDeviceList: DeviceChooser['subscribe']
@@ -17,6 +17,11 @@ interface Bridge {
   safeDecrypt(b64: string): Promise<string | null>
   onUpdate: AppUpdates['subscribe']
   installUpdate(): void
+  keyEnsure?(alias: string): Promise<string>
+  keyHas?(alias: string): Promise<boolean>
+  keyPublic?(alias: string): Promise<string | null>
+  keySign?(alias: string, dataB64: string): Promise<string>
+  keyDelete?(alias: string): Promise<void>
 }
 
 const bridge = (window as unknown as { kasaElectron: Bridge }).kasaElectron
@@ -49,11 +54,22 @@ function storageKey(): Promise<CryptoKey> {
   return keyPromise
 }
 
+/** DPAPI key store in the main process; an older main process without it falls back to WebCrypto. */
+const dpapiKeys: KeyStore | null = bridge.keySign
+  ? {
+      ensureKey: (alias) => bridge.keyEnsure!(alias),
+      hasKey: (alias) => bridge.keyHas!(alias),
+      getPublicKey: (alias) => bridge.keyPublic!(alias),
+      sign: (alias, data) => bridge.keySign!(alias, b64(data)),
+      deleteKey: (alias) => bridge.keyDelete!(alias),
+    }
+  : null
+
 export const electronDevice: DeviceAdapter = {
   platform: 'electron',
   appVersion: __APP_VERSION__,
   getDeviceId,
-  keys,
+  keys: dpapiKeys ?? webKeys,
   storage: createSecureStore(storageKey),
   printer,
   deviceChooser: { subscribe: (cb) => bridge.onDeviceList(cb), select: (kind, id) => bridge.selectDevice(kind, id) },
