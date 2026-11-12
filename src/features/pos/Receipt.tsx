@@ -136,6 +136,7 @@ export function Receipt({
         <>
           <QrImage text={f.qr} className={cn('mx-auto my-3', narrow ? 'w-[40mm]' : 'w-[46mm]')} />
           {f.status === 'failed' && <div className="text-center text-[11px]">ATK e refuzoi: {f.error}</div>}
+          <img src="/rks.png" alt="Stema e Republikës së Kosovës" className={cn('mx-auto mt-1', narrow ? 'w-[11mm]' : 'w-[13mm]')} />
           <div className="mt-1 text-center font-bold tracking-[0.15em]">RKS / MF</div>
         </>
       ) : (

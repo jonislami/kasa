@@ -3,6 +3,9 @@ import type { Sale } from '@/features/pos/api'
 import type { ReceiptSettings } from '@/features/settings/api'
 import { charsPerLine, EscPos } from './escpos'
 import { n2, qty, receiptFacts } from './receiptFacts'
+import { RKS_LOGO } from './rksLogo'
+
+const rksBytes = () => Uint8Array.from(atob(RKS_LOGO.data), (c) => c.charCodeAt(0))
 
 /** Word-wraps `text` into lines of at most `width` characters (long words are cut). */
 function chunks(text: string, width: number): string[] {
@@ -102,6 +105,7 @@ export function receiptBytes(sale: Sale, business: Business, s: ReceiptSettings,
     // ATK: QR = citizen coupon + signature, then the RKS mark
     p.feed(1).qr(f.qr, s.paper_width === 58 ? 5 : 6).raw(0x0a)
     if (f.status === 'failed') p.wrap(`ATK e refuzoi: ${f.error ?? ''}`)
+    p.feed(1).image(RKS_LOGO.width / 8, RKS_LOGO.height, rksBytes())
     p.bold(true).line('RKS / MF').bold(false)
   } else {
     p.feed(1).line('Ky kupon nuk është fiskal.')
