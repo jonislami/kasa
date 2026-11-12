@@ -1,5 +1,5 @@
 import { Capacitor, registerPlugin } from '@capacitor/core'
-import type { DeviceAdapter, KeyStore, PrinterTransport } from './types'
+import type { AppUpdates, DeviceAdapter, KeyStore, PrinterTransport } from './types'
 import { getDeviceId, keys as webKeys, storage } from './web'
 
 /**
@@ -105,6 +105,56 @@ const printer: PrinterTransport = {
   },
 }
 
+// ---------------------------------------------------------------------------
+// Android APK updates: the APK installed from the website cannot update itself, so the app looks for a
+// newer release on GitHub (at start and every 6 hours) and offers its APK; the system installs it over
+// the current one and keeps the data. Play Store / App Store builds update through the store instead.
+// ---------------------------------------------------------------------------
+const RELEASES = 'https://api.github.com/repos/jonislami/kasa/releases/latest'
+
+/** true when version a (e.g. "0.3.2") is newer than b. */
+function newer(a: string, b: string): boolean {
+  const pa = a.split('.').map((x) => parseInt(x, 10) || 0)
+  const pb = b.split('.').map((x) => parseInt(x, 10) || 0)
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const d = (pa.at(i) ?? 0) - (pb.at(i) ?? 0)
+    if (d !== 0) return d > 0
+  }
+  return false
+}
+
+let apkUrl: string | null = null
+const apkUpdates: AppUpdates = {
+  subscribe(cb) {
+    let stopped = false
+    const check = async () => {
+      if (!navigator.onLine) return
+      try {
+        const r = await fetch(RELEASES, { headers: { Accept: 'application/vnd.github+json' } })
+        if (!r.ok) return
+        const rel = (await r.json()) as { tag_name: string; assets: { name: string; browser_download_url: string }[] }
+        const version = rel.tag_name.replace(/^v/, '')
+        const apk = rel.assets.find((a) => /\.apk$/i.test(a.name))
+        if (stopped || !apk || !newer(version, __APP_VERSION__)) return
+        apkUrl = apk.browser_download_url
+        cb({ state: 'ready', version, mode: 'download' })
+      } catch {
+        /* offline or GitHub unreachable: try again later */
+      }
+    }
+    void check()
+    const t = window.setInterval(check, 6 * 3600_000)
+    return () => {
+      stopped = true
+      window.clearInterval(t)
+    }
+  },
+  install() {
+    // An address outside the app opens in the phone's browser, which downloads the APK.
+    if (apkUrl) window.location.assign(apkUrl)
+  },
+}
+
 export const capacitorDevice: DeviceAdapter = {
   platform: 'capacitor',
   appVersion: __APP_VERSION__,
@@ -112,4 +162,6 @@ export const capacitorDevice: DeviceAdapter = {
   keys: Capacitor.isPluginAvailable('AtkKey') ? nativeKeys : webKeys,
   storage,
   printer,
+  // iPhone gets its updates from the App Store
+  appUpdates: Capacitor.getPlatform() === 'android' ? apkUpdates : undefined,
 }
