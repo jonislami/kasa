@@ -8,6 +8,16 @@ import { isManagerRole } from '@/lib/business'
 import { device } from '@/lib/device'
 import { fetchFiscalContext, isFiscalHere, registerOnDevice, type FiscalContext } from '@/lib/fiscal'
 
+/**
+ * ATK gives a verification code only once per POS ID: asking again for the same POS answers 404.
+ * The till then needs another POS ID (set on the web, Fiskalizimi → POS ID).
+ */
+export function explainAtkError(message: string): string {
+  if (/verify request/i.test(message) && /404/.test(message))
+    return `${message}. ATK nuk e verifikon dy herë të njëjtën POS ID (ose të dhënat nuk përputhen me ATK-në). Vendos një POS ID tjetër për këtë arkë te Fiskalizimi në web dhe provo përsëri.`
+  return message
+}
+
 /** The register this till works on (chosen at the till, or set by the activation key / the admin). */
 export const tillRegisterId = (businessId: string) => localStorage.getItem(`kasa.register.${businessId}`)
 
@@ -104,7 +114,7 @@ export function TillFiscalCard() {
             Arka është gati për ATK. Regjistrimi krijon çelësin e arkës <b>në këtë pajisje</b> (nuk kopjohet dot) dhe merr certifikatën nga ATK.
           </p>
           {step && <p className="rounded-ctl bg-[#F2F5F2] px-4 py-2.5 text-sm">{step}</p>}
-          {run.error && <p className="rounded-ctl bg-warn-100 px-4 py-2.5 text-sm text-warn-700">{(run.error as Error).message}</p>}
+          {run.error && <p className="rounded-ctl bg-warn-100 px-4 py-2.5 text-sm text-warn-700">{explainAtkError((run.error as Error).message)}</p>}
           <div>
             <Button loading={run.isPending} onClick={() => run.mutate()}>
               <ShieldCheck className="h-4 w-4" /> Regjistro arkën në ATK

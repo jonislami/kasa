@@ -24,6 +24,7 @@ export function PinLogin() {
   const [pin, setPin] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [relink, setRelink] = useState(false)
 
   useEffect(() => {
     void getLink().then(setLink)
@@ -97,12 +98,17 @@ export function PinLogin() {
 
   if (link === undefined) return <p className="mt-8 text-center text-muted">Duke kontrolluar pajisjen…</p>
 
-  if (!link)
+  if (!link || relink)
     return (
       <ActivationForm
-        error={error}
+        error={relink ? null : error}
+        replacing={relink && link ? link.business_name : null}
+        onCancel={relink ? () => setRelink(false) : undefined}
         onActivated={(l) => {
           setError(null)
+          setRelink(false)
+          setWorkers(null)
+          setSelected(null)
           setLink(l)
         }}
       />
@@ -142,6 +148,9 @@ export function PinLogin() {
           </ul>
         )}
         {error && <p className="mt-3 rounded-ctl bg-warn-100 px-4 py-3 text-sm text-warn-700">{error}</p>}
+        <button type="button" onClick={() => setRelink(true)} className="mt-6 w-full text-center text-sm text-muted underline">
+          Aktivizo me çelës tjetër (biznes ose arkë tjetër)
+        </button>
       </div>
     )
   }
@@ -202,7 +211,18 @@ function Key({ children, onClick, disabled, label }: { children: React.ReactNode
 }
 
 /** SEF app, first start: the key the platform admin sent (KASA-XXXX-XXXX-XXXX) links this device to the business. */
-function ActivationForm({ error: outerError, onActivated }: { error: string | null; onActivated: (l: DeviceLink) => void }) {
+function ActivationForm({
+  error: outerError,
+  replacing,
+  onCancel,
+  onActivated,
+}: {
+  error: string | null
+  /** Name of the business this till is linked to now; it stays linked until the new key is accepted. */
+  replacing?: string | null
+  onCancel?: () => void
+  onActivated: (l: DeviceLink) => void
+}) {
   const [key, setKey] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -226,7 +246,11 @@ function ActivationForm({ error: outerError, onActivated }: { error: string | nu
         <KeyRound className="h-6 w-6" />
       </div>
       <div className="text-lg font-semibold">Aktivizo arkën</div>
-      <p className="mt-1 text-sm text-muted">Shkruaj çelësin e aktivizimit që të dërgoi administratori i Kasa-s. Kjo bëhet vetëm njëherë në këtë pajisje.</p>
+      <p className="mt-1 text-sm text-muted">
+        {replacing
+          ? `Kjo arkë është e lidhur tani me ${replacing}. Me çelës të ri lidhet me biznesin ose arkën e çelësit; lidhja e vjetër mbetet derisa çelësi i ri të pranohet.`
+          : 'Shkruaj çelësin e aktivizimit që të dërgoi administratori i Kasa-s. Kjo bëhet vetëm njëherë në këtë pajisje.'}
+      </p>
       <label className="mt-5 block text-sm font-medium" htmlFor="activation-key">
         Çelësi i aktivizimit
       </label>
@@ -245,6 +269,11 @@ function ActivationForm({ error: outerError, onActivated }: { error: string | nu
       <Button type="submit" className="mt-5" size="lg" block loading={busy} disabled={key.replace(/[^A-Za-z0-9]/g, '').length < 12}>
         Aktivizo
       </Button>
+      {onCancel && (
+        <Button type="button" variant="secondary" className="mt-2" size="lg" block onClick={onCancel}>
+          Anulo
+        </Button>
+      )}
     </form>
   )
 }
