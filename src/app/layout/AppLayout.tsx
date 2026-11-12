@@ -1,6 +1,6 @@
 import { Outlet, useNavigate } from 'react-router-dom'
 import { useEffect, type ReactNode } from 'react'
-import { ensureDeviceLinked } from '@/lib/deviceLink'
+import { ensureDeviceLinked, getLink } from '@/lib/deviceLink'
 import { isSefApp } from '@/lib/device'
 import { ClockBar, FiscalBar, OfflineBar } from '@/app/AppStatus'
 import { LicenseBanner } from '@/app/LicenseBanner'
@@ -76,6 +76,23 @@ export function AppLayout() {
       void qc.prefetchQuery({ queryKey: ['stock', 'entries'], queryFn: () => fetchEntries(), ...opts })
     }
   }, [qc, profile.role, business.type])
+
+  // SEF app: a session left from an older version (e-mail sign-in) or from another business is closed,
+  // so the till always opens on its own business's PIN screen (or asks for the activation key).
+  const { signOut } = useAuth()
+  const navigate = useNavigate()
+  useEffect(() => {
+    if (!isSefApp) return
+    let alive = true
+    void getLink().then(async (l) => {
+      if (!alive || (l && l.business_id === business.id)) return
+      await signOut()
+      navigate('/login', { replace: true })
+    })
+    return () => {
+      alive = false
+    }
+  }, [business.id, signOut, navigate])
 
   // The installed SEF app keeps its link alive (heartbeat, register of the till). The web app has no PIN
   // sign-in, so browsers are never linked as devices (they would take the license's device slots).
