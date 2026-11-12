@@ -60,6 +60,13 @@ export class EscPos {
     return this
   }
 
+  /** Raster image (GS v 0, normal size): rows of `bytesPerRow` bytes, most significant bit first, 1 = black. Follows ESC a. */
+  image(bytesPerRow: number, height: number, data: Uint8Array): this {
+    this.raw(GS, 0x76, 0x30, 0x00, bytesPerRow & 0xff, (bytesPerRow >> 8) & 0xff, height & 0xff, (height >> 8) & 0xff)
+    for (const b of data) this.bytes.push(b)
+    return this.raw(0x0a)
+  }
+
   text(s: string): this {
     this.bytes.push(...encodeText(s, this.charset))
     return this

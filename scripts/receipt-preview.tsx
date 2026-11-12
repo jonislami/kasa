@@ -44,6 +44,13 @@ const visible = (bytes: Uint8Array) => {
     const b = bytes[i]
     if (b === 0x1b || b === 0x1d) {
       const c = bytes[i + 1]
+      if (b === 0x1d && c === 0x76) {
+        const wb = bytes[i + 4] + 256 * bytes[i + 5]
+        const h = bytes[i + 6] + 256 * bytes[i + 7]
+        out += `[IMAGE ${wb * 8}x${h}]`
+        i += 7 + wb * h
+        continue
+      }
       if (b === 0x1d && c === 0x28 && bytes[i + 2] === 0x6b) {
         const len = bytes[i + 3] + 256 * bytes[i + 4]
         if (bytes[i + 5] === 0x31 && bytes[i + 6] === 0x50) out += '[QR]'
