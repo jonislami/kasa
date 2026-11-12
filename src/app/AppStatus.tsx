@@ -22,17 +22,27 @@ export function UpdatePrompt() {
 /** Windows app: the new version is downloaded; it installs when the user taps (or on next start). */
 function InstalledAppUpdate() {
   const [version, setVersion] = useState<string | null>(null)
-  useEffect(() => device.appUpdates?.subscribe((i) => setVersion(i.version)), [])
+  const [download, setDownload] = useState(false)
+  useEffect(
+    () =>
+      device.appUpdates?.subscribe((i) => {
+        setVersion(i.version)
+        setDownload(i.mode === 'download')
+      }),
+    [],
+  )
   if (!version) return null
   return (
     <div className="fixed inset-x-3 bottom-6 z-[60] mx-auto flex max-w-[460px] items-center gap-3 rounded-card bg-ink px-4 py-3 text-white shadow-2xl md:left-auto md:right-6">
       <RefreshCw className="h-5 w-5 shrink-0 text-brand-400" />
       <div className="min-w-0 flex-1 text-sm">
-        <div className="font-semibold">Kasa {version} është gati</div>
-        <div className="text-white/70">Instalohet tani ose herën tjetër që hapet programi.</div>
+        <div className="font-semibold">{download ? `Version i ri: Kasa ${version}` : `Kasa ${version} është gati`}</div>
+        <div className="text-white/70">
+          {download ? 'Shkarkoje dhe instaloje mbi aplikacionin e tanishëm; të dhënat mbeten.' : 'Instalohet tani ose herën tjetër që hapet programi.'}
+        </div>
       </div>
       <Button size="sm" onClick={() => device.appUpdates?.install()}>
-        Instalo
+        {download ? 'Shkarko' : 'Instalo'}
       </Button>
       <button type="button" aria-label="Më vonë" onClick={() => setVersion(null)} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-white/10">
         <X className="h-4 w-4" />

@@ -52,9 +52,13 @@ export interface DeviceChooser {
   select(kind: 'bluetooth' | 'serial', id: string | null): void
 }
 
-/** Updates of an installed app (Windows: GitHub Releases). The web version uses the service worker. */
+/**
+ * Updates of an installed app from GitHub Releases. The web version uses the service worker.
+ *  - Windows: downloaded in the background, installed on "Instalo" or when the program closes (mode 'install')
+ *  - Android (APK outside Play Store): the app finds the newer APK and opens its download (mode 'download')
+ */
 export interface AppUpdates {
-  subscribe(cb: (info: { state: 'ready'; version: string }) => void): () => void
+  subscribe(cb: (info: { state: 'ready'; version: string; mode?: 'install' | 'download' }) => void): () => void
   install(): void
 }
 
