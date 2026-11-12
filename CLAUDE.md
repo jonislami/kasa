@@ -47,7 +47,7 @@ ATK kërkon që SEF të instalohet në pajisje, ta mbajë çelësin privat të s
 - **Programi SEF (i instaluar) vetëm shet dhe printon** (`isSefApp` te `src/lib/device/`): aktivizohet njëherë me
   çelës `KASA-XXXX-XXXX-XXXX` që e gjeneron admini i platformës (`activation_keys`, 0030, një pajisje për çelës),
   pastaj vetëm hyrje me PIN; çdo rol merr panelin e punëtorit. Përjashtim: pronari/menaxheri me PIN sheh edhe
-  Produktet në ark (`RequireCatalogEditor`, `profile.actual_role`). Stoku, PIN-et, raportet → aplikacioni web.
+  Produktet në arkë (`RequireCatalogEditor`, `profile.actual_role`). Stoku, PIN-et, raportet → aplikacioni web.
 - **Aplikacioni web nuk shet** (`SefOnly` te `src/app/routes.tsx`): arka, kthimet, porositë e tavolinave dhe kuzhina
   janë vetëm në programin SEF. Web-i: menaxhim (produktet, stoku, punëtorët/PIN-et, raportet, puna, cilësimet), hyrje
   vetëm me email; llogaritë `worker` nuk hyjnë në web.
