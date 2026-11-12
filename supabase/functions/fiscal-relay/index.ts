@@ -32,6 +32,8 @@ const B64_RE = /^[A-Za-z0-9+/]+={0,2}$/
 interface AtkAnswer {
   ok: boolean
   status: number // 0 = no answer (network / timeout)
+  /** Body as text: ATK's transaction numbers are larger than JavaScript numbers can hold exactly. */
+  raw?: string
   data: Record<string, unknown>
   message: string
 }
@@ -56,7 +58,7 @@ async function callAtk(env: Env, path: string, body: unknown): Promise<AtkAnswer
     const err = data.error as unknown
     const message =
       typeof err === 'string' ? err : err && typeof err === 'object' ? String((err as { message?: string }).message ?? JSON.stringify(err)) : String(data.message ?? '')
-    return { ok: res.ok, status: res.status, data, message: message || (res.ok ? 'OK' : `ATK u përgjigj me ${res.status}`) }
+    return { ok: res.ok, status: res.status, raw: text, data, message: message || (res.ok ? 'OK' : `ATK u përgjigj me ${res.status}`) }
   } catch (e) {
     const aborted = (e as Error).name === 'AbortError'
     return { ok: false, status: 0, data: {}, message: aborted ? 'ATK nuk u përgjigj brenda 10 sekondave' : 'Nuk u lidh me ATK: ' + (e as Error).message }
@@ -206,8 +208,13 @@ Deno.serve(async (req) => {
     await log({ register_id: row.register_id, sale_id: saleId, env, action: 'coupon', ok: r.ok, http_status: r.status, coupon_id: row.coupon_id, message: r.message })
     // 2xx → sent; 4xx → rejected by ATK (needs attention); no answer / 5xx → stays pending, sent again later.
     const status = r.ok ? 'sent' : r.status >= 400 && r.status < 500 ? 'failed' : 'pending'
-    const transactionNo = r.ok ? (r.data.transaction_id ?? r.data.TransactionNo ?? null) : null
-    await admin.rpc('_fiscal_store', { p: { sale_id: saleId, status, transaction_no: transactionNo, error: r.ok ? null : r.message } })
+    // Read the number from the raw text (JSON.parse would round a 19-digit number).
+    const transactionNo = r.ok ? (/"(?:transaction_id|TransactionNo|transaction_no)"\s*:\s*"?(\d+)"?/.exec(r.raw ?? '')?.[1] ?? null) : null
+    const { error: saveError } = await admin.rpc('_fiscal_store', { p: { sale_id: saleId, status, transaction_no: transactionNo, error: r.ok ? null : r.message } })
+    if (saveError) {
+      // ATK has the coupon; only our copy of the answer is missing. Never send it again because of this.
+      await log({ register_id: row.register_id, sale_id: saleId, env, action: 'store', ok: false, http_status: 500, coupon_id: row.coupon_id, message: 'Përgjigjja e ATK-së nuk u ruajt: ' + saveError.message })
+    }
     return json({ status, transaction_no: transactionNo, error: r.ok ? undefined : r.message })
   }
 
