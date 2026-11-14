@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Camera, ClipboardList, Minus, PauseCircle, Plus, ScanLine, Search, Trash2, WifiOff, X } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
 import { Button, Dialog, Select } from '@/components/ui'
-import { hasModule } from '@/lib/business'
+import { hasModule, isManagerRole } from '@/lib/business'
 import { cn } from '@/lib/cn'
 import { formatEUR, round2 } from '@/lib/money'
 import { formatQty, unitLabel } from '@/lib/units'
@@ -17,6 +17,7 @@ import { CameraScanner, CashDialog, DiscountDialog, LineDialog } from './dialogs
 import { enqueueSale, loadCatalog, loadHeld, nextOfflineNo, saveCatalog, saveHeld, useOfflineQueue, type HeldCart } from './offline'
 import { PrintArea, Receipt } from './Receipt'
 import { SalesDialog } from './SalesDialog'
+import { QuickProductDialog } from './QuickProductDialog'
 import { VariantPicker } from './VariantPicker'
 import { expiryStatus, fetchLots, formatExpiry, summarizeLots } from '@/lib/lots'
 import { printReceipt } from '@/lib/printer'
@@ -68,6 +69,10 @@ export function PosPage() {
     },
     staleTime: 60_000,
   })
+
+  // "+" in the till: the owner / manager (in the SEF app signed in with PIN) adds a product on the spot
+  const canAddProduct = isManagerRole(profile.actual_role ?? profile.role)
+  const [quickAdd, setQuickAdd] = useState<{ barcode: string | null } | null>(null)
   const products = useMemo(() => catalog.data?.products ?? [], [catalog.data])
   const categories = catalog.data?.categories ?? []
 
@@ -186,10 +191,13 @@ export function PosPage() {
         setCart((c) => addToCart(c, p, 1, salon ? staffId : null))
         setNotice(`${p.name} u shtua`)
         setError(lotWarning(p, 1))
+      } else if (canAddProduct) {
+        setError(`Barkodi ${code} nuk u gjet – shtoje si produkt të ri`)
+        setQuickAdd({ barcode: code.trim() })
       } else setError(`Barkodi ${code} nuk u gjet`)
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [products, salon, staffId, lotSum, cart.lines],
+    [products, salon, staffId, lotSum, cart.lines, canAddProduct],
   )
 
   const creditParam = params.get('kredit')
@@ -244,7 +252,10 @@ export function PosPage() {
       setSearch('')
       return
     }
-    if (/^\d{6,}$/.test(q)) setError(`Barkodi ${q} nuk u gjet`)
+    if (/^\d{6,}$/.test(q)) {
+      setError(canAddProduct ? `Barkodi ${q} nuk u gjet – shtoje si produkt të ri` : `Barkodi ${q} nuk u gjet`)
+      if (canAddProduct) setQuickAdd({ barcode: q })
+    }
   }
 
   useEffect(() => {
@@ -548,6 +559,17 @@ export function PosPage() {
 
   const toolbar = (
     <div className="flex items-center gap-2">
+      {canAddProduct && (
+        <button
+          type="button"
+          onClick={() => setQuickAdd({ barcode: null })}
+          title={business.type === 'salon' ? 'Shto shërbimin' : 'Shto produktin'}
+          aria-label={business.type === 'salon' ? 'Shto shërbimin' : 'Shto produktin'}
+          className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600 text-white hover:bg-[#0b5a41]"
+        >
+          <Plus className="h-6 w-6" />
+        </button>
+      )}
       {(registers.data?.length ?? 0) > 1 && (
         <Select
           aria-label="Arka"
@@ -626,9 +648,9 @@ export function PosPage() {
   ) : products.length === 0 ? (
     <div className="py-16 text-center text-muted">
       Ende pa produkte për arkë.{' '}
-      {profile.role !== 'worker' && (
-        <button className="font-semibold text-brand-600 underline" onClick={() => navigate('/produktet')}>
-          Shto produktet
+      {canAddProduct && (
+        <button className="font-semibold text-brand-600 underline" onClick={() => setQuickAdd({ barcode: null })}>
+          Shto produktin e parë
         </button>
       )}
     </div>
@@ -636,6 +658,23 @@ export function PosPage() {
 
   const sharedDialogs = (
     <>
+      <QuickProductDialog
+        open={Boolean(quickAdd)}
+        type={business.type}
+        barcode={quickAdd?.barcode ?? null}
+        onClose={() => setQuickAdd(null)}
+        onSaved={async (id) => {
+          setQuickAdd(null)
+          setError(null)
+          void qc.invalidateQueries({ queryKey: ['products'] })
+          const fresh = await catalog.refetch()
+          const p = fresh.data?.products.find((x) => x.id === id)
+          if (p) {
+            add(p)
+            setNotice(`${p.name} u shtua në katalog dhe në faturë`)
+          }
+        }}
+      />
       {editLine && (
         <LineDialog
           line={cart.lines.find((l) => l.key === editLine.key) ?? editLine}

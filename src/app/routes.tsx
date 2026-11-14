@@ -2,7 +2,7 @@ import { lazy, Suspense, type ReactNode } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useAuth, useBusiness } from './AuthProvider'
 import { hasModule } from '@/lib/business'
-import { Blocked, FullScreenLoader, RequireBusiness, RequireCatalogEditor, RequireManager, RequireOwner, RequirePlatformAdmin, RequireStaff, RequireType } from './AuthGuard'
+import { Blocked, FullScreenLoader, RequireBusiness, RequireManager, RequireOwner, RequirePlatformAdmin, RequireStaff, RequireType } from './AuthGuard'
 import { AppLayout } from './layout/AppLayout'
 import { workerHome } from './nav'
 import { LandingPage } from '@/features/landing/LandingPage'
@@ -214,21 +214,21 @@ export function AppRoutes() {
         <Route
           path="produktet"
           element={
-            <RequireCatalogEditor>
+            <RequireManager>
               <Lazy>
                 <ProductsPage />
               </Lazy>
-            </RequireCatalogEditor>
+            </RequireManager>
           }
         />
         <Route
           path="produktet/:id"
           element={
-            <RequireCatalogEditor>
+            <RequireManager>
               <Lazy>
                 <ProductDetails />
               </Lazy>
-            </RequireCatalogEditor>
+            </RequireManager>
           }
         />
         <Route
