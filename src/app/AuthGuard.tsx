@@ -84,18 +84,6 @@ export function RequireManager({ children }: { children: ReactNode }) {
   return <>{children}</>
 }
 
-/**
- * Products / menu / services: the admin panel, and in the SEF app also the owner or manager signed in
- * with PIN (they see the worker's panel there, but may add and change products from the till).
- * The database checks the real role either way.
- */
-export function RequireCatalogEditor({ children }: { children: ReactNode }) {
-  const { ctx } = useAuth()
-  const p = ctx?.profile
-  if (!isManagerRole(p?.role) && !isManagerRole(p?.actual_role)) return <Navigate to="/" replace />
-  return <>{children}</>
-}
-
 /** Screens of the people who work in the business (till, own work, printer). Not for the accountant. */
 export function RequireStaff({ children }: { children: ReactNode }) {
   const { ctx } = useAuth()

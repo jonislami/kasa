@@ -2,10 +2,10 @@ import { LicenseBanner } from '@/app/LicenseBanner'
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { ChefHat, ClipboardList, LogOut, Menu, MoreHorizontal, Package, Printer, Square, X } from 'lucide-react'
+import { ChefHat, ClipboardList, LogOut, Menu, MoreHorizontal, Printer, Square, X } from 'lucide-react'
 import { useAuth } from '@/app/AuthProvider'
 import { Button, Dialog, Input } from '@/components/ui'
-import { businessType, hasModule, isManagerRole, type BusinessType } from '@/lib/business'
+import { hasModule, type BusinessType } from '@/lib/business'
 import { KOSOVO_TZ } from '@/lib/clock'
 import { cn } from '@/lib/cn'
 import { formatEUR } from '@/lib/money'
@@ -53,7 +53,7 @@ export function WorkerShell({
   tabs: NavItem[]
   children: ReactNode
 }) {
-  const { signOut, ctx } = useAuth()
+  const { signOut } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [menu, setMenu] = useState(false)
@@ -70,10 +70,7 @@ export function WorkerShell({
     await signOut()
     navigate('/login', { replace: true })
   }
-  // SEF app: the owner / manager signed in with PIN may add and change products from the till
-  const catalogEditor = isManagerRole(ctx?.profile?.actual_role)
   const extra = [
-    ...(catalogEditor ? [{ to: '/produktet', label: businessType(type).terms.catalog, icon: Package }] : []),
     { to: '/puna', label: 'Puna ime sot', icon: ClipboardList },
     ...(hasModule(type, 'kitchen') ? [{ to: '/kuzhina', label: 'Ekrani i kuzhinës / barit', icon: ChefHat }] : []),
     { to: '/cilesimet', label: 'Printeri', icon: Printer },
