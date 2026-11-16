@@ -52,3 +52,45 @@ export function lastPrinterName(): string | null {
     return null
   }
 }
+
+// ---------------------------------------------------------------------------
+// Printer installed in Windows (e.g. Xprinter XP-80 with its driver): the Windows app prints the rendered
+// receipt straight to it, without the print dialog. The chosen printer is kept on the device.
+// ---------------------------------------------------------------------------
+const WIN_PRINTER = 'kasa.winprinter'
+
+export const windowsPrinter = (): string | null => {
+  try {
+    return localStorage.getItem(WIN_PRINTER) || null
+  } catch {
+    return null
+  }
+}
+export const setWindowsPrinter = (name: string | null) => (name ? localStorage.setItem(WIN_PRINTER, name) : localStorage.removeItem(WIN_PRINTER))
+
+/**
+ * The printer for receipts: the one chosen in Printeri, else the Windows default, else a thermal receipt printer
+ * found by name (Xprinter, POS-80, …), so a new till prints without any setup.
+ */
+export async function receiptPrinterName(): Promise<string | null> {
+  const chosen = windowsPrinter()
+  if (chosen || !device.systemPrint) return chosen
+  const list = await device.systemPrint.list().catch(() => [])
+  const def = list.find((p) => p.isDefault)
+  if (def) return def.name
+  const thermal = list.find((p) => /xprinter|xp-?\d|pos-?\d|thermal|receipt|epson tm|tm-t|rongta|bixolon|star tsp|80mm|58mm/i.test(p.name))
+  return thermal?.name ?? null
+}
+
+/** Prints what the page renders for print (the receipt): silently on the Windows printer, else with the browser dialog. */
+export async function printPage(): Promise<void> {
+  if (device.systemPrint) {
+    try {
+      await device.systemPrint.print((await receiptPrinterName()) ?? undefined)
+      return
+    } catch {
+      /* printer missing or offline: fall back to the dialog */
+    }
+  }
+  window.print()
+}

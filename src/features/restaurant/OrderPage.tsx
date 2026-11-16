@@ -8,7 +8,7 @@ import { Badge, Button, Card, Dialog, Input, Tabs } from '@/components/ui'
 import { serverDate } from '@/lib/clock'
 import { cn } from '@/lib/cn'
 import { formatEUR, round2 } from '@/lib/money'
-import { printReceipt, printTicket } from '@/lib/printer'
+import { printPage, printReceipt, printTicket } from '@/lib/printer'
 import { fetchCategories } from '@/features/products/api'
 import { APPROVAL_MESSAGES, createSale, type ApprovalError, type PaymentMethod, type Sale } from '@/features/pos/api'
 import { ApprovalDialog } from '@/features/pos/dialogs'
@@ -372,7 +372,7 @@ export function OrderPage() {
               try {
                 if ((await printReceipt(sale, business, receiptSettings.data, { openDrawer: true })) === 'browser') {
                   setPrintSale(sale)
-                  setTimeout(() => window.print(), 50)
+                  setTimeout(() => void printPage(), 50)
                 }
               } catch {
                 /* the receipt dialog has a print button */
@@ -446,7 +446,7 @@ export function OrderPage() {
                     }
                   }
                   setPrintSale(receipt)
-                  setTimeout(() => window.print(), 50)
+                  setTimeout(() => void printPage(), 50)
                 }}
               >
                 Printo

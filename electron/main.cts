@@ -105,6 +105,25 @@ ipcMain.on('kasa:device-select', (_e, msg: { kind: 'bluetooth' | 'serial'; id: s
 })
 
 // ---------------------------------------------------------------------------
+// Printing to a Windows printer without the print dialog (thermal printer installed in Windows, e.g. Xprinter).
+// The page has already rendered the receipt for print (.print-root, @page 80mm); this prints it silently.
+// ---------------------------------------------------------------------------
+ipcMain.handle('kasa:printers', async (e) => {
+  if (!trustedSender(e)) throw new Error('Kërkesë e palejuar')
+  const list = await e.sender.getPrintersAsync()
+  return list.map((p) => ({ name: p.name, displayName: p.displayName || p.name, isDefault: Boolean((p as { isDefault?: boolean }).isDefault) }))
+})
+ipcMain.handle('kasa:print-silent', (e, deviceName: unknown) => {
+  if (!trustedSender(e)) throw new Error('Kërkesë e palejuar')
+  return new Promise<{ ok: boolean; error?: string }>((resolve) => {
+    e.sender.print(
+      { silent: true, printBackground: true, margins: { marginType: 'none' }, ...(typeof deviceName === 'string' && deviceName ? { deviceName } : {}) },
+      (ok, failureReason) => resolve({ ok, error: ok ? undefined : failureReason }),
+    )
+  })
+})
+
+// ---------------------------------------------------------------------------
 // DPAPI (safeStorage): encrypts a small secret for the renderer (the key that seals local data).
 // ---------------------------------------------------------------------------
 ipcMain.handle('kasa:safe-encrypt', (_e, text: string) => {

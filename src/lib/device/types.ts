@@ -62,8 +62,16 @@ export interface AppUpdates {
   install(): void
 }
 
+/** Windows app: printers installed in Windows, printed to without the print dialog. */
+export interface SystemPrint {
+  list(): Promise<{ name: string; displayName: string; isDefault: boolean }[]>
+  /** Prints the page as rendered for print (the receipt) on that printer (default printer when empty). */
+  print(deviceName?: string): Promise<void>
+}
+
 export interface DeviceAdapter {
   platform: DevicePlatform
+  systemPrint?: SystemPrint
   deviceChooser?: DeviceChooser
   appUpdates?: AppUpdates
   /** Stable ID for this installation (links the device to a register and ATK POS ID). */
