@@ -149,8 +149,8 @@ Deno.serve(async (req) => {
   await sendEmail(
     [email],
     'Regjistrimi në Kasa u pranua',
-    `Përshëndetje ${ownerName},\n\nRegjistrimi i ${businessName} u pranua dhe është në shqyrtim. Do t'ju njoftojmë kur të aprovohet. Mund ta ndiqni statusin duke hyrë në ${appUrl}/login.`,
-    box('Regjistrimi u pranua', `<p>Përshëndetje ${esc(ownerName)},</p><p>regjistrimi i <b>${esc(businessName)}</b> (${esc(TYPE_LABELS[type])}) u pranua dhe është në shqyrtim. Pasi të aprovohet, ju dërgojmë udhëzimet për pagesën dhe aktivizimin.</p><p><a href="${esc(appUrl)}/login" style="color:#0E6B4E;font-weight:600">Shiko statusin</a></p>`),
+    `Përshëndetje ${ownerName},\n\nRegjistrimi i ${businessName} u pranua dhe është në shqyrtim. Pas aprovimit, te llogaria juaj ju dalin shkarkimi dhe çelësat e arkave. Statusin e ndiqni duke hyrë në ${appUrl}/login.`,
+    box('Regjistrimi u pranua', `<p>Përshëndetje ${esc(ownerName)},</p><p>regjistrimi i <b>${esc(businessName)}</b> (${esc(TYPE_LABELS[type])}) u pranua dhe është në shqyrtim. Pasi të aprovohet, te llogaria juaj ju dalin shkarkimi i Kasa-s dhe çelësi për çdo arkë.</p><p><a href="${esc(appUrl)}/login" style="color:#0E6B4E;font-weight:600">Shiko statusin</a></p>`),
   )
   const { data: admins } = await admin.from('platform_admins').select('user_id')
   const adminEmails: string[] = []

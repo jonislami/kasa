@@ -1,23 +1,19 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, ChevronLeft, Copy, CreditCard, KeyRound, MonitorSmartphone, ShieldCheck, Trash2 } from 'lucide-react'
+import { Check, ChevronLeft, Copy, KeyRound, MonitorSmartphone, ShieldCheck } from 'lucide-react'
 import { PageHeader } from '@/app/layout/AppLayout'
 import { Badge, Button, Card, Dialog, Input, Select } from '@/components/ui'
 import { businessType } from '@/lib/business'
-import { formatKosovoDateTime, kosovoDateISO } from '@/lib/clock'
+import { formatKosovoDateTime } from '@/lib/clock'
 import { cn } from '@/lib/cn'
-import { formatEUR } from '@/lib/money'
 import { APP_STATUS, DEVICE_LABELS, EVENT_LABELS, LICENSE_LABELS, PRINTER_LABELS, STATUS_LABELS, type RegisterApplication } from '@/features/onboarding/api'
 import {
-  confirmPayment,
   createActivationKey,
   decide,
   decideRegister,
-  deletePayment,
   fetchActivationKeys,
   fetchAdminDetail,
-  fetchPlatformSettings,
   revokeActivationKey,
   saveLicense,
   setDevice,
@@ -29,7 +25,7 @@ import { statusTone } from './ApplicationsPage'
 
 const day = (d: string | null | undefined) => (d ? d.slice(0, 10).split('-').reverse().join('.') : '—')
 
-/** /platforma/biznes/:id – everything about one business: data, decision, payment, license, tills, devices, history. */
+/** /platforma/biznes/:id – everything about one business: data, approval, license, keys, devices, history. */
 export function BusinessAdminPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
@@ -41,7 +37,7 @@ export function BusinessAdminPage() {
     void qc.invalidateQueries({ queryKey: ['platform-businesses'] })
   }
   const [decision, setDecision] = useState<Decision | null>(null)
-  const [pay, setPay] = useState(false)
+  const approve = useMutation({ mutationFn: () => decide(id, 'approve'), onSuccess: refresh })
   const d = data.data
   const b = d?.business
 
@@ -59,7 +55,9 @@ export function BusinessAdminPage() {
             <div className="flex flex-wrap gap-2">
               {(b.status === 'pending' || b.status === 'needs_info') && (
                 <>
-                  <Button onClick={() => setDecision('approve')}>Prano</Button>
+                  <Button loading={approve.isPending} onClick={() => approve.mutate()}>
+                    <Check className="h-4 w-4" /> Aprovo
+                  </Button>
                   <Button variant="secondary" onClick={() => setDecision('request_info')}>
                     Kërko të dhëna
                   </Button>
@@ -67,11 +65,6 @@ export function BusinessAdminPage() {
                     Refuzo
                   </Button>
                 </>
-              )}
-              {['approved', 'active', 'suspended'].includes(b.status) && (
-                <Button onClick={() => setPay(true)}>
-                  <CreditCard className="h-4 w-4" /> Konfirmo pagesën
-                </Button>
               )}
               {b.status === 'active' && (
                 <Button variant="danger" onClick={() => setDecision('suspend')}>
@@ -102,6 +95,12 @@ export function BusinessAdminPage() {
                 {d.owner_last_sign_in && ` · pronari hyri së fundi ${formatKosovoDateTime(d.owner_last_sign_in)}`}
               </span>
             </div>
+            {approve.error && <p className="rounded-ctl bg-warn-100 px-4 py-3 text-sm text-warn-700">{(approve.error as Error).message}</p>}
+            {(b.status === 'pending' || b.status === 'needs_info') && (
+              <p className="rounded-ctl bg-brand-100 px-4 py-3 text-sm text-brand-600">
+                “Aprovo” e hap biznesin menjëherë: krijohen arkat që ka kërkuar klienti dhe pronari i merr vetë çelësat te llogaria e tij.
+              </p>
+            )}
             {b.status_note && <p className="rounded-ctl bg-amber-100 px-4 py-3 text-sm text-amber-700">Mesazhi për klientin: {b.status_note}</p>}
 
             <div className="grid gap-4 lg:grid-cols-2">
@@ -132,8 +131,7 @@ export function BusinessAdminPage() {
               <LicenseCard id={id} d={d} onSaved={refresh} />
             </div>
 
-            <PaymentsCard d={d} onChanged={refresh} />
-            <RegistersCard d={d} onChanged={refresh} />
+            {d.register_applications.length > 0 && <RegistersCard d={d} onChanged={refresh} />}
             <ActivationKeysCard d={d} onChanged={refresh} />
             <DevicesCard d={d} onChanged={refresh} />
 
@@ -157,7 +155,6 @@ export function BusinessAdminPage() {
         )}
       </div>
       {b && <DecisionDialog id={id} action={decision} onClose={() => setDecision(null)} onDone={refresh} />}
-      {b && <PaymentDialog id={id} open={pay} plan={d?.license?.plan ?? 'monthly'} price={d?.license?.price ?? null} onClose={() => setPay(false)} onDone={refresh} />}
     </PlatformShell>
   )
 }
@@ -198,67 +195,8 @@ function DecisionDialog({ id, action, onClose, onDone }: { id: string; action: D
         </div>
       }
     >
-      {action === 'approve' && <p className="mb-3 text-sm text-muted">Klientit i del pagesa; qasja hapet kur ta konfirmosh pagesën.</p>}
       {action === 'suspend' && <p className="mb-3 text-sm text-muted">Qasja në Kasa ndalet menjëherë për të gjithë përdoruesit e biznesit.</p>}
       <Input label={t?.note} value={note} onChange={(e) => setNote(e.target.value)} />
-      {run.error && <p className="mt-3 text-sm text-warn-700">{(run.error as Error).message}</p>}
-    </Dialog>
-  )
-}
-
-function PaymentDialog({ id, open, plan, price, onClose, onDone }: { id: string; open: boolean; plan: string; price: number | null; onClose: () => void; onDone: () => void }) {
-  const settings = useQuery({ queryKey: ['platform-settings'], queryFn: fetchPlatformSettings, enabled: open })
-  const [f, setF] = useState({ amount: '', months: '1', method: 'bank', paid_on: kosovoDateISO(), reference: '', note: '' })
-  useEffect(() => {
-    if (!open) return
-    const months = plan === 'yearly' ? 12 : 1
-    const def = price ?? (months === 12 ? settings.data?.yearly_price : settings.data?.monthly_price) ?? 0
-    setF({ amount: def ? String(def) : '', months: String(months), method: 'bank', paid_on: kosovoDateISO(), reference: '', note: '' })
-  }, [open, plan, price, settings.data])
-  const run = useMutation({
-    mutationFn: () => confirmPayment({ business_id: id, amount: Number(f.amount.replace(',', '.')) || 0, months: Number(f.months), method: f.method, paid_on: f.paid_on, reference: f.reference, note: f.note }),
-    onSuccess: () => {
-      onDone()
-      onClose()
-    },
-  })
-  return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      title="Konfirmo pagesën"
-      subtitle="Licenca zgjatet nga data e skadimit (ose nga sot nëse ka skaduar)"
-      width="md:max-w-[480px]"
-      footer={
-        <div className="flex justify-end gap-2">
-          <Button variant="secondary" onClick={onClose}>
-            Anulo
-          </Button>
-          <Button loading={run.isPending} onClick={() => run.mutate()}>
-            Konfirmo
-          </Button>
-        </div>
-      }
-    >
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Input label="Shuma (€)" inputMode="decimal" value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value })} />
-        <Select
-          label="Zgjat licencën me"
-          value={f.months}
-          onChange={(e) => setF({ ...f, months: e.target.value })}
-          options={[
-            { value: '1', label: '1 muaj' },
-            { value: '3', label: '3 muaj' },
-            { value: '6', label: '6 muaj' },
-            { value: '12', label: '12 muaj' },
-            { value: '0', label: 'Pa zgjatur (vetëm regjistro pagesën)' },
-          ]}
-        />
-        <Select label="Mënyra" value={f.method} onChange={(e) => setF({ ...f, method: e.target.value })} options={[{ value: 'bank', label: 'Bankë' }, { value: 'cash', label: 'Kesh' }, { value: 'other', label: 'Tjetër' }]} />
-        <Input label="Data e pagesës" type="date" value={f.paid_on} onChange={(e) => setF({ ...f, paid_on: e.target.value })} />
-        <Input label="Referenca (nr. i transaksionit)" value={f.reference} onChange={(e) => setF({ ...f, reference: e.target.value })} />
-        <Input label="Shënim" value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} />
-      </div>
       {run.error && <p className="mt-3 text-sm text-warn-700">{(run.error as Error).message}</p>}
     </Dialog>
   )
@@ -272,7 +210,7 @@ function LicenseCard({ id, d, onSaved }: { id: string; d: AdminDetailT; onSaved:
     if (l) setF({ plan: l.plan, price: l.price == null ? '' : String(l.price), status: l.status, expires_on: l.expires_on ?? '', max_devices: String(l.max_devices), note: l.note ?? '' })
   }, [l])
   const save = useMutation({
-    mutationFn: () => saveLicense({ business_id: id, ...f, price: f.price.replace(',', '.'), max_devices: Number(f.max_devices) || 3 }),
+    mutationFn: () => saveLicense({ business_id: id, status: f.status, expires_on: f.expires_on, note: f.note, max_devices: Number(f.max_devices) || 3 }),
     onSuccess: () => (setOk(true), onSaved()),
   })
   const c = l?.computed
@@ -289,8 +227,6 @@ function LicenseCard({ id, d, onSaved }: { id: string; d: AdminDetailT; onSaved:
         )}
       </div>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
-        <Select label="Plani" value={f.plan} onChange={(e) => (setOk(false), setF({ ...f, plan: e.target.value }))} options={[{ value: 'monthly', label: 'Mujor' }, { value: 'yearly', label: 'Vjetor' }, { value: 'custom', label: 'I veçantë' }]} />
-        <Input label="Çmimi për këtë biznes (€, bosh = sipas planit)" inputMode="decimal" value={f.price} onChange={(e) => (setOk(false), setF({ ...f, price: e.target.value }))} />
         <Select
           label="Statusi"
           value={f.status}
@@ -308,38 +244,11 @@ function LicenseCard({ id, d, onSaved }: { id: string; d: AdminDetailT; onSaved:
         {ok && <span className="text-sm text-brand-600">U ruajt.</span>}
         {save.error && <span className="text-sm text-warn-700">{(save.error as Error).message}</span>}
       </div>
-      <p className="mt-2 text-xs text-muted">Licenca e pezulluar ose e çaktivizuar mbyll qasjen; pas skadimit + tolerancës ndalen vetëm shitjet e reja.</p>
+      <p className="mt-2 text-xs text-muted">“Pajisje maksimale” = sa arka mund të ketë klienti. Licenca e pezulluar mbyll qasjen; afati është opsional.</p>
     </Card>
   )
 }
 type AdminDetailT = Awaited<ReturnType<typeof fetchAdminDetail>>
-
-function PaymentsCard({ d, onChanged }: { d: AdminDetailT; onChanged: () => void }) {
-  const del = useMutation({ mutationFn: deletePayment, onSuccess: onChanged })
-  return (
-    <Card className="p-5">
-      <h2 className="text-[17px] font-semibold">Pagesat</h2>
-      {d.payments.length === 0 ? (
-        <p className="mt-2 text-sm text-muted">Asnjë pagesë e konfirmuar.</p>
-      ) : (
-        <ul className="mt-2 divide-y divide-line">
-          {d.payments.map((p) => (
-            <li key={p.id} className="flex flex-wrap items-center gap-3 py-2 text-sm">
-              <span className="w-[90px]">{day(p.paid_on)}</span>
-              <span className="min-w-0 flex-1 text-muted">
-                {[p.method === 'bank' ? 'bankë' : p.method === 'cash' ? 'kesh' : 'tjetër', p.reference, p.months ? `+${p.months} muaj` : null, p.extended_to && `deri ${day(p.extended_to)}`, p.confirmed_by_name, p.note].filter(Boolean).join(' · ')}
-              </span>
-              <b className="tabular-nums">{formatEUR(p.amount)}</b>
-              <button type="button" aria-label="Fshi" onClick={() => confirm('Ta fshij pagesën? Afati i licencës nuk ndryshon vetë.') && del.mutate(p.id)} className="text-muted hover:text-warn-700">
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </Card>
-  )
-}
 
 function RegistersCard({ d, onChanged }: { d: AdminDetailT; onChanged: () => void }) {
   const [act, setAct] = useState<{ app: RegisterApplication; action: 'approve' | 'reject' | 'request_info' } | null>(null)

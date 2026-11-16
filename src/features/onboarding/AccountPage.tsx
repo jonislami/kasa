@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { AlertTriangle, CheckCircle2, Circle, Clock, CreditCard, Download, LogOut, MonitorSmartphone, Plus, XCircle } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Circle, Clock, Download, LogOut, MonitorSmartphone, Plus, XCircle } from 'lucide-react'
 import { useAuth } from '@/app/AuthProvider'
 import { SafeAreaStrip } from '@/app/layout/AppLayout'
 import { LogoMark } from '@/components/Logo'
@@ -9,8 +9,8 @@ import { Badge, Button, Card, Dialog, Input, Select } from '@/components/ui'
 import { businessType } from '@/lib/business'
 import { formatKosovoDateTime } from '@/lib/clock'
 import { cn } from '@/lib/cn'
-import { formatEUR } from '@/lib/money'
 import { DownloadCards } from '@/features/download/DownloadPage'
+import { TillKeysCard } from './TillKeys'
 import {
   APP_STATUS,
   DEVICE_LABELS,
@@ -29,8 +29,8 @@ import {
 const day = (d: string | null | undefined) => (d ? d.slice(0, 10).split('-').reverse().join('.') : '')
 
 /**
- * /llogaria – the owner's panel: status of the registration, data, payment, license, application for a till,
- * Install SEF. Works while the business waits (active = false) through security-definer RPCs.
+ * /llogaria – the owner's panel: status of the registration, data, the tills with their activation keys (0036),
+ * download. Works while the business waits (active = false) through security-definer RPCs.
  */
 export function AccountPage() {
   const { ctx, signOut, refresh } = useAuth()
@@ -78,9 +78,10 @@ export function AccountPage() {
           <>
             <Steps s={s} />
             <StatusCard s={s} />
-            {['pending', 'needs_info', 'approved'].includes(s.business.status) && <DataCard s={s} onSaved={reload} />}
-            {['approved', 'active', 'suspended'].includes(s.business.status) && <PaymentCard s={s} />}
-            {s.business.status === 'active' && <RegisterCard s={s} onSaved={reload} />}
+            {['pending', 'needs_info'].includes(s.business.status) && <DataCard s={s} onSaved={reload} />}
+            {/* before 0036 an active business could wait for a till application: keep that card for it */}
+            {s.business.status === 'active' && !s.can_install && <RegisterCard s={s} onSaved={reload} />}
+            {s.can_install && <TillKeysCard />}
             {s.can_install && (
               <Card className="p-5 md:p-6">
                 <div className="mb-4 flex items-center gap-3">
@@ -88,8 +89,8 @@ export function AccountPage() {
                     <Download className="h-5 w-5" />
                   </div>
                   <div>
-                    <h2 className="text-[19px] font-bold">Install SEF</h2>
-                    <p className="text-sm text-muted">Shkarko Kasa për pajisjen e arkës dhe hyr me këtë llogari; biznesi dhe konfigurimi ngarkohen vetë.</p>
+                    <h2 className="text-[19px] font-bold">Shkarko Kasa</h2>
+                    <p className="text-sm text-muted">Instalo programin në pajisjen e arkës dhe shkruaj çelësin e asaj arke; biznesi dhe konfigurimi ngarkohen vetë.</p>
                   </div>
                 </div>
                 <DownloadCards businessLabel={businessType(s.business.type).label} />
@@ -105,18 +106,14 @@ export function AccountPage() {
 
 function Steps({ s }: { s: OnboardingState }) {
   const st = s.business.status
-  const paid = s.payments.length > 0 || (st === 'active' && !s.business.applied_at)
-  const regApproved = s.register_applications.some((a) => a.status === 'approved')
   const steps: { label: string; done: boolean; active: boolean; bad?: boolean }[] = [
     { label: 'Regjistrimi', done: true, active: false },
-    { label: 'Shqyrtimi', done: ['approved', 'active', 'suspended'].includes(st), active: st === 'pending' || st === 'needs_info', bad: st === 'rejected' },
-    { label: 'Pagesa', done: paid && st !== 'approved', active: st === 'approved' },
-    { label: 'Aplikimi për arkë', done: regApproved || s.can_install, active: st === 'active' && !regApproved && !s.can_install },
-    { label: 'Install SEF', done: false, active: s.can_install },
+    { label: 'Aprovimi', done: ['approved', 'active', 'suspended'].includes(st), active: st === 'pending' || st === 'needs_info', bad: st === 'rejected' },
+    { label: 'Instalimi', done: false, active: s.can_install },
   ]
   return (
     <Card className="p-5">
-      <ol className="grid grid-cols-5 gap-2">
+      <ol className="grid grid-cols-3 gap-2">
         {steps.map((x, i) => {
           const Icon = x.bad ? XCircle : x.done ? CheckCircle2 : x.active ? Clock : Circle
           return (
@@ -138,12 +135,12 @@ function StatusCard({ s }: { s: OnboardingState }) {
   const st = s.business.status
   const lic = s.license
   const text: Record<string, string> = {
-    pending: 'Regjistrimi është në shqyrtim. Zakonisht përgjigjemi brenda një dite pune; do të të njoftojmë me email.',
+    pending: 'Regjistrimi është në shqyrtim. Zakonisht aprovohet brenda një dite pune; kjo faqe përditësohet vetë.',
     needs_info: 'Për të vazhduar na duhen disa të dhëna. Plotësoji më poshtë dhe kliko “Dërgo të dhënat”.',
     approved: 'Regjistrimi u aprovua. Kryej pagesën sipas udhëzimeve më poshtë; pas konfirmimit hapet aplikimi për arkë.',
-    active: s.can_install ? 'Llogaria është aktive. Shkarko Kasa te “Install SEF” dhe fillo punën.' : 'Llogaria është aktive. Apliko për arkë; pas aprovimit të del “Install SEF”.',
+    active: s.can_install ? 'Llogaria është aktive. Merr çelësin e arkës më poshtë, shkarko Kasa dhe fillo punën.' : 'Llogaria është aktive. Apliko për arkë; pas aprovimit të del “Install SEF”.',
     rejected: 'Regjistrimi u refuzua. Për sqarime na kontakto.',
-    suspended: 'Llogaria është pezulluar. Kasa nuk punon derisa të riaktivizohet – kontrollo pagesën ose na kontakto.',
+    suspended: 'Llogaria është pezulluar. Kasa nuk punon derisa të riaktivizohet – na kontakto.',
   }
   return (
     <Card className={cn('p-5', st === 'needs_info' || st === 'rejected' || st === 'suspended' ? 'border-warn-700/30' : '')}>
@@ -216,81 +213,6 @@ function DataCard({ s, onSaved }: { s: OnboardingState; onSaved: () => void }) {
         {ok && <span className="text-sm text-brand-600">U ruajt.</span>}
         {save.error && <span className="text-sm text-warn-700">{(save.error as Error).message}</span>}
       </div>
-    </Card>
-  )
-}
-
-function PaymentCard({ s }: { s: OnboardingState }) {
-  const p = s.payment_info
-  const price = s.license.price ?? (s.license.plan === 'yearly' ? p.yearly_price : p.monthly_price)
-  return (
-    <Card className="p-5 md:p-6">
-      <div className="flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-100 text-brand-600">
-          <CreditCard className="h-5 w-5" />
-        </div>
-        <div>
-          <h2 className="text-[19px] font-bold">Pagesa e abonimit</h2>
-          <p className="text-sm text-muted">Me bankë ose kesh; pagesën e konfirmon administratori dhe licenca zgjatet vetë.</p>
-        </div>
-      </div>
-      <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <div className="rounded-card bg-bg p-4 text-[15px]">
-          {p.iban ? (
-            <>
-              <div className="text-sm text-muted">Paguaj në llogarinë</div>
-              <div className="font-semibold">{p.account_holder ?? 'Kasa'}</div>
-              <div>{p.bank_name}</div>
-              <div className="select-all break-all font-mono text-[16px]">{p.iban}</div>
-              <div className="mt-2 text-sm text-muted">Përshkrimi: “Kasa – {s.business.name} – NUI {s.business.nui ?? ''}”</div>
-            </>
-          ) : (
-            <div className="text-sm text-muted">Udhëzimet e pagesës do të shfaqen këtu së shpejti.</div>
-          )}
-          {p.payment_note && <div className="mt-2 text-sm">{p.payment_note}</div>}
-        </div>
-        <div className="rounded-card bg-bg p-4 text-[15px]">
-          {Number(p.monthly_price) > 0 && (
-            <div className="flex justify-between">
-              <span className="text-muted">Mujore</span> <b>{formatEUR(p.monthly_price)}</b>
-            </div>
-          )}
-          {Number(p.yearly_price) > 0 && (
-            <div className="flex justify-between">
-              <span className="text-muted">Vjetore</span> <b>{formatEUR(p.yearly_price)}</b>
-            </div>
-          )}
-          {!(Number(p.monthly_price) > 0) && !(Number(p.yearly_price) > 0) && !(price != null && Number(price) > 0) && (
-            <div className="text-sm text-muted">Çmimin ta tregon administratori.</div>
-          )}
-          {price != null && Number(price) > 0 && (
-            <div className="mt-2 flex justify-between border-t border-line pt-2">
-              <span className="text-muted">Çmimi yt</span> <b>{formatEUR(Number(price))}</b>
-            </div>
-          )}
-          {s.license.expires_on && (
-            <div className="mt-2 text-sm text-muted">
-              Licenca vlen deri më <b className="text-ink">{day(s.license.expires_on)}</b>
-            </div>
-          )}
-        </div>
-      </div>
-      {s.payments.length > 0 && (
-        <ul className="mt-4 divide-y divide-line rounded-card border border-line text-sm">
-          {s.payments.map((x, i) => (
-            <li key={i} className="flex flex-wrap justify-between gap-2 px-3 py-2">
-              <span>
-                {day(x.paid_on)} · {x.method === 'bank' ? 'bankë' : x.method === 'cash' ? 'kesh' : 'tjetër'}
-                {x.reference && ` · ${x.reference}`}
-              </span>
-              <span className="tabular-nums">
-                {formatEUR(x.amount)}
-                {x.extended_to && <span className="text-muted"> · deri {day(x.extended_to)}</span>}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
     </Card>
   )
 }

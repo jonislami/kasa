@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Search, Settings2 } from 'lucide-react'
+import { Check, Search } from 'lucide-react'
 import { PageHeader } from '@/app/layout/AppLayout'
-import { Badge, Button, Card, Dialog, EmptyState, Input, StatCard } from '@/components/ui'
+import { Badge, Button, Card, EmptyState, StatCard } from '@/components/ui'
 import { businessType } from '@/lib/business'
 import { formatKosovoDateTime } from '@/lib/clock'
 import { cn } from '@/lib/cn'
 import { LICENSE_LABELS, STATUS_LABELS, type BusinessStatus } from '@/features/onboarding/api'
-import { fetchOnboardingList, fetchPlatformSettings, savePlatformSettings, type OnboardingRow } from './onboardingApi'
+import { decide, fetchOnboardingList, type OnboardingRow } from './onboardingApi'
 import { PlatformShell } from './PlatformPage'
 
 type Filter = 'waiting' | BusinessStatus | 'all'
@@ -16,7 +16,6 @@ const FILTERS: [Filter, string][] = [
   ['waiting', 'Presin vendim'],
   ['pending', 'Në shqyrtim'],
   ['needs_info', 'Kërkohen të dhëna'],
-  ['approved', 'Presin pagesën'],
   ['active', 'Aktive'],
   ['suspended', 'Pezulluar'],
   ['rejected', 'Refuzuar'],
@@ -27,12 +26,19 @@ export const statusTone = (s: BusinessStatus) => (s === 'active' ? 'success' : s
 const licenseTone = (s: string) => (s === 'active' ? 'success' : s === 'expiring' || s === 'grace' ? 'amber' : 'warn')
 const day = (d: string | null) => (d ? d.slice(0, 10).split('-').reverse().join('.') : '')
 
-/** /platforma/aplikimet – registrations, payments and licenses of all businesses. */
+/** /platforma/aplikimet – registrations of new businesses; the admin only approves (0036). */
 export function ApplicationsPage() {
   const navigate = useNavigate()
   const [filter, setFilter] = useState<Filter>('waiting')
   const [q, setQ] = useState('')
-  const [settings, setSettings] = useState(false)
+  const qc = useQueryClient()
+  const approve = useMutation({
+    mutationFn: (id: string) => decide(id, 'approve'),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['platform-onboarding'] })
+      void qc.invalidateQueries({ queryKey: ['platform-businesses'] })
+    },
+  })
   const all = useQuery({ queryKey: ['platform-onboarding', 'all'], queryFn: () => fetchOnboardingList(null) })
   const rows = all.data ?? []
   const counts = useMemo(() => {
@@ -51,17 +57,12 @@ export function ApplicationsPage() {
   return (
     <PlatformShell>
       <PageHeader
-        eyebrow="Regjistrimet, pagesat dhe licencat"
+        eyebrow="Regjistrimet e bizneseve të reja"
         title="Aplikimet"
-        actions={
-          <Button variant="secondary" onClick={() => setSettings(true)}>
-            <Settings2 className="h-4 w-4" /> Pagesa dhe çmimet
-          </Button>
-        }
       />
       <div className="grid grid-cols-2 gap-3 px-4 py-5 md:gap-4 md:px-8 md:py-0 lg:grid-cols-4">
         <StatCard label="Presin vendim" value={counts.waiting ?? 0} />
-        <StatCard label="Presin pagesën" value={counts.approved ?? 0} />
+        <StatCard label="Në shqyrtim" value={counts.pending ?? 0} />
         <StatCard label="Aktive" value={counts.active ?? 0} />
         <StatCard label="Licenca që skadojnë / kanë skaduar" value={expiring} />
       </div>
@@ -100,8 +101,8 @@ export function ApplicationsPage() {
           ) : (
             <ul className="divide-y divide-line">
               {list.map((r: OnboardingRow) => (
-                <li key={r.id}>
-                  <button type="button" onClick={() => navigate(`/platforma/biznes/${r.id}`)} className="flex w-full flex-wrap items-center gap-3 px-5 py-3.5 text-left hover:bg-bg">
+                <li key={r.id} className="flex items-center gap-2 pr-4 hover:bg-bg">
+                  <button type="button" onClick={() => navigate(`/platforma/biznes/${r.id}`)} className="flex min-w-0 flex-1 flex-wrap items-center gap-3 px-5 py-3.5 text-left">
                     <div className="min-w-0 flex-1">
                       <div className="font-semibold">
                         {r.name} <span className="font-normal text-muted">· {businessType(r.type).shortLabel}</span>
@@ -120,70 +121,18 @@ export function ApplicationsPage() {
                     <Badge tone={statusTone(r.status)}>{STATUS_LABELS[r.status]}</Badge>
                     <span className="hidden w-[90px] text-right text-sm text-muted md:inline">{r.devices} pajisje</span>
                   </button>
+                  {(r.status === 'pending' || r.status === 'needs_info') && (
+                    <Button size="sm" loading={approve.isPending && approve.variables === r.id} onClick={() => approve.mutate(r.id)}>
+                      <Check className="h-4 w-4" /> Aprovo
+                    </Button>
+                  )}
                 </li>
               ))}
             </ul>
           )}
         </Card>
       </div>
-      <SettingsDialog open={settings} onClose={() => setSettings(false)} />
+      {approve.error && <p className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-ctl bg-warn-100 px-4 py-3 text-sm text-warn-700 shadow">{(approve.error as Error).message}</p>}
     </PlatformShell>
-  )
-}
-
-function SettingsDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const qc = useQueryClient()
-  const data = useQuery({ queryKey: ['platform-settings'], queryFn: fetchPlatformSettings, enabled: open })
-  const [f, setF] = useState({ bank_name: '', iban: '', account_holder: '', monthly_price: '', yearly_price: '', payment_note: '', grace_days: '7' })
-  useEffect(() => {
-    const d = data.data
-    if (d) setF({ bank_name: d.bank_name ?? '', iban: d.iban ?? '', account_holder: d.account_holder ?? '', monthly_price: String(d.monthly_price || ''), yearly_price: String(d.yearly_price || ''), payment_note: d.payment_note ?? '', grace_days: String(d.grace_days) })
-  }, [data.data])
-  const save = useMutation({
-    mutationFn: () => savePlatformSettings({ ...f, monthly_price: f.monthly_price.replace(',', '.'), yearly_price: f.yearly_price.replace(',', '.') }),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['platform-settings'] })
-      onClose()
-    },
-  })
-  const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value })
-  return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      title="Pagesa dhe çmimet"
-      subtitle="U shfaqen klientëve te paneli i tyre pas aprovimit"
-      width="md:max-w-[560px]"
-      footer={
-        <div className="flex justify-end gap-2">
-          <Button variant="secondary" onClick={onClose}>
-            Anulo
-          </Button>
-          <Button loading={save.isPending} onClick={() => save.mutate()}>
-            Ruaj
-          </Button>
-        </div>
-      }
-    >
-      {data.error ? (
-        <p className="text-sm text-warn-700">{(data.error as Error).message}</p>
-      ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Input label="Mbajtësi i llogarisë" value={f.account_holder} onChange={set('account_holder')} />
-          <Input label="Banka" value={f.bank_name} onChange={set('bank_name')} />
-          <div className="sm:col-span-2">
-            <Input label="IBAN" value={f.iban} onChange={set('iban')} />
-          </div>
-          <Input label="Çmimi mujor (€)" inputMode="decimal" value={f.monthly_price} onChange={set('monthly_price')} />
-          <Input label="Çmimi vjetor (€)" inputMode="decimal" value={f.yearly_price} onChange={set('yearly_price')} />
-          <Input label="Ditët e tolerancës pas skadimit" inputMode="numeric" value={f.grace_days} onChange={set('grace_days')} />
-          <div className="sm:col-span-2">
-            <Input label="Shënim për pagesën" value={f.payment_note} onChange={set('payment_note')} placeholder="p.sh. Pagesa në kesh në zyrë: Rr. …, çdo ditë 9–17" />
-          </div>
-          <p className="text-xs text-muted sm:col-span-2">Për një biznes mund të vendosësh çmim tjetër te licenca e tij.</p>
-        </div>
-      )}
-      {save.error && <p className="mt-3 text-sm text-warn-700">{(save.error as Error).message}</p>}
-    </Dialog>
   )
 }

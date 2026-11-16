@@ -19,6 +19,7 @@ import { RegistersSection } from './RegistersSection'
 import { UsersSection } from './UsersSection'
 import { LANG_LABELS, setLang, useLang, type Lang } from '@/lib/i18n'
 import { InstallCard } from '@/app/AppStatus'
+import { TillKeysCard } from '@/features/onboarding/TillKeys'
 
 type Section = 'biznesi' | 'printeri' | 'perdoruesit' | 'kontabilisti' | 'arkat' | 'tvsh' | 'backup'
 
@@ -91,7 +92,12 @@ export function SettingsPage() {
             </div>
           )}
           {section === 'kontabilisti' && <AccountantSection />}
-          {section === 'arkat' && <RegistersSection />}
+          {section === 'arkat' && (
+            <div className="flex flex-col gap-5">
+              {profile.role === 'admin' && !isSefApp && <TillKeysCard />}
+              <RegistersSection />
+            </div>
+          )}
           {section === 'tvsh' && <VatSection />}
           {section === 'backup' && <BackupSection />}
         </div>
