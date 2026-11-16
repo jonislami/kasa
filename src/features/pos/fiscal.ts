@@ -1,6 +1,7 @@
 // The till's side of fiscalization: turns a Kasa sale (sale, cancel, return) into the ATK coupon via
 // src/lib/fiscal. Returns null when this register on this device is not registered at ATK.
 import { fetchSaleFiscal, fiscalize, type FiscalReceipt, type FiscalSale } from '@/lib/fiscal'
+import { groupItems } from '@/lib/printer/receiptFacts'
 import type { Sale } from './api'
 
 export function toFiscalSale(sale: Sale): FiscalSale {
@@ -12,7 +13,8 @@ export function toFiscalSale(sale: Sale): FiscalSale {
     card_amount: sale.card_amount,
     payment_kind: sale.payment_kind ?? null,
     vat_lines: sale.vat_lines,
-    items: sale.items.map((i) => ({ name: i.name, unit: i.unit, quantity: i.quantity, unit_price: i.unit_price, total: i.total, vat_code: i.vat_code, atk_type: i.atk_type ?? null })),
+    // the same item on one line, as on the printed coupon (ATK)
+    items: groupItems(sale.items).map((i) => ({ name: i.name, unit: i.unit, quantity: i.quantity, unit_price: i.unit_price, total: i.total, vat_code: i.vat_code, atk_type: i.atk_type ?? null })),
   }
 }
 

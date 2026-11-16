@@ -86,8 +86,31 @@ export interface ReceiptFacts {
 
 type Item = { name: string; unit: string; quantity: number; unit_price: number; line_discount: number; vat_code: string }
 
+/**
+ * ATK (neni 25 pika 18): "nëse artikulli është i njëjtë duhet të bëhet grupimi me një rresht" – the same item
+ * (name, price, VAT, unit) is printed once, e.g. one service done by two workers in a salon.
+ */
+export function groupItems<T extends Item & { total?: number; atk_type?: string | null }>(items: T[]): T[] {
+  const out: T[] = []
+  const at = new Map<string, number>()
+  for (const i of items) {
+    const key = [i.name, i.unit, i.unit_price, i.vat_code, i.atk_type ?? '', Math.sign(i.quantity)].join('|')
+    const k = at.get(key)
+    if (k == null) {
+      at.set(key, out.length)
+      out.push({ ...i })
+    } else {
+      const g = out[k]
+      g.quantity = Math.round((g.quantity + i.quantity) * 1000) / 1000
+      g.line_discount = r2(g.line_discount + i.line_discount)
+      if (g.total != null && i.total != null) g.total = r2(g.total + i.total)
+    }
+  }
+  return out
+}
+
 function linesOf(items: Item[], sign: 1 | -1): ReceiptLine[] {
-  return items.map((i) => {
+  return groupItems(items).map((i) => {
     const q = Math.abs(i.quantity)
     const gross = r2(q * i.unit_price)
     const disc = Math.abs(i.line_discount)
@@ -118,7 +141,7 @@ function blockOf(
       .filter((v) => Math.abs(v.vat) > 0.004)
       .map((v) => [`TVSH ${v.code} ${Math.round(Number(v.rate) * 100)}%`, n2(Math.abs(v.vat))]),
     net: n2(Math.abs(totals.net_total)),
-    itemsCount: items.length,
+    itemsCount: groupItems(items).length,
   }
 }
 
@@ -182,7 +205,7 @@ export function receiptFacts(sale: Sale, business: Business, copy?: boolean): Re
       lines,
       total: n2(-Math.abs(sale.total)),
       remaining: n2(Math.max(0, r2(ref.total + ref.returned))),
-      count: sale.items.length,
+      count: groupItems(sale.items).length,
     }
   } else if (sale.kind === 'void' && ref) {
     // ATK sample "KUPON FISKAL I ANULUAR": the cancelled bill as it was
