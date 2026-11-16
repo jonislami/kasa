@@ -2,10 +2,10 @@ import type { Business } from '@/app/AuthProvider'
 import type { Sale } from '@/features/pos/api'
 import type { ReceiptSettings } from '@/features/settings/api'
 import { charsPerLine, EscPos } from './escpos'
-import { n2, qty, receiptFacts } from './receiptFacts'
-import { RKS_LOGO } from './rksLogo'
+import { n2, receiptFacts, type ReceiptLine } from './receiptFacts'
+import { RKS_MARK } from './rksLogo'
 
-const rksBytes = () => Uint8Array.from(atob(RKS_LOGO.data), (c) => c.charCodeAt(0))
+const markBytes = () => Uint8Array.from(atob(RKS_MARK.data), (c) => c.charCodeAt(0))
 
 /** Word-wraps `text` into lines of at most `width` characters (long words are cut). */
 function chunks(text: string, width: number): string[] {
@@ -32,7 +32,7 @@ function chunks(text: string, width: number): string[] {
   return out.length ? out : ['']
 }
 
-/** The same receipt as the on-screen one (Receipt.tsx), as ESC/POS bytes. */
+/** The same receipt as the on-screen one (Receipt.tsx), as ESC/POS bytes – laid out as the ATK samples (Shtojca F). */
 export function receiptBytes(sale: Sale, business: Business, s: ReceiptSettings, opts: { copy?: boolean; drawer?: boolean } = {}): Uint8Array {
   const w = charsPerLine(s.paper_width)
   const p = new EscPos(w, s.printer_charset)
@@ -40,77 +40,82 @@ export function receiptBytes(sale: Sale, business: Business, s: ReceiptSettings,
   const f = sale.fiscal ?? null
   const x = receiptFacts(sale, business, opts.copy)
 
-  // Taxpayer and unit
-  p.feed(1).align('center').bold(true).wrap(`TATIMPAGUESI: ${business.name}`).bold(false)
-  if (s.receipt_header) p.wrap(s.receipt_header)
-  for (const [k, v] of x.header) p.wrap(`${k}: ${v}`)
-  p.align('left').rule()
+  // Taxpayer and unit (the free header text stands in for the business logo)
+  p.feed(1).align('center')
+  if (s.receipt_header) p.bold(true).size(2).wrap(s.receipt_header).size(1).bold(false)
+  p.wrap(`TATIMPAGUESI: ${business.name}`)
+  for (const [k, v] of x.header) {
+    const strong = k === 'NF-NUI' || k === 'NUMRI I TVSH-SË'
+    if (strong) p.bold(true)
+    p.wrap(`${k}: ${v}`)
+    if (strong) p.bold(false)
+  }
+  p.align('left').rule('#')
 
-  // Worker and title
+  // Worker, title, the original coupon of a cancel / return
   if (sale.worker_name) p.align('right').wrap(`EMRI I PUNËTORIT: ${sale.worker_name}`)
-  p.align('center').bold(true).size(2).wrap(x.title).size(1)
+  p.align('center').bold(true).size(w >= 48 ? 2 : 1).wrap(x.title).size(1).bold(false)
   for (const m of x.marks) p.line(m)
-  p.bold(false)
-  if (x.refInvoice) p.line(`PËR KUPONIN: ${x.refInvoice}`)
-  p.align('left').rule()
+  if (x.refLine) p.wrap(x.refLine)
+  if (x.reasonLine) p.wrap(x.reasonLine)
+  p.align('left').feed(1)
 
-  // Items: ARTIKULLI | SASIA | ÇMIMI | SHUMA (+ VAT letter); long names continue on the next lines
-  const cw = w >= 48 ? [20, 6, 9, 13] : [11, 5, 7, 9]
-  p.bold(true).cols(['ARTIKULLI', 'SASIA', 'ÇMIMI', 'SHUMA'], cw).bold(false)
-  for (const i of sale.items) {
-    const name = chunks(i.name, cw[0] - 1)
-    p.cols([name[0], qty(i.quantity, i.unit), n2(i.unit_price), `${n2(i.total)} ${i.vat_code}`], cw)
-    for (const more of name.slice(1)) p.line(more)
-    const disc = i.line_discount + i.invoice_discount
-    if (disc !== 0) p.pair('  zbritje', `-${n2(Math.abs(disc))}`)
+  // Items: ARTIKULLI | SASIA X ÇMIMI | SHUMA (with the VAT letter); long names continue on the next lines
+  const cw = w >= 48 ? [22, 14, 12] : [10, 13, 9]
+  const lines = (ls: ReceiptLine[]) => {
+    p.cols(['ARTIKULLI', 'SASIA X ÇMIMI', 'SHUMA'], cw)
+    p.rule('-')
+    for (const l of ls) {
+      const name = chunks(l.name, cw[0] - 1)
+      p.cols([name[0], l.qtyPrice, l.amount], cw)
+      for (const more of name.slice(1)) p.line(more)
+      if (l.discount) p.pair(`  ${l.discount.label}`, l.discount.amount)
+    }
   }
-  p.rule()
+  lines(x.main.lines)
+  if (x.main.subtotal) {
+    p.bold(true).pair('NËNTOTALI', x.main.subtotal.value).bold(false)
+    p.pair(x.main.subtotal.label, x.main.subtotal.discount)
+  }
+  p.rule('-')
+  p.bold(true).pair('TOTALI PËR PAGESË', `${x.main.total} EUR`).bold(false)
+  p.pair('MËNYRA E PAGESËS', x.main.payment)
+  if (!x.returned && sale.kind === 'sale' && sale.tendered != null && sale.tendered !== sale.cash_amount) p.pair('PAGUAR', n2(sale.tendered))
+  if (!x.returned && sale.change_amount > 0) p.pair('KUSURI', n2(sale.change_amount))
+  for (const [k, v] of x.main.vat) p.pair(k, `${v} EUR`)
+  p.pair('TOTALI PA TVSH', `${x.main.net} EUR`)
+  p.rule('-')
 
-  // Total and payment
-  if (sale.discount_total !== 0) p.pair('ZBRITJE GJITHSEJ', `-${n2(Math.abs(sale.discount_total))} EUR`)
-  p.bold(true).pair(sale.kind === 'sale' ? 'TOTALI PËR PAGESË' : 'TOTALI', `${n2(sale.total)} EUR`).bold(false)
-  p.pair('MËNYRA E PAGESËS', x.payment)
-  if (sale.payment_method === 'mixed') {
-    p.pair('  Kesh', n2(sale.cash_amount))
-    p.pair('  Kartelë', n2(sale.card_amount))
+  // Return: what is returned and what remains
+  if (x.returned) {
+    p.rule('#').align('center').line('KTHIMI I ARTIKUJVE').align('left').rule('#')
+    lines(x.returned.lines)
+    p.rule('-').pair('TOTALI I KTHIMIT', `${x.returned.total} EUR`)
+    p.bold(true).pair('TOTALI I MBETUR', `${x.returned.remaining} EUR`).bold(false)
+    p.rule('-')
   }
-  if (sale.kind === 'sale' && sale.tendered != null && sale.tendered !== sale.cash_amount) p.pair('PAGUAR', n2(sale.tendered))
-  if (sale.change_amount > 0) p.bold(true).pair('KUSURI', n2(sale.change_amount)).bold(false)
-
-  // VAT by rate (ATK: VAT per rate and the total without VAT)
-  if (opt.show_vat !== false) {
-    p.rule()
-    const vw = [Math.floor(w / 3), Math.ceil(w / 3), w - Math.floor(w / 3) - Math.ceil(w / 3)]
-    p.bold(true).cols(['TVSH', 'PA TVSH', 'TVSH'], vw).bold(false)
-    for (const v of sale.vat_lines) p.cols([`${v.code} ${v.code === 'A' ? 'e liruar' : `${Math.round(v.rate * 100)}%`}`, n2(v.net), n2(v.vat)], vw)
-    p.cols(['Gjithsej', n2(sale.net_total), n2(sale.vat_total)], vw)
-  }
-  p.rule()
 
   // Fiscal block
-  p.align('right').line(`ARTIKUJ - ${x.itemsCount}`).align('left')
+  p.align('right').line(x.returned ? `ARTIKUJ TË KTHYER - ${x.returned.count}` : `ARTIKUJ - ${x.main.itemsCount}`).align('left')
   p.line(x.number)
   // label + value on one line, or the value right-aligned under its label when the paper is too narrow
   const field = (label: string, value: string) => (label.length + 1 + value.length <= w ? p.pair(label, value) : p.line(label).align('right').line(value).align('left'))
   field('DATA DHE ORA', x.dateTime)
   if (f) {
     field('NR. IDENTIFIKUES I SEF', f.sef_no)
-    p.line(`NUIKF: ${f.verification_no}`)
+    p.feed(1).bold(true).line(`NUIKF: ${f.verification_no}`).bold(false)
   }
-  p.align('center').line(`${f ? 'KUPON FISKAL' : 'KUPON'} DITOR NR. ${x.dailyNo}`).align('left')
-  if (sale.reason) p.wrap(`ARSYEJA: ${sale.reason}`)
+  p.feed(1).align('center').line(`${f ? 'KUPON FISKAL' : 'KUPON'} DITOR NR. ${x.dailyNo}`)
 
-  p.align('center')
   if (f) {
-    // ATK: QR = citizen coupon + signature, then the RKS mark
-    p.feed(1).qr(f.qr, s.paper_width === 58 ? 5 : 6).raw(0x0a)
+    // ATK: QR = citizen coupon + signature, then the fiscal logo (coat of arms + RKS / MF, 19 x 9.5 mm)
+    p.qr(f.qr, s.paper_width === 58 ? 5 : 6).raw(0x0a)
     if (f.status === 'failed') p.wrap(`ATK e refuzoi: ${f.error ?? ''}`)
-    p.feed(1).image(RKS_LOGO.width / 8, RKS_LOGO.height, rksBytes())
-    p.bold(true).line('RKS / MF').bold(false)
+    p.image(RKS_MARK.width / 8, RKS_MARK.height, markBytes()).raw(0x0a)
   } else {
     p.feed(1).line('Ky kupon nuk është fiskal.')
   }
-  if (s.receipt_footer) p.bold(true).wrap(s.receipt_footer.toUpperCase()).bold(false)
+  if (s.receipt_footer) p.wrap(s.receipt_footer.toUpperCase())
   p.line('Mundësuar nga Kasa')
   if (opt.show_barcode && sale.invoice_no && !f) p.feed(1).barcode128(String(sale.invoice_no)).raw(0x0a)
   p.align('left')

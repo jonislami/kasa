@@ -39,7 +39,7 @@ const nul = (type: string) => ({ anyOf: [{ type }, { type: 'null' }] })
 // ATK "Kategoritë e mallrave dhe shërbimeve" (same list as src/lib/atk/catalog.ts). "PM#36" = nr. 36, printed as PM.
 const ATK_CATEGORIES: [string, string][] = [
   ['TT', 'Të tjera'], ['UR', 'Ushqime të përgatitura në restorante dhe kuzhina'], ['AU', 'Artikuj ushqimorë nga dyqanet me pakicë'],
-  ['VM', 'Vreshtari'], ['KO', 'Produkte kozmetike dhe materiale për zbukurim'], ['AP', 'Autopjesë'], ['BM', 'Barna dhe pajisje mjekësore'],
+  ['VM', 'Veshmbathje (tesha, këpucë)'], ['KO', 'Produkte kozmetike dhe materiale për zbukurim'], ['AP', 'Autopjesë'], ['BM', 'Barna dhe pajisje mjekësore'],
   ['PM', 'Pajisje dhe aparatura mjekësore'], ['PP', 'Pemë dhe perime'], ['PE', 'Pajisje elektronike, audio dhe video'],
   ['PS', 'Pajisje shtëpiake (frigoriferë, shporetë, pajisje kuzhine)'], ['PB', 'Pajisje dhe makineri bujqësore'], ['BB', 'Barna bujqësore'],
   ['KB', 'Karburantë (nafta, benzina)'], ['EE', 'Energji elektrike'], ['PSE', 'Pajisje speciale elektrike'], ['SM', 'Shërbime mjekësore'],

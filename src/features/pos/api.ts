@@ -61,6 +61,24 @@ export interface Sale {
   has_refunds: boolean
   /** Fiscal coupon (ATK) of this sale on this receipt – phase 9. */
   fiscal?: FiscalReceipt | null
+  /** 0033: the original sale of a cancel / return (for the ATK coupon samples). */
+  ref?: SaleRef | null
+}
+
+export interface SaleRef {
+  invoice_no: number
+  created_at: string
+  total: number
+  subtotal: number
+  invoice_discount: number
+  net_total: number
+  vat_total: number
+  vat_lines: { code: VatCode; rate: number; gross: number; net: number; vat: number }[]
+  payment_method: string
+  items_count: number
+  items: { name: string; unit: string; quantity: number; unit_price: number; line_discount: number; total: number; vat_code: string }[]
+  /** Sum of the returns up to this coupon (negative). */
+  returned: number
 }
 
 export interface CreateSaleInput {
@@ -115,6 +133,23 @@ function toSale(raw: unknown): Sale {
       net: n(v.net),
       vat: n(v.vat),
     })),
+    ref: s.ref
+      ? (() => {
+          const r = s.ref as Record<string, unknown>
+          return {
+            ...(r as unknown as SaleRef),
+            total: n(r.total),
+            subtotal: n(r.subtotal),
+            invoice_discount: n(r.invoice_discount),
+            net_total: n(r.net_total),
+            vat_total: n(r.vat_total),
+            returned: n(r.returned),
+            items_count: n(r.items_count),
+            vat_lines: ((r.vat_lines as SaleRef['vat_lines']) ?? []).map((v) => ({ ...v, rate: n(v.rate), gross: n(v.gross), net: n(v.net), vat: n(v.vat) })),
+            items: ((r.items as SaleRef['items']) ?? []).map((i) => ({ ...i, quantity: n(i.quantity), unit_price: n(i.unit_price), line_discount: n(i.line_discount), total: n(i.total) })),
+          }
+        })()
+      : null,
     items: ((s.items as SaleItem[]) ?? []).map((i) => ({
       ...i,
       quantity: n(i.quantity),
