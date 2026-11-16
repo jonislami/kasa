@@ -8,6 +8,7 @@ import { lastPrinterName, printerReady, testPageBytes } from '@/lib/printer'
 import { isManagerRole } from '@/lib/business'
 import type { Sale } from '@/features/pos/api'
 import { Receipt } from '@/features/pos/Receipt'
+import { setWindowsPrinter, windowsPrinter } from '@/lib/printer'
 import { DEFAULT_RECEIPT, fetchReceiptSettings, saveReceiptSettings, type ReceiptSettings } from './api'
 
 /** Bluetooth connection on this device (everyone) + receipt settings for the business (managers). */
@@ -40,6 +41,7 @@ export function PrinterSection() {
   return (
     <div className="flex flex-col gap-5 xl:flex-row xl:items-start">
       <div className="flex min-w-0 flex-1 flex-col gap-5">
+        {device.systemPrint && <WindowsPrinterCard />}
         <BluetoothCard settings={form} />
 
         {manager && (
@@ -285,4 +287,36 @@ const SAMPLE: Sale = {
   ],
   voided: false,
   has_refunds: false,
+}
+
+/**
+ * Windows app: the receipt printer installed in Windows (e.g. Xprinter XP-80). Receipts print straight to it,
+ * without the print dialog. Kept on this device.
+ */
+function WindowsPrinterCard() {
+  const list = useQuery({ queryKey: ['windows-printers'], queryFn: () => device.systemPrint!.list() })
+  const [chosen, setChosen] = useState<string>(() => windowsPrinter() ?? '')
+  const def = list.data?.find((p) => p.isDefault)?.name
+  const pick = (name: string) => {
+    setChosen(name)
+    setWindowsPrinter(name || null)
+  }
+  return (
+    <Card className="p-5">
+      <h2 className="text-[17px] font-semibold">Printeri i Windows</h2>
+      <p className="mt-1 text-sm text-muted">Kuponi printohet drejt në këtë printer, pa dritaren e printimit.</p>
+      <div className="mt-4">
+        <Select
+          label="Printeri"
+          value={chosen}
+          onChange={(e) => pick(e.target.value)}
+          options={[
+            { value: '', label: def ? `Automatik – printeri kryesor (${def})` : 'Automatik – printeri i kuponëve (p.sh. Xprinter)' },
+            ...(list.data ?? []).map((p) => ({ value: p.name, label: p.displayName + (p.isDefault ? ' (kryesor)' : '') })),
+          ]}
+        />
+      </div>
+      {list.error && <p className="mt-2 text-sm text-warn-700">{(list.error as Error).message}</p>}
+    </Card>
+  )
 }

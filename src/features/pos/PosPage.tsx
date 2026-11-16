@@ -21,7 +21,7 @@ import { QuickProductDialog } from './QuickProductDialog'
 import { BookEntryDialog, type BookEntry } from './BookEntryDialog'
 import { VariantPicker } from './VariantPicker'
 import { expiryStatus, fetchLots, formatExpiry, summarizeLots } from '@/lib/lots'
-import { printReceipt } from '@/lib/printer'
+import { printPage, printReceipt } from '@/lib/printer'
 import { serverDate, KOSOVO_TZ } from '@/lib/clock'
 import { fetchReceiptSettings } from '@/features/settings/api'
 import { fetchFiscalContext } from '@/lib/fiscal'
@@ -419,7 +419,7 @@ export function PosPage() {
       }
     }
     setPrintSale({ sale, copy })
-    setTimeout(() => window.print(), 50)
+    setTimeout(() => void printPage(), 50)
   }
 
   const change = (() => {

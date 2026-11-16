@@ -28,4 +28,7 @@ contextBridge.exposeInMainWorld('kasaElectron', {
     return () => ipcRenderer.removeListener('kasa:update', h)
   },
   installUpdate: () => ipcRenderer.send('kasa:update-install'),
+  // Windows printers: list them, and print the rendered receipt without the dialog
+  listPrinters: () => ipcRenderer.invoke('kasa:printers') as Promise<{ name: string; displayName: string; isDefault: boolean }[]>,
+  printSilent: (deviceName?: string) => ipcRenderer.invoke('kasa:print-silent', deviceName ?? null) as Promise<{ ok: boolean; error?: string }>,
 })

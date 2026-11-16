@@ -14,7 +14,7 @@ import { APPROVAL_MESSAGES, lookupSale, refundSale, type Sale, type SaleItem } f
 import { ApprovalDialog } from './dialogs'
 import { PrintArea, Receipt } from './Receipt'
 import { formatKosovoDateTime as formatDateTime } from '@/lib/clock'
-import { printReceipt } from '@/lib/printer'
+import { printPage, printReceipt } from '@/lib/printer'
 import { fetchReceiptSettings } from '@/features/settings/api'
 
 const REASONS = ['Produkt i dëmtuar', 'Afati ka skaduar', 'Gabim në arkë', 'Klienti ndërroi mendje', 'Tjetër']
@@ -374,7 +374,7 @@ export function RefundPage() {
                     }
                   }
                   setPrinting(true)
-                  setTimeout(() => window.print(), 50)
+                  setTimeout(() => void printPage(), 50)
                 }}
               >
                 Printo
