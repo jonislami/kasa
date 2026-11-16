@@ -21,6 +21,8 @@ export interface SaleItem {
   total: number
   vat_code: VatCode
   refunded: number
+  /** ATK category (CouponItem.Type), from 0032. */
+  atk_type?: string | null
 }
 
 export interface Sale {

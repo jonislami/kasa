@@ -6,6 +6,8 @@
 // PosCoupon and CitizenCoupon get the same header and totals, otherwise ATK marks the coupon
 // "FAILED VERIFICATION". Cancel / return coupons carry positive amounts and ReferenceNo = original CouponId.
 import type { VatCode } from '@/lib/vat'
+import { categoryCode, unitCode } from '@/lib/atk/catalog'
+import { UNITS, type UnitCode } from '@/lib/units'
 import { CouponType, PaymentType, type CitizenCoupon, type CouponItem, type CouponTypeValue, type Payment, type PosCoupon, type TaxGroup } from './protobuf'
 
 export interface FiscalSaleItem {
@@ -48,7 +50,6 @@ const tenThousandths = (eur: number) => BigInt(Math.round(Math.abs(eur) * 10000)
 const big = (v: number | string) => BigInt(String(v).trim() || '0')
 
 const TYPE: Record<FiscalSale['kind'], CouponTypeValue> = { sale: CouponType.Sale, void: CouponType.Cancel, refund: CouponType.Return }
-const UNIT: Record<string, string> = { cope: 'copë', copë: 'copë', kg: 'kg', pako: 'pako', liter: 'litër', litër: 'litër' }
 const RATE_ORDER: VatCode[] = ['A', 'C', 'D', 'E']
 
 /** NUIKF / VerificationNo: unique per coupon, alphanumeric, no spaces, at most 16 characters. */
@@ -66,11 +67,12 @@ export function buildCoupons(sale: FiscalSale, h: FiscalHeader): { pos: PosCoupo
   const items: CouponItem[] = sale.items.map((i) => ({
     Name: i.name.trim().slice(0, 100),
     Price: tenThousandths(i.unit_price),
-    Unit: UNIT[i.unit] ?? i.unit,
+    // official ATK codes: "Njësitë matëse" (CP, KGN, PK, LTR…) and "Kategoritë e mallrave dhe shërbimeve"
+    Unit: UNITS[i.unit as UnitCode]?.atk ?? unitCode(i.unit) ?? 'CP',
     Quantity: Math.abs(i.quantity),
     Total: tenThousandths(i.total),
     TaxRate: i.vat_code,
-    Type: i.atk_type || 'TT',
+    Type: categoryCode(i.atk_type),
   }))
 
   const groups: TaxGroup[] = RATE_ORDER.flatMap((code) => {

@@ -129,7 +129,8 @@ export function DocDetailDialog({
     export: x.export,
     vat_deductible: x.vat_nd === 0,
     vat_flag: x.vat_flag ?? 'none',
-    lines: x.lines.map((l) => ({ description: l.description, unit: l.unit, quantity: l.quantity, unit_price: l.unit_price, discount_pct: l.discount_pct, vat_code: l.vat_code })),
+    atk_category: x.atk_category ?? null,
+    lines: x.lines.map((l) => ({ description: l.description, unit: l.unit, quantity: l.quantity, unit_price: l.unit_price, discount_pct: l.discount_pct, vat_code: l.vat_code, category_code: l.category_code ?? null })),
     // amounts are stored with the sign of the document; the editor works with positive numbers
     net_e: Math.abs(x.net_e),
     vat_e: Math.abs(x.vat_e) + (x.vat_nd && x.net_e ? Math.abs(x.vat_nd) : 0),

@@ -75,6 +75,12 @@ ATK kërkon që SEF të instalohet në pajisje, ta mbajë çelësin privat të s
   kontabilisti kërkon me NUI dhe pronari e miraton (`business_members` + biznesi aktiv). Vetëm lexim: shitjet, anulimet,
   kthimet, stoku, raportet, TVSH-ja, eksporti. Nuk sheh punëtorët/PIN-et, arkat, pajisjet, çelësat e ATK-së,
   përdoruesit, cilësimet; nuk shet. Pronari ia heq qasjen kur të dojë.
+- **ATK – kategoritë dhe njësitë (0032):** listat zyrtare fikse te `src/lib/atk/catalog.ts` (pa faqe, pa ndryshim).
+  Kasa: `products.atk_type` vendoset vetë sipas llojit të biznesit (trigger) dhe dërgohet si `CouponItem.Type`;
+  njësitë dërgohen me kodet zyrtare (CP, KGN, PK, LTR – `src/lib/units.ts`).
+- **Kontabilisti – ATK (0032):** skanimi me AI në 4 lloje (`acc_scans.scan_kind`); librat e shitjes/blerjes shkarkohen
+  si skedari origjinal i ATK-së (`public/atk/*.xlsx`) i mbushur me të dhëna (`atkXlsx.ts`), me/jo TVSH sipas biznesit
+  (kontroll: `scripts/books-preview.ts`); HR: punonjësit, historiku, vijueshmëria, pushimet, kontrata/vendimi/raporti.
 - Çdo shitje, rresht fature, termin dhe veprim ruan `worker_id`, që admini ta shohë punën për punëtor.
 - Punëtorët hyjnë me **PIN 4-shifror** (Edge Function `pin-login`, bcrypt, bllokim pas 5 gabimeve). Pajisja lidhet
   me biznesin kur menaxheri hyn njëherë me email.

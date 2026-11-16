@@ -6,6 +6,7 @@ import { businessType, hasModule, type BusinessType } from '@/lib/business'
 import { cn } from '@/lib/cn'
 import { UNIT_OPTIONS, type UnitCode } from '@/lib/units'
 import { VAT_LABELS, type VatCode } from '@/lib/vat'
+import { categoryOptions, DEFAULT_CATEGORY } from '@/lib/atk/catalog'
 import { margin, nextInternalBarcode, type Category, type Product, type ProductInput, type ProductKind } from './api'
 
 const VAT_OPTIONS = (Object.keys(VAT_LABELS) as VatCode[]).map((v) => ({ value: v, label: VAT_LABELS[v] }))
@@ -32,6 +33,7 @@ interface Draft {
   duration: string
   substance: string
   show_in_pos: boolean
+  atk: string
 }
 
 function toDraft(p: Product | null, type: BusinessType, categoryId: string | null): Draft {
@@ -50,6 +52,7 @@ function toDraft(p: Product | null, type: BusinessType, categoryId: string | nul
     duration: p?.duration_min ? String(p.duration_min) : '',
     substance: p?.substance ?? '',
     show_in_pos: p?.show_in_pos ?? true,
+    atk: p?.atk_type && p.atk_type !== 'TT' ? p.atk_type : (DEFAULT_CATEGORY[type] ?? 'TT'),
   }
 }
 
@@ -138,6 +141,7 @@ export function ProductForm({
       duration_min: isService ? (duration ?? null) : null,
       substance: type === 'pharmacy' ? d.substance.trim() || null : null,
       show_in_pos: d.show_in_pos,
+      atk_type: d.atk,
     })
   }
 
@@ -247,6 +251,7 @@ export function ProductForm({
 
       <div className="grid grid-cols-2 gap-3">
         <Select label="TVSH" value={d.vat} onChange={(e) => set('vat', e.target.value as VatCode)} options={VAT_OPTIONS} />
+        <Select label="Kategoria ATK" value={d.atk} onChange={(e) => set('atk', e.target.value)} options={categoryOptions()} />
         {isService ? (
           <Input label="Kohëzgjatja (min)" inputMode="numeric" value={d.duration} onChange={(e) => set('duration', e.target.value)} placeholder="p.sh. 30" />
         ) : showStock ? (

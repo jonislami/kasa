@@ -28,8 +28,10 @@ import { PartnersTab } from './PartnersTab'
 import { CompanyShell } from './CompanyShell'
 import { ClientDialog } from './ClientDialog'
 import { DocumentsTab } from './DocumentsTab'
+import { AtkBooksTab } from './AtkBooksTab'
+import { HrTab } from './HrTab'
 
-type TabKey = 'inventari' | 'arkiva' | 'zyra' | 'skanimi' | 'pagat' | 'konto' | 'ditari' | 'libri' | 'bilanci' | 'pasqyrat' | 'asetet' | 'mbyllja' | 'paneli' | 'pasqyra' | 'banka' | 'tatimet' | 'tvsh_permbledhje' | 'shitjet' | 'proformat' | 'blerjet' | 'partneret' | 'borxhet' | 'tvsh' | 'fitimi' | 'arka' | 'stoku' | 'klienti'
+type TabKey = 'librat_atk' | 'punonjesit' | 'vijueshmeria' | 'pushimet' | 'inventari' | 'arkiva' | 'zyra' | 'skanimi' | 'pagat' | 'konto' | 'ditari' | 'libri' | 'bilanci' | 'pasqyrat' | 'asetet' | 'mbyllja' | 'paneli' | 'pasqyra' | 'banka' | 'tatimet' | 'tvsh_permbledhje' | 'shitjet' | 'proformat' | 'blerjet' | 'partneret' | 'borxhet' | 'tvsh' | 'fitimi' | 'arka' | 'stoku' | 'klienti'
 const TABS: { key: TabKey; label: string; kasaOnly?: boolean }[] = [
   { key: 'paneli', label: 'Paneli' },
   { key: 'pasqyra', label: 'Pasqyra' },
@@ -40,6 +42,9 @@ const TABS: { key: TabKey; label: string; kasaOnly?: boolean }[] = [
   { key: 'borxhet', label: 'Borxhet' },
   { key: 'banka', label: 'Arka & banka' },
   { key: 'tatimet', label: 'Tatimet e tjera dhe afatet' },
+  { key: 'punonjesit', label: 'Punonjësit dhe kontratat' },
+  { key: 'vijueshmeria', label: 'Orari dhe vijueshmëria' },
+  { key: 'pushimet', label: 'Pushimet' },
   { key: 'pagat', label: 'Pagat' },
   { key: 'skanimi', label: 'Skanimi me AI' },
   { key: 'zyra', label: 'Zyra' },
@@ -54,6 +59,7 @@ const TABS: { key: TabKey; label: string; kasaOnly?: boolean }[] = [
   { key: 'mbyllja', label: 'Mbyllja e muajit' },
   { key: 'tvsh_permbledhje', label: 'TVSH sipas normave' },
   { key: 'tvsh', label: 'TVSH' },
+  { key: 'librat_atk', label: 'Libri i shitjes dhe i blerjes (ATK)' },
   { key: 'fitimi', label: 'Fitimi' },
   { key: 'arka', label: 'Arka', kasaOnly: true },
   { key: 'stoku', label: 'Stoku', kasaOnly: true },
@@ -159,7 +165,7 @@ export function ClientPage({ me }: { me: AccMe }) {
   }
 
   const toolbar =
-    ['klienti', 'paneli', 'pagat', 'skanimi', 'zyra', 'arkiva', 'inventari', 'tvsh', 'tatimet', 'borxhet', 'konto', 'asetet', 'mbyllja'].includes(tab.key) ? undefined : (
+    ['klienti', 'paneli', 'pagat', 'skanimi', 'zyra', 'arkiva', 'inventari', 'tvsh', 'tatimet', 'borxhet', 'konto', 'asetet', 'mbyllja', 'librat_atk', 'punonjesit', 'vijueshmeria', 'pushimet'].includes(tab.key) ? undefined : (
       <>
         <PeriodPicker period={period} onChange={setPeriod} disableNext={isCurrent} />
         <Button variant="secondary" onClick={() => void exportAll()} disabled={!s} loading={exporting}>
@@ -185,7 +191,7 @@ export function ClientPage({ me }: { me: AccMe }) {
 
   return (
     <CompanyShell me={me} client={client ?? null} linked={linked} active={tab.key} toolbar={toolbar}>
-      {!['klienti', 'paneli', 'pagat', 'skanimi', 'zyra', 'arkiva', 'inventari', 'tvsh', 'tatimet', 'borxhet', 'konto', 'asetet', 'mbyllja'].includes(tab.key) && (
+      {!['klienti', 'paneli', 'pagat', 'skanimi', 'zyra', 'arkiva', 'inventari', 'tvsh', 'tatimet', 'borxhet', 'konto', 'asetet', 'mbyllja', 'librat_atk', 'punonjesit', 'vijueshmeria', 'pushimet'].includes(tab.key) && (
         <p className="-mt-1 mb-3 text-sm text-muted">
           {TABS.find((t) => t.key === tab.key)?.label} · {formatDay(range.from)} – {formatDay(range.to)}
         </p>
@@ -255,6 +261,10 @@ export function ClientPage({ me }: { me: AccMe }) {
             {tab.key === 'zyra' && <ClientOfficeTab client={client} me={me} />}
             {tab.key === 'skanimi' && <ScanTab client={client} />}
             {tab.key === 'pagat' && <PayrollTab client={client} />}
+            {tab.key === 'librat_atk' && <AtkBooksTab client={client} />}
+            {tab.key === 'punonjesit' && <HrTab client={client} view="employees" />}
+            {tab.key === 'vijueshmeria' && <HrTab client={client} view="attendance" />}
+            {tab.key === 'pushimet' && <HrTab client={client} view="leaves" />}
             {tab.key === 'tatimet' && <TaxesTab client={client} onGo={(t) => navigate(`/klient/${id}/${t}`)} />}
             {tab.key === 'fitimi' && <ProfitTab s={s} />}
             {tab.key === 'arka' && linked && <CashTab s={s} />}

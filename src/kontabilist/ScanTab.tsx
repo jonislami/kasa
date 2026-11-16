@@ -6,8 +6,9 @@ import { formatKosovoDateTime, kosovoDateISO } from '@/lib/clock'
 import { cn } from '@/lib/cn'
 import { formatEUR } from '@/lib/money'
 import { formatDay } from '@/features/accounting/api'
-import { DuplicateInvoice, fetchPartners, openDocFile, PURCHASE_CATEGORIES, saveInvoice, savePartner, type Client, type DocCategory } from './api'
-import { confirmScan, deleteScan, fetchScans, markReview, readScan, SCAN_STATUS, uploadScan, type Scan, type ScanStatus } from './scan'
+import { categoryName, categoryOptions } from '@/lib/atk/catalog'
+import { DuplicateInvoice, fetchPartners, openDocFile, PURCHASE_CATEGORIES, SALE_CATEGORIES, saveInvoice, savePartner, type Client, type DocCategory } from './api'
+import { confirmScan, deleteScan, fetchScans, markReview, readScan, SCAN_KINDS, SCAN_STATUS, setScanKind, uploadScan, type Scan, type ScanKind, type ScanStatus } from './scan'
 
 const n2 = (v: number) => new Intl.NumberFormat('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v)
 const num = (s: string) => Number(s.replace(/\s/g, '').replace(',', '.')) || 0
@@ -16,13 +17,15 @@ const r2 = (v: number) => Math.round((v + Number.EPSILON) * 100) / 100
 type Filter = 'todo' | 'all' | ScanStatus
 
 /**
- * Skanimi me AI: photos / PDFs of supplier invoices are read by AI, checked side by side with the original
- * and confirmed into the purchase book (VAT, expenses and postings follow automatically).
+ * Skanimi me AI in four kinds – purchase, expense, investment, sale: photos / PDFs are read by AI, checked side by
+ * side with the original and confirmed into the purchase or sales book (VAT and postings follow automatically).
  */
 export function ScanTab({ client }: { client: Client }) {
   const qc = useQueryClient()
   const scans = useQuery({ queryKey: ['client', client.id, 'scans'], queryFn: () => fetchScans(client.id), refetchInterval: (q) => (q.state.data?.some((s) => s.status === 'pending') ? 5000 : false) })
   const [filter, setFilter] = useState<Filter>('todo')
+  const [kind, setKind] = useState<ScanKind>('purchase')
+  const [kindFilter, setKindFilter] = useState<ScanKind | 'all'>('all')
   const [busy, setBusy] = useState<Record<string, string>>({}) // file/scan → what is happening
   const [errors, setErrors] = useState<string[]>([])
   const [open, setOpen] = useState<Scan | null>(null)
@@ -47,7 +50,7 @@ export function ScanTab({ client }: { client: Client }) {
       const key = 'up:' + f.name
       setBusy((b) => ({ ...b, [key]: `Duke ngarkuar ${f.name}…` }))
       try {
-        ids.push(await uploadScan(client.id, f))
+        ids.push(await uploadScan(client.id, f, kind))
       } catch (e) {
         setErrors((x) => [...x, (e as Error).message])
       }
@@ -63,17 +66,30 @@ export function ScanTab({ client }: { client: Client }) {
   const del = useMutation({ mutationFn: deleteScan, onSuccess: refresh, onError: (e) => setErrors([(e as Error).message]) })
 
   const list = scans.data ?? []
-  const shown = list.filter((s) => (filter === 'all' ? true : filter === 'todo' ? s.status !== 'confirmed' : s.status === filter))
+  const shown = list.filter((s) => (filter === 'all' ? true : filter === 'todo' ? s.status !== 'confirmed' : s.status === filter) && (kindFilter === 'all' || (s.scan_kind ?? 'purchase') === kindFilter))
   const counts = useMemo(() => {
     const c: Record<string, number> = {}
     for (const s of list) c[s.status] = (c[s.status] ?? 0) + 1
     return c
   }, [list])
   const uploading = Object.entries(busy).filter(([k]) => k.startsWith('up:'))
+  const kindInfo = SCAN_KINDS.find((k) => k.value === kind)!
 
   return (
     <div className="flex flex-col gap-4 md:gap-5">
       <Card className="p-5">
+        <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-4">
+          {SCAN_KINDS.map((k) => (
+            <button
+              key={k.value}
+              type="button"
+              onClick={() => setKind(k.value)}
+              className={cn('min-h-[52px] rounded-ctl border-2 px-3 py-2 text-left text-[15px] font-semibold', kind === k.value ? 'border-brand-600 bg-brand-100 text-brand-600' : 'border-line bg-white text-ink hover:bg-bg')}
+            >
+              {k.button}
+            </button>
+          ))}
+        </div>
         <div
           className="flex flex-col items-center gap-3 rounded-card border-2 border-dashed border-field bg-[#F8FAF8] px-4 py-8 text-center"
           onDragOver={(e) => e.preventDefault()}
@@ -86,9 +102,9 @@ export function ScanTab({ client }: { client: Client }) {
             <Sparkles className="h-6 w-6" />
           </div>
           <div>
-            <div className="text-[17px] font-semibold">Skano faturat e blerjes</div>
+            <div className="text-[17px] font-semibold">{kindInfo.button}</div>
             <p className="mt-1 max-w-[560px] text-sm text-muted">
-              Foto nga telefoni, skaner ose PDF – edhe disa njëherësh. AI lexon furnitorin, NUI-në, numrin, datën, bazën dhe TVSH-në sipas normave dhe artikujt; ti i kontrollon pranë origjinalit dhe i konfirmon.
+              {kindInfo.hint} Foto nga telefoni, skaner ose PDF – edhe disa njëherësh. AI lexon {kind === 'sale' ? 'blerësin' : 'furnitorin'}, NUI-në / numrin fiskal, numrin, datën, artikujt me sasi dhe çmime, bazën dhe TVSH-në sipas normave, totalin dhe kategorinë e ATK-së; ti i kontrollon pranë origjinalit dhe i konfirmon.
             </p>
           </div>
           <div className="flex flex-wrap justify-center gap-2">
@@ -125,6 +141,14 @@ export function ScanTab({ client }: { client: Client }) {
         <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
           <h2 className="text-[17px] font-semibold">Dokumentet e skanuara</h2>
           <div className="flex flex-wrap gap-2">
+            <select value={kindFilter} onChange={(e) => setKindFilter(e.target.value as ScanKind | 'all')} className="h-9 rounded-full border border-line bg-white px-3 text-sm font-semibold text-muted">
+              <option value="all">Të gjitha llojet</option>
+              {SCAN_KINDS.map((k) => (
+                <option key={k.value} value={k.value}>
+                  {k.label}
+                </option>
+              ))}
+            </select>
             {(
               [
                 ['todo', `Për t'u kryer (${list.length - (counts.confirmed ?? 0)})`],
@@ -159,6 +183,7 @@ export function ScanTab({ client }: { client: Client }) {
                     </div>
                     <div className="min-w-0">
                       <div className={cn('truncate font-semibold', canOpen && 'text-brand-600 hover:underline')}>
+                        <span className="mr-1.5 rounded bg-bg px-1.5 py-0.5 text-[11px] font-semibold uppercase text-muted">{SCAN_KINDS.find((k) => k.value === (s.scan_kind ?? 'purchase'))!.label}</span>
                         {x?.supplier_name ?? s.file_name}
                         {x?.doc_no && <span className="font-normal text-muted"> · nr. {x.doc_no}</span>}
                       </div>
@@ -232,6 +257,8 @@ export function ScanTab({ client }: { client: Client }) {
 // Review: original next to the data read, corrections, confirm.
 // ---------------------------------------------------------------------------
 interface Form {
+  kind: ScanKind
+  atk_category: string
   doc_type: 'invoice' | 'credit_note'
   partner_id: string
   partner_name: string
@@ -253,10 +280,32 @@ interface Form {
 
 const CAT_VALUES = new Set(PURCHASE_CATEGORIES.map((c) => c.value as string))
 
+/** Default category for the kind: investment → fixed assets, expense → what AI found (not goods), sale → goods/services. */
+function categoryFor(kind: ScanKind, s: Scan): DocCategory {
+  const x = s.extracted!
+  if (kind === 'sale') return [s.suggest?.category, x.category].includes('services') ? 'services' : 'goods'
+  if (kind === 'investment') return 'assets'
+  const cat = [s.suggest?.category, x.category].find((c) => c && CAT_VALUES.has(c)) as DocCategory | undefined
+  if (kind === 'expense') return cat && cat !== 'goods' && cat !== 'assets' ? cat : 'operating'
+  return cat && cat !== 'assets' ? cat : 'goods'
+}
+
+/** What was used last time for the partner, what AI chose, or the most frequent category of the lines. */
+function atkOf(s: Scan): string {
+  const x = s.extracted!
+  if (s.suggest?.atk_category) return s.suggest.atk_category
+  if (x.atk_category) return x.atk_category
+  const count = new Map<string, number>()
+  for (const l of x.lines) if (l.category_code) count.set(l.category_code, (count.get(l.category_code) ?? 0) + (l.total_gross ?? 1))
+  return [...count.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? ''
+}
+
 function formOf(s: Scan): Form {
   const x = s.extracted!
-  const cat = [s.suggest?.category, x.category].find((c) => c && CAT_VALUES.has(c)) as DocCategory | undefined
+  const kind = s.scan_kind ?? 'purchase'
   return {
+    kind,
+    atk_category: atkOf(s),
     doc_type: x.doc_type === 'credit_note' ? 'credit_note' : 'invoice',
     partner_id: s.suggest?.partner_id ?? '',
     partner_name: x.supplier_name ?? '',
@@ -265,7 +314,7 @@ function formOf(s: Scan): Form {
     doc_no: x.doc_no ?? '',
     doc_date: x.doc_date && /^\d{4}-\d{2}-\d{2}$/.test(x.doc_date) ? x.doc_date : kosovoDateISO(),
     due_date: x.due_date && /^\d{4}-\d{2}-\d{2}$/.test(x.due_date) ? x.due_date : '',
-    category: cat ?? 'other',
+    category: categoryFor(kind, s),
     payment: x.payment === 'cash' ? 'cash' : x.payment === 'card' || x.payment === 'bank' ? 'bank' : 'due',
     description: x.summary ?? '',
     net_e: x.net_e || 0,
@@ -295,6 +344,12 @@ function ScanReview({ client, scan, onClose, onDone, onReread }: { client: Clien
     if (scan.status === 'read') void markReview(scan.id).catch(() => undefined)
   }, [scan])
 
+  const sale = f?.kind === 'sale'
+  const changeKind = (k: ScanKind) => {
+    if (!scan || !f) return
+    setF({ ...f, kind: k, category: categoryFor(k, scan) })
+    void setScanKind(scan.id, k).catch(() => undefined)
+  }
   const save = useMutation({
     mutationFn: async (force: boolean) => {
       if (!scan || !f) return
@@ -302,7 +357,7 @@ function ScanReview({ client, scan, onClose, onDone, onReread }: { client: Clien
       if (!partnerId && f.add_partner && f.partner_name.trim()) {
         const x = scan.extracted!
         partnerId = await savePartner(client.id, {
-          role: 'supplier',
+          role: sale ? 'customer' : 'supplier',
           name: f.partner_name.trim(),
           nui: f.partner_nui || null,
           fiscal_number: x.supplier_fiscal_no,
@@ -316,7 +371,8 @@ function ScanReview({ client, scan, onClose, onDone, onReread }: { client: Clien
         })
       }
       const r = await saveInvoice(client.id, {
-        kind: 'purchase',
+        kind: sale ? 'sale' : 'purchase',
+        atk_category: f.atk_category || null,
         doc_type: f.doc_type,
         category: f.category,
         doc_date: f.doc_date,
@@ -352,7 +408,8 @@ function ScanReview({ client, scan, onClose, onDone, onReread }: { client: Clien
   const total = r2(f.net_e + f.vat_e + f.net_d + f.vat_d + f.amt_c + f.amt_a)
   const off = x.total && Math.abs(total - x.total) > 0.05
   const pdf = scan.mime === 'application/pdf'
-  const supplierOptions = (partners.data ?? []).filter((p) => p.active && p.role !== 'customer')
+  const supplierOptions = (partners.data ?? []).filter((p) => p.active && p.role !== (sale ? 'supplier' : 'customer'))
+  const party = sale ? 'Blerësi' : 'Furnitori'
   const amount = (k: 'net_e' | 'vat_e' | 'net_d' | 'vat_d' | 'amt_c' | 'amt_a', label: string, rate?: { key: 'vat_e' | 'vat_d'; r: number }) => (
     <Input
       label={label}
@@ -369,7 +426,7 @@ function ScanReview({ client, scan, onClose, onDone, onReread }: { client: Clien
     <Dialog
       open
       onClose={onClose}
-      title="Kontrollo faturën e skanuar"
+      title={`Kontrollo: ${SCAN_KINDS.find((k) => k.value === f.kind)!.label.toLowerCase()}`}
       subtitle={`${scan.file_name}${scan.model ? ' · lexuar me ' + scan.model : ''}`}
       width="md:max-w-[1200px]"
       footer={
@@ -446,7 +503,7 @@ function ScanReview({ client, scan, onClose, onDone, onReread }: { client: Clien
               )}
               {scan.suggest?.buyer_mismatch && (
                 <div className="rounded-ctl bg-amber-100 px-4 py-3 text-sm text-amber-700">
-                  Blerësi në faturë ({x.buyer_name ?? '—'}, NUI {x.buyer_nui}) nuk është {client.name}. A është faturë e këtij biznesi?
+                  {sale ? 'Lëshuesi i faturës' : 'Blerësi në faturë'} ({x.buyer_name ?? '—'}, NUI {x.buyer_nui}) nuk është {client.name}. A është faturë e këtij biznesi?
                 </div>
               )}
               {(x.warnings.length > 0 || x.confidence === 'low') && (
@@ -463,6 +520,20 @@ function ScanReview({ client, scan, onClose, onDone, onReread }: { client: Clien
           )}
 
           <div className="grid gap-3 sm:grid-cols-2">
+            {sale ? (
+              <div className="rounded-ctl bg-bg px-3 py-2 text-sm text-muted sm:col-span-2">Faturë shitjeje e lëshuar nga {client.name} – hyn te libri i shitjeve.</div>
+            ) : (
+              <div className="sm:col-span-2">
+                <span className="mb-1.5 block text-sm font-semibold text-muted">Regjistroje si</span>
+                <div className="grid grid-cols-3 gap-2">
+                  {SCAN_KINDS.filter((k) => k.value !== 'sale').map((k) => (
+                    <button key={k.value} type="button" onClick={() => changeKind(k.value)} className={cn('h-10 rounded-ctl border text-sm font-semibold', f.kind === k.value ? 'border-brand-600 bg-brand-100 text-brand-600' : 'border-line bg-white text-muted')}>
+                      {k.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <Select
               label="Lloji"
               value={f.doc_type}
@@ -476,26 +547,34 @@ function ScanReview({ client, scan, onClose, onDone, onReread }: { client: Clien
               label={`Kategoria${scan.suggest?.category ? ' (si herën e kaluar)' : ''}`}
               value={f.category}
               onChange={(e) => setF({ ...f, category: e.target.value as DocCategory })}
-              options={PURCHASE_CATEGORIES.map((c) => ({ value: c.value, label: c.label }))}
+              options={(sale ? SALE_CATEGORIES : PURCHASE_CATEGORIES).map((c) => ({ value: c.value, label: c.label }))}
             />
             <div className="sm:col-span-2">
               <Select
-                label="Furnitori"
+                label="Kategoria sipas ATK-së"
+                value={f.atk_category}
+                onChange={(e) => setF({ ...f, atk_category: e.target.value })}
+                options={[{ value: '', label: '— pa kategori —' }, ...categoryOptions()]}
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <Select
+                label={party}
                 value={f.partner_id}
                 onChange={(e) => setF({ ...f, partner_id: e.target.value })}
                 options={[
-                  { value: '', label: f.partner_name ? `I ri: ${f.partner_name}` : '— pa furnitor të regjistruar —' },
+                  { value: '', label: f.partner_name ? `I ri: ${f.partner_name}` : sale ? '— pa blerës të regjistruar —' : '— pa furnitor të regjistruar —' },
                   ...supplierOptions.map((p) => ({ value: p.id, label: p.name + (p.nui ? ` · ${p.nui}` : '') })),
                 ]}
               />
             </div>
             {!f.partner_id && (
               <>
-                <Input label="Emri i furnitorit" value={f.partner_name} onChange={(e) => setF({ ...f, partner_name: e.target.value })} />
+                <Input label={sale ? 'Emri i blerësit' : 'Emri i furnitorit'} value={f.partner_name} onChange={(e) => setF({ ...f, partner_name: e.target.value })} />
                 <Input label="NUI" inputMode="numeric" maxLength={9} value={f.partner_nui} onChange={(e) => setF({ ...f, partner_nui: e.target.value.replace(/\D/g, '') })} />
                 <label className="flex items-center gap-2 text-[15px] sm:col-span-2">
                   <input type="checkbox" className="h-5 w-5 accent-brand-600" checked={f.add_partner} onChange={(e) => setF({ ...f, add_partner: e.target.checked })} />
-                  Shtoje te furnitorët (herën tjetër njihet vetë)
+                  Shtoje te {sale ? 'klientët' : 'furnitorët'} (herën tjetër njihet vetë)
                 </label>
               </>
             )}
@@ -506,7 +585,7 @@ function ScanReview({ client, scan, onClose, onDone, onReread }: { client: Clien
               value={f.payment}
               onChange={(e) => setF({ ...f, payment: e.target.value as Form['payment'] })}
               options={[
-                { value: 'due', label: 'E papaguar (borxh te furnitori)' },
+                { value: 'due', label: sale ? 'E papaguar (borxh i blerësit)' : 'E papaguar (borxh te furnitori)' },
                 { value: 'cash', label: 'E paguar me para në dorë' },
                 { value: 'bank', label: 'E paguar me bankë / kartelë' },
               ]}
@@ -542,6 +621,7 @@ function ScanReview({ client, scan, onClose, onDone, onReread }: { client: Clien
                     <th className="px-4 py-2 font-medium">Artikulli</th>
                     <th className="px-2 py-2 text-right font-medium">Sasia</th>
                     <th className="px-2 py-2 text-center font-medium">TVSH</th>
+                    <th className="px-2 py-2 font-medium">Kategoria ATK</th>
                     <th className="px-4 py-2 text-right font-medium">Totali</th>
                   </tr>
                 </thead>
@@ -549,8 +629,12 @@ function ScanReview({ client, scan, onClose, onDone, onReread }: { client: Clien
                   {x.lines.map((l, i) => (
                     <tr key={i} className="border-t border-line">
                       <td className="px-4 py-1.5">{l.description}</td>
-                      <td className="px-2 py-1.5 text-right tabular-nums">{l.quantity != null ? `${l.quantity}${l.unit ? ' ' + l.unit : ''}` : ''}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums">
+                        {l.quantity != null ? `${l.quantity}${l.unit ? ' ' + l.unit : ''}` : ''}
+                        {l.unit_price_net != null && <div className="text-xs text-muted">× {n2(l.unit_price_net)}</div>}
+                      </td>
                       <td className="px-2 py-1.5 text-center">{l.vat_rate}</td>
+                      <td className="px-2 py-1.5 text-xs text-muted">{categoryName(l.category_code)}</td>
                       <td className="px-4 py-1.5 text-right tabular-nums">{l.total_gross != null ? n2(l.total_gross) : ''}</td>
                     </tr>
                   ))}
@@ -559,7 +643,11 @@ function ScanReview({ client, scan, onClose, onDone, onReread }: { client: Clien
             </details>
           )}
           <p className="text-xs text-muted">
-            Pas konfirmimit fatura hyn te blerjet, libri i blerjeve dhe TVSH-ja e zbritshme; kontohet vetë dhe origjinali ruhet si skedar i faturës.
+            {sale
+              ? 'Pas konfirmimit fatura hyn te shitjet, libri i shitjeve dhe TVSH-ja e llogaritur; kontohet vetë dhe origjinali ruhet si skedar i faturës.'
+              : f.kind === 'investment'
+                ? 'Pas konfirmimit hyn si blerje investive (mjete themelore) te libri i blerjeve dhe TVSH-ja e zbritshme; origjinali ruhet si skedar i faturës.'
+                : 'Pas konfirmimit fatura hyn te blerjet, libri i blerjeve dhe TVSH-ja e zbritshme; kontohet vetë dhe origjinali ruhet si skedar i faturës.'}
           </p>
           {save.error && !(save.error instanceof DuplicateInvoice) && <p className="text-sm text-warn-700">{(save.error as Error).message}</p>}
         </div>

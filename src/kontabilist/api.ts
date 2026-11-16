@@ -392,6 +392,8 @@ export interface Doc {
   has_lines: boolean
   converted_to: string | null
   vat_flag?: InvoiceInput['vat_flag']
+  /** ATK category (0032). */
+  atk_category?: string | null
   /** From acc_doc_balances (0016); before the migration: derived from `payment`. */
   paid: number
   credited: number
@@ -474,6 +476,8 @@ export interface DocLine {
   discount_pct: number
   vat_code: VatCode
   net?: number
+  /** ATK category of the line (0032). */
+  category_code?: string | null
 }
 
 export interface InvoiceInput {
@@ -505,6 +509,8 @@ export interface InvoiceInput {
   force?: boolean
   /** How the document enters the VAT form (0018). */
   vat_flag?: 'none' | 'service_abroad' | 'reverse_charge' | 'exempt_credit' | 'import' | 'farmer'
+  /** ATK category of the document ("Kategoritë e mallrave dhe shërbimeve", 0032). */
+  atk_category?: string | null
 }
 
 export class DuplicateInvoice extends Error {}
@@ -520,6 +526,16 @@ export async function saveInvoice(clientId: string, inv: InvoiceInput): Promise<
   if (inv.vat_flag && (inv.vat_flag !== 'none' || inv.id)) {
     const f = await supabase.rpc('acc_set_vat_flag', { p_doc: r.id, p_flag: inv.vat_flag })
     if (f.error && !['PGRST202', '42883'].includes(f.error.code ?? '')) fail(f.error)
+  }
+  // ATK categories (0032): of the document and of each line (the database numbers the lines as sent, from 1)
+  const kept = inv.lines
+  if (inv.atk_category !== undefined || kept.some((l) => l.category_code)) {
+    const c = await supabase.rpc('acc_set_atk_categories', {
+      p_doc: r.id,
+      p_category: inv.atk_category ?? null,
+      p_lines: kept.map((l, i) => ({ position: i + 1, code: l.category_code ?? null })),
+    })
+    if (c.error && !['PGRST202', '42883'].includes(c.error.code ?? '')) fail(c.error)
   }
   return r
 }

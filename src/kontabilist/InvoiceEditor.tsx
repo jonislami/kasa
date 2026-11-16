@@ -5,6 +5,7 @@ import { Button, Dialog, Input, Select, Tabs } from '@/components/ui'
 import { kosovoDateISO } from '@/lib/clock'
 import { formatEUR } from '@/lib/money'
 import type { VatCode } from '@/lib/vat'
+import { categoryOptions, unitOptions } from '@/lib/atk/catalog'
 import {
   computeInvoice,
   DOC_TYPE_LABELS,
@@ -22,14 +23,13 @@ import {
 import { EMPTY_PARTNER, PartnerDialog } from './PartnersTab'
 import { VAT_FLAG_LABELS, type VatFlag } from './vat'
 
-const UNITS = ['copë', 'orë', 'ditë', 'muaj', 'kg', 'litër', 'm', 'm²', 'm³', 'pako', 'shërbim']
 const VAT_OPTIONS: { value: VatCode; label: string }[] = [
   { value: 'E', label: '18%' },
   { value: 'D', label: '8%' },
   { value: 'C', label: '0%' },
   { value: 'A', label: 'E liruar' },
 ]
-const emptyLine = (code: VatCode = 'E'): DocLine => ({ description: '', unit: 'copë', quantity: 1, unit_price: 0, discount_pct: 0, vat_code: code })
+const emptyLine = (code: VatCode = 'E'): DocLine => ({ description: '', unit: 'Copë', quantity: 1, unit_price: 0, discount_pct: 0, vat_code: code })
 const num = (s: string) => {
   const v = Number(s.replace(',', '.'))
   return Number.isFinite(v) ? v : 0
@@ -94,6 +94,7 @@ export function InvoiceEditor({ clientId, value, onClose, onSaved }: { clientId:
   const partnerOptions = (partners.data ?? []).filter((p) => p.active || p.id === f.partner_id).filter((p) => (purchase ? p.role !== 'customer' : p.role !== 'supplier'))
 
   const calc = useMemo(() => computeInvoice(f.lines, Boolean(f.export)), [f.lines, f.export])
+  const catOptions = categoryOptions()
   const amounts = mode === 'lines' ? calc : (() => {
     const r = { net_e: f.net_e ?? 0, vat_e: f.vat_e ?? 0, net_d: f.net_d ?? 0, vat_d: f.vat_d ?? 0, amt_c: f.amt_c ?? 0, amt_a: f.amt_a ?? 0 }
     return { ...r, discount: 0, total: Math.round((r.net_e + r.vat_e + r.net_d + r.vat_d + r.amt_c + r.amt_a) * 100) / 100 }
@@ -242,6 +243,15 @@ export function InvoiceEditor({ clientId, value, onClose, onSaved }: { clientId:
             )}
           </div>
 
+          <div className="grid gap-3 md:grid-cols-2">
+            <Select
+              label="Kategoria sipas ATK-së"
+              value={f.atk_category ?? ''}
+              onChange={(e) => setF({ ...f, atk_category: e.target.value || null })}
+              options={[{ value: '', label: '— pa kategori —' }, ...catOptions]}
+            />
+          </div>
+
           {/* --- amounts --- */}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <Tabs
@@ -288,9 +298,28 @@ export function InvoiceEditor({ clientId, value, onClose, onSaved }: { clientId:
                     <tr key={i} className="border-t border-line">
                       <td className="px-2 py-1.5">
                         <input className="h-10 w-full rounded-lg border border-field px-2.5" value={l.description} placeholder="Produkti ose shërbimi" onChange={(e) => setLine(i, { description: e.target.value })} />
+                        <select
+                          aria-label="Kategoria ATK e rreshtit"
+                          className="mt-1 h-8 w-full rounded-lg border border-field bg-white px-2 text-xs text-muted"
+                          value={l.category_code ?? ''}
+                          onChange={(e) => setLine(i, { category_code: e.target.value || null })}
+                        >
+                          <option value="">Kategoria ATK: si e dokumentit</option>
+                          {catOptions.map((o) => (
+                            <option key={o.value} value={o.value}>
+                              {o.label}
+                            </option>
+                          ))}
+                        </select>
                       </td>
                       <td className="px-1">
-                        <input list="acc-units" className="h-10 w-full rounded-lg border border-field px-2" value={l.unit} onChange={(e) => setLine(i, { unit: e.target.value })} />
+                        <select className="h-10 w-full rounded-lg border border-field bg-white px-1" value={l.unit} onChange={(e) => setLine(i, { unit: e.target.value })}>
+                          {[...unitOptions(), ...(l.unit && !unitOptions().includes(l.unit) ? [l.unit] : [])].map((u) => (
+                            <option key={u} value={u}>
+                              {u}
+                            </option>
+                          ))}
+                        </select>
                       </td>
                       <td className="px-1">
                         <input inputMode="decimal" className="h-10 w-full rounded-lg border border-field px-2 text-right" value={l.quantity || ''} onChange={(e) => setLine(i, { quantity: num(e.target.value) })} />
@@ -320,11 +349,6 @@ export function InvoiceEditor({ clientId, value, onClose, onSaved }: { clientId:
                   ))}
                 </tbody>
               </table>
-              <datalist id="acc-units">
-                {UNITS.map((u) => (
-                  <option key={u} value={u} />
-                ))}
-              </datalist>
               <div className="border-t border-line p-2">
                 <Button variant="ghost" size="sm" onClick={() => setF({ ...f, lines: [...f.lines, emptyLine(f.lines[f.lines.length - 1]?.vat_code ?? 'E')] })}>
                   <Plus className="h-4 w-4" /> Shto rresht
