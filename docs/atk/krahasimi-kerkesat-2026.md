@@ -98,3 +98,21 @@ Legjenda: ✅ e plotësuar · 🟡 pjesërisht · ❌ mungon · ➖ nuk vlen pë
 6. **Bashkimi i rreshtave** të njëjtë në kupon (edhe te salloni).
 7. **Serbishtja**: ndërfaqja e arkës dhe kuponi (shkronja latine).
 8. Opsionale: kuponi elektronik me "e-kuponi"; njoftimi për kuponin fiskal kur ATK ta japë modelin.
+
+## Gjendja pas punës (dega `atk-kerkesat`, 16.11.2026)
+
+| Pika | Çfarë u bë | Gjendja |
+|---|---|---|
+| B7 Logoja RKS | stema + "RKS / MF", 19 × 9,5 mm (ekran dhe printer termik) | ✅ |
+| B1–B4 Kuponi | etiketat si në shembull, SASIA X ÇMIMI, "Ulje x%", NËNTOTALI + ULJE | ✅ |
+| B8 Anulimi | "KUPON FISKAL I ANULUAR", nr. dhe data e origjinalit, "ARSYEJA E ANULIMIT", fatura origjinale | ✅ (kërkon 0033) |
+| B9 Kthimi | "KUPON FISKAL KTHIMI", fatura origjinale, "KTHIMI I ARTIKUJVE", "TOTALI I KTHIMIT", "TOTALI I MBETUR" | ✅ (kërkon 0033) |
+| C Kodet | VM = Veshmbathje (butikët), KWH | ✅ |
+| A12 Kuponët e padërguar | eksport CSV/PDF vetëm me kërkesë (shënohet kërkesa, ruhet në regjistër) – arka dhe web | ✅ |
+| A9 Integriteti i log-ut | zinxhir SHA-256 në regjistrin e veprimeve + "Kontrollo integritetin" | ✅ (kërkon 0034) |
+| A15 Ndërhyrjet në SEF | çdo version i ri i programit në pajisje shënohet në regjistër | ✅ |
+| A28 Blloku i veçantë | kupon nga blloku me numër serik dhe kohën në letër, nënshkruhet dhe dërgohet me atë kohë | ✅ |
+| A30 Pagesat | transfer bankar, vauçer, çek (ATK: Voucher 3, Cheque 4, Other 6) | ✅ (kërkon 0033) |
+| A31 Një artikull – një rresht | grupim në kupon dhe te ATK | ✅ |
+| A27 Serbishtja | arka (hyrja, menuja, shitja, pagesa) dhe kuponi; zgjedhja te Printeri | 🟡 paneli i menaxhimit në web mbetet shqip |
+| A32 e-kupon | – | opsional, jo i bërë |
