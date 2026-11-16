@@ -8,6 +8,7 @@ import { formatEUR } from '@/lib/money'
 import { addMonths, formatDay, monthName, monthStart } from '@/features/accounting/api'
 import { addDays } from '@/features/reports/api'
 import type { VatCode } from '@/lib/vat'
+import { categoryName, categoryOptions, unitOptions } from '@/lib/atk/catalog'
 import type { Client } from './api'
 import {
   addMove,
@@ -31,7 +32,6 @@ import {
   saveItem,
   saveWarehouse,
   transfer,
-  UNITS,
   unpostDoc,
   type Item,
   type StockDoc,
@@ -95,6 +95,7 @@ function ItemsView({ client }: { client: Client }) {
   const [q, setQ] = useState('')
   const [filter, setFilter] = useState<'active' | 'low' | 'negative' | 'inactive'>('active')
   const [wh, setWh] = useState('')
+  const [cat, setCat] = useState('')
   const [edit, setEdit] = useState<Partial<Item> | null>(null)
   const [move, setMove] = useState<Item | null>(null)
   const [imp, setImp] = useState(false)
@@ -109,8 +110,10 @@ function ItemsView({ client }: { client: Client }) {
       (filter === 'inactive' ? !i.active : i.active) &&
       (filter !== 'low' || i.status === 'low' || i.status === 'critical') &&
       (filter !== 'negative' || i.status === 'negative') &&
-      (!s || [i.name, i.sku, i.barcode, i.category].some((x) => x?.toLowerCase().includes(s))),
+      (!cat || (cat === '-' ? !i.category : i.category === cat)) &&
+      (!s || [i.name, i.sku, i.barcode, i.category, categoryName(i.category)].some((x) => x?.toLowerCase().includes(s))),
   )
+  const usedCats = Array.from(new Set(all.map((i) => i.category).filter((c): c is string => Boolean(c))))
   const stockOf = (i: Item) => (wh ? i.by_wh[wh] ?? 0 : i.stock)
   const value = list.reduce((a, i) => a + stockOf(i) * i.avg_cost, 0)
   const low = all.filter((i) => i.active && (i.status === 'low' || i.status === 'critical')).length
@@ -156,6 +159,11 @@ function ItemsView({ client }: { client: Client }) {
               { value: 'inactive', label: 'Joaktivët' },
             ]}
           />
+          <Select
+            value={cat}
+            onChange={(e) => setCat(e.target.value)}
+            options={[{ value: '', label: 'Të gjitha kategoritë' }, { value: '-', label: 'Pa kategori ATK' }, ...usedCats.map((c) => ({ value: c, label: categoryName(c) }))]}
+          />
           {(whs.data?.length ?? 0) > 1 && (
             <Select value={wh} onChange={(e) => setWh(e.target.value)} options={[{ value: '', label: 'Të gjitha depot' }, ...(whs.data ?? []).map((w) => ({ value: w.id, label: w.name }))]} />
           )}
@@ -177,7 +185,7 @@ function ItemsView({ client }: { client: Client }) {
           >
             <FileSpreadsheet className="h-4 w-4" />
           </Button>
-          <Button onClick={() => setEdit({ unit: 'copë', vat_code: 'E', purchase_price: 0, sale_price: 0, min_stock: 0, active: true })}>
+          <Button onClick={() => setEdit({ unit: 'Copë', vat_code: 'E', purchase_price: 0, sale_price: 0, min_stock: 0, active: true })}>
             <Plus className="h-4 w-4" /> Artikull
           </Button>
         </div>
@@ -194,7 +202,7 @@ function ItemsView({ client }: { client: Client }) {
                 <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setEdit(i)}>
                   <div className="truncate font-semibold text-brand-600 hover:underline">{i.name}</div>
                   <div className="truncate text-xs text-muted">
-                    {[i.sku && `SKU ${i.sku}`, i.barcode, i.category, `kosto ${formatEUR(i.avg_cost)}`, i.sale_price ? `shitje ${formatEUR(i.sale_price)}` : null, i.min_stock ? `min. ${qtyFmt(i.min_stock)}` : null]
+                    {[i.sku && `SKU ${i.sku}`, i.barcode, categoryName(i.category), `kosto ${formatEUR(i.avg_cost)}`, i.sale_price ? `shitje ${formatEUR(i.sale_price)}` : null, i.min_stock ? `min. ${qtyFmt(i.min_stock)}` : null]
                       .filter(Boolean)
                       .join(' · ')}
                   </div>
@@ -262,19 +270,27 @@ function ItemDialog({ clientId, value, onClose, onSaved }: { clientId: string; v
         </div>
         <Input label="SKU / kodi" value={f.sku ?? ''} onChange={set('sku')} />
         <Input label="Barkodi" value={f.barcode ?? ''} onChange={set('barcode')} />
-        <div>
-          <Input label="Njësia" list="inv-units" value={f.unit ?? ''} onChange={set('unit')} />
-          <datalist id="inv-units">
-            {UNITS.map((u) => (
-              <option key={u} value={u} />
-            ))}
-          </datalist>
-        </div>
+        <Select
+          label="Njësia (ATK)"
+          value={f.unit ?? 'Copë'}
+          onChange={(e) => setF({ ...f, unit: e.target.value })}
+          options={[...unitOptions(), ...(f.unit && !unitOptions().includes(f.unit) ? [f.unit] : [])].map((u) => ({ value: u, label: u }))}
+        />
         <Select label="TVSH" value={f.vat_code ?? 'E'} onChange={(e) => setF({ ...f, vat_code: e.target.value as VatCode })} options={[{ value: 'E', label: 'E – 18%' }, { value: 'D', label: 'D – 8%' }, { value: 'C', label: 'C – 0%' }, { value: 'A', label: 'A – e liruar' }]} />
         <Input label="Çmimi i blerjes pa TVSH (€)" inputMode="decimal" value={f.purchase_price ? String(f.purchase_price) : ''} onChange={(e) => setF({ ...f, purchase_price: num(e.target.value) })} />
         <Input label="Çmimi i shitjes me TVSH (€)" inputMode="decimal" value={f.sale_price ? String(f.sale_price) : ''} onChange={(e) => setF({ ...f, sale_price: num(e.target.value) })} />
         <Input label="Stoku minimal" inputMode="decimal" value={f.min_stock ? String(f.min_stock) : ''} onChange={(e) => setF({ ...f, min_stock: num(e.target.value) })} />
-        <Input label="Kategoria" value={f.category ?? ''} onChange={set('category')} />
+        <Select
+          label="Kategoria sipas ATK-së"
+          value={f.category ?? ''}
+          onChange={(e) => setF({ ...f, category: e.target.value || null })}
+          options={[
+            { value: '', label: '— pa kategori —' },
+            ...categoryOptions(),
+            // an older free-text category stays selectable until it is changed
+            ...(f.category && !categoryOptions().some((o) => o.value === f.category) ? [{ value: f.category, label: `${f.category} (e vjetër)` }] : []),
+          ]}
+        />
         <div className="sm:col-span-2">
           <Input label="Shënim" value={f.note ?? ''} onChange={set('note')} />
         </div>

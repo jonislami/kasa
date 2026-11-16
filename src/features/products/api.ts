@@ -57,6 +57,8 @@ export interface ProductInput {
   duration_min?: number | null
   substance?: string | null
   show_in_pos: boolean
+  /** ATK category ("Kategoritë e mallrave dhe shërbimeve"); empty → by business type (0032). */
+  atk_type?: string
 }
 
 export interface ImportRow {

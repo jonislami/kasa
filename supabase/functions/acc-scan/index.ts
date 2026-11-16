@@ -1,6 +1,7 @@
-// Edge Function: acc-scan (Kasa Kontabilist, phase K6)
-// Reads a supplier invoice (photo or PDF already uploaded to bucket acc-files and registered with acc_scan_add)
-// with Claude and stores what it read with the RPC acc_scan_result.
+// Edge Function: acc-scan (Kasa Kontabilist, phase K6; four kinds and ATK categories since 0032)
+// Reads an invoice (photo or PDF already uploaded to bucket acc-files and registered with acc_scan_add) with Claude
+// and stores what it read with the RPC acc_scan_result. The scan's kind (purchase / expense / investment / sale)
+// tells who the other party is: for a sale the client issued the document and the customer goes into supplier_*.
 //   POST { scan_id, strong? }  →  { status: 'read' | 'failed', extracted?, suggest?, error? }
 // Runs entirely with the caller's own JWT (anon key + Authorization header): the scan row, the client and the
 // file are reachable only through RLS / storage policies of that accountant. No service role is used.
@@ -35,6 +36,29 @@ function mediaType(mime: string | null, name: string): ImageType | 'application/
 }
 
 const nul = (type: string) => ({ anyOf: [{ type }, { type: 'null' }] })
+// ATK "Kategoritë e mallrave dhe shërbimeve" (same list as src/lib/atk/catalog.ts). "PM#36" = nr. 36, printed as PM.
+const ATK_CATEGORIES: [string, string][] = [
+  ['TT', 'Të tjera'], ['UR', 'Ushqime të përgatitura në restorante dhe kuzhina'], ['AU', 'Artikuj ushqimorë nga dyqanet me pakicë'],
+  ['VM', 'Vreshtari'], ['KO', 'Produkte kozmetike dhe materiale për zbukurim'], ['AP', 'Autopjesë'], ['BM', 'Barna dhe pajisje mjekësore'],
+  ['PM', 'Pajisje dhe aparatura mjekësore'], ['PP', 'Pemë dhe perime'], ['PE', 'Pajisje elektronike, audio dhe video'],
+  ['PS', 'Pajisje shtëpiake (frigoriferë, shporetë, pajisje kuzhine)'], ['PB', 'Pajisje dhe makineri bujqësore'], ['BB', 'Barna bujqësore'],
+  ['KB', 'Karburantë (nafta, benzina)'], ['EE', 'Energji elektrike'], ['PSE', 'Pajisje speciale elektrike'], ['SM', 'Shërbime mjekësore'],
+  ['SJ', 'Shërbime juridike'], ['ST', 'Shërbime të tjera'], ['SK', 'Shërbime të kontabilitetit'], ['SMK', 'Shërbime mekanike'],
+  ['STR', 'Shërbime transporti'], ['PI', 'Pajisje dhe makineri industriale'], ['PT', 'Mjete transporti (automobil, kamionë, vetura)'],
+  ['SEA', 'Shërbime edukative dhe arsimore'], ['KS', 'Klube sportive'], ['MN', 'Materiale ndërtimore'], ['SHN', 'Shërbime ndërtimore'],
+  ['SDG', 'Shtyp dhe dizajn grafik'], ['HT', 'Hotelet dhe turizëm'], ['SHB', 'Shërbime bankare'], ['STI', 'Shërbime të teknologjisë informative'],
+  ['SHT', 'Shërbime të telekomunikimit'], ['PBS', 'Lule, bimë, farëra, plehra, kafshë shtëpiake dhe ushqim për to'],
+  ['MPM', 'Mish dhe produkte të mishit'], ['PM#36', 'Miell dhe produkte të miellit (bukë, byrek)'], ['PPD', 'Produkte të drurit'],
+  ['PPH', 'Produkte të hekurit'], ['PPP', 'Produkte të plastikës'], ['PPA', 'Produkte të aluminit'], ['PHN', 'Pajisje hidraulike dhe të ngrohjes'],
+  ['SHH', 'Shërbime hidraulike'], ['SUA', 'Shërbime udhëtimi dhe akomodimi'], ['SHZ', 'Sallone floktarie dhe trajtime bukurie'],
+  ['PJA', 'Pije joalkoolike'], ['PAL', 'Pije alkoolike'], ['DUH', 'Duhan'], ['SHM', 'Publicitet dhe marketing'], ['PRO', 'Veprimtari prodhuese'],
+  ['SFV', 'Shpërndarje filmash, videosh dhe programesh televizive'], ['BSH', 'Blegtori dhe shpezëtari'],
+  ['RPK', 'Riparimi i pajisjeve të komunikimit'], ['PTI', 'Pajisje të teknologjisë informative (PC, laptop)'],
+]
+const ATK_CODES = ATK_CATEGORIES.map(([c]) => c)
+
+type ScanKind = 'purchase' | 'expense' | 'investment' | 'sale'
+
 const CATEGORIES = [
   'goods', 'assets', 'services', 'rent', 'utilities', 'telecom', 'fuel', 'vehicles', 'transport', 'taxes',
   'admin', 'operating', 'travel', 'representation', 'maintenance', 'marketing', 'bank', 'other',
@@ -47,7 +71,7 @@ const SCHEMA = {
   required: [
     'is_invoice', 'doc_type', 'supplier_name', 'supplier_nui', 'supplier_fiscal_no', 'supplier_vat_no', 'supplier_address',
     'buyer_name', 'buyer_nui', 'doc_no', 'doc_date', 'due_date', 'currency', 'payment', 'lines',
-    'net_e', 'vat_e', 'net_d', 'vat_d', 'amt_c', 'amt_a', 'discount', 'total', 'category', 'summary', 'confidence', 'warnings',
+    'net_e', 'vat_e', 'net_d', 'vat_d', 'amt_c', 'amt_a', 'discount', 'total', 'category', 'atk_category', 'summary', 'confidence', 'warnings',
   ],
   properties: {
     is_invoice: { type: 'boolean' },
@@ -69,7 +93,7 @@ const SCHEMA = {
       items: {
         type: 'object',
         additionalProperties: false,
-        required: ['description', 'quantity', 'unit', 'unit_price_net', 'vat_rate', 'total_gross'],
+        required: ['description', 'quantity', 'unit', 'unit_price_net', 'vat_rate', 'total_gross', 'category_code'],
         properties: {
           description: { type: 'string' },
           quantity: nul('number'),
@@ -77,6 +101,7 @@ const SCHEMA = {
           unit_price_net: nul('number'),
           vat_rate: { type: 'string', enum: ['E', 'D', 'C', 'A'] },
           total_gross: nul('number'),
+          category_code: { anyOf: [{ type: 'string', enum: ATK_CODES }, { type: 'null' }] },
         },
       },
     },
@@ -89,17 +114,31 @@ const SCHEMA = {
     discount: { type: 'number' },
     total: { type: 'number' },
     category: { type: 'string', enum: CATEGORIES },
+    atk_category: { anyOf: [{ type: 'string', enum: ATK_CODES }, { type: 'null' }] },
     summary: { type: 'string' },
     confidence: { type: 'string', enum: ['high', 'medium', 'low'] },
     warnings: { type: 'array', items: { type: 'string' } },
   },
 }
 
-function systemPrompt(clientName: string, clientNui: string | null) {
-  return `You read supplier invoices, fiscal receipts and credit notes from Kosovo for an accounting office and return the data as JSON in the given schema.
+const KIND_TEXT: Record<ScanKind, string> = {
+  purchase: 'a PURCHASE of the client (goods for resale or raw materials)',
+  expense: 'an EXPENSE of the client (utilities, phone, fuel, rent, services, office supplies…)',
+  investment: 'an INVESTMENT of the client (equipment, machines, vehicles, furniture – fixed assets)',
+  sale: 'a SALE: an invoice the client ISSUED to a customer',
+}
 
-The buyer is normally the office's client "${clientName}"${clientNui ? ` (NUI ${clientNui})` : ''}. The supplier is the issuer/seller of the document. Never swap them.
+function systemPrompt(clientName: string, clientNui: string | null, kind: ScanKind) {
+  const client = `"${clientName}"${clientNui ? ` (NUI ${clientNui})` : ''}`
+  const parties =
+    kind === 'sale'
+      ? `The document was issued by the office's client ${client}: the client is the SELLER. Put the CUSTOMER (the buyer) in the supplier_* fields – here they mean "the other party" – and the client (the issuer) in buyer_name / buyer_nui. Never swap them.`
+      : `The buyer is normally the office's client ${client}. The supplier is the issuer/seller of the document. Never swap them.`
+  return `You read invoices, fiscal receipts and credit notes from Kosovo for an accounting office and return the data as JSON in the given schema.
 
+The accountant says this document is ${KIND_TEXT[kind]}.
+${parties}
+` + `
 Rules:
 - Amounts in EUR as plain numbers with a dot for decimals (the documents often write 1.234,56 – that is 1234.56).
 - VAT rates in Kosovo: E = 18%, D = 8%, C = 0%, A = exempt. Fill net_e/vat_e (base and VAT at 18%), net_d/vat_d (8%), amt_c (0%) and amt_a (exempt) exactly as printed in the VAT summary of the document. If there is no summary, compute them from the lines (prices include VAT unless the document says otherwise). Use 0 for rates that do not appear.
@@ -109,7 +148,10 @@ Rules:
 - doc_type: "receipt" for a cash-register fiscal coupon, "credit_note" for a credit note / return (amounts stay positive), otherwise "invoice".
 - payment: cash / card / bank when the document says how it was paid; "due" if it has a due date or says unpaid; else "unknown".
 - lines: the items as printed (max 60; group the rest into one line). vat_rate as the letter E/D/C/A.
-- category: the best accounting category for the whole document (goods = goods for resale, assets = equipment and furniture lasting more than a year, fuel, utilities = electricity/water/waste, telecom = phone/internet, vehicles = vehicle service/insurance/registration, representation = meals and gifts, etc.).
+- category: the best accounting category for the whole document (goods = goods for resale, assets = equipment and furniture lasting more than a year, fuel, utilities = electricity/water/waste, telecom = phone/internet, vehicles = vehicle service/insurance/registration, representation = meals and gifts, etc.).${kind === 'investment' ? ' For an investment this is normally "assets".' : kind === 'sale' ? ' For a sale use "goods" or "services".' : ''}
+- ATK categories (official list of the Kosovo Tax Administration, code – meaning):
+${ATK_CATEGORIES.map(([c, n]) => `  ${c} – ${n}`).join('\n')}
+  category_code of each line: the ATK code that fits the item (null if none fits clearly). atk_category: the code that fits most of the document's value.
 - summary: one short line in Albanian describing what was bought (e.g. "Karburant 45 L", "Material zyre").
 - warnings: short notes in Albanian for anything the accountant must check: unreadable parts, totals that do not add up, missing NUI, a buyer that is not the client, a handwritten or damaged document.
 - If the image is not an invoice or receipt at all, set is_invoice to false, explain in warnings and fill the rest with nulls/0.
@@ -119,7 +161,8 @@ Rules:
 const r2 = (v: number) => Math.round((v + Number.EPSILON) * 100) / 100
 
 /** Arithmetic checks on what the model read; problems are added as warnings for the accountant. */
-function checks(x: Record<string, unknown>): string[] {
+function checks(x: Record<string, unknown>, kind: ScanKind): string[] {
+  const party = kind === 'sale' ? 'e blerësit' : 'e furnitorit'
   const n = (k: string) => Number(x[k] ?? 0) || 0
   const w: string[] = []
   const sum = r2(n('net_e') + n('vat_e') + n('net_d') + n('vat_d') + n('amt_c') + n('amt_a'))
@@ -133,8 +176,8 @@ function checks(x: Record<string, unknown>): string[] {
     if (Number.isNaN(t) || t > Date.now() + 3 * 86400000 || t < Date.now() - 6 * 366 * 86400000) w.push('Data e faturës duket e pasaktë.')
   }
   const nui = typeof x.supplier_nui === 'string' ? x.supplier_nui.replace(/\D/g, '') : ''
-  if (!nui) w.push('NUI e furnitorit nuk u gjet.')
-  else if (nui.length !== 9) w.push(`NUI e furnitorit (${nui}) nuk ka 9 shifra.`)
+  if (!nui) w.push(`NUI ${party} nuk u gjet.`)
+  else if (nui.length !== 9) w.push(`NUI ${party} (${nui}) nuk ka 9 shifra.`)
   return w
 }
 
@@ -160,11 +203,18 @@ Deno.serve(async (req) => {
   }
   if (!/^[0-9a-f-]{36}$/i.test(scanId)) return json({ error: 'Skanimi mungon' }, 400)
 
-  const { data: scan, error: scanErr } = await db.from('acc_scans').select('id, client_id, path, file_name, mime, status').eq('id', scanId).maybeSingle()
+  let { data: scan, error: scanErr } = await db.from('acc_scans').select('id, client_id, path, file_name, mime, status, scan_kind').eq('id', scanId).maybeSingle()
+  if (scanErr && /scan_kind/.test(scanErr.message)) {
+    // before migration 0032: every scan is a purchase
+    ;({ data: scan, error: scanErr } = await db.from('acc_scans').select('id, client_id, path, file_name, mime, status').eq('id', scanId).maybeSingle())
+  }
   if (scanErr || !scan) return json({ error: 'Skanimi nuk u gjet' }, 404)
   if (scan.status === 'confirmed') return json({ error: 'Skanimi është konfirmuar tashmë' }, 409)
 
   const MODEL = strong ? MODEL_STRONG : MODEL_FAST
+  const kind: ScanKind = (['purchase', 'expense', 'investment', 'sale'] as const).includes((scan as { scan_kind?: ScanKind }).scan_kind as ScanKind)
+    ? ((scan as { scan_kind?: ScanKind }).scan_kind as ScanKind)
+    : 'purchase'
   const store = async (p: Record<string, unknown>) => {
     const { data, error } = await db.rpc('acc_scan_result', { p_id: scanId, p })
     if (error) throw new Error(error.message)
@@ -197,7 +247,7 @@ Deno.serve(async (req) => {
       model: MODEL,
       max_tokens: 16000,
       output_config: { effort: 'medium' as const, format: { type: 'json_schema' as const, schema: SCHEMA } },
-      system: systemPrompt(client?.name ?? 'klienti', client?.nui ?? null),
+      system: systemPrompt(client?.name ?? 'klienti', client?.nui ?? null, kind),
       messages: [
         {
           role: 'user' as const,
@@ -230,7 +280,7 @@ Deno.serve(async (req) => {
       const why = Array.isArray(extracted.warnings) && extracted.warnings.length ? String(extracted.warnings[0]) : 'Dokumenti nuk duket si faturë.'
       return failWith(why)
     }
-    extracted.warnings = [...(Array.isArray(extracted.warnings) ? extracted.warnings : []), ...checks(extracted)]
+    extracted.warnings = [...(Array.isArray(extracted.warnings) ? extracted.warnings : []), ...checks(extracted, kind)]
     const saved = await store({ extracted, model: response.model })
     return json({ status: saved.status, extracted, suggest: saved.suggest ?? null })
   } catch (e) {

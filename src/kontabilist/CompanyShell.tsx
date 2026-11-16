@@ -54,7 +54,7 @@ export const MENU: { group: string; icon: LucideIcon; items: MenuItem[] }[] = [
   { group: 'Të përgjithshme', icon: LayoutGrid, items: [{ key: 'paneli', label: 'Paneli', icon: LayoutGrid }, { key: 'pasqyra', label: 'Pasqyra e periudhës', icon: FileBarChart }] },
   { group: 'Subjektet', icon: Users, items: [{ key: 'partneret', label: 'Klientët dhe furnitorët', icon: Users }] },
   { group: 'Shitjet', icon: Receipt, items: [{ key: 'shitjet', label: 'Faturat e shitjes', icon: Receipt }, { key: 'proformat', label: 'Proformat', icon: FileText }] },
-  { group: 'Blerjet', icon: ShoppingCart, items: [{ key: 'blerjet', label: 'Blerjet dhe shpenzimet', icon: ShoppingCart }, { key: 'skanimi', label: 'Skanimi me AI', icon: ScanLine }] },
+  { group: 'Blerjet', icon: ShoppingCart, items: [{ key: 'blerjet', label: 'Blerjet dhe shpenzimet', icon: ShoppingCart }, { key: 'skanimi', label: 'Skanimi me AI (blerje, shpenzim, investim, shitje)', icon: ScanLine }] },
   {
     group: 'Kontabiliteti',
     icon: Calculator,
@@ -71,12 +71,22 @@ export const MENU: { group: string; icon: LucideIcon; items: MenuItem[] }[] = [
       { key: 'mbyllja', label: 'Mbyllja e muajit', icon: Lock },
     ],
   },
-  { group: 'Burimet njerëzore', icon: UserCog, items: [{ key: 'pagat', label: 'Pagat dhe punëtorët', icon: UserCog }] },
+  {
+    group: 'Burimet njerëzore',
+    icon: UserCog,
+    items: [
+      { key: 'punonjesit', label: 'Punonjësit dhe kontratat', icon: Users },
+      { key: 'vijueshmeria', label: 'Orari dhe vijueshmëria', icon: CalendarDays },
+      { key: 'pushimet', label: 'Pushimet, vendimet dhe raportet', icon: FileText },
+      { key: 'pagat', label: 'Pagat', icon: UserCog },
+    ],
+  },
   {
     group: 'Administrata tatimore',
     icon: Percent,
     items: [
       { key: 'tvsh', label: 'Formulari i TVSH-së dhe librat', icon: Percent },
+      { key: 'librat_atk', label: 'Libri i shitjes dhe i blerjes (ATK)', icon: BookOpen },
       { key: 'tvsh_permbledhje', label: 'TVSH sipas normave', icon: FileBarChart },
       { key: 'tatimet', label: 'Tatimet e tjera dhe afatet', icon: CalendarDays },
     ],

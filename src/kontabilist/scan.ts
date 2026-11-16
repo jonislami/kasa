@@ -18,6 +18,15 @@ export const SCAN_STATUS: Record<ScanStatus, { label: string; tone: 'neutral' | 
 
 export type VatLetter = 'E' | 'D' | 'C' | 'A'
 
+/** The four kinds of scanning (0032). A sale is a document the client issued. */
+export type ScanKind = 'purchase' | 'expense' | 'investment' | 'sale'
+export const SCAN_KINDS: { value: ScanKind; label: string; button: string; hint: string }[] = [
+  { value: 'purchase', label: 'Blerje', button: 'Skano Blerjen', hint: 'Mall për rishitje, lëndë e parë – hyn te libri i blerjeve.' },
+  { value: 'expense', label: 'Shpenzim', button: 'Skano Shpenzimin', hint: 'Rrymë, ujë, telefon, karburant, qira, shërbime – shpenzime të biznesit.' },
+  { value: 'investment', label: 'Investim', button: 'Skano Investimin', hint: 'Pajisje, makineri, automjete, inventar – blerje investive (mjete themelore).' },
+  { value: 'sale', label: 'Shitje', button: 'Skano Shitjen', hint: 'Fatura që i ka lëshuar biznesi – hyn te libri i shitjeve.' },
+]
+
 /** What the AI read (schema of the Edge Function). */
 export interface Extracted {
   is_invoice: boolean
@@ -34,7 +43,7 @@ export interface Extracted {
   due_date: string | null
   currency: string
   payment: 'cash' | 'card' | 'bank' | 'due' | 'unknown'
-  lines: { description: string; quantity: number | null; unit: string | null; unit_price_net: number | null; vat_rate: VatLetter; total_gross: number | null }[]
+  lines: { description: string; quantity: number | null; unit: string | null; unit_price_net: number | null; vat_rate: VatLetter; total_gross: number | null; category_code?: string | null }[]
   net_e: number
   vat_e: number
   net_d: number
@@ -44,6 +53,8 @@ export interface Extracted {
   discount: number
   total: number
   category: string
+  /** ATK category of the whole document (0032). */
+  atk_category?: string | null
   summary: string
   confidence: 'high' | 'medium' | 'low'
   warnings: string[]
@@ -53,6 +64,7 @@ export interface ScanSuggest {
   partner_id?: string
   partner_name?: string
   category?: string
+  atk_category?: string
   duplicate_doc_id?: string
   duplicate_doc_no?: string
   duplicate_doc_date?: string
@@ -81,6 +93,8 @@ export interface Scan {
   source?: 'office' | 'portal'
   note?: string | null
   request_title?: string | null
+  /** 0032; older scans are purchases. */
+  scan_kind?: ScanKind
 }
 
 export async function fetchScans(clientId: string): Promise<Scan[]> {
@@ -124,7 +138,7 @@ export async function prepareUpload(file: File): Promise<Blob & { name?: string 
 }
 
 /** Uploads one file to the client folder and registers it; returns the scan id. */
-export async function uploadScan(clientId: string, file: File): Promise<string> {
+export async function uploadScan(clientId: string, file: File, kind: ScanKind = 'purchase'): Promise<string> {
   const ready = await prepareUpload(file)
   if (ready.size > 20 * 1024 * 1024) throw new Error(`${file.name}: më i madh se 20 MB`)
   const pdf = ready.type === 'application/pdf' || /\.pdf$/i.test(file.name)
@@ -134,7 +148,7 @@ export async function uploadScan(clientId: string, file: File): Promise<string> 
   const path = `${clientId}/scan-${crypto.randomUUID()}-${name}`
   const up = await supabase.storage.from('acc-files').upload(path, ready, { contentType: mime, upsert: false })
   if (up.error) throw new Error(`${file.name}: nuk u ngarkua (${up.error.message})`)
-  const { data, error } = await supabase.rpc('acc_scan_add', { p: { client_id: clientId, path, file_name: file.name, mime, size_bytes: ready.size } })
+  const { data, error } = await supabase.rpc('acc_scan_add', { p: { client_id: clientId, path, file_name: file.name, mime, size_bytes: ready.size, kind } })
   if (error) {
     await supabase.storage.from('acc-files').remove([path])
     fail(error)
@@ -160,6 +174,15 @@ export async function readScan(scanId: string, strong = false): Promise<{ status
     return { status: 'failed', error: msg }
   }
   return data as { status: ScanStatus; error?: string }
+}
+
+/** Changes the kind of a scan that is not confirmed yet (and reads it again, since the roles of the parties differ). */
+export async function setScanKind(scanId: string, kind: ScanKind): Promise<void> {
+  const { error } = await supabase.rpc('acc_scan_set_kind', { p_id: scanId, p_kind: kind })
+  if (error) {
+    if (['PGRST202', '42883'].includes(error.code ?? '')) throw new Error('Kjo kërkon migrimin supabase/migrations/0032_acc_atk_books_hr.sql në Supabase.')
+    fail(error)
+  }
 }
 
 export async function markReview(scanId: string): Promise<void> {

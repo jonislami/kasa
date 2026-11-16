@@ -8,17 +8,13 @@ import { cn } from '@/lib/cn'
 import { formatEUR } from '@/lib/money'
 import { addMonths, formatDay, monthName, monthStart } from '@/features/accounting/api'
 import type { Client } from './api'
-import { downloadSheets } from './xls'
+import { BOOK_LABELS, buildRows } from './atkBooks'
+import { downloadBook, fetchBookDocs } from './atkBooksApi'
 import {
-  fetchVatBook,
   fetchVatForm,
   finalBoxes,
   INPUTS,
   OUTPUTS,
-  PURCHASE_BOOK_COLUMNS,
-  purchaseBookRow,
-  SALES_BOOK_COLUMNS,
-  salesBookRow,
   saveVatReturn,
   type Boxes,
   type FormLine,
@@ -66,12 +62,15 @@ export function VatFormTab({ client }: { client: Client }) {
     },
   })
 
+  // the official ATK files (same as "Libri i shitjes dhe i blerjes (ATK)")
   const books = async () => {
-    const [sales, purchases] = await Promise.all([fetchVatBook(client.id, month, 'sale'), fetchVatBook(client.id, month, 'purchase')])
-    await downloadSheets(`librat-tvsh-${client.name.replace(/[^\p{L}\p{N}]+/gu, '-').toLowerCase()}-${month.slice(0, 7)}.xlsx`, [
-      { name: 'Libri i shitjeve', columns: SALES_BOOK_COLUMNS, rows: sales.length ? sales.map(salesBookRow) : [['', '', '', '0', '']] },
-      { name: 'Libri i blerjeve', columns: PURCHASE_BOOK_COLUMNS, rows: purchases.filter((r) => r.doc_type !== 'credit_note').map(purchaseBookRow) },
-    ])
+    const last = new Date(`${addMonths(month, 1)}T00:00:00Z`)
+    last.setUTCDate(0)
+    const to = last.toISOString().slice(0, 10)
+    const docs = await fetchBookDocs(client.id, month, to)
+    for (const b of client.vat_registered ? (['sales_vat', 'purchase_vat'] as const) : (['sales_novat', 'purchase_novat'] as const)) {
+      await downloadBook(`${BOOK_LABELS[b]} - ${client.name.replace(/[\/:*?"<>|]+/g, ' ')} - ${month.slice(0, 7)}.xlsx`, b, buildRows(b, docs))
+    }
   }
 
   const line = (l: FormLine) => {

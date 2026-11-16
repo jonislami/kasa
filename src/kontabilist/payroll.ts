@@ -24,8 +24,18 @@ export function salaryPreview(gross: number, empPct: number, erPct: number, prim
 
 export type Contract = 'indefinite' | 'fixed' | 'part_time' | 'service'
 export const CONTRACT_LABELS: Record<Contract, string> = { indefinite: 'Me kohë të pacaktuar', fixed: 'Me kohë të caktuar', part_time: 'Me kohë të pjesshme', service: 'Kontratë shërbimi' }
-export type LeaveKind = 'annual' | 'sick' | 'unpaid' | 'maternity' | 'other'
-export const LEAVE_LABELS: Record<LeaveKind, string> = { annual: 'Pushim vjetor', sick: 'Pushim mjekësor', unpaid: 'Pushim pa pagesë', maternity: 'Lehonie', other: 'Tjetër' }
+// sick_work, paternity and special since 0032
+export type LeaveKind = 'annual' | 'sick' | 'sick_work' | 'unpaid' | 'maternity' | 'paternity' | 'special' | 'other'
+export const LEAVE_LABELS: Record<LeaveKind, string> = {
+  annual: 'Pushim vjetor',
+  sick: 'Pushim mjekësor',
+  sick_work: 'Pushim mjekësor – lëndim në punë',
+  unpaid: 'Pushim pa pagesë',
+  maternity: 'Pushim i lehonisë',
+  paternity: 'Pushim i atësisë',
+  special: 'Pushim me pagesë për raste të veçanta',
+  other: 'Tjetër',
+}
 
 export interface Leave {
   id: string
@@ -35,6 +45,8 @@ export interface Leave {
   to_date: string
   days: number
   note: string | null
+  decision_no?: string | null
+  decision_date?: string | null
 }
 
 export interface Employee {
@@ -57,6 +69,25 @@ export interface Employee {
   active: boolean
   leave_days: Partial<Record<LeaveKind, number>>
   leaves: Leave[]
+  // HR (0032)
+  birth_date?: string | null
+  gender?: 'F' | 'M' | null
+  address?: string | null
+  city?: string | null
+  profession?: string | null
+  education?: string | null
+  bank_name?: string | null
+  duties?: string | null
+  workplace?: string | null
+  contract_no?: string | null
+  work_days?: 5 | 6
+  weekly_hours?: number
+  schedule_from?: string | null
+  schedule_to?: string | null
+  probation_months?: number | null
+  annual_leave_days?: number | null
+  extra_leave_days?: number
+  carried_leave_days?: number
 }
 
 export async function fetchEmployees(clientId: string, year?: number): Promise<Employee[]> {
@@ -69,6 +100,13 @@ export async function fetchEmployees(clientId: string, year?: number): Promise<E
     er_pension_pct: n(e.er_pension_pct),
     leave_days: Object.fromEntries(Object.entries((e.leave_days as Record<string, unknown>) ?? {}).map(([k, v]) => [k, n(v)])),
     leaves: ((e.leaves as Record<string, unknown>[]) ?? []).map((l) => ({ ...(l as unknown as Leave), days: n(l.days) })),
+    weekly_hours: e.weekly_hours == null ? 40 : n(e.weekly_hours),
+    work_days: e.work_days === 6 ? 6 : 5,
+    annual_leave_days: e.annual_leave_days == null ? null : n(e.annual_leave_days),
+    extra_leave_days: n(e.extra_leave_days),
+    carried_leave_days: n(e.carried_leave_days),
+    schedule_from: typeof e.schedule_from === 'string' ? e.schedule_from.slice(0, 5) : null,
+    schedule_to: typeof e.schedule_to === 'string' ? e.schedule_to.slice(0, 5) : null,
   }))
 }
 

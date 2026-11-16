@@ -1,15 +1,14 @@
 /**
- * Units of measure. `code` is stored in the database; `atk` is sent as CouponItem.Unit.
- * TODO(ATK): confirm the `atk` values against the official "Njësitë matëse dhe kategoritë" list
- * (only "cope" is confirmed by the ATK examples so far).
+ * Units of measure. `code` is stored in the database; `atk` is the code of the official ATK list "Njësitë matëse"
+ * (src/lib/atk/catalog.ts), sent as CouponItem.Unit.
  */
 export type UnitCode = 'cope' | 'kg' | 'pako' | 'liter'
 
 export const UNITS: Record<UnitCode, { label: string; atk: string; decimals: number }> = {
-  cope: { label: 'copë', atk: 'cope', decimals: 0 },
-  kg: { label: 'kg', atk: 'kg', decimals: 3 },
-  pako: { label: 'pako', atk: 'pako', decimals: 0 },
-  liter: { label: 'litër', atk: 'l', decimals: 0 },
+  cope: { label: 'copë', atk: 'CP', decimals: 0 },
+  kg: { label: 'kg', atk: 'KGN', decimals: 3 },
+  pako: { label: 'pako', atk: 'PK', decimals: 0 },
+  liter: { label: 'litër', atk: 'LTR', decimals: 0 },
 }
 
 export const UNIT_OPTIONS = (Object.keys(UNITS) as UnitCode[]).map((value) => ({ value, label: UNITS[value].label }))
