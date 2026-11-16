@@ -31,4 +31,7 @@ contextBridge.exposeInMainWorld('kasaElectron', {
   // Windows printers: list them, and print the rendered receipt without the dialog
   listPrinters: () => ipcRenderer.invoke('kasa:printers') as Promise<{ name: string; displayName: string; isDefault: boolean }[]>,
   printSilent: (deviceName?: string) => ipcRenderer.invoke('kasa:print-silent', deviceName ?? null) as Promise<{ ok: boolean; error?: string }>,
+  // ESC/POS bytes straight to a Windows printer (RAW, without its driver), and emptying a printer's queue
+  printRaw: (deviceName: string, data: Uint8Array) => ipcRenderer.invoke('kasa:print-raw', deviceName, data) as Promise<{ ok: boolean; error?: string }>,
+  clearPrintQueue: (deviceName: string) => ipcRenderer.invoke('kasa:print-clear', deviceName) as Promise<{ ok: boolean; error?: string }>,
 })

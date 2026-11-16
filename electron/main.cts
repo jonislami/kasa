@@ -8,6 +8,7 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import fs from 'node:fs'
 import crypto from 'node:crypto'
+import { execFile } from 'node:child_process'
 
 // The same main process runs two programs: Kasa (the till) and Kasa Kontabilist (the accountant's
 // program). electron-builder.kontabilist.yml writes "kasaApp": "kontabilist" into package.json;
@@ -121,6 +122,99 @@ ipcMain.handle('kasa:print-silent', (e, deviceName: unknown) => {
       (ok, failureReason) => resolve({ ok, error: ok ? undefined : failureReason }),
     )
   })
+})
+
+// ---------------------------------------------------------------------------
+// RAW printing: the ESC/POS bytes of the receipt go to the Windows printer as they are (datatype RAW), without the
+// printer driver. Every thermal receipt printer understands them, also clones whose driver output they cannot read
+// (that output prints as endless rows of symbols). Done with the Win32 spooler (winspool.drv) from PowerShell, so no
+// native module is needed. A printer that Windows marks offline (USB unplugged) is refused instead of queued, so no
+// job waits in the queue and prints later. Also: emptying a printer's queue.
+// ---------------------------------------------------------------------------
+const RAW_PS = String.raw`
+param([string]$Printer, [string]$File, [string]$Action)
+$ErrorActionPreference = 'Stop'
+if ($Action -eq 'clear') {
+  Get-PrintJob -PrinterName $Printer | Remove-PrintJob
+  exit 0
+}
+$p = Get-CimInstance Win32_Printer -Filter ("Name='" + $Printer.Replace("'", "''").Replace('\', '\\') + "'")
+if (-not $p) { [Console]::Error.Write('NOPRINTER'); exit 2 }
+if ($p.WorkOffline) { [Console]::Error.Write('OFFLINE'); exit 3 }
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class KasaRaw {
+  [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+  public class DOCINFO { public string pDocName; public string pOutputFile; public string pDataType; }
+  [DllImport("winspool.drv", CharSet = CharSet.Unicode, SetLastError = true)] static extern bool OpenPrinter(string n, out IntPtr h, IntPtr d);
+  [DllImport("winspool.drv", SetLastError = true)] static extern bool ClosePrinter(IntPtr h);
+  [DllImport("winspool.drv", CharSet = CharSet.Unicode, SetLastError = true)] static extern int StartDocPrinter(IntPtr h, int level, [In, MarshalAs(UnmanagedType.LPStruct)] DOCINFO di);
+  [DllImport("winspool.drv", SetLastError = true)] static extern bool EndDocPrinter(IntPtr h);
+  [DllImport("winspool.drv", SetLastError = true)] static extern bool StartPagePrinter(IntPtr h);
+  [DllImport("winspool.drv", SetLastError = true)] static extern bool EndPagePrinter(IntPtr h);
+  [DllImport("winspool.drv", SetLastError = true)] static extern bool WritePrinter(IntPtr h, byte[] b, int n, out int w);
+  public static void Send(string printer, byte[] data) {
+    IntPtr h;
+    if (!OpenPrinter(printer, out h, IntPtr.Zero)) throw new Exception("OpenPrinter " + Marshal.GetLastWin32Error());
+    try {
+      if (StartDocPrinter(h, 1, new DOCINFO { pDocName = "Kasa", pDataType = "RAW" }) == 0) throw new Exception("StartDoc " + Marshal.GetLastWin32Error());
+      StartPagePrinter(h);
+      int w;
+      if (!WritePrinter(h, data, data.Length, out w) || w != data.Length) throw new Exception("WritePrinter " + Marshal.GetLastWin32Error());
+      EndPagePrinter(h);
+      EndDocPrinter(h);
+    } finally { ClosePrinter(h); }
+  }
+}
+'@
+[KasaRaw]::Send($Printer, [IO.File]::ReadAllBytes($File))
+`
+
+function runRawPs(args: string[]): Promise<{ ok: boolean; error?: string }> {
+  const dir = fs.mkdtempSync(path.join(app.getPath('temp'), 'kasa-print-'))
+  const script = path.join(dir, 'raw.ps1')
+  fs.writeFileSync(script, RAW_PS, 'utf-8')
+  return new Promise((resolve) => {
+    execFile(
+      'powershell.exe',
+      ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', script, ...args],
+      { windowsHide: true, timeout: 30_000 },
+      (err, _stdout, stderr) => {
+        fs.rmSync(dir, { recursive: true, force: true })
+        if (!err) return resolve({ ok: true })
+        const s = String(stderr || err.message)
+        resolve({
+          ok: false,
+          error: s.includes('OFFLINE')
+            ? 'Printeri nuk është i lidhur (kontrollo kabllon USB dhe që është i ndezur).'
+            : s.includes('NOPRINTER')
+              ? 'Printeri nuk u gjet në Windows.'
+              : 'Printimi dështoi: ' + s.trim().split('\n')[0].slice(0, 200),
+        })
+      },
+    )
+  })
+}
+
+ipcMain.handle('kasa:print-raw', async (e, deviceName: unknown, data: unknown) => {
+  if (!trustedSender(e)) throw new Error('Kërkesë e palejuar')
+  if (process.platform !== 'win32') return { ok: false, error: 'Vetëm në Windows' }
+  if (typeof deviceName !== 'string' || !deviceName || !(data instanceof Uint8Array) || data.length === 0 || data.length > 2_000_000) {
+    return { ok: false, error: 'Kërkesë e pavlefshme' }
+  }
+  const file = path.join(app.getPath('temp'), `kasa-${crypto.randomUUID()}.bin`)
+  fs.writeFileSync(file, data)
+  try {
+    return await runRawPs(['-Printer', deviceName, '-File', file])
+  } finally {
+    fs.rmSync(file, { force: true })
+  }
+})
+ipcMain.handle('kasa:print-clear', async (e, deviceName: unknown) => {
+  if (!trustedSender(e)) throw new Error('Kërkesë e palejuar')
+  if (process.platform !== 'win32' || typeof deviceName !== 'string' || !deviceName) return { ok: false, error: 'Kërkesë e pavlefshme' }
+  return runRawPs(['-Printer', deviceName, '-Action', 'clear'])
 })
 
 // ---------------------------------------------------------------------------

@@ -8,7 +8,7 @@ import { lastPrinterName, printerReady, testPageBytes } from '@/lib/printer'
 import { isManagerRole } from '@/lib/business'
 import type { Sale } from '@/features/pos/api'
 import { Receipt } from '@/features/pos/Receipt'
-import { setWindowsPrinter, windowsPrinter } from '@/lib/printer'
+import { clearPrinterQueue, effectiveMode, printWindowsTest, setWindowsPrinter, setWindowsPrintMode, windowsPrinter, windowsPrintMode, THERMAL_RE, type WinPrintMode } from '@/lib/printer'
 import { DEFAULT_RECEIPT, fetchReceiptSettings, saveReceiptSettings, type ReceiptSettings } from './api'
 
 /** Bluetooth connection on this device (everyone) + receipt settings for the business (managers). */
@@ -41,7 +41,7 @@ export function PrinterSection() {
   return (
     <div className="flex flex-col gap-5 xl:flex-row xl:items-start">
       <div className="flex min-w-0 flex-1 flex-col gap-5">
-        {device.systemPrint && <WindowsPrinterCard />}
+        {device.systemPrint && <WindowsPrinterCard settings={settings.data ?? DEFAULT_RECEIPT} />}
         <BluetoothCard settings={form} />
 
         {manager && (
@@ -293,29 +293,86 @@ const SAMPLE: Sale = {
  * Windows app: the receipt printer installed in Windows (e.g. Xprinter XP-80). Receipts print straight to it,
  * without the print dialog. Kept on this device.
  */
-function WindowsPrinterCard() {
+const MODE_LABELS: Record<WinPrintMode, string> = {
+  raw: 'Direkt (ESC/POS) – për printerët termikë',
+  driver: 'Me driver-in e Windows',
+  dialog: 'Me dritaren e printimit',
+}
+
+function WindowsPrinterCard({ settings }: { settings: ReceiptSettings }) {
+  const { business } = useBusiness()
   const list = useQuery({ queryKey: ['windows-printers'], queryFn: () => device.systemPrint!.list() })
   const [chosen, setChosen] = useState<string>(() => windowsPrinter() ?? '')
+  const [mode, setMode] = useState<WinPrintMode | ''>(() => windowsPrintMode() ?? '')
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const def = list.data?.find((p) => p.isDefault)?.name
+  const auto = list.data?.find((p) => THERMAL_RE.test(p.name))?.name
+  const target = chosen || def || auto || null
+  const used = mode || effectiveMode(target)
   const pick = (name: string) => {
     setChosen(name)
     setWindowsPrinter(name || null)
+    setMsg(null)
   }
+  const pickMode = (m: string) => {
+    setMode(m as WinPrintMode | '')
+    setWindowsPrintMode((m as WinPrintMode) || null)
+    setMsg(null)
+  }
+  const test = useMutation({
+    mutationFn: () => printWindowsTest(business.name, settings, target),
+    onSuccess: () => setMsg({ ok: true, text: 'Faqja e provës u dërgua. Nëse del me shenja të çuditshme, provo “Me driver-in e Windows”.' }),
+    onError: (e: Error) => setMsg({ ok: false, text: e.message }),
+  })
+  const clear = useMutation({
+    mutationFn: () => clearPrinterQueue(target),
+    onSuccess: () => setMsg({ ok: true, text: 'Radha e printimit u pastrua.' }),
+    onError: (e: Error) => setMsg({ ok: false, text: e.message }),
+  })
   return (
     <Card className="p-5">
       <h2 className="text-[17px] font-semibold">Printeri i Windows</h2>
       <p className="mt-1 text-sm text-muted">Kuponi printohet drejt në këtë printer, pa dritaren e printimit.</p>
-      <div className="mt-4">
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <Select
           label="Printeri"
           value={chosen}
           onChange={(e) => pick(e.target.value)}
           options={[
-            { value: '', label: def ? `Automatik – printeri kryesor (${def})` : 'Automatik – printeri i kuponëve (p.sh. Xprinter)' },
+            { value: '', label: def ? `Automatik – printeri kryesor (${def})` : `Automatik – printeri i kuponëve${auto ? ` (${auto})` : ''}` },
             ...(list.data ?? []).map((p) => ({ value: p.name, label: p.displayName + (p.isDefault ? ' (kryesor)' : '') })),
           ]}
         />
+        <Select
+          label="Mënyra e printimit"
+          value={mode}
+          onChange={(e) => pickMode(e.target.value)}
+          options={[
+            { value: '', label: `Automatike – ${MODE_LABELS[effectiveMode(target)].split(' –')[0].toLowerCase()}` },
+            ...(Object.keys(MODE_LABELS) as WinPrintMode[]).filter((m) => m !== 'raw' || device.systemPrint?.printRaw).map((m) => ({ value: m, label: MODE_LABELS[m] })),
+          ]}
+        />
       </div>
+      <p className="mt-2 text-xs text-muted">
+        {used === 'raw'
+          ? 'Direkt: kuponi i dërgohet printerit si komanda ESC/POS, pa driver – punon me çdo printer termik (Xprinter, POS-80, …). Nëse printeri është i shkëputur, kuponi nuk mbetet në radhë.'
+          : used === 'driver'
+            ? 'Driver: kuponi printohet si figurë përmes driver-it të instaluar. Nëse dalin shenja pa kuptim, driver-i nuk i përshtatet printerit – zgjidh “Direkt”.'
+            : 'Hapet dritarja e printimit dhe e zgjedh printerin vetë.'}
+      </p>
+      <div className="mt-4 flex flex-wrap gap-2">
+        {used === 'raw' && (
+          <Button variant="secondary" loading={test.isPending} disabled={!target} onClick={() => test.mutate()}>
+            <Printer className="h-4 w-4" /> Printo provë
+          </Button>
+        )}
+        {device.systemPrint?.clearQueue && (
+          <Button variant="secondary" loading={clear.isPending} disabled={!target} onClick={() => clear.mutate()}>
+            Pastro radhën e printimit
+          </Button>
+        )}
+      </div>
+      {msg && <p className={`mt-3 rounded-ctl px-4 py-3 text-sm ${msg.ok ? 'bg-brand-100 text-brand-600' : 'bg-warn-100 text-warn-700'}`}>{msg.text}</p>}
       {list.error && <p className="mt-2 text-sm text-warn-700">{(list.error as Error).message}</p>}
     </Card>
   )
