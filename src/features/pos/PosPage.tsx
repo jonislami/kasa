@@ -19,6 +19,7 @@ import { PrintArea, Receipt } from './Receipt'
 import { SalesDialog } from './SalesDialog'
 import { QuickProductDialog } from './QuickProductDialog'
 import { BookEntryDialog, type BookEntry } from './BookEntryDialog'
+import { EcouponButton } from './EcouponDialog'
 import { VariantPicker } from './VariantPicker'
 import { expiryStatus, fetchLots, formatExpiry, summarizeLots } from '@/lib/lots'
 import { printPage, printReceipt } from '@/lib/printer'
@@ -758,6 +759,7 @@ export function PosPage() {
             <div className="max-h-[50dvh] overflow-y-auto rounded-xl border border-line bg-white py-2">
               <Receipt sale={receipt} business={business} settings={receiptSettings.data} />
             </div>
+            {receipt.fiscal && !receipt.offline && receipt.id && <EcouponButton saleId={receipt.id} />}
             <div className="grid grid-cols-2 gap-2.5">
               <Button variant="secondary" size="lg" onClick={() => void print(receipt)}>
                 {tr('Printo', lang)}

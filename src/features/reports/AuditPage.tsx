@@ -18,6 +18,7 @@ const ACTIONS: Record<string, { label: string; tone: Tone }> = {
   login: { label: 'Hyrje', tone: 'neutral' },
   fiscal_export: { label: 'Eksport kuponësh për ATK', tone: 'amber' },
   sef_update: { label: 'Përditësim i programit', tone: 'info' },
+  ecoupon_sent: { label: 'e-kupon i dërguar', tone: 'info' },
   pin_login: { label: 'Hyrje me PIN', tone: 'neutral' },
   login_failed: { label: 'Hyrje e dështuar', tone: 'warn' },
   sale: { label: 'Shitje', tone: 'success' },
