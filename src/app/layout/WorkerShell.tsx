@@ -10,6 +10,7 @@ import { KOSOVO_TZ } from '@/lib/clock'
 import { cn } from '@/lib/cn'
 import { formatEUR } from '@/lib/money'
 import { endShift, fetchWork } from '@/features/reports/api'
+import { t as tr, useLang } from '@/lib/i18n'
 import type { NavItem } from '@/app/nav'
 
 /** Cash the worker holds now: change at the start of the shift + cash taken today. */
@@ -53,6 +54,7 @@ export function WorkerShell({
   tabs: NavItem[]
   children: ReactNode
 }) {
+  const lang = useLang()
   const { signOut } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -89,12 +91,12 @@ export function WorkerShell({
           {tabs.map((t) => (
             <NavLink key={t.to} to={t.to} className={({ isActive }) => cn(railBtn, 'min-h-[68px]', isActive ? 'bg-bt-600 text-white shadow-lg shadow-black/20' : 'text-white/70 hover:bg-white/10')}>
               <t.icon className="h-6 w-6" />
-              <span className="leading-tight">{t.short ?? t.label}</span>
+              <span className="leading-tight">{tr(t.short ?? t.label, lang)}</span>
             </NavLink>
           ))}
           <button type="button" onClick={() => setMenu(true)} className={cn(railBtn, 'text-white/60 hover:bg-white/10')}>
             <MoreHorizontal className="h-6 w-6" />
-            Më shumë
+            {tr('Më shumë', lang)}
           </button>
         </nav>
 
@@ -106,11 +108,11 @@ export function WorkerShell({
           <div className="max-w-[80px] truncate text-[10px] font-semibold uppercase tracking-wide text-white/50">{userSub}</div>
           <button type="button" onClick={() => setClosing(true)} className={cn(railBtn, 'bg-[#3A2A12] text-[#F59E0B] hover:bg-[#4A3516]')}>
             <Square className="h-5 w-5 fill-current" />
-            Mbyll ditën
+            {tr('Mbyll ditën', lang)}
           </button>
           <button type="button" onClick={() => void doSignOut()} className={cn(railBtn, 'bg-[#3A1717] text-[#F87171] hover:bg-[#4A1D1D]')}>
             <LogOut className="h-5 w-5" />
-            Dil
+            {tr('Dil', lang)}
           </button>
         </div>
       </aside>
@@ -170,7 +172,7 @@ export function WorkerShell({
               {[...tabs.map((t) => ({ to: t.to, label: t.label, icon: t.icon })), ...extra].map((i) => (
                 <NavLink key={i.to} to={i.to} className={({ isActive }) => cn('flex min-h-[48px] items-center gap-3 rounded-xl px-3 text-[15px] font-medium', isActive ? 'bg-brand-100 text-brand-600' : 'hover:bg-bg')}>
                   <i.icon className="h-5 w-5" />
-                  {i.label}
+                  {tr(i.label, lang)}
                 </NavLink>
               ))}
             </nav>
@@ -183,10 +185,10 @@ export function WorkerShell({
                 }}
                 className="flex min-h-[48px] w-full items-center gap-3 rounded-xl px-3 text-[15px] font-medium text-amber-700 hover:bg-amber-100"
               >
-                <Square className="h-5 w-5" /> Mbyll ditën
+                <Square className="h-5 w-5" /> {tr('Mbyll ditën', lang)}
               </button>
               <button type="button" onClick={() => void doSignOut()} className="flex min-h-[48px] w-full items-center gap-3 rounded-xl px-3 text-[15px] font-medium text-warn-700 hover:bg-warn-100">
-                <LogOut className="h-5 w-5" /> Dil
+                <LogOut className="h-5 w-5" /> {tr('Dil', lang)}
               </button>
             </div>
           </div>

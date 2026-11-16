@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Camera, ClipboardList, Minus, PauseCircle, Plus, ScanLine, Search, Trash2, WifiOff, X } from 'lucide-react'
+import { BookOpen, Camera, ClipboardList, Minus, PauseCircle, Plus, ScanLine, Search, Trash2, WifiOff, X } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
 import { Button, Dialog, Select } from '@/components/ui'
 import { hasModule, isManagerRole } from '@/lib/business'
@@ -10,7 +10,7 @@ import { formatEUR, round2 } from '@/lib/money'
 import { formatQty, unitLabel } from '@/lib/units'
 import { useMediaQuery } from '@/lib/useMediaQuery'
 import { fetchCategories } from '@/features/products/api'
-import { createSale, fetchPosProducts, fetchRegisters, NetworkError, type CreateSaleInput, type PaymentMethod, type Sale } from './api'
+import { createSale, fetchPosProducts, fetchRegisters, NetworkError, PAYMENT_KIND_LABELS, type CreateSaleInput, type PaymentKind, type PaymentMethod, type Sale } from './api'
 import { addToCart, computeTotals, emptyCart, setLineDiscount, setLineStaff, setQuantity, type Cart, type CartLine, type PosProduct } from './cart'
 import { fetchAppointment, fetchStaff, initials, staffColor, type Appointment } from '@/features/salon/api'
 import { CameraScanner, CashDialog, DiscountDialog, LineDialog } from './dialogs'
@@ -18,12 +18,14 @@ import { enqueueSale, loadCatalog, loadHeld, nextOfflineNo, saveCatalog, saveHel
 import { PrintArea, Receipt } from './Receipt'
 import { SalesDialog } from './SalesDialog'
 import { QuickProductDialog } from './QuickProductDialog'
+import { BookEntryDialog, type BookEntry } from './BookEntryDialog'
 import { VariantPicker } from './VariantPicker'
 import { expiryStatus, fetchLots, formatExpiry, summarizeLots } from '@/lib/lots'
 import { printReceipt } from '@/lib/printer'
 import { serverDate, KOSOVO_TZ } from '@/lib/clock'
 import { fetchReceiptSettings } from '@/features/settings/api'
 import { fetchFiscalContext } from '@/lib/fiscal'
+import { t as tr, useLang } from '@/lib/i18n'
 import { fiscalizeSale } from './fiscal'
 
 const parseNum = (s: string) => {
@@ -73,6 +75,9 @@ export function PosPage() {
   // "+" in the till: the owner / manager (in the SEF app signed in with PIN) adds a product on the spot
   const canAddProduct = isManagerRole(profile.actual_role ?? profile.role)
   const [quickAdd, setQuickAdd] = useState<{ barcode: string | null } | null>(null)
+  // ATK (UA neni 45): coupons written by hand from the separate coupon book while the device was down
+  const [bookEntry, setBookEntry] = useState<BookEntry | null>(null)
+  const [bookOpen, setBookOpen] = useState(false)
   const products = useMemo(() => catalog.data?.products ?? [], [catalog.data])
   const categories = catalog.data?.categories ?? []
 
@@ -127,7 +132,9 @@ export function PosPage() {
   // ---------- UI state ----------
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState<string>('all')
+  const lang = useLang()
   const [method, setMethod] = useState<PaymentMethod>('cash')
+  const [cardKind, setCardKind] = useState<PaymentKind | 'card'>('card')
   const [tendered, setTendered] = useState('')
   const [cardPart, setCardPart] = useState('')
   const [busy, setBusy] = useState(false)
@@ -281,14 +288,15 @@ export function PosPage() {
         })),
         appointment_id: appointment?.id,
         invoice_discount: totals.invoiceDiscount || undefined,
-        payment: { method: m, tendered: m === 'card' ? undefined : tenderedAmount, card_amount: m === 'mixed' ? cardAmount : undefined },
-        client_created_at: serverDate().toISOString(),
+        payment: { method: m, tendered: m === 'card' ? undefined : tenderedAmount, card_amount: m === 'mixed' ? cardAmount : undefined, kind: m !== 'cash' && cardKind !== 'card' ? cardKind : undefined },
+        client_created_at: bookEntry ? bookEntry.at : serverDate().toISOString(),
+        ...(bookEntry ? { note: `Blloku i veçantë i kuponëve – nr. ${bookEntry.serial}` } : {}),
       }
       setBusy(true)
       try {
         const sale = await createSale(input)
         // ATK: the coupon is signed and sent before the receipt is printed.
-        const fiscal = await fiscalizeSale(sale, { key: input.client_id, registerId, operator: profile.full_name, saved: true }).catch((e: Error) => {
+        const fiscal = await fiscalizeSale(sale, { key: input.client_id, registerId, operator: profile.full_name, saved: true, issuedAt: bookEntry?.at }).catch((e: Error) => {
           setError('Kuponi fiskal nuk u krijua: ' + e.message)
           return null
         })
@@ -303,7 +311,7 @@ export function PosPage() {
           const queued = { ...input, offline: true, offline_no: offlineNo }
           await enqueueSale(queued)
           const local = localReceipt(queued, cart, totals, profile.full_name, registerName)
-          const fiscal = await fiscalizeSale(local, { key: input.client_id, registerId, operator: profile.full_name, saved: false }).catch(() => null)
+          const fiscal = await fiscalizeSale(local, { key: input.client_id, registerId, operator: profile.full_name, saved: false, issuedAt: bookEntry?.at }).catch(() => null)
           finish({ ...local, fiscal })
         } else setError((e as Error).message)
       } finally {
@@ -311,10 +319,11 @@ export function PosPage() {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [cart, totals, registerId, busy, registerName, profile.full_name, appointment],
+    [cart, totals, registerId, busy, registerName, profile.full_name, appointment, bookEntry, cardKind],
   )
 
   const finish = (sale: Sale) => {
+    setBookEntry(null)
     setReceipt(sale)
     setExchange(null)
     if (appointment) {
@@ -326,6 +335,7 @@ export function PosPage() {
     setTendered('')
     setCardPart('')
     setMethod('cash')
+    setCardKind('card')
     setCashOpen(false)
   }
 
@@ -570,6 +580,17 @@ export function PosPage() {
           <Plus className="h-6 w-6" />
         </button>
       )}
+      {canAddProduct && (
+        <button
+          type="button"
+          onClick={() => setBookOpen(true)}
+          title="Kupon nga blloku i veçantë (pajisja ishte e prishur)"
+          aria-label="Kupon nga blloku i veçantë"
+          className={cn('flex h-11 w-11 items-center justify-center rounded-xl border hover:bg-bg', bookEntry ? 'border-amber-700 bg-amber-100 text-amber-700' : 'border-line bg-white')}
+        >
+          <BookOpen className="h-5 w-5" />
+        </button>
+      )}
       {(registers.data?.length ?? 0) > 1 && (
         <Select
           aria-label="Arka"
@@ -614,7 +635,7 @@ export function PosPage() {
             submitSearch()
           } else if (e.key === 'Escape') setSearch('')
         }}
-        placeholder={wide ? 'Skano barkodin ose shkruaj emrin e produktit…' : 'Kërko produktin…'}
+        placeholder={wide ? tr('Skano barkodin ose shkruaj emrin e produktit…', lang) : tr('Kërko produktin…', lang)}
         className="h-[52px] w-full rounded-xl border-2 border-field bg-white pl-12 pr-14 text-[16px] focus:border-brand-600 focus:outline-none"
       />
       {search ? (
@@ -656,8 +677,21 @@ export function PosPage() {
     </div>
   ) : null
 
+  const bookBanner = bookEntry && (
+    <div className="flex items-center gap-2 rounded-ctl bg-amber-100 px-3 py-2 text-sm text-amber-700">
+      <BookOpen className="h-4 w-4 shrink-0" />
+      <span className="min-w-0 flex-1">
+        Kupon nga blloku nr. <b>{bookEntry.serial}</b>, lëshuar më {new Date(bookEntry.at).toLocaleString('en-GB', { timeZone: KOSOVO_TZ, dateStyle: 'short', timeStyle: 'short' })}
+      </span>
+      <button type="button" className="font-semibold underline" onClick={() => setBookEntry(null)}>
+        Anulo
+      </button>
+    </div>
+  )
+
   const sharedDialogs = (
     <>
+      <BookEntryDialog open={bookOpen} onClose={() => setBookOpen(false)} onSet={(b) => { setBookEntry(b); setBookOpen(false) }} />
       <QuickProductDialog
         open={Boolean(quickAdd)}
         type={business.type}
@@ -714,7 +748,7 @@ export function PosPage() {
         {receipt && (
           <div className="flex flex-col gap-4">
             <div className="text-center">
-              <div className="text-sm text-muted">{receipt.offline ? 'Ruajtur pa internet – dërgohet më vonë' : 'Pagesa u krye'}</div>
+              <div className="text-sm text-muted">{receipt.offline ? 'Ruajtur pa internet – dërgohet më vonë' : tr('Pagesa u krye', lang)}</div>
               {receipt.change_amount > 0 && (
                 <div className="mt-1 text-[28px] font-bold">
                   Kusuri <span className="text-warn-700">{formatEUR(receipt.change_amount)}</span>
@@ -726,10 +760,10 @@ export function PosPage() {
             </div>
             <div className="grid grid-cols-2 gap-2.5">
               <Button variant="secondary" size="lg" onClick={() => void print(receipt)}>
-                Printo
+                {tr('Printo', lang)}
               </Button>
               <Button size="lg" autoFocus onClick={() => setReceipt(null)}>
-                Shitje e re
+                {tr('Shitje e re', lang)}
               </Button>
             </div>
           </div>
@@ -793,7 +827,7 @@ export function PosPage() {
           {messages}
           <CameraScanner active={camera} onCode={onScan} />
           <div className="flex flex-wrap gap-2">
-            {[{ id: 'all', name: 'Të gjitha' }, ...categories].map((c) => (
+            {[{ id: 'all', name: tr('Të gjitha', lang) }, ...categories].map((c) => (
               <button
                 key={c.id}
                 type="button"
@@ -841,12 +875,13 @@ export function PosPage() {
         <div className="flex w-[400px] shrink-0 flex-col overflow-hidden rounded-card border border-line bg-white">
           <div className="flex items-start justify-between border-b border-line px-5 py-4">
             <div>
-              <div className="text-xl font-semibold">Faturë e re</div>
+              <div className="text-xl font-semibold">{tr('Faturë e re', lang)}</div>
               <div className="text-sm text-muted">
                 {cart.lines.length} {cart.lines.length === 1 ? 'produkt' : 'produkte'} · {new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 }).format(totals.itemsCount)} artikuj
                 {registerName && ` · ${registerName}`}
               </div>
               {exchangeBanner && <div className="mt-2">{exchangeBanner}</div>}
+              {bookBanner && <div className="mt-2">{bookBanner}</div>}
               {appointment && (
                 <div className="mt-1 text-sm font-medium text-brand-600">
                   Klienti: {appointment.customer_name} · termini{' '}
@@ -864,7 +899,7 @@ export function PosPage() {
             {cart.lines.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center text-muted">
                 <ScanLine className="h-8 w-8" />
-                Skano një barkod ose kliko një produkt
+                {tr('Skano një barkod ose kliko një produkt', lang)}
               </div>
             ) : (
               cartLines
@@ -878,7 +913,7 @@ export function PosPage() {
               </div>
             )}
             <div className="flex justify-between py-0.5 text-muted">
-              <span>Pa TVSH</span>
+              <span>{tr('Pa TVSH', lang)}</span>
               <span className="tabular-nums">{formatEUR(totals.netTotal)}</span>
             </div>
             {totals.vat
@@ -890,7 +925,7 @@ export function PosPage() {
                 </div>
               ))}
             <div className="mt-2 flex items-end justify-between border-t border-dashed border-field pt-2">
-              <span className="text-base font-semibold">Totali</span>
+              <span className="text-base font-semibold">{tr('Totali', lang)}</span>
               <span className="text-[32px] font-bold leading-none tabular-nums">{formatEUR(totals.total)}</span>
             </div>
           </div>
@@ -898,9 +933,9 @@ export function PosPage() {
             <div className="grid grid-cols-3 gap-2">
               {(
                 [
-                  ['cash', 'Kesh'],
-                  ['card', 'Kartelë'],
-                  ['mixed', 'Të kombinuara'],
+                  ['cash', tr('Kesh', lang)],
+                  ['card', tr('Kartelë', lang)],
+                  ['mixed', tr('Të kombinuara', lang)],
                 ] as const
               ).map(([m, label]) => (
                 <button
@@ -916,9 +951,23 @@ export function PosPage() {
                 </button>
               ))}
             </div>
+            {method !== 'cash' && (
+              <div className="flex flex-wrap gap-1.5">
+                {([['card', 'Kartelë'], ...Object.entries(PAYMENT_KIND_LABELS)] as [PaymentKind | 'card', string][]).map(([k, label0]) => [k, tr(label0, lang)] as const).map(([k, label]) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => setCardKind(k)}
+                    className={cn('h-9 rounded-full border px-3 text-sm font-semibold', cardKind === k ? 'border-brand-600 bg-brand-100 text-brand-600' : 'border-line bg-white text-muted')}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
             {method === 'mixed' && (
               <div className="flex flex-col gap-1">
-                <span className="text-xs text-muted">Me kartelë</span>
+                <span className="text-xs text-muted">Me {cardKind === 'card' ? 'kartelë' : PAYMENT_KIND_LABELS[cardKind].toLowerCase()}</span>
                 <input value={cardPart} onChange={(e) => setCardPart(e.target.value)} inputMode="decimal" placeholder="€0.00" className="h-11 rounded-ctl border border-field px-3 tabular-nums" />
               </div>
             )}
@@ -944,7 +993,7 @@ export function PosPage() {
               </div>
             )}
             <Button size="lg" className="h-[58px] text-[18px]" disabled={!cart.lines.length} loading={busy} onClick={payDesktop}>
-              Paguaj {formatEUR(due)} <span className="rounded-md border border-white/40 px-1.5 text-xs font-medium">F12</span>
+              {tr('Paguaj', lang)} {formatEUR(due)} <span className="rounded-md border border-white/40 px-1.5 text-xs font-medium">F12</span>
             </Button>
             <div className="grid grid-cols-3 gap-2">
               <Button variant="secondary" disabled={!cart.lines.length} onClick={() => setDiscountOpen(true)}>
@@ -970,10 +1019,11 @@ export function PosPage() {
       <div className="sticky top-[calc(var(--topbar,0px)+env(safe-area-inset-top))] z-20 border-b border-line bg-white px-4 pb-3 pt-4">
         <div className="mb-3 flex items-start justify-between">
           <div>
-            <h1 className="text-[26px] font-bold leading-tight">Faturë e re</h1>
+            <h1 className="text-[26px] font-bold leading-tight">{tr('Faturë e re', lang)}</h1>
             <div className="text-sm text-muted">
               {registerName ?? 'Arka'} · {new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 }).format(totals.itemsCount)} artikuj
             </div>
+            {bookBanner && <div className="mt-2">{bookBanner}</div>}
           </div>
           {toolbar}
         </div>
@@ -1058,10 +1108,10 @@ export function PosPage() {
         </div>
         <div className="grid grid-cols-[1fr_1.6fr] gap-2.5">
           <Button variant="secondary" size="lg" disabled={!cart.lines.length} loading={busy && !cashOpen} onClick={payCard}>
-            Kartelë
+            {tr('Kartelë', lang)}
           </Button>
           <Button size="lg" disabled={!cart.lines.length} onClick={() => setCashOpen(true)}>
-            Paguaj kesh
+            {tr('Paguaj kesh', lang)}
           </Button>
         </div>
       </div>
@@ -1100,6 +1150,7 @@ function localReceipt(
     vat_total: totals.vatTotal,
     vat_lines: totals.vat,
     payment_method: input.payment.method,
+    payment_kind: input.payment.kind ?? null,
     cash_amount: cash,
     card_amount: card,
     tendered: cash > 0 ? (t ?? cash) : null,

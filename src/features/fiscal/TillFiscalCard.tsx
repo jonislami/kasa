@@ -6,6 +6,7 @@ import { useBusiness } from '@/app/AuthProvider'
 import { Badge, Button, Card } from '@/components/ui'
 import { isManagerRole } from '@/lib/business'
 import { device } from '@/lib/device'
+import { UnsentExport } from './UnsentExport'
 import { fetchFiscalContext, isFiscalHere, registerOnDevice, type FiscalContext } from '@/lib/fiscal'
 
 /**
@@ -123,6 +124,11 @@ export function TillFiscalCard() {
         </div>
       ) : (
         <p className="mt-3 text-[15px] text-muted">Arka është gati për ATK. Pronari ose menaxheri hyn me PIN-in e vet në këtë arkë dhe e regjistron këtu.</p>
+      )}
+      {s.here && canRegister && (
+        <div className="mt-4 border-t border-line pt-4">
+          <UnsentExport includeDevice businessName={business.name} />
+        </div>
       )}
     </Card>
   )

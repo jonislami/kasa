@@ -14,8 +14,7 @@ export const ATK_CATEGORIES: AtkCategory[] = [
   { nr: 1, code: 'TT', name: 'Të tjera', description: 'Të tjera' },
   { nr: 2, code: 'UR', name: 'Ushqime restoranti', description: 'Ushqime të përgatitura në restorante dhe kuzhina' },
   { nr: 3, code: 'AU', name: 'Artikuj ushqimorë', description: 'Artikuj ushqimorë nga dyqanet me pakicë' },
-  // Row 4 is hard to read in the copy received: check the wording against the ATK original.
-  { nr: 4, code: 'VM', name: 'Vreshtari', description: 'Prodhime të vreshtarisë' },
+  { nr: 4, code: 'VM', name: 'Veshmbathje', description: 'Artikuj veshmbathje, tesha, këpucë, nga dyqanet me pakicë' },
   { nr: 5, code: 'KO', name: 'Kozmetikë', description: 'Produkte kozmetike dhe materiale për zbukurim' },
   { nr: 6, code: 'AP', name: 'Autopjesë', description: 'Autopjesë nga autoservise dhe dyqane e autopjesëve' },
   { nr: 7, code: 'BM', name: 'Barna mjekësore', description: 'Barna dhe pajisje mjekësore' },
@@ -98,7 +97,8 @@ export const ATK_UNITS: AtkUnit[] = [
   { nr: 18, code: 'MTS', name: 'M2', description: 'Njësi matëse e sipërfaqes' },
   { nr: 19, code: 'MTV', name: 'M3', description: 'Njësi matëse e vëllimit' },
   { nr: 20, code: 'MSK', name: 'M/S2', description: 'Njësi matëse e largësisë' },
-  { nr: 21, code: 'KËH', name: 'Këh', description: 'Njësi matëse e Fuqisë' },
+  // the official machine list (docx) has KWH; the scanned PDF prints "KËH"
+  { nr: 21, code: 'KWH', name: 'kWh', description: 'Njësi matëse e Fuqisë' },
   { nr: 22, code: 'NFJ', name: 'Numri i fjalëve', description: 'Njësi matëse e tekstit' },
   { nr: 23, code: 'NFQ', name: 'Numri i faqeve', description: 'Njësi matëse e largësisë' },
   { nr: 24, code: 'PRQ', name: 'Përqindje për njëqind', description: '%' },
@@ -139,4 +139,4 @@ export function unitCode(label: string | null | undefined): string | null {
 }
 
 /** Default ATK category of a Kasa business type, used when a product gets none. */
-export const DEFAULT_CATEGORY: Record<string, string> = { market: 'AU', restaurant: 'UR', pharmacy: 'BM', boutique: 'TT', salon: 'SHZ' }
+export const DEFAULT_CATEGORY: Record<string, string> = { market: 'AU', restaurant: 'UR', pharmacy: 'BM', boutique: 'VM', salon: 'SHZ' }

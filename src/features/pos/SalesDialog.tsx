@@ -12,6 +12,7 @@ import { formatEUR, formatInvoiceNo } from '@/lib/money'
 import { APPROVAL_MESSAGES, fetchTodaySales, getSale, localDate, voidSale, type Sale, type SaleRow } from './api'
 import { ApprovalDialog } from './dialogs'
 import { discardQueued, syncQueue, type QueuedSale } from './offline'
+import { PAYMENT_KIND_LABELS } from './api'
 import { Receipt } from './Receipt'
 
 const VOID_REASONS = ['Gabim në arkë', 'Klienti ndërroi mendje', 'Pagesa nuk u krye', 'Tjetër']
@@ -238,7 +239,7 @@ export function SalesDialog({
                             {r.offline && <Badge tone="amber">Offline</Badge>}
                           </div>
                           <div className="text-xs text-muted">
-                            {time(r.created_at)} · {PAY_LABEL[r.payment_method]} · {new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 }).format(r.items_count)} artikuj
+                            {time(r.created_at)} · {r.payment_kind ? PAYMENT_KIND_LABELS[r.payment_kind] : PAY_LABEL[r.payment_method]} · {new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 }).format(r.items_count)} artikuj
                           </div>
                         </div>
                         <span className={cn('font-bold tabular-nums', r.total < 0 && 'text-warn-700')}>{loadingId === r.id ? '…' : formatEUR(r.total)}</span>

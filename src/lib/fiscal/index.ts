@@ -201,6 +201,8 @@ export interface FiscalizeInput {
   operator: string
   /** CouponId of the original sale, for cancel / return. */
   referenceNo?: string | null
+  /** Time written on a coupon of the separate coupon book (UA neni 45); default: now (server time). */
+  issuedAt?: string | null
 }
 
 /** Signs the coupon; sends it now when possible. Returns null when this register does not fiscalize. */
@@ -210,7 +212,7 @@ export async function fiscalize(input: FiscalizeInput): Promise<FiscalReceipt | 
   const r = ctx.register
   const seq = await nextSeq(r.id, r.coupon_seq)
   const couponId = BigInt(ctx.branch_id) * 10n ** 12n + BigInt(r.pos_id!) * 10n ** 8n + BigInt(seq)
-  const issued = Math.floor(serverNow() / 1000)
+  const issued = Math.floor((input.issuedAt ? Date.parse(input.issuedAt) : serverNow()) / 1000)
   const verificationNo = newVerificationNo()
   const { pos, citizen } = buildCoupons(input.sale, {
     nui: ctx.nui,
@@ -305,6 +307,26 @@ async function queuedCoupons(): Promise<QueuedCoupon[]> {
   const keys = await device.storage.keys(Q_PREFIX)
   const list = (await Promise.all(keys.map((k) => device.storage.get<QueuedCoupon>(k)))).filter(Boolean) as QueuedCoupon[]
   return list.sort((a, b) => a.coupon_seq - b.coupon_seq)
+}
+
+/** Coupons on this device not yet confirmed by ATK (for the export on ATK's request – ndryshimi 2026). */
+export async function unsentOnDevice(): Promise<{ coupon_id: string; verification_no: string; coupon_type: number; issued_at: string; offline: boolean; status: string; error: string | null; attempts: number; register_id: string; reference_no: string | null; details: string; signature: string; qr: string; sale_saved: boolean }[]> {
+  return (await queuedCoupons()).map((q) => ({
+    coupon_id: q.coupon_id,
+    verification_no: q.verification_no,
+    coupon_type: q.coupon_type,
+    issued_at: q.issued_at,
+    offline: q.offline,
+    status: q.status,
+    error: q.error,
+    attempts: q.attempts,
+    register_id: q.register_id,
+    reference_no: q.reference_no,
+    details: q.details,
+    signature: q.signature,
+    qr: q.qr,
+    sale_saved: Boolean(q.sale_id),
+  }))
 }
 
 export interface FiscalQueueState {

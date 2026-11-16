@@ -6,6 +6,7 @@ import { PageHeader } from '@/app/layout/AppLayout'
 import { Badge, Button, Card, Dialog, Input, Select } from '@/components/ui'
 import { formatKosovoDateTime } from '@/lib/clock'
 import { device, isSefApp } from '@/lib/device'
+import { UnsentExport } from './UnsentExport'
 import {
   fetchFiscalContext,
   fetchFiscalRegisters,
@@ -33,7 +34,7 @@ const ENV_LABEL: Record<FiscalEnv, string> = { test: 'Test (fiskalizimi-test)', 
  * plus the registers' state and the coupons this device still has to send.
  */
 export function FiscalPage() {
-  const { profile } = useBusiness()
+  const { profile, business } = useBusiness()
   const owner = profile.role === 'admin'
   const qc = useQueryClient()
   const ctx = useQuery({ queryKey: ['fiscal-context'], queryFn: () => fetchFiscalContext(null) })
@@ -65,7 +66,7 @@ export function FiscalPage() {
 
   return (
     <>
-      <PageHeader eyebrow="ATK · Sistemi Elektronik Fiskal (SEF)" title="Fiskalizimi" />
+      <PageHeader eyebrow="ATK · Sistemi Elektronik Fiskal (SEF)" title="Fiskalizimi" actions={<UnsentExport includeDevice={false} businessName={business.name} />} />
       <div className="flex flex-col gap-4 px-4 pb-10 md:gap-5 md:px-8">
         {c && !c.application_id && (
           <p className="flex items-start gap-2 rounded-ctl bg-amber-100 px-4 py-3 text-sm text-amber-700">

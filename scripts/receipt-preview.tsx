@@ -67,11 +67,48 @@ const visible = (bytes: Uint8Array) => {
   return out
 }
 
-for (const width of [80, 58] as const) {
-  const text = visible(receiptBytes(sale, business, { ...DEFAULT_RECEIPT, paper_width: width, printer_charset: 'replace' }))
-  console.log(`===== ${width} mm =====`)
-  console.log(text.replace(/\n{3,}/g, '\n\n'))
+// The ATK samples (Shtojca F): discount on an item and on the total, a return and a cancel of that sale
+const discounted = {
+  ...sale,
+  invoice_no: 41,
+  subtotal: 12.9,
+  invoice_discount: 1.24,
+  discount_total: 1.74,
+  total: 11.16,
+  items: [
+    { ...item('1', 'QUMËSHT', 2, 2.5, 'D'), line_discount: 0.5, total: 4.5 },
+    item('2', 'COCA COLA', 3, 1.5, 'E'),
+    item('3', 'ENERGY DRINK', 2, 1.7, 'E'),
+  ],
+} as Sale
+const ref = {
+  invoice_no: 41, created_at: '2026-11-12T12:28:00Z', total: 12.9, subtotal: 12.9, invoice_discount: 0, net_total: 11.32, vat_total: 1.58,
+  vat_lines: [{ code: 'D', rate: 0.08, gross: 5, net: 4.63, vat: 0.37 }, { code: 'E', rate: 0.18, gross: 7.9, net: 6.69, vat: 1.21 }],
+  payment_method: 'card', items_count: 3, returned: -4,
+  items: [
+    { name: 'QUMËSHT', unit: 'cope', quantity: 2, unit_price: 2.5, line_discount: 0, total: 5, vat_code: 'D' },
+    { name: 'COCA COLA', unit: 'cope', quantity: 3, unit_price: 1.5, line_discount: 0, total: 4.5, vat_code: 'E' },
+    { name: 'ENERGY DRINK', unit: 'cope', quantity: 2, unit_price: 1.7, line_discount: 0, total: 3.4, vat_code: 'E' },
+  ],
+}
+const refund = {
+  ...sale, kind: 'refund', invoice_no: 42, ref_sale_id: 'x', ref_invoice_no: 41, total: -4, change_amount: 0, tendered: null, ref,
+  items: [{ ...item('4', 'QUMËSHT', -1, 2.5, 'D'), total: -2.5 }, { ...item('5', 'COCA COLA', -1, 1.5, 'E'), total: -1.5 }],
+} as Sale
+const cancel = { ...sale, kind: 'void', invoice_no: 43, ref_sale_id: 'x', ref_invoice_no: 41, total: -12.9, reason: 'Gabim gjatë shtypjes', change_amount: 0, tendered: null, ref: { ...ref, returned: 0 } } as Sale
+
+const cases: [string, Sale, number[]][] = [['SHITJE', sale, [80, 58]], ['ULJE', discounted, [80]], ['KTHIM', refund, [80, 58]], ['ANULIM', cancel, [80]]]
+for (const [name, s0, widths] of cases) {
+  for (const width of widths) {
+    const text = visible(receiptBytes(s0, business, { ...DEFAULT_RECEIPT, paper_width: width as 58 | 80, printer_charset: 'replace' }))
+    console.log(`===== ${name} · ${width} mm =====`)
+    console.log(text.replace(/\n{3,}/g, '\n\n'))
+  }
 }
 
 const out = process.argv[2]
-if (out) writeFileSync(out, renderToStaticMarkup(<Receipt sale={sale} business={business} settings={DEFAULT_RECEIPT} />))
+if (out)
+  writeFileSync(
+    out,
+    `<html><head><script src="https://cdn.tailwindcss.com"></script></head><body style="display:flex;gap:16px;align-items:flex-start;background:#ddd;padding:16px">${cases.map(([, x]) => renderToStaticMarkup(<Receipt sale={x} business={business} settings={DEFAULT_RECEIPT} />)).join('')}</body></html>`,
+  )
