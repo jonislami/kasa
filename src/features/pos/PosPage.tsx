@@ -10,7 +10,7 @@ import { formatEUR, round2 } from '@/lib/money'
 import { formatQty, unitLabel } from '@/lib/units'
 import { useMediaQuery } from '@/lib/useMediaQuery'
 import { fetchCategories } from '@/features/products/api'
-import { createSale, fetchPosProducts, fetchRegisters, NetworkError, type CreateSaleInput, type PaymentMethod, type Sale } from './api'
+import { createSale, fetchPosProducts, fetchRegisters, NetworkError, PAYMENT_KIND_LABELS, type CreateSaleInput, type PaymentKind, type PaymentMethod, type Sale } from './api'
 import { addToCart, computeTotals, emptyCart, setLineDiscount, setLineStaff, setQuantity, type Cart, type CartLine, type PosProduct } from './cart'
 import { fetchAppointment, fetchStaff, initials, staffColor, type Appointment } from '@/features/salon/api'
 import { CameraScanner, CashDialog, DiscountDialog, LineDialog } from './dialogs'
@@ -132,6 +132,7 @@ export function PosPage() {
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState<string>('all')
   const [method, setMethod] = useState<PaymentMethod>('cash')
+  const [cardKind, setCardKind] = useState<PaymentKind | 'card'>('card')
   const [tendered, setTendered] = useState('')
   const [cardPart, setCardPart] = useState('')
   const [busy, setBusy] = useState(false)
@@ -285,7 +286,7 @@ export function PosPage() {
         })),
         appointment_id: appointment?.id,
         invoice_discount: totals.invoiceDiscount || undefined,
-        payment: { method: m, tendered: m === 'card' ? undefined : tenderedAmount, card_amount: m === 'mixed' ? cardAmount : undefined },
+        payment: { method: m, tendered: m === 'card' ? undefined : tenderedAmount, card_amount: m === 'mixed' ? cardAmount : undefined, kind: m !== 'cash' && cardKind !== 'card' ? cardKind : undefined },
         client_created_at: bookEntry ? bookEntry.at : serverDate().toISOString(),
         ...(bookEntry ? { note: `Blloku i veçantë i kuponëve – nr. ${bookEntry.serial}` } : {}),
       }
@@ -316,7 +317,7 @@ export function PosPage() {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [cart, totals, registerId, busy, registerName, profile.full_name, appointment, bookEntry],
+    [cart, totals, registerId, busy, registerName, profile.full_name, appointment, bookEntry, cardKind],
   )
 
   const finish = (sale: Sale) => {
@@ -332,6 +333,7 @@ export function PosPage() {
     setTendered('')
     setCardPart('')
     setMethod('cash')
+    setCardKind('card')
     setCashOpen(false)
   }
 
@@ -947,9 +949,23 @@ export function PosPage() {
                 </button>
               ))}
             </div>
+            {method !== 'cash' && (
+              <div className="flex flex-wrap gap-1.5">
+                {([['card', 'Kartelë'], ...Object.entries(PAYMENT_KIND_LABELS)] as [PaymentKind | 'card', string][]).map(([k, label]) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => setCardKind(k)}
+                    className={cn('h-9 rounded-full border px-3 text-sm font-semibold', cardKind === k ? 'border-brand-600 bg-brand-100 text-brand-600' : 'border-line bg-white text-muted')}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
             {method === 'mixed' && (
               <div className="flex flex-col gap-1">
-                <span className="text-xs text-muted">Me kartelë</span>
+                <span className="text-xs text-muted">Me {cardKind === 'card' ? 'kartelë' : PAYMENT_KIND_LABELS[cardKind].toLowerCase()}</span>
                 <input value={cardPart} onChange={(e) => setCardPart(e.target.value)} inputMode="decimal" placeholder="€0.00" className="h-11 rounded-ctl border border-field px-3 tabular-nums" />
               </div>
             )}
@@ -1132,6 +1148,7 @@ function localReceipt(
     vat_total: totals.vatTotal,
     vat_lines: totals.vat,
     payment_method: input.payment.method,
+    payment_kind: input.payment.kind ?? null,
     cash_amount: cash,
     card_amount: card,
     tendered: cash > 0 ? (t ?? cash) : null,

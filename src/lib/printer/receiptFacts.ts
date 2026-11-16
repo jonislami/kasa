@@ -161,7 +161,16 @@ export function receiptFacts(sale: Sale, business: Business, copy?: boolean): Re
   const reasonLine = sale.reason ? `${sale.kind === 'void' ? 'ARSYEJA E ANULIMIT' : 'ARSYEJA'}: ${sale.reason}` : null
 
   const mixed = (cash: number, card: number) => `KESH ${n2(Math.abs(cash))} + KARTELË ${n2(Math.abs(card))}`
-  const ownPayment = sale.payment_method === 'mixed' ? mixed(sale.cash_amount, sale.card_amount) : null
+  const KIND: Record<string, string> = { bank: 'TRANSFER BANKAR', voucher: 'VAUÇER', cheque: 'ÇEK' }
+  const kindLabel = sale.payment_kind ? KIND[sale.payment_kind] : null
+  const ownPayment =
+    sale.payment_method === 'mixed'
+      ? kindLabel
+        ? `KESH ${n2(Math.abs(sale.cash_amount))} + ${kindLabel} ${n2(Math.abs(sale.card_amount))}`
+        : mixed(sale.cash_amount, sale.card_amount)
+      : sale.payment_method === 'card' && kindLabel
+        ? kindLabel
+        : null
 
   let main: ReceiptBlock
   let returned: ReceiptFacts['returned'] = null

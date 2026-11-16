@@ -20,12 +20,16 @@ export interface FiscalSaleItem {
   atk_type?: string | null
 }
 
+/** Non-cash part when it is not a card (0033). */
+export type FiscalPaymentKind = 'bank' | 'voucher' | 'cheque' | null | undefined
+
 export interface FiscalSale {
   kind: 'sale' | 'void' | 'refund'
   total: number
   discount_total: number
   cash_amount: number
   card_amount: number
+  payment_kind?: FiscalPaymentKind
   vat_lines: { code: VatCode; gross: number; net: number; vat: number }[]
   items: FiscalSaleItem[]
 }
@@ -88,7 +92,8 @@ export function buildCoupons(sale: FiscalSale, h: FiscalHeader): { pos: PosCoupo
   const cash = total - card > 0n ? total - card : 0n
   const payments: Payment[] = [
     ...(cash > 0n ? [{ Type: PaymentType.Cash, Amount: cash }] : []),
-    ...(card > 0n ? [{ Type: PaymentType.CreditCard, Amount: card > total ? total : card }] : []),
+    // the non-cash part: card, or voucher / cheque / bank transfer ("Other") – ATK PaymentType
+    ...(card > 0n ? [{ Type: sale.payment_kind === 'voucher' ? PaymentType.Voucher : sale.payment_kind === 'cheque' ? PaymentType.Cheque : sale.payment_kind === 'bank' ? PaymentType.Other : PaymentType.CreditCard, Amount: card > total ? total : card }] : []),
   ]
 
   const head = {

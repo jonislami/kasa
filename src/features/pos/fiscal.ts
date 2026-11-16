@@ -10,6 +10,7 @@ export function toFiscalSale(sale: Sale): FiscalSale {
     discount_total: sale.discount_total,
     cash_amount: sale.cash_amount,
     card_amount: sale.card_amount,
+    payment_kind: sale.payment_kind ?? null,
     vat_lines: sale.vat_lines,
     items: sale.items.map((i) => ({ name: i.name, unit: i.unit, quantity: i.quantity, unit_price: i.unit_price, total: i.total, vat_code: i.vat_code, atk_type: i.atk_type ?? null })),
   }

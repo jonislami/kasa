@@ -7,6 +7,9 @@ import type { PosProduct } from './cart'
 
 export type SaleKind = 'sale' | 'void' | 'refund'
 export type PaymentMethod = 'cash' | 'card' | 'mixed'
+/** Non-cash payments other than a card (UA neni 7: llogari bankare, vauçer, çek). */
+export type PaymentKind = 'bank' | 'voucher' | 'cheque'
+export const PAYMENT_KIND_LABELS: Record<PaymentKind, string> = { bank: 'Transfer bankar', voucher: 'Vauçer', cheque: 'Çek' }
 
 export interface SaleItem {
   id: string
@@ -44,6 +47,7 @@ export interface Sale {
   vat_total: number
   vat_lines: { code: VatCode; rate: number; gross: number; net: number; vat: number }[]
   payment_method: PaymentMethod
+  payment_kind?: PaymentKind | null
   cash_amount: number
   card_amount: number
   tendered: number | null
@@ -90,7 +94,8 @@ export interface CreateSaleInput {
   /** Restaurant: the open order (table) being paid – whole or some lines (split bill). */
   order_id?: string
   invoice_discount?: number
-  payment: { method: PaymentMethod; card_amount?: number; tendered?: number }
+  /** kind: what the non-cash part is when it is not a card (0033). */
+  payment: { method: PaymentMethod; card_amount?: number; tendered?: number; kind?: PaymentKind }
   offline?: boolean
   offline_no?: string
   client_created_at?: string
