@@ -6,8 +6,8 @@
 // PosCoupon and CitizenCoupon get the same header and totals, otherwise ATK marks the coupon
 // "FAILED VERIFICATION". Cancel / return coupons carry positive amounts and ReferenceNo = original CouponId.
 import type { VatCode } from '@/lib/vat'
-import { categoryCode, unitCode } from '@/lib/atk/catalog'
-import { UNITS, type UnitCode } from '@/lib/units'
+import { categoryCode, unitCode } from '../atk/catalog'
+import { UNITS, type UnitCode } from '../units'
 import { CouponType, PaymentType, type CitizenCoupon, type CouponItem, type CouponTypeValue, type Payment, type PosCoupon, type TaxGroup } from './protobuf'
 
 export interface FiscalSaleItem {
