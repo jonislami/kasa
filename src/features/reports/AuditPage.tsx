@@ -3,7 +3,8 @@ import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
 import { KOSOVO_TZ } from '@/lib/clock'
 import { createPortal } from 'react-dom'
 import { useBusiness } from '@/app/AuthProvider'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { supabase } from '@/lib/supabase'
 import { PageHeader } from '@/app/layout/AppLayout'
 import { Badge, Button, Card, EmptyState, Select } from '@/components/ui'
 import { formatEUR } from '@/lib/money'
@@ -15,6 +16,8 @@ type Tone = 'success' | 'warn' | 'amber' | 'neutral' | 'info'
 
 const ACTIONS: Record<string, { label: string; tone: Tone }> = {
   login: { label: 'Hyrje', tone: 'neutral' },
+  fiscal_export: { label: 'Eksport kuponësh për ATK', tone: 'amber' },
+  sef_update: { label: 'Përditësim i programit', tone: 'info' },
   pin_login: { label: 'Hyrje me PIN', tone: 'neutral' },
   login_failed: { label: 'Hyrje e dështuar', tone: 'warn' },
   sale: { label: 'Shitje', tone: 'success' },
@@ -145,6 +148,15 @@ export function AuditPage() {
     return s ? list.filter((x) => x.text.toLowerCase().includes(s)) : list
   }, [audit.data, q])
 
+  // ATK: audit logs protected with an integrity check (0034, audit_verify)
+  const verify = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.rpc('audit_verify')
+      if (error) throw new Error(['PGRST202', '42883'].includes(error.code ?? '') ? 'Kjo kërkon migrimin 0034_audit_integrity.sql në Supabase.' : error.message)
+      return data as { ok: boolean; checked: number; broken: { id: number; action: string }[] }
+    },
+  })
+
   const exportCsv = () => {
     const esc = (v: string) => `"${v.replace(/"/g, '""')}"`
     const lines = [
@@ -166,6 +178,9 @@ export function AuditPage() {
         title="Regjistri i veprimeve"
         actions={
           <div className="flex gap-2 print:hidden">
+            <Button variant="secondary" loading={verify.isPending} onClick={() => verify.mutate()}>
+              Kontrollo integritetin
+            </Button>
             <Button variant="secondary" onClick={exportCsv} disabled={rows.length === 0}>
               CSV
             </Button>
@@ -175,7 +190,15 @@ export function AuditPage() {
           </div>
         }
       />
-      <p className="-mt-5 hidden px-8 pb-5 text-muted md:block">Çdo veprim në arkë dhe në cilësime, me kohën dhe përdoruesin. Nuk mund të fshihet.</p>
+      <p className="-mt-5 hidden px-8 pb-5 text-muted md:block">Çdo veprim në arkë dhe në cilësime, me kohën dhe përdoruesin. Nuk mund të fshihet; çdo rresht është i lidhur me të mëparshmin (SHA-256), që çdo ndryshim të zbulohet.</p>
+      {verify.data && (
+        <div className={`mx-4 mb-4 rounded-ctl px-4 py-3 text-sm md:mx-8 ${verify.data.ok ? 'bg-brand-100 text-brand-600' : 'bg-warn-100 text-warn-700'}`}>
+          {verify.data.ok
+            ? `Integriteti në rregull: ${verify.data.checked} veprime të kontrolluara, asnjë ndryshim.`
+            : `Kujdes: ${verify.data.broken.length} veprime nuk përputhen me zinxhirin (${verify.data.broken.map((b) => '#' + b.id).join(', ')}).`}
+        </div>
+      )}
+      {verify.error && <div className="mx-4 mb-4 rounded-ctl bg-warn-100 px-4 py-3 text-sm text-warn-700 md:mx-8">{(verify.error as Error).message}</div>}
 
       <div className="px-4 pb-8 pt-4 md:px-8 md:pt-0">
         <Card className="overflow-hidden">

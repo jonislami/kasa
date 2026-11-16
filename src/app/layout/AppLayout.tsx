@@ -1,7 +1,8 @@
 import { Outlet, useNavigate } from 'react-router-dom'
 import { useEffect, type ReactNode } from 'react'
 import { ensureDeviceLinked, getLink } from '@/lib/deviceLink'
-import { isSefApp } from '@/lib/device'
+import { device, isSefApp } from '@/lib/device'
+import { supabase } from '@/lib/supabase'
 import { ClockBar, FiscalBar, OfflineBar } from '@/app/AppStatus'
 import { LicenseBanner } from '@/app/LicenseBanner'
 import { TillFiscalBanner } from '@/features/fiscal/TillFiscalCard'
@@ -99,6 +100,16 @@ export function AppLayout() {
   useEffect(() => {
     if (!isSefApp || profile.role === 'accountant') return
     void ensureDeviceLinked({ id: business.id, name: business.name }, isManagerRole(profile.role)).catch(() => undefined)
+    // ATK: the SEF keeps a trail of changes to the software – every new version on this device goes to the audit log
+    const key = 'kasa.sef.version'
+    const last = localStorage.getItem(key)
+    if (last !== device.appVersion) {
+      void device.getDeviceId().then((id) =>
+        supabase.rpc('log_action', { p_action: 'sef_update', p_entity: 'device', p_entity_id: id, p_details: { from: last, to: device.appVersion, platform: device.platform } }).then(({ error }) => {
+          if (!error) localStorage.setItem(key, device.appVersion)
+        }),
+      )
+    }
   }, [business.id, business.name, profile.role])
 
   if (profile.role === 'worker') {

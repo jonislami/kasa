@@ -307,6 +307,26 @@ async function queuedCoupons(): Promise<QueuedCoupon[]> {
   return list.sort((a, b) => a.coupon_seq - b.coupon_seq)
 }
 
+/** Coupons on this device not yet confirmed by ATK (for the export on ATK's request – ndryshimi 2026). */
+export async function unsentOnDevice(): Promise<{ coupon_id: string; verification_no: string; coupon_type: number; issued_at: string; offline: boolean; status: string; error: string | null; attempts: number; register_id: string; reference_no: string | null; details: string; signature: string; qr: string; sale_saved: boolean }[]> {
+  return (await queuedCoupons()).map((q) => ({
+    coupon_id: q.coupon_id,
+    verification_no: q.verification_no,
+    coupon_type: q.coupon_type,
+    issued_at: q.issued_at,
+    offline: q.offline,
+    status: q.status,
+    error: q.error,
+    attempts: q.attempts,
+    register_id: q.register_id,
+    reference_no: q.reference_no,
+    details: q.details,
+    signature: q.signature,
+    qr: q.qr,
+    sale_saved: Boolean(q.sale_id),
+  }))
+}
+
 export interface FiscalQueueState {
   waiting: number
   failed: number
