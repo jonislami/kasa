@@ -13,6 +13,7 @@ import { APPROVAL_MESSAGES, fetchTodaySales, getSale, localDate, voidSale, type 
 import { ApprovalDialog } from './dialogs'
 import { discardQueued, syncQueue, type QueuedSale } from './offline'
 import { PAYMENT_KIND_LABELS } from './api'
+import { EcouponButton } from './EcouponDialog'
 import { Receipt } from './Receipt'
 
 const VOID_REASONS = ['Gabim në arkë', 'Klienti ndërroi mendje', 'Pagesa nuk u krye', 'Tjetër']
@@ -148,10 +149,11 @@ export function SalesDialog({
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 <Button variant="secondary" onClick={() => onPrint(selected)}>
                   Printo kopje
                 </Button>
+                <EcouponButton saleId={selected.id} disabled={selected.offline} />
                 <Button
                   variant="secondary"
                   disabled={selected.kind !== 'sale' || selected.voided}

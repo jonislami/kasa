@@ -115,4 +115,4 @@ Legjenda: ✅ e plotësuar · 🟡 pjesërisht · ❌ mungon · ➖ nuk vlen pë
 | A30 Pagesat | transfer bankar, vauçer, çek (ATK: Voucher 3, Cheque 4, Other 6) | ✅ (kërkon 0033) |
 | A31 Një artikull – një rresht | grupim në kupon dhe te ATK | ✅ |
 | A27 Serbishtja | arka (hyrja, menuja, shitja, pagesa) dhe kuponi; zgjedhja te Printeri | 🟡 paneli i menaxhimit në web mbetet shqip |
-| A32 e-kupon | – | opsional, jo i bërë |
+| A32 e-kupon | kuponi me email (Edge Function send-ecoupon), me pëlqimin e blerësit, QR dhe "e-kuponi" | ✅ (kërkon send-ecoupon) |
