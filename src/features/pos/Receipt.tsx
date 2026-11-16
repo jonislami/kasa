@@ -35,9 +35,9 @@ export function Receipt({
 
   const lines = (ls: ReceiptLine[]) => (
     <div className="grid grid-cols-[1fr_auto_auto] gap-x-2">
-      <span className="border-b border-black">ARTIKULLI</span>
-      <span className="border-b border-black text-right">SASIA X ÇMIMI</span>
-      <span className="border-b border-black text-right">SHUMA</span>
+      <span className="border-b border-black">{x.L.item}</span>
+      <span className="border-b border-black text-right">{x.L.qtyPrice}</span>
+      <span className="border-b border-black text-right">{x.L.amount}</span>
       {ls.map((l, k) => (
         <div key={k} className="contents">
           <span className="min-w-0 break-words">{l.name}</span>
@@ -58,15 +58,15 @@ export function Receipt({
     <div className={cn('mx-auto bg-white font-mono leading-snug text-black', narrow ? 'w-[58mm] px-1 text-[11px]' : 'w-[80mm] px-3 text-[12.5px]')}>
       <div className="flex flex-col items-center pt-4 text-center">
         {settings?.receipt_header && <div className={cn('font-bold', big)}>{settings.receipt_header}</div>}
-        <div>TATIMPAGUESI: {business.name}</div>
+        <div>{x.L.taxpayer}: {business.name}</div>
         {x.header.map(([k, v]) => (
-          <div key={k} className={k === 'NF-NUI' || k === 'NUMRI I TVSH-SË' ? 'font-semibold' : undefined}>
+          <div key={k} className={k === x.header.find(([h]) => h.includes('NUI') || h.includes('JIB'))?.[0] || k.includes('TVSH') || k.includes('PDV') ? 'font-semibold' : undefined}>
             {k}: {v}
           </div>
         ))}
       </div>
       <Rule hash />
-      {sale.worker_name && <div className="text-right text-[0.9em]">EMRI I PUNËTORIT: {sale.worker_name}</div>}
+      {sale.worker_name && <div className="text-right text-[0.9em]">{x.L.worker}: {sale.worker_name}</div>}
       <div className={cn('mt-1 text-center font-bold', big)}>{x.title}</div>
       {x.marks.map((m) => (
         <div key={m} className="text-center font-semibold">
@@ -79,62 +79,62 @@ export function Receipt({
       {lines(x.main.lines)}
       {x.main.subtotal && (
         <>
-          <Row l={<b>NËNTOTALI</b>} r={<b>{x.main.subtotal.value}</b>} />
+          <Row l={<b>{x.L.subtotal}</b>} r={<b>{x.main.subtotal.value}</b>} />
           <Row l={<i>{x.main.subtotal.label}</i>} r={<i>{x.main.subtotal.discount}</i>} />
         </>
       )}
       <div className={cn('mt-1 flex items-baseline justify-between border-t border-black pt-1 font-bold', big)}>
-        <span>TOTALI PËR PAGESË</span>
+        <span>{x.L.total}</span>
         <span className="tabular-nums">{x.main.total}€</span>
       </div>
-      <Row l="MËNYRA E PAGESËS" r={x.main.payment} />
-      {!x.returned && sale.kind === 'sale' && sale.tendered != null && sale.tendered !== sale.cash_amount && <Row l="PAGUAR" r={n2(sale.tendered)} />}
-      {!x.returned && sale.change_amount > 0 && <Row l="KUSURI" r={n2(sale.change_amount)} />}
+      <Row l={x.L.payment} r={x.main.payment} />
+      {!x.returned && sale.kind === 'sale' && sale.tendered != null && sale.tendered !== sale.cash_amount && <Row l={x.L.paid} r={n2(sale.tendered)} />}
+      {!x.returned && sale.change_amount > 0 && <Row l={x.L.change} r={n2(sale.change_amount)} />}
       {x.main.vat.map(([k, v]) => (
         <Row key={k} l={k} r={`${v}€`} />
       ))}
       <div className="border-b border-dashed border-black">
-        <Row l="TOTALI PA TVSH" r={`${x.main.net}€`} />
+        <Row l={x.L.net} r={`${x.main.net}€`} />
       </div>
 
       {x.returned && (
         <>
           <Rule hash />
-          <div className="text-center">KTHIMI I ARTIKUJVE</div>
+          <div className="text-center">{x.L.returnedTitle}</div>
           <Rule hash />
           {lines(x.returned.lines)}
           <div className="border-t border-black">
-            <Row l="TOTALI I KTHIMIT" r={`${x.returned.total}€`} />
+            <Row l={x.L.returnedTotal} r={`${x.returned.total}€`} />
           </div>
           <div className={cn('flex items-baseline justify-between border-t border-black pt-1 font-bold', big)}>
-            <span>TOTALI I MBETUR</span>
+            <span>{x.L.remaining}</span>
             <span className="tabular-nums">{x.returned.remaining}€</span>
           </div>
         </>
       )}
 
-      <div className="text-right">{x.returned ? `ARTIKUJ TË KTHYER - ${x.returned.count}` : `ARTIKUJ - ${x.main.itemsCount}`}</div>
+      <div className="text-right">{x.returned ? `${x.L.itemsReturned} - ${x.returned.count}` : `${x.L.items} - ${x.main.itemsCount}`}</div>
       <div>{x.number}</div>
-      <Row l="DATA DHE ORA" r={x.dateTime} />
-      {f && <Row l="NR. IDENTIFIKUES I SEF" r={f.sef_no} />}
+      <Row l={x.L.dateTime} r={x.dateTime} />
+      {f && <Row l={x.L.sefNo} r={f.sef_no} />}
       {f && <div className="mt-1 font-semibold">NUIKF: {f.verification_no}</div>}
       <div className="mt-2 text-center">
-        {f ? 'KUPON FISKAL' : 'KUPON'} DITOR NR. {x.dailyNo}
+        {x.L.daily} {x.dailyNo}
       </div>
 
       {f ? (
         <>
           <QrImage text={f.qr} className={cn('mx-auto my-2', narrow ? 'w-[36mm]' : 'w-[40mm]')} />
-          {f.status === 'failed' && <div className="text-center text-[11px]">ATK e refuzoi: {f.error}</div>}
+          {f.status === 'failed' && <div className="text-center text-[11px]">{x.L.rejected}: {f.error}</div>}
           <FiscalLogo />
         </>
       ) : (
-        <div className="mt-3 text-center text-[11px]">Ky kupon nuk është fiskal.</div>
+        <div className="mt-3 text-center text-[11px]">{x.L.notFiscal}</div>
       )}
 
       <div className="mt-2 pb-1 text-center">
         {footer && <div className="uppercase">{footer}</div>}
-        <div className="text-[10px]">Mundësuar nga Kasa</div>
+        <div className="text-[10px]">{x.L.poweredBy}</div>
       </div>
       <div className="pb-5" />
     </div>

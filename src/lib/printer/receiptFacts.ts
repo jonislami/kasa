@@ -6,6 +6,7 @@
 // free text.
 import type { Business } from '@/app/AuthProvider'
 import type { Sale, SaleRef } from '@/features/pos/api'
+import { getLang, t, type Lang } from '../i18n'
 
 export const n2 = (v: number) => new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false }).format(v)
 export const qty = (v: number, unit: string) => new Intl.NumberFormat('en-US', { maximumFractionDigits: unit === 'kg' ? 3 : 0, useGrouping: false }).format(v)
@@ -31,9 +32,11 @@ export function receiptDateTime(iso: string, seconds = true): string {
 }
 
 const PAYMENT = { cash: 'KESH', card: 'KARTELË', mixed: 'KESH + KARTELË' } as Record<string, string>
+const payLabel = (m: string, lang: Lang) => (m === 'mixed' ? `${t('KESH', lang)} + ${t('KARTELË', lang)}` : t(PAYMENT[m] ?? m.toUpperCase(), lang))
 
 /** "Ulje 10%" when the discount is a round percentage of the amount, otherwise "Ulje". */
-function discountLabel(word: string, discount: number, of: number): string {
+function discountLabel(word: string, discount: number, of: number, lang: Lang = getLang()): string {
+  word = t(word, lang)
   if (!of || !discount) return word
   const pct = (Math.abs(discount) / Math.abs(of)) * 100
   return Math.abs(pct - Math.round(pct)) < 0.05 && Math.round(pct) > 0 ? `${word} ${Math.round(pct)}%` : word
@@ -61,7 +64,34 @@ export interface ReceiptBlock {
   itemsCount: number
 }
 
+/** Fixed texts of the coupon in the language of the till. */
+export interface ReceiptLabels {
+  taxpayer: string
+  worker: string
+  item: string
+  qtyPrice: string
+  amount: string
+  subtotal: string
+  total: string
+  payment: string
+  paid: string
+  change: string
+  net: string
+  returnedTitle: string
+  returnedTotal: string
+  remaining: string
+  items: string
+  itemsReturned: string
+  dateTime: string
+  sefNo: string
+  daily: string
+  notFiscal: string
+  poweredBy: string
+  rejected: string
+}
+
 export interface ReceiptFacts {
+  L: ReceiptLabels
   /** [label, value] under TATIMPAGUESI. */
   header: [string, string][]
   /** KUPON FISKAL / KUPON FISKAL I ANULUAR / KUPON FISKAL KTHIMI / KUPON JO-FISKAL … */
@@ -135,28 +165,28 @@ function blockOf(
     lines,
     subtotal: inv > 0.004 ? { value: n2(after), label: discountLabel('ULJE', inv, after), discount: n2(-inv) } : null,
     total: n2(Math.abs(totals.total)),
-    payment: extraPayment ?? PAYMENT[totals.payment_method] ?? totals.payment_method.toUpperCase(),
+    payment: extraPayment ?? payLabel(totals.payment_method, getLang()),
     vat: (totals.vat_lines ?? [])
       .filter((v) => v.code === 'D' || v.code === 'E')
       .filter((v) => Math.abs(v.vat) > 0.004)
-      .map((v) => [`TVSH ${v.code} ${Math.round(Number(v.rate) * 100)}%`, n2(Math.abs(v.vat))]),
+      .map((v) => [`${t('TVSH')} ${v.code} ${Math.round(Number(v.rate) * 100)}%`, n2(Math.abs(v.vat))]),
     net: n2(Math.abs(totals.net_total)),
     itemsCount: groupItems(items).length,
   }
 }
 
-export function receiptFacts(sale: Sale, business: Business, copy?: boolean): ReceiptFacts {
+export function receiptFacts(sale: Sale, business: Business, copy?: boolean, lang: Lang = getLang()): ReceiptFacts {
   const f = sale.fiscal ?? null
   const offline = sale.offline || Boolean(f?.offline)
   const unitNo = f?.sef_no ? f.sef_no.split('-')[0] : null
   const header: [string, string][] = []
-  header.push(['EMRI I NJËSISË', business.name])
-  if (unitNo) header.push(['NUMRI I NJËSISË', unitNo])
-  if (business.address) header.push(['ADRESA E NJËSISË', business.address])
-  if (business.city) header.push(['VENDI', business.city])
-  if (business.phone) header.push(['TELEFONI', business.phone])
-  if (business.nui) header.push(['NF-NUI', business.nui])
-  if (business.vat_number) header.push(['NUMRI I TVSH-SË', business.vat_number])
+  header.push([t('EMRI I NJËSISË', lang), business.name])
+  if (unitNo) header.push([t('NUMRI I NJËSISË', lang), unitNo])
+  if (business.address) header.push([t('ADRESA E NJËSISË', lang), business.address])
+  if (business.city) header.push([t('VENDI', lang), business.city])
+  if (business.phone) header.push([t('TELEFONI', lang), business.phone])
+  if (business.nui) header.push([t('NF-NUI', lang), business.nui])
+  if (business.vat_number) header.push([t('NUMRI I TVSH-SË', lang), business.vat_number])
 
   const fiscal = Boolean(f)
   const title =
@@ -171,25 +201,26 @@ export function receiptFacts(sale: Sale, business: Business, copy?: boolean): Re
         : fiscal
           ? 'KUPON FISKAL'
           : 'KUPON JO-FISKAL'
+  const titleText = t(title, lang)
   const marks: string[] = []
-  if (!fiscal && sale.kind !== 'sale') marks.push('JO-FISKAL')
-  if (sale.note?.startsWith('Blloku i veçantë')) marks.push(sale.note.toUpperCase())
-  if (copy) marks.push('KOPJE E KUPONIT')
+  if (!fiscal && sale.kind !== 'sale') marks.push(t('JO-FISKAL', lang))
+  if (sale.note?.startsWith('Blloku i veçantë')) marks.push(sale.note.toUpperCase().replace('BLLOKU I VEÇANTË I KUPONËVE – NR.', t('BLLOKU I VEÇANTË I KUPONËVE – NR.', lang)))
+  if (copy) marks.push(t('KOPJE E KUPONIT', lang))
   if (offline) marks.push('OFFLINE')
-  if (f?.env === 'test') marks.push('TEST – PA VLERË FISKALE')
+  if (f?.env === 'test') marks.push(t('TEST – PA VLERË FISKALE', lang))
 
   const ref = sale.ref ?? null
   const refNo = sale.ref_invoice_no != null ? pad(sale.ref_invoice_no, 10) : null
-  const refLine = sale.kind !== 'sale' && sale.ref_invoice_no != null ? `KUPON FISKAL NR. ${sale.ref_invoice_no}${ref?.created_at ? ` DATË: ${receiptDateTime(ref.created_at, false)}` : ''}` : null
-  const reasonLine = sale.reason ? `${sale.kind === 'void' ? 'ARSYEJA E ANULIMIT' : 'ARSYEJA'}: ${sale.reason}` : null
+  const refLine = sale.kind !== 'sale' && sale.ref_invoice_no != null ? `${t('KUPON FISKAL NR.', lang)} ${sale.ref_invoice_no}${ref?.created_at ? ` ${t('DATË:', lang)} ${receiptDateTime(ref.created_at, false)}` : ''}` : null
+  const reasonLine = sale.reason ? `${t(sale.kind === 'void' ? 'ARSYEJA E ANULIMIT' : 'ARSYEJA', lang)}: ${sale.reason}` : null
 
-  const mixed = (cash: number, card: number) => `KESH ${n2(Math.abs(cash))} + KARTELË ${n2(Math.abs(card))}`
+  const mixed = (cash: number, card: number) => `${t('KESH', lang)} ${n2(Math.abs(cash))} + ${t('KARTELË', lang)} ${n2(Math.abs(card))}`
   const KIND: Record<string, string> = { bank: 'TRANSFER BANKAR', voucher: 'VAUÇER', cheque: 'ÇEK' }
-  const kindLabel = sale.payment_kind ? KIND[sale.payment_kind] : null
+  const kindLabel = sale.payment_kind ? t(KIND[sale.payment_kind], lang) : null
   const ownPayment =
     sale.payment_method === 'mixed'
       ? kindLabel
-        ? `KESH ${n2(Math.abs(sale.cash_amount))} + ${kindLabel} ${n2(Math.abs(sale.card_amount))}`
+        ? `${t('KESH', lang)} ${n2(Math.abs(sale.cash_amount))} + ${kindLabel} ${n2(Math.abs(sale.card_amount))}`
         : mixed(sale.cash_amount, sale.card_amount)
       : sale.payment_method === 'card' && kindLabel
         ? kindLabel
@@ -215,9 +246,34 @@ export function receiptFacts(sale: Sale, business: Business, copy?: boolean): Re
   }
 
   const invoice = sale.offline_no && sale.invoice_no === 0 ? sale.offline_no : pad(sale.invoice_no, 10)
+  const L: ReceiptLabels = {
+    taxpayer: t('TATIMPAGUESI', lang),
+    worker: t('EMRI I PUNËTORIT', lang),
+    item: t('ARTIKULLI', lang),
+    qtyPrice: t('SASIA X ÇMIMI', lang),
+    amount: t('SHUMA', lang),
+    subtotal: t('NËNTOTALI', lang),
+    total: t('TOTALI PËR PAGESË', lang),
+    payment: t('MËNYRA E PAGESËS', lang),
+    paid: t('PAGUAR', lang),
+    change: t('KUSURI', lang),
+    net: t('TOTALI PA TVSH', lang),
+    returnedTitle: t('KTHIMI I ARTIKUJVE', lang),
+    returnedTotal: t('TOTALI I KTHIMIT', lang),
+    remaining: t('TOTALI I MBETUR', lang),
+    items: t('ARTIKUJ', lang),
+    itemsReturned: t('ARTIKUJ TË KTHYER', lang),
+    dateTime: t('DATA DHE ORA', lang),
+    sefNo: t('NR. IDENTIFIKUES I SEF', lang),
+    daily: t(fiscal ? 'KUPON FISKAL DITOR NR.' : 'KUPON DITOR NR.', lang),
+    notFiscal: t('Ky kupon nuk është fiskal.', lang),
+    poweredBy: t('Mundësuar nga Kasa', lang),
+    rejected: t('ATK e refuzoi', lang),
+  }
   return {
+    L,
     header,
-    title,
+    title: titleText,
     marks,
     refLine,
     reasonLine,

@@ -17,6 +17,7 @@ import { BusinessSection } from './BusinessSection'
 import { PrinterSection } from './PrinterSection'
 import { RegistersSection } from './RegistersSection'
 import { UsersSection } from './UsersSection'
+import { LANG_LABELS, setLang, useLang, type Lang } from '@/lib/i18n'
 import { InstallCard } from '@/app/AppStatus'
 
 type Section = 'biznesi' | 'printeri' | 'perdoruesit' | 'kontabilisti' | 'arkat' | 'tvsh' | 'backup'
@@ -48,6 +49,7 @@ export function SettingsPage() {
               <TillFiscalCard />
             </div>
           )}
+          {isSefApp && <LanguageCard />}
           <PrinterSection />
           <p className="mt-6 text-center text-sm text-muted">Kasa v{device.appVersion}</p>
         </div>
@@ -185,6 +187,31 @@ function PinCard() {
         </Button>
       </form>
       {msg && <p className={`mt-3 rounded-ctl px-4 py-2.5 text-sm ${msg.ok ? 'bg-brand-100 text-brand-600' : 'bg-warn-100 text-warn-700'}`}>{msg.text}</p>}
+    </Card>
+  )
+}
+
+/** Language of this till (Albanian / Serbian, Latin letters) – screens of the till and the fiscal coupon. */
+function LanguageCard() {
+  const lang = useLang()
+  return (
+    <Card className="mb-5 flex flex-wrap items-center justify-between gap-3 p-5">
+      <div>
+        <div className="text-[17px] font-semibold">Gjuha / Jezik</div>
+        <div className="text-sm text-muted">Arka dhe kuponi fiskal · Kasa i fiskalni kupon</div>
+      </div>
+      <div className="flex gap-2">
+        {(Object.keys(LANG_LABELS) as Lang[]).map((l) => (
+          <button
+            key={l}
+            type="button"
+            onClick={() => setLang(l)}
+            className={`h-10 rounded-full border px-4 text-sm font-semibold ${lang === l ? 'border-brand-600 bg-brand-100 text-brand-600' : 'border-line bg-white text-muted'}`}
+          >
+            {LANG_LABELS[l]}
+          </button>
+        ))}
+      </div>
     </Card>
   )
 }

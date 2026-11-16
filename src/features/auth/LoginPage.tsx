@@ -8,6 +8,7 @@ import { LogoMark } from '@/components/Logo'
 import { Button, Input } from '@/components/ui'
 import { supabaseConfigured } from '@/lib/supabase'
 import { isSefApp } from '@/lib/device'
+import { t as tr } from '@/lib/i18n'
 import { PinLogin } from './PinLogin'
 
 /**
@@ -72,10 +73,10 @@ export function LoginPage() {
       {/* Form */}
       <section className="flex flex-1 items-start justify-center bg-bg px-6 py-8 md:items-center md:py-12">
         <div className="w-full max-w-[420px]">
-          <h2 className="text-[28px] font-bold tracking-tight">Mirë se erdhe</h2>
+          <h2 className="text-[28px] font-bold tracking-tight">{tr('Mirë se erdhe')}</h2>
           {isSefApp ? (
             <>
-              <p className="mt-1 text-muted">Hyr me PIN-in tënd për të shitur</p>
+              <p className="mt-1 text-muted">{tr('Hyr me PIN-in tënd për të shitur')}</p>
               <PinLogin />
             </>
           ) : (

@@ -25,6 +25,7 @@ import { printReceipt } from '@/lib/printer'
 import { serverDate, KOSOVO_TZ } from '@/lib/clock'
 import { fetchReceiptSettings } from '@/features/settings/api'
 import { fetchFiscalContext } from '@/lib/fiscal'
+import { t as tr, useLang } from '@/lib/i18n'
 import { fiscalizeSale } from './fiscal'
 
 const parseNum = (s: string) => {
@@ -131,6 +132,7 @@ export function PosPage() {
   // ---------- UI state ----------
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState<string>('all')
+  const lang = useLang()
   const [method, setMethod] = useState<PaymentMethod>('cash')
   const [cardKind, setCardKind] = useState<PaymentKind | 'card'>('card')
   const [tendered, setTendered] = useState('')
@@ -633,7 +635,7 @@ export function PosPage() {
             submitSearch()
           } else if (e.key === 'Escape') setSearch('')
         }}
-        placeholder={wide ? 'Skano barkodin ose shkruaj emrin e produktit…' : 'Kërko produktin…'}
+        placeholder={wide ? tr('Skano barkodin ose shkruaj emrin e produktit…', lang) : tr('Kërko produktin…', lang)}
         className="h-[52px] w-full rounded-xl border-2 border-field bg-white pl-12 pr-14 text-[16px] focus:border-brand-600 focus:outline-none"
       />
       {search ? (
@@ -746,7 +748,7 @@ export function PosPage() {
         {receipt && (
           <div className="flex flex-col gap-4">
             <div className="text-center">
-              <div className="text-sm text-muted">{receipt.offline ? 'Ruajtur pa internet – dërgohet më vonë' : 'Pagesa u krye'}</div>
+              <div className="text-sm text-muted">{receipt.offline ? 'Ruajtur pa internet – dërgohet më vonë' : tr('Pagesa u krye', lang)}</div>
               {receipt.change_amount > 0 && (
                 <div className="mt-1 text-[28px] font-bold">
                   Kusuri <span className="text-warn-700">{formatEUR(receipt.change_amount)}</span>
@@ -758,10 +760,10 @@ export function PosPage() {
             </div>
             <div className="grid grid-cols-2 gap-2.5">
               <Button variant="secondary" size="lg" onClick={() => void print(receipt)}>
-                Printo
+                {tr('Printo', lang)}
               </Button>
               <Button size="lg" autoFocus onClick={() => setReceipt(null)}>
-                Shitje e re
+                {tr('Shitje e re', lang)}
               </Button>
             </div>
           </div>
@@ -825,7 +827,7 @@ export function PosPage() {
           {messages}
           <CameraScanner active={camera} onCode={onScan} />
           <div className="flex flex-wrap gap-2">
-            {[{ id: 'all', name: 'Të gjitha' }, ...categories].map((c) => (
+            {[{ id: 'all', name: tr('Të gjitha', lang) }, ...categories].map((c) => (
               <button
                 key={c.id}
                 type="button"
@@ -873,7 +875,7 @@ export function PosPage() {
         <div className="flex w-[400px] shrink-0 flex-col overflow-hidden rounded-card border border-line bg-white">
           <div className="flex items-start justify-between border-b border-line px-5 py-4">
             <div>
-              <div className="text-xl font-semibold">Faturë e re</div>
+              <div className="text-xl font-semibold">{tr('Faturë e re', lang)}</div>
               <div className="text-sm text-muted">
                 {cart.lines.length} {cart.lines.length === 1 ? 'produkt' : 'produkte'} · {new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 }).format(totals.itemsCount)} artikuj
                 {registerName && ` · ${registerName}`}
@@ -897,7 +899,7 @@ export function PosPage() {
             {cart.lines.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center text-muted">
                 <ScanLine className="h-8 w-8" />
-                Skano një barkod ose kliko një produkt
+                {tr('Skano një barkod ose kliko një produkt', lang)}
               </div>
             ) : (
               cartLines
@@ -911,7 +913,7 @@ export function PosPage() {
               </div>
             )}
             <div className="flex justify-between py-0.5 text-muted">
-              <span>Pa TVSH</span>
+              <span>{tr('Pa TVSH', lang)}</span>
               <span className="tabular-nums">{formatEUR(totals.netTotal)}</span>
             </div>
             {totals.vat
@@ -923,7 +925,7 @@ export function PosPage() {
                 </div>
               ))}
             <div className="mt-2 flex items-end justify-between border-t border-dashed border-field pt-2">
-              <span className="text-base font-semibold">Totali</span>
+              <span className="text-base font-semibold">{tr('Totali', lang)}</span>
               <span className="text-[32px] font-bold leading-none tabular-nums">{formatEUR(totals.total)}</span>
             </div>
           </div>
@@ -931,9 +933,9 @@ export function PosPage() {
             <div className="grid grid-cols-3 gap-2">
               {(
                 [
-                  ['cash', 'Kesh'],
-                  ['card', 'Kartelë'],
-                  ['mixed', 'Të kombinuara'],
+                  ['cash', tr('Kesh', lang)],
+                  ['card', tr('Kartelë', lang)],
+                  ['mixed', tr('Të kombinuara', lang)],
                 ] as const
               ).map(([m, label]) => (
                 <button
@@ -951,7 +953,7 @@ export function PosPage() {
             </div>
             {method !== 'cash' && (
               <div className="flex flex-wrap gap-1.5">
-                {([['card', 'Kartelë'], ...Object.entries(PAYMENT_KIND_LABELS)] as [PaymentKind | 'card', string][]).map(([k, label]) => (
+                {([['card', 'Kartelë'], ...Object.entries(PAYMENT_KIND_LABELS)] as [PaymentKind | 'card', string][]).map(([k, label0]) => [k, tr(label0, lang)] as const).map(([k, label]) => (
                   <button
                     key={k}
                     type="button"
@@ -991,7 +993,7 @@ export function PosPage() {
               </div>
             )}
             <Button size="lg" className="h-[58px] text-[18px]" disabled={!cart.lines.length} loading={busy} onClick={payDesktop}>
-              Paguaj {formatEUR(due)} <span className="rounded-md border border-white/40 px-1.5 text-xs font-medium">F12</span>
+              {tr('Paguaj', lang)} {formatEUR(due)} <span className="rounded-md border border-white/40 px-1.5 text-xs font-medium">F12</span>
             </Button>
             <div className="grid grid-cols-3 gap-2">
               <Button variant="secondary" disabled={!cart.lines.length} onClick={() => setDiscountOpen(true)}>
@@ -1017,7 +1019,7 @@ export function PosPage() {
       <div className="sticky top-[calc(var(--topbar,0px)+env(safe-area-inset-top))] z-20 border-b border-line bg-white px-4 pb-3 pt-4">
         <div className="mb-3 flex items-start justify-between">
           <div>
-            <h1 className="text-[26px] font-bold leading-tight">Faturë e re</h1>
+            <h1 className="text-[26px] font-bold leading-tight">{tr('Faturë e re', lang)}</h1>
             <div className="text-sm text-muted">
               {registerName ?? 'Arka'} · {new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 }).format(totals.itemsCount)} artikuj
             </div>
@@ -1106,10 +1108,10 @@ export function PosPage() {
         </div>
         <div className="grid grid-cols-[1fr_1.6fr] gap-2.5">
           <Button variant="secondary" size="lg" disabled={!cart.lines.length} loading={busy && !cashOpen} onClick={payCard}>
-            Kartelë
+            {tr('Kartelë', lang)}
           </Button>
           <Button size="lg" disabled={!cart.lines.length} onClick={() => setCashOpen(true)}>
-            Paguaj kesh
+            {tr('Paguaj kesh', lang)}
           </Button>
         </div>
       </div>
