@@ -201,6 +201,8 @@ export interface FiscalizeInput {
   operator: string
   /** CouponId of the original sale, for cancel / return. */
   referenceNo?: string | null
+  /** Time written on a coupon of the separate coupon book (UA neni 45); default: now (server time). */
+  issuedAt?: string | null
 }
 
 /** Signs the coupon; sends it now when possible. Returns null when this register does not fiscalize. */
@@ -210,7 +212,7 @@ export async function fiscalize(input: FiscalizeInput): Promise<FiscalReceipt | 
   const r = ctx.register
   const seq = await nextSeq(r.id, r.coupon_seq)
   const couponId = BigInt(ctx.branch_id) * 10n ** 12n + BigInt(r.pos_id!) * 10n ** 8n + BigInt(seq)
-  const issued = Math.floor(serverNow() / 1000)
+  const issued = Math.floor((input.issuedAt ? Date.parse(input.issuedAt) : serverNow()) / 1000)
   const verificationNo = newVerificationNo()
   const { pos, citizen } = buildCoupons(input.sale, {
     nui: ctx.nui,

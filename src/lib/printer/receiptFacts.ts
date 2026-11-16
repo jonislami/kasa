@@ -150,6 +150,7 @@ export function receiptFacts(sale: Sale, business: Business, copy?: boolean): Re
           : 'KUPON JO-FISKAL'
   const marks: string[] = []
   if (!fiscal && sale.kind !== 'sale') marks.push('JO-FISKAL')
+  if (sale.note?.startsWith('Blloku i veçantë')) marks.push(sale.note.toUpperCase())
   if (copy) marks.push('KOPJE E KUPONIT')
   if (offline) marks.push('OFFLINE')
   if (f?.env === 'test') marks.push('TEST – PA VLERË FISKALE')

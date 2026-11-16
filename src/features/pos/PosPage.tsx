@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Camera, ClipboardList, Minus, PauseCircle, Plus, ScanLine, Search, Trash2, WifiOff, X } from 'lucide-react'
+import { BookOpen, Camera, ClipboardList, Minus, PauseCircle, Plus, ScanLine, Search, Trash2, WifiOff, X } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
 import { Button, Dialog, Select } from '@/components/ui'
 import { hasModule, isManagerRole } from '@/lib/business'
@@ -18,6 +18,7 @@ import { enqueueSale, loadCatalog, loadHeld, nextOfflineNo, saveCatalog, saveHel
 import { PrintArea, Receipt } from './Receipt'
 import { SalesDialog } from './SalesDialog'
 import { QuickProductDialog } from './QuickProductDialog'
+import { BookEntryDialog, type BookEntry } from './BookEntryDialog'
 import { VariantPicker } from './VariantPicker'
 import { expiryStatus, fetchLots, formatExpiry, summarizeLots } from '@/lib/lots'
 import { printReceipt } from '@/lib/printer'
@@ -73,6 +74,9 @@ export function PosPage() {
   // "+" in the till: the owner / manager (in the SEF app signed in with PIN) adds a product on the spot
   const canAddProduct = isManagerRole(profile.actual_role ?? profile.role)
   const [quickAdd, setQuickAdd] = useState<{ barcode: string | null } | null>(null)
+  // ATK (UA neni 45): coupons written by hand from the separate coupon book while the device was down
+  const [bookEntry, setBookEntry] = useState<BookEntry | null>(null)
+  const [bookOpen, setBookOpen] = useState(false)
   const products = useMemo(() => catalog.data?.products ?? [], [catalog.data])
   const categories = catalog.data?.categories ?? []
 
@@ -282,13 +286,14 @@ export function PosPage() {
         appointment_id: appointment?.id,
         invoice_discount: totals.invoiceDiscount || undefined,
         payment: { method: m, tendered: m === 'card' ? undefined : tenderedAmount, card_amount: m === 'mixed' ? cardAmount : undefined },
-        client_created_at: serverDate().toISOString(),
+        client_created_at: bookEntry ? bookEntry.at : serverDate().toISOString(),
+        ...(bookEntry ? { note: `Blloku i veçantë i kuponëve – nr. ${bookEntry.serial}` } : {}),
       }
       setBusy(true)
       try {
         const sale = await createSale(input)
         // ATK: the coupon is signed and sent before the receipt is printed.
-        const fiscal = await fiscalizeSale(sale, { key: input.client_id, registerId, operator: profile.full_name, saved: true }).catch((e: Error) => {
+        const fiscal = await fiscalizeSale(sale, { key: input.client_id, registerId, operator: profile.full_name, saved: true, issuedAt: bookEntry?.at }).catch((e: Error) => {
           setError('Kuponi fiskal nuk u krijua: ' + e.message)
           return null
         })
@@ -303,7 +308,7 @@ export function PosPage() {
           const queued = { ...input, offline: true, offline_no: offlineNo }
           await enqueueSale(queued)
           const local = localReceipt(queued, cart, totals, profile.full_name, registerName)
-          const fiscal = await fiscalizeSale(local, { key: input.client_id, registerId, operator: profile.full_name, saved: false }).catch(() => null)
+          const fiscal = await fiscalizeSale(local, { key: input.client_id, registerId, operator: profile.full_name, saved: false, issuedAt: bookEntry?.at }).catch(() => null)
           finish({ ...local, fiscal })
         } else setError((e as Error).message)
       } finally {
@@ -311,10 +316,11 @@ export function PosPage() {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [cart, totals, registerId, busy, registerName, profile.full_name, appointment],
+    [cart, totals, registerId, busy, registerName, profile.full_name, appointment, bookEntry],
   )
 
   const finish = (sale: Sale) => {
+    setBookEntry(null)
     setReceipt(sale)
     setExchange(null)
     if (appointment) {
@@ -570,6 +576,17 @@ export function PosPage() {
           <Plus className="h-6 w-6" />
         </button>
       )}
+      {canAddProduct && (
+        <button
+          type="button"
+          onClick={() => setBookOpen(true)}
+          title="Kupon nga blloku i veçantë (pajisja ishte e prishur)"
+          aria-label="Kupon nga blloku i veçantë"
+          className={cn('flex h-11 w-11 items-center justify-center rounded-xl border hover:bg-bg', bookEntry ? 'border-amber-700 bg-amber-100 text-amber-700' : 'border-line bg-white')}
+        >
+          <BookOpen className="h-5 w-5" />
+        </button>
+      )}
       {(registers.data?.length ?? 0) > 1 && (
         <Select
           aria-label="Arka"
@@ -656,8 +673,21 @@ export function PosPage() {
     </div>
   ) : null
 
+  const bookBanner = bookEntry && (
+    <div className="flex items-center gap-2 rounded-ctl bg-amber-100 px-3 py-2 text-sm text-amber-700">
+      <BookOpen className="h-4 w-4 shrink-0" />
+      <span className="min-w-0 flex-1">
+        Kupon nga blloku nr. <b>{bookEntry.serial}</b>, lëshuar më {new Date(bookEntry.at).toLocaleString('en-GB', { timeZone: KOSOVO_TZ, dateStyle: 'short', timeStyle: 'short' })}
+      </span>
+      <button type="button" className="font-semibold underline" onClick={() => setBookEntry(null)}>
+        Anulo
+      </button>
+    </div>
+  )
+
   const sharedDialogs = (
     <>
+      <BookEntryDialog open={bookOpen} onClose={() => setBookOpen(false)} onSet={(b) => { setBookEntry(b); setBookOpen(false) }} />
       <QuickProductDialog
         open={Boolean(quickAdd)}
         type={business.type}
@@ -847,6 +877,7 @@ export function PosPage() {
                 {registerName && ` · ${registerName}`}
               </div>
               {exchangeBanner && <div className="mt-2">{exchangeBanner}</div>}
+              {bookBanner && <div className="mt-2">{bookBanner}</div>}
               {appointment && (
                 <div className="mt-1 text-sm font-medium text-brand-600">
                   Klienti: {appointment.customer_name} · termini{' '}
@@ -974,6 +1005,7 @@ export function PosPage() {
             <div className="text-sm text-muted">
               {registerName ?? 'Arka'} · {new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 }).format(totals.itemsCount)} artikuj
             </div>
+            {bookBanner && <div className="mt-2">{bookBanner}</div>}
           </div>
           {toolbar}
         </div>

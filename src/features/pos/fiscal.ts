@@ -19,7 +19,7 @@ export function toFiscalSale(sale: Sale): FiscalSale {
  * @param key       client_id of the sale
  * @param saved     the sale is on the server (false while it waits in the offline queue)
  */
-export async function fiscalizeSale(sale: Sale, o: { key: string; registerId: string | null; operator: string; saved: boolean }): Promise<FiscalReceipt | null> {
+export async function fiscalizeSale(sale: Sale, o: { key: string; registerId: string | null; operator: string; saved: boolean; issuedAt?: string | null }): Promise<FiscalReceipt | null> {
   if (!o.registerId) return null
   let referenceNo: string | null = null
   if (sale.kind !== 'sale') {
@@ -28,5 +28,5 @@ export async function fiscalizeSale(sale: Sale, o: { key: string; registerId: st
     if (!orig) return null
     referenceNo = String(orig.coupon_id)
   }
-  return fiscalize({ key: o.key, saleId: o.saved ? sale.id : null, registerId: o.registerId, sale: toFiscalSale(sale), operator: o.operator, referenceNo })
+  return fiscalize({ key: o.key, saleId: o.saved ? sale.id : null, registerId: o.registerId, sale: toFiscalSale(sale), operator: o.operator, referenceNo, issuedAt: o.issuedAt })
 }
