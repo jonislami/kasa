@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { AlertTriangle, CheckCircle2, Circle, Clock, CreditCard, Download, LogOut, MonitorSmartphone, Plus, XCircle } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Circle, Clock, Download, LogOut, MonitorSmartphone, Plus, XCircle } from 'lucide-react'
 import { useAuth } from '@/app/AuthProvider'
 import { SafeAreaStrip } from '@/app/layout/AppLayout'
 import { LogoMark } from '@/components/Logo'
@@ -9,7 +9,6 @@ import { Badge, Button, Card, Dialog, Input, Select } from '@/components/ui'
 import { businessType } from '@/lib/business'
 import { formatKosovoDateTime } from '@/lib/clock'
 import { cn } from '@/lib/cn'
-import { formatEUR } from '@/lib/money'
 import { DownloadCards } from '@/features/download/DownloadPage'
 import { TillKeysCard } from './TillKeys'
 import {
@@ -80,8 +79,7 @@ export function AccountPage() {
             <Steps s={s} />
             <StatusCard s={s} />
             {['pending', 'needs_info'].includes(s.business.status) && <DataCard s={s} onSaved={reload} />}
-            {/* before 0036 a business could wait for payment / a till application: keep those cards for it */}
-            {s.business.status === 'approved' && <PaymentCard s={s} />}
+            {/* before 0036 an active business could wait for a till application: keep that card for it */}
             {s.business.status === 'active' && !s.can_install && <RegisterCard s={s} onSaved={reload} />}
             {s.can_install && <TillKeysCard />}
             {s.can_install && (
@@ -215,81 +213,6 @@ function DataCard({ s, onSaved }: { s: OnboardingState; onSaved: () => void }) {
         {ok && <span className="text-sm text-brand-600">U ruajt.</span>}
         {save.error && <span className="text-sm text-warn-700">{(save.error as Error).message}</span>}
       </div>
-    </Card>
-  )
-}
-
-function PaymentCard({ s }: { s: OnboardingState }) {
-  const p = s.payment_info
-  const price = s.license.price ?? (s.license.plan === 'yearly' ? p.yearly_price : p.monthly_price)
-  return (
-    <Card className="p-5 md:p-6">
-      <div className="flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-100 text-brand-600">
-          <CreditCard className="h-5 w-5" />
-        </div>
-        <div>
-          <h2 className="text-[19px] font-bold">Pagesa e abonimit</h2>
-          <p className="text-sm text-muted">Me bankë ose kesh; pagesën e konfirmon administratori dhe licenca zgjatet vetë.</p>
-        </div>
-      </div>
-      <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <div className="rounded-card bg-bg p-4 text-[15px]">
-          {p.iban ? (
-            <>
-              <div className="text-sm text-muted">Paguaj në llogarinë</div>
-              <div className="font-semibold">{p.account_holder ?? 'Kasa'}</div>
-              <div>{p.bank_name}</div>
-              <div className="select-all break-all font-mono text-[16px]">{p.iban}</div>
-              <div className="mt-2 text-sm text-muted">Përshkrimi: “Kasa – {s.business.name} – NUI {s.business.nui ?? ''}”</div>
-            </>
-          ) : (
-            <div className="text-sm text-muted">Udhëzimet e pagesës do të shfaqen këtu së shpejti.</div>
-          )}
-          {p.payment_note && <div className="mt-2 text-sm">{p.payment_note}</div>}
-        </div>
-        <div className="rounded-card bg-bg p-4 text-[15px]">
-          {Number(p.monthly_price) > 0 && (
-            <div className="flex justify-between">
-              <span className="text-muted">Mujore</span> <b>{formatEUR(p.monthly_price)}</b>
-            </div>
-          )}
-          {Number(p.yearly_price) > 0 && (
-            <div className="flex justify-between">
-              <span className="text-muted">Vjetore</span> <b>{formatEUR(p.yearly_price)}</b>
-            </div>
-          )}
-          {!(Number(p.monthly_price) > 0) && !(Number(p.yearly_price) > 0) && !(price != null && Number(price) > 0) && (
-            <div className="text-sm text-muted">Çmimin ta tregon administratori.</div>
-          )}
-          {price != null && Number(price) > 0 && (
-            <div className="mt-2 flex justify-between border-t border-line pt-2">
-              <span className="text-muted">Çmimi yt</span> <b>{formatEUR(Number(price))}</b>
-            </div>
-          )}
-          {s.license.expires_on && (
-            <div className="mt-2 text-sm text-muted">
-              Licenca vlen deri më <b className="text-ink">{day(s.license.expires_on)}</b>
-            </div>
-          )}
-        </div>
-      </div>
-      {s.payments.length > 0 && (
-        <ul className="mt-4 divide-y divide-line rounded-card border border-line text-sm">
-          {s.payments.map((x, i) => (
-            <li key={i} className="flex flex-wrap justify-between gap-2 px-3 py-2">
-              <span>
-                {day(x.paid_on)} · {x.method === 'bank' ? 'bankë' : x.method === 'cash' ? 'kesh' : 'tjetër'}
-                {x.reference && ` · ${x.reference}`}
-              </span>
-              <span className="tabular-nums">
-                {formatEUR(x.amount)}
-                {x.extended_to && <span className="text-muted"> · deri {day(x.extended_to)}</span>}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
     </Card>
   )
 }

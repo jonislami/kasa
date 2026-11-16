@@ -1,23 +1,19 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, ChevronLeft, Copy, CreditCard, KeyRound, MonitorSmartphone, ShieldCheck, Trash2 } from 'lucide-react'
+import { Check, ChevronLeft, Copy, KeyRound, MonitorSmartphone, ShieldCheck } from 'lucide-react'
 import { PageHeader } from '@/app/layout/AppLayout'
 import { Badge, Button, Card, Dialog, Input, Select } from '@/components/ui'
 import { businessType } from '@/lib/business'
-import { formatKosovoDateTime, kosovoDateISO } from '@/lib/clock'
+import { formatKosovoDateTime } from '@/lib/clock'
 import { cn } from '@/lib/cn'
-import { formatEUR } from '@/lib/money'
 import { APP_STATUS, DEVICE_LABELS, EVENT_LABELS, LICENSE_LABELS, PRINTER_LABELS, STATUS_LABELS, type RegisterApplication } from '@/features/onboarding/api'
 import {
-  confirmPayment,
   createActivationKey,
   decide,
   decideRegister,
-  deletePayment,
   fetchActivationKeys,
   fetchAdminDetail,
-  fetchPlatformSettings,
   revokeActivationKey,
   saveLicense,
   setDevice,
@@ -41,7 +37,6 @@ export function BusinessAdminPage() {
     void qc.invalidateQueries({ queryKey: ['platform-businesses'] })
   }
   const [decision, setDecision] = useState<Decision | null>(null)
-  const [pay, setPay] = useState(false)
   const approve = useMutation({ mutationFn: () => decide(id, 'approve'), onSuccess: refresh })
   const d = data.data
   const b = d?.business
@@ -70,12 +65,6 @@ export function BusinessAdminPage() {
                     Refuzo
                   </Button>
                 </>
-              )}
-              {/* only for a business that waited for payment before 0036 */}
-              {b.status === 'approved' && (
-                <Button onClick={() => setPay(true)}>
-                  <CreditCard className="h-4 w-4" /> Konfirmo pagesën
-                </Button>
               )}
               {b.status === 'active' && (
                 <Button variant="danger" onClick={() => setDecision('suspend')}>
@@ -142,7 +131,6 @@ export function BusinessAdminPage() {
               <LicenseCard id={id} d={d} onSaved={refresh} />
             </div>
 
-            {d.payments.length > 0 && <PaymentsCard d={d} onChanged={refresh} />}
             {d.register_applications.length > 0 && <RegistersCard d={d} onChanged={refresh} />}
             <ActivationKeysCard d={d} onChanged={refresh} />
             <DevicesCard d={d} onChanged={refresh} />
@@ -167,7 +155,6 @@ export function BusinessAdminPage() {
         )}
       </div>
       {b && <DecisionDialog id={id} action={decision} onClose={() => setDecision(null)} onDone={refresh} />}
-      {b && <PaymentDialog id={id} open={pay} plan={d?.license?.plan ?? 'monthly'} price={d?.license?.price ?? null} onClose={() => setPay(false)} onDone={refresh} />}
     </PlatformShell>
   )
 }
@@ -210,64 +197,6 @@ function DecisionDialog({ id, action, onClose, onDone }: { id: string; action: D
     >
       {action === 'suspend' && <p className="mb-3 text-sm text-muted">Qasja në Kasa ndalet menjëherë për të gjithë përdoruesit e biznesit.</p>}
       <Input label={t?.note} value={note} onChange={(e) => setNote(e.target.value)} />
-      {run.error && <p className="mt-3 text-sm text-warn-700">{(run.error as Error).message}</p>}
-    </Dialog>
-  )
-}
-
-function PaymentDialog({ id, open, plan, price, onClose, onDone }: { id: string; open: boolean; plan: string; price: number | null; onClose: () => void; onDone: () => void }) {
-  const settings = useQuery({ queryKey: ['platform-settings'], queryFn: fetchPlatformSettings, enabled: open })
-  const [f, setF] = useState({ amount: '', months: '1', method: 'bank', paid_on: kosovoDateISO(), reference: '', note: '' })
-  useEffect(() => {
-    if (!open) return
-    const months = plan === 'yearly' ? 12 : 1
-    const def = price ?? (months === 12 ? settings.data?.yearly_price : settings.data?.monthly_price) ?? 0
-    setF({ amount: def ? String(def) : '', months: String(months), method: 'bank', paid_on: kosovoDateISO(), reference: '', note: '' })
-  }, [open, plan, price, settings.data])
-  const run = useMutation({
-    mutationFn: () => confirmPayment({ business_id: id, amount: Number(f.amount.replace(',', '.')) || 0, months: Number(f.months), method: f.method, paid_on: f.paid_on, reference: f.reference, note: f.note }),
-    onSuccess: () => {
-      onDone()
-      onClose()
-    },
-  })
-  return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      title="Konfirmo pagesën"
-      subtitle="Licenca zgjatet nga data e skadimit (ose nga sot nëse ka skaduar)"
-      width="md:max-w-[480px]"
-      footer={
-        <div className="flex justify-end gap-2">
-          <Button variant="secondary" onClick={onClose}>
-            Anulo
-          </Button>
-          <Button loading={run.isPending} onClick={() => run.mutate()}>
-            Konfirmo
-          </Button>
-        </div>
-      }
-    >
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Input label="Shuma (€)" inputMode="decimal" value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value })} />
-        <Select
-          label="Zgjat licencën me"
-          value={f.months}
-          onChange={(e) => setF({ ...f, months: e.target.value })}
-          options={[
-            { value: '1', label: '1 muaj' },
-            { value: '3', label: '3 muaj' },
-            { value: '6', label: '6 muaj' },
-            { value: '12', label: '12 muaj' },
-            { value: '0', label: 'Pa zgjatur (vetëm regjistro pagesën)' },
-          ]}
-        />
-        <Select label="Mënyra" value={f.method} onChange={(e) => setF({ ...f, method: e.target.value })} options={[{ value: 'bank', label: 'Bankë' }, { value: 'cash', label: 'Kesh' }, { value: 'other', label: 'Tjetër' }]} />
-        <Input label="Data e pagesës" type="date" value={f.paid_on} onChange={(e) => setF({ ...f, paid_on: e.target.value })} />
-        <Input label="Referenca (nr. i transaksionit)" value={f.reference} onChange={(e) => setF({ ...f, reference: e.target.value })} />
-        <Input label="Shënim" value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} />
-      </div>
       {run.error && <p className="mt-3 text-sm text-warn-700">{(run.error as Error).message}</p>}
     </Dialog>
   )
@@ -320,33 +249,6 @@ function LicenseCard({ id, d, onSaved }: { id: string; d: AdminDetailT; onSaved:
   )
 }
 type AdminDetailT = Awaited<ReturnType<typeof fetchAdminDetail>>
-
-function PaymentsCard({ d, onChanged }: { d: AdminDetailT; onChanged: () => void }) {
-  const del = useMutation({ mutationFn: deletePayment, onSuccess: onChanged })
-  return (
-    <Card className="p-5">
-      <h2 className="text-[17px] font-semibold">Pagesat</h2>
-      {d.payments.length === 0 ? (
-        <p className="mt-2 text-sm text-muted">Asnjë pagesë e konfirmuar.</p>
-      ) : (
-        <ul className="mt-2 divide-y divide-line">
-          {d.payments.map((p) => (
-            <li key={p.id} className="flex flex-wrap items-center gap-3 py-2 text-sm">
-              <span className="w-[90px]">{day(p.paid_on)}</span>
-              <span className="min-w-0 flex-1 text-muted">
-                {[p.method === 'bank' ? 'bankë' : p.method === 'cash' ? 'kesh' : 'tjetër', p.reference, p.months ? `+${p.months} muaj` : null, p.extended_to && `deri ${day(p.extended_to)}`, p.confirmed_by_name, p.note].filter(Boolean).join(' · ')}
-              </span>
-              <b className="tabular-nums">{formatEUR(p.amount)}</b>
-              <button type="button" aria-label="Fshi" onClick={() => confirm('Ta fshij pagesën? Afati i licencës nuk ndryshon vetë.') && del.mutate(p.id)} className="text-muted hover:text-warn-700">
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </Card>
-  )
-}
 
 function RegistersCard({ d, onChanged }: { d: AdminDetailT; onChanged: () => void }) {
   const [act, setAct] = useState<{ app: RegisterApplication; action: 'approve' | 'reject' | 'request_info' } | null>(null)
