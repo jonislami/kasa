@@ -79,6 +79,7 @@ export interface SaleRef {
   vat_total: number
   vat_lines: { code: VatCode; rate: number; gross: number; net: number; vat: number }[]
   payment_method: string
+  payment_kind?: PaymentKind | null
   items_count: number
   items: { name: string; unit: string; quantity: number; unit_price: number; line_discount: number; total: number; vat_code: string }[]
   /** Sum of the returns up to this coupon (negative). */
@@ -271,6 +272,7 @@ export interface SaleRow {
   ref_sale_id: string | null
   total: number
   payment_method: PaymentMethod
+  payment_kind?: PaymentKind | null
   items_count: number
   created_at: string
   offline: boolean
@@ -280,7 +282,7 @@ export interface SaleRow {
 export async function fetchTodaySales(date: string): Promise<SaleRow[]> {
   const { data, error } = await supabase
     .from('sales')
-    .select('id, kind, invoice_no, ref_sale_id, total, payment_method, items_count, created_at, offline')
+    .select('id, kind, invoice_no, ref_sale_id, total, payment_method, payment_kind, items_count, created_at, offline')
     .eq('sale_date', date)
     .order('invoice_no', { ascending: false })
     .limit(300)

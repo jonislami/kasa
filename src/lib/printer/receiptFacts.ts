@@ -226,11 +226,14 @@ export function receiptFacts(sale: Sale, business: Business, copy?: boolean, lan
         ? kindLabel
         : null
 
+  // the original bill of a return / cancel: its own payment kind (0035)
+  const refKind = ref?.payment_kind ? t(KIND[ref.payment_kind], lang) : null
+  const refPayment = ref && refKind ? (ref.payment_method === 'mixed' ? `${t('KESH', lang)} + ${refKind}` : refKind) : null
   let main: ReceiptBlock
   let returned: ReceiptFacts['returned'] = null
   if (sale.kind === 'refund' && ref) {
     // ATK sample "KUPON FISKAL KTHIMI": the original bill, then what is returned and what remains
-    main = blockOf(ref.items, ref, null)
+    main = blockOf(ref.items, ref, refPayment)
     const lines = linesOf(sale.items, -1)
     returned = {
       lines,
@@ -240,7 +243,7 @@ export function receiptFacts(sale: Sale, business: Business, copy?: boolean, lan
     }
   } else if (sale.kind === 'void' && ref) {
     // ATK sample "KUPON FISKAL I ANULUAR": the cancelled bill as it was
-    main = blockOf(ref.items, ref, null)
+    main = blockOf(ref.items, ref, refPayment)
   } else {
     main = blockOf(sale.items, sale, ownPayment)
   }
