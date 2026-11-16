@@ -69,10 +69,10 @@ export function RegisterPage() {
         <div className="mx-auto max-w-[900px] px-5 pt-8 md:pt-12">
           <h1 className="text-[32px] font-bold tracking-tight md:text-[44px]">Regjistro biznesin</h1>
           <p className="mt-3 max-w-xl text-[17px] text-white/75">
-            Plotëso të dhënat e biznesit. E shqyrtojmë regjistrimin, pastaj të dërgojmë udhëzimet për pagesën; pas pagesës aplikon për arkë dhe instalon Kasa.
+            Plotëso të dhënat e biznesit një herë. Pas aprovimit e merr çelësin e arkës te llogaria jote dhe instalon Kasa.
           </p>
           <ol className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/70">
-            {['Regjistrimi', 'Shqyrtimi', 'Pagesa', 'Aplikimi për arkë', 'Instalimi'].map((s, i) => (
+            {['Regjistrimi', 'Aprovimi', 'Instalimi'].map((s, i) => (
               <li key={s} className="flex items-center gap-2">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/15 text-xs font-bold">{i + 1}</span> {s}
               </li>
@@ -85,7 +85,7 @@ export function RegisterPage() {
           <div className="rounded-[20px] border border-line bg-white p-8 text-center shadow-sm">
             <CheckCircle2 className="mx-auto h-12 w-12 text-brand-600" />
             <h2 className="mt-3 text-[22px] font-bold">Regjistrimi u dërgua</h2>
-            <p className="mt-2 text-muted">E shqyrtojmë së shpejti. Statusin e sheh duke hyrë me email-in dhe fjalëkalimin tënd.</p>
+            <p className="mt-2 text-muted">Pas aprovimit, te llogaria jote të dalin çelësat e arkave dhe shkarkimi i Kasa-s.</p>
             <Link to="/login" className="mt-5 inline-block">
               <Button size="lg">Hyr</Button>
             </Link>

@@ -76,8 +76,8 @@ export function DownloadPage() {
           <div className="rounded-[20px] border border-line bg-white p-7 shadow-sm md:p-9">
             <h2 className="text-[22px] font-bold">Shkarkimi hapet pas aktivizimit</h2>
             <p className="mt-2 max-w-2xl text-muted">
-              Kasa instalohet pasi të regjistrohet biznesi, të aprovohet llogaria, të konfirmohet pagesa dhe të aprovohet aplikimi për arkë. Pastaj butoni
-              <b> Install SEF</b> të del te paneli yt, me programin e duhur për llojin e biznesit.
+              Kasa instalohet pasi të regjistrohet dhe të aprovohet biznesi. Pastaj te llogaria jote të dalin shkarkimi dhe
+              <b> çelësi për çdo arkë</b>.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
               {ctx?.profile ? (

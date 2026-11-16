@@ -7,7 +7,7 @@ export type BusinessStatus = 'pending' | 'needs_info' | 'approved' | 'active' | 
 export const STATUS_LABELS: Record<BusinessStatus, string> = {
   pending: 'Në shqyrtim',
   needs_info: 'Kërkohen të dhëna',
-  approved: 'Aprovuar – pret pagesën',
+  approved: 'Aprovuar',
   active: 'Aktiv',
   rejected: 'Refuzuar',
   suspended: 'Pezulluar',
@@ -153,4 +153,31 @@ export const EVENT_LABELS: Record<string, string> = {
   device_off: 'Pajisja u çaktivizua',
   activation_key: 'U krijua çelës aktivizimi',
   device_activated: 'Pajisja u aktivizua me çelës',
+  register_added: 'U shtua një arkë',
 }
+
+// ---------------------------------------------------------------------------
+// The owner's tills and activation keys (0036): the owner takes the key for each till from their own panel.
+// ---------------------------------------------------------------------------
+export class OwnerKeysNotMigrated extends Error {}
+
+export interface OwnerRegister {
+  id: string
+  name: string
+  device: string | null
+  device_seen: string | null
+  key_hint: string | null
+  key_expires: string | null
+}
+
+async function ownerRpc<T>(fn: string, args?: Record<string, unknown>): Promise<T> {
+  const { data, error } = await supabase.rpc(fn, args)
+  if (error) {
+    if (['PGRST202', '42883'].includes(error.code ?? '')) throw new OwnerKeysNotMigrated('Çelësin e arkës ta dërgon administratori i Kasa-s.')
+    throw new Error(error.message)
+  }
+  return data as T
+}
+export const fetchOwnerRegisters = () => ownerRpc<{ max_devices: number; registers: OwnerRegister[] }>('owner_registers')
+export const createOwnerKey = (registerId: string) => ownerRpc<{ id: string; key: string; expires_at: string }>('owner_activation_key_create', { p_register: registerId })
+export const addOwnerRegister = (name?: string) => ownerRpc<string>('owner_register_add', { p_name: name ?? null })

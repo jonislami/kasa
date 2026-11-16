@@ -29,7 +29,7 @@ import { statusTone } from './ApplicationsPage'
 
 const day = (d: string | null | undefined) => (d ? d.slice(0, 10).split('-').reverse().join('.') : '—')
 
-/** /platforma/biznes/:id – everything about one business: data, decision, payment, license, tills, devices, history. */
+/** /platforma/biznes/:id – everything about one business: data, approval, license, keys, devices, history. */
 export function BusinessAdminPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
@@ -42,6 +42,7 @@ export function BusinessAdminPage() {
   }
   const [decision, setDecision] = useState<Decision | null>(null)
   const [pay, setPay] = useState(false)
+  const approve = useMutation({ mutationFn: () => decide(id, 'approve'), onSuccess: refresh })
   const d = data.data
   const b = d?.business
 
@@ -59,7 +60,9 @@ export function BusinessAdminPage() {
             <div className="flex flex-wrap gap-2">
               {(b.status === 'pending' || b.status === 'needs_info') && (
                 <>
-                  <Button onClick={() => setDecision('approve')}>Prano</Button>
+                  <Button loading={approve.isPending} onClick={() => approve.mutate()}>
+                    <Check className="h-4 w-4" /> Aprovo
+                  </Button>
                   <Button variant="secondary" onClick={() => setDecision('request_info')}>
                     Kërko të dhëna
                   </Button>
@@ -68,7 +71,8 @@ export function BusinessAdminPage() {
                   </Button>
                 </>
               )}
-              {['approved', 'active', 'suspended'].includes(b.status) && (
+              {/* only for a business that waited for payment before 0036 */}
+              {b.status === 'approved' && (
                 <Button onClick={() => setPay(true)}>
                   <CreditCard className="h-4 w-4" /> Konfirmo pagesën
                 </Button>
@@ -102,6 +106,12 @@ export function BusinessAdminPage() {
                 {d.owner_last_sign_in && ` · pronari hyri së fundi ${formatKosovoDateTime(d.owner_last_sign_in)}`}
               </span>
             </div>
+            {approve.error && <p className="rounded-ctl bg-warn-100 px-4 py-3 text-sm text-warn-700">{(approve.error as Error).message}</p>}
+            {(b.status === 'pending' || b.status === 'needs_info') && (
+              <p className="rounded-ctl bg-brand-100 px-4 py-3 text-sm text-brand-600">
+                “Aprovo” e hap biznesin menjëherë: krijohen arkat që ka kërkuar klienti dhe pronari i merr vetë çelësat te llogaria e tij.
+              </p>
+            )}
             {b.status_note && <p className="rounded-ctl bg-amber-100 px-4 py-3 text-sm text-amber-700">Mesazhi për klientin: {b.status_note}</p>}
 
             <div className="grid gap-4 lg:grid-cols-2">
@@ -132,8 +142,8 @@ export function BusinessAdminPage() {
               <LicenseCard id={id} d={d} onSaved={refresh} />
             </div>
 
-            <PaymentsCard d={d} onChanged={refresh} />
-            <RegistersCard d={d} onChanged={refresh} />
+            {d.payments.length > 0 && <PaymentsCard d={d} onChanged={refresh} />}
+            {d.register_applications.length > 0 && <RegistersCard d={d} onChanged={refresh} />}
             <ActivationKeysCard d={d} onChanged={refresh} />
             <DevicesCard d={d} onChanged={refresh} />
 
@@ -198,7 +208,6 @@ function DecisionDialog({ id, action, onClose, onDone }: { id: string; action: D
         </div>
       }
     >
-      {action === 'approve' && <p className="mb-3 text-sm text-muted">Klientit i del pagesa; qasja hapet kur ta konfirmosh pagesën.</p>}
       {action === 'suspend' && <p className="mb-3 text-sm text-muted">Qasja në Kasa ndalet menjëherë për të gjithë përdoruesit e biznesit.</p>}
       <Input label={t?.note} value={note} onChange={(e) => setNote(e.target.value)} />
       {run.error && <p className="mt-3 text-sm text-warn-700">{(run.error as Error).message}</p>}
@@ -272,7 +281,7 @@ function LicenseCard({ id, d, onSaved }: { id: string; d: AdminDetailT; onSaved:
     if (l) setF({ plan: l.plan, price: l.price == null ? '' : String(l.price), status: l.status, expires_on: l.expires_on ?? '', max_devices: String(l.max_devices), note: l.note ?? '' })
   }, [l])
   const save = useMutation({
-    mutationFn: () => saveLicense({ business_id: id, ...f, price: f.price.replace(',', '.'), max_devices: Number(f.max_devices) || 3 }),
+    mutationFn: () => saveLicense({ business_id: id, status: f.status, expires_on: f.expires_on, note: f.note, max_devices: Number(f.max_devices) || 3 }),
     onSuccess: () => (setOk(true), onSaved()),
   })
   const c = l?.computed
@@ -289,8 +298,6 @@ function LicenseCard({ id, d, onSaved }: { id: string; d: AdminDetailT; onSaved:
         )}
       </div>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
-        <Select label="Plani" value={f.plan} onChange={(e) => (setOk(false), setF({ ...f, plan: e.target.value }))} options={[{ value: 'monthly', label: 'Mujor' }, { value: 'yearly', label: 'Vjetor' }, { value: 'custom', label: 'I veçantë' }]} />
-        <Input label="Çmimi për këtë biznes (€, bosh = sipas planit)" inputMode="decimal" value={f.price} onChange={(e) => (setOk(false), setF({ ...f, price: e.target.value }))} />
         <Select
           label="Statusi"
           value={f.status}
@@ -308,7 +315,7 @@ function LicenseCard({ id, d, onSaved }: { id: string; d: AdminDetailT; onSaved:
         {ok && <span className="text-sm text-brand-600">U ruajt.</span>}
         {save.error && <span className="text-sm text-warn-700">{(save.error as Error).message}</span>}
       </div>
-      <p className="mt-2 text-xs text-muted">Licenca e pezulluar ose e çaktivizuar mbyll qasjen; pas skadimit + tolerancës ndalen vetëm shitjet e reja.</p>
+      <p className="mt-2 text-xs text-muted">“Pajisje maksimale” = sa arka mund të ketë klienti. Licenca e pezulluar mbyll qasjen; afati është opsional.</p>
     </Card>
   )
 }
