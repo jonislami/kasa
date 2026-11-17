@@ -1,9 +1,10 @@
 // Prints the thermal receipt (ESC/POS) as plain text and writes the screen receipt as HTML, for checking
-// the layout without a printer:  npx tsx scripts/receipt-preview.tsx [out.html]
+// the layout without a printer, on every paper width:  npx tsx --tsconfig tsconfig.app.json scripts/receipt-preview.tsx [out.html]
 import { writeFileSync } from 'node:fs'
 import * as React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { receiptBytes } from '../src/lib/printer/receipt'
+import { charsPerLine, LINE_CHARS, PAPER_WIDTHS, type PaperWidth } from '../src/lib/printer/escpos'
 import { Receipt } from '../src/features/pos/Receipt'
 import type { Sale } from '../src/features/pos/api'
 import type { Business } from '../src/app/AuthProvider'
@@ -97,14 +98,26 @@ const refund = {
 } as Sale
 const cancel = { ...sale, kind: 'void', invoice_no: 43, ref_sale_id: 'x', ref_invoice_no: 41, total: -12.9, reason: 'Gabim gjatë shtypjes', change_amount: 0, tendered: null, ref: { ...ref, returned: 0 } } as Sale
 
-const cases: [string, Sale, number[]][] = [['SHITJE', sale, [80, 58]], ['ULJE', discounted, [80]], ['KTHIM', refund, [80, 58]], ['ANULIM', cancel, [80]]]
+const ALL = PAPER_WIDTHS.map((p) => p.value)
+const cases: [string, Sale, PaperWidth[]][] = [['SHITJE', sale, ALL], ['ULJE', discounted, ALL], ['KTHIM', refund, ALL], ['ANULIM', cancel, ALL]]
+let tooLong = 0
 for (const [name, s0, widths] of cases) {
   for (const width of widths) {
-    const text = visible(receiptBytes(s0, business, { ...DEFAULT_RECEIPT, paper_width: width as 58 | 80, printer_charset: 'replace' }))
-    console.log(`===== ${name} · ${width} mm =====`)
-    console.log(text.replace(/\n{3,}/g, '\n\n'))
+    for (const line_chars of [null, ...LINE_CHARS.filter((c) => c < charsPerLine(width))]) {
+      const settings = { ...DEFAULT_RECEIPT, paper_width: width, printer_charset: 'replace' as const, settings: { ...DEFAULT_RECEIPT.settings, line_chars } }
+      const text = visible(receiptBytes(s0, business, settings))
+      if (!line_chars) {
+        console.log(`===== ${name} · ${width} mm =====`)
+        console.log(text.replace(/\n{3,}/g, '\n\n'))
+      }
+      // a line longer than the print area wraps on the printer and breaks the columns
+      const max = charsPerLine(width, line_chars)
+      for (const line of text.split('\n'))
+        if (line.length > max) (tooLong++, console.log(`!! ${name} ${width} mm / ${max}: ${line.length} shenja: ${line}`))
+    }
   }
 }
+if (tooLong) process.exitCode = 1
 
 const out = process.argv[2]
 if (out)

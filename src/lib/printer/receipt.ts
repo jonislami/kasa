@@ -54,14 +54,15 @@ export function receiptBytes(sale: Sale, business: Business, s: ReceiptSettings,
 
   // Worker, title, the original coupon of a cancel / return
   if (sale.worker_name) p.align('right').wrap(`${x.L.worker}: ${sale.worker_name}`)
-  p.align('center').bold(true).size(w >= 48 ? 2 : 1).wrap(x.title).size(1).bold(false)
+  p.align('center').bold(true).size(w >= 42 ? 2 : 1).wrap(x.title).size(1).bold(false)
   for (const m of x.marks) p.line(m)
   if (x.refLine) p.wrap(x.refLine)
   if (x.reasonLine) p.wrap(x.reasonLine)
   p.align('left').feed(1)
 
   // Items: ARTIKULLI | SASIA X ÇMIMI | SHUMA (with the VAT letter); long names continue on the next lines
-  const cw = w >= 48 ? [22, 14, 12] : [10, 13, 9]
+  // the name takes what the quantity and amount columns leave (32 → 10, 42 → 16, 48 → 22, 64 → 38)
+  const cw = w >= 42 ? [w - 26, 14, 12] : [w - 22, 13, 9]
   const lines = (ls: ReceiptLine[]) => {
     p.cols([x.L.item, x.L.qtyPrice, x.L.amount], cw)
     p.rule('-')

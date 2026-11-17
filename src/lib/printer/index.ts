@@ -89,17 +89,17 @@ export const windowsPrinter = (): string | null => {
 export const setWindowsPrinter = (name: string | null) => (name ? localStorage.setItem(WIN_PRINTER, name) : localStorage.removeItem(WIN_PRINTER))
 
 /**
- * The printer for receipts: the one chosen in Printeri, else the Windows default, else a thermal receipt printer
- * found by name (Xprinter, POS-80, …), so a new till prints without any setup.
+ * The printer for receipts: the one chosen in Printeri, else a thermal receipt printer found by name (Xprinter,
+ * POS-80, …) – the default thermal one first –, else the Windows default, so a new till prints without any setup
+ * (the default is often "Microsoft Print to PDF" or OneNote).
  */
 export async function receiptPrinterName(): Promise<string | null> {
   const chosen = windowsPrinter()
   if (chosen || !device.systemPrint) return chosen
   const list = await device.systemPrint.list().catch(() => [])
-  const def = list.find((p) => p.isDefault)
-  if (def) return def.name
-  const thermal = list.find((p) => THERMAL_RE.test(p.name))
-  return thermal?.name ?? null
+  const thermal = list.filter((p) => THERMAL_RE.test(p.name))
+  const pick = thermal.find((p) => p.isDefault) ?? thermal[0] ?? list.find((p) => p.isDefault)
+  return pick?.name ?? null
 }
 
 // How the Windows app prints: 'raw' = ESC/POS commands straight to the thermal printer (no driver; works with every

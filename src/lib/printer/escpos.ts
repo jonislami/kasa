@@ -86,8 +86,10 @@ export class EscPos {
 
   /** 1 = normal, 2 = double width + height */
   size(n: 1 | 2): this {
+    this.scale = n
     return this.raw(GS, 0x21, n === 2 ? 0x11 : 0x00)
   }
+  private scale: 1 | 2 = 1
 
   rule(ch = '-'): this {
     return this.line(ch.repeat(this.width))
@@ -112,10 +114,12 @@ export class EscPos {
 
   /** Word-wrapped paragraph. */
   wrap(s: string): this {
+    // double-size text takes two columns per character
+    const max = Math.floor(this.width / this.scale)
     const words = s.split(/\s+/)
     let cur = ''
     for (const w of words) {
-      if ((cur + ' ' + w).trim().length > this.width) {
+      if ((cur + ' ' + w).trim().length > max) {
         if (cur) this.line(cur)
         cur = w
       } else cur = (cur + ' ' + w).trim()
