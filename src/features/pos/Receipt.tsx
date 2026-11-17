@@ -22,7 +22,7 @@ export function Receipt({
 }: {
   sale: Sale
   business: Business
-  width?: 58 | 80
+  width?: number
   copy?: boolean
   settings?: ReceiptSettings
 }) {
@@ -30,7 +30,7 @@ export function Receipt({
   const f = sale.fiscal ?? null
   const x = receiptFacts(sale, business, copy)
   const footer = settings ? settings.receipt_footer : 'Faleminderit për blerjen!'
-  const narrow = width === 58
+  const narrow = width < 70
   const big = narrow ? 'text-[14px]' : 'text-[17px]'
 
   const lines = (ls: ReceiptLine[]) => (
@@ -55,7 +55,9 @@ export function Receipt({
   )
 
   return (
-    <div className={cn('mx-auto bg-white font-mono leading-snug text-black', narrow ? 'w-[58mm] px-1 text-[11px]' : 'w-[80mm] px-3 text-[12.5px]')}>
+    <div className={cn('mx-auto bg-white font-mono leading-snug text-black', narrow ? 'px-1 text-[11px]' : width > 100 ? 'px-4 text-[14px]' : 'px-3 text-[12.5px]')} style={{ width: `${width}mm` }}>
+      {/* the page of the print (driver / dialog) follows the paper roll */}
+      <style>{`@media print { @page { size: ${width}mm auto; margin: 0 } }`}</style>
       <div className="flex flex-col items-center pt-4 text-center">
         {settings?.receipt_header && <div className={cn('font-bold', big)}>{settings.receipt_header}</div>}
         <div>{x.L.taxpayer}: {business.name}</div>

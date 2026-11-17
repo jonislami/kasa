@@ -86,8 +86,10 @@ export class EscPos {
 
   /** 1 = normal, 2 = double width + height */
   size(n: 1 | 2): this {
+    this.scale = n
     return this.raw(GS, 0x21, n === 2 ? 0x11 : 0x00)
   }
+  private scale: 1 | 2 = 1
 
   rule(ch = '-'): this {
     return this.line(ch.repeat(this.width))
@@ -112,10 +114,12 @@ export class EscPos {
 
   /** Word-wrapped paragraph. */
   wrap(s: string): this {
+    // double-size text takes two columns per character
+    const max = Math.floor(this.width / this.scale)
     const words = s.split(/\s+/)
     let cur = ''
     for (const w of words) {
-      if ((cur + ' ' + w).trim().length > this.width) {
+      if ((cur + ' ' + w).trim().length > max) {
         if (cur) this.line(cur)
         cur = w
       } else cur = (cur + ' ' + w).trim()
@@ -159,6 +163,19 @@ export class EscPos {
   }
 }
 
-export function charsPerLine(paper: 58 | 80): number {
-  return paper === 58 ? 32 : 48
+/** Paper rolls of thermal receipt printers and the characters per line in the normal font (12-dot font A). */
+export type PaperWidth = 58 | 80 | 100
+export const PAPER_WIDTHS: { value: PaperWidth; chars: number }[] = [
+  { value: 58, chars: 32 },
+  { value: 80, chars: 48 },
+  // 100 mm: about 88 mm print area, so 56 is safe; a printer with a wider head is set to 64 with line_chars
+  { value: 100, chars: 56 },
+]
+export const LINE_CHARS = [32, 42, 48, 56, 64] as const
+
+/** Characters per line: the chosen number (for printers with a narrower print area, e.g. 80 mm with 42), else by paper. */
+export function charsPerLine(paper: number, override?: number | null): number {
+  if (override && LINE_CHARS.includes(override as (typeof LINE_CHARS)[number])) return override
+  return PAPER_WIDTHS.find((p) => p.value === paper)?.chars ?? (paper < 70 ? 32 : 48)
 }
+export const isNarrowPaper = (paper: number) => paper < 70

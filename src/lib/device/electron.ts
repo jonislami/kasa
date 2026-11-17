@@ -24,6 +24,8 @@ interface Bridge {
   keyDelete?(alias: string): Promise<void>
   listPrinters?(): Promise<{ name: string; displayName: string; isDefault: boolean }[]>
   printSilent?(deviceName?: string): Promise<{ ok: boolean; error?: string }>
+  printRaw?(deviceName: string, data: Uint8Array): Promise<{ ok: boolean; error?: string }>
+  clearPrintQueue?(deviceName: string): Promise<{ ok: boolean; error?: string }>
 }
 
 const bridge = (window as unknown as { kasaElectron: Bridge }).kasaElectron
@@ -82,6 +84,18 @@ export const electronDevice: DeviceAdapter = {
           const r = await bridge.printSilent!(deviceName)
           if (!r.ok) throw new Error(r.error || 'Printimi dështoi')
         },
+        ...(bridge.printRaw
+          ? {
+              printRaw: async (deviceName: string, data: Uint8Array) => {
+                const r = await bridge.printRaw!(deviceName, data)
+                if (!r.ok) throw new Error(r.error || 'Printimi dështoi')
+              },
+              clearQueue: async (deviceName: string) => {
+                const r = await bridge.clearPrintQueue!(deviceName)
+                if (!r.ok) throw new Error(r.error || 'Radha nuk u pastrua')
+              },
+            }
+          : {}),
       }
     : undefined,
   appUpdates: { subscribe: (cb) => bridge.onUpdate(cb), install: () => bridge.installUpdate() },

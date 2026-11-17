@@ -8,7 +8,7 @@ const qty = (v: number) => new Intl.NumberFormat('en-US', { maximumFractionDigit
 
 /** Kitchen / bar ticket: big table name and quantities, no prices. */
 export function ticketBytes(t: Ticket, s: Pick<ReceiptSettings, 'paper_width' | 'printer_charset'>, reprint = false): Uint8Array {
-  const w = charsPerLine(s.paper_width)
+  const w = charsPerLine(s.paper_width, (s as { settings?: ReceiptSettings['settings'] }).settings?.line_chars)
   const p = new EscPos(w, s.printer_charset)
   p.align('center').bold(true).line(STATION_LABELS[t.station].toUpperCase() + (reprint ? ' - KOPJE' : ''))
   p.size(2).line(t.table_name ? `Tavolina ${t.table_name}` : `Porosia #${t.order_no}`).size(1).bold(false)

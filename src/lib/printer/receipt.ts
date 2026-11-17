@@ -34,7 +34,7 @@ function chunks(text: string, width: number): string[] {
 
 /** The same receipt as the on-screen one (Receipt.tsx), as ESC/POS bytes – laid out as the ATK samples (Shtojca F). */
 export function receiptBytes(sale: Sale, business: Business, s: ReceiptSettings, opts: { copy?: boolean; drawer?: boolean } = {}): Uint8Array {
-  const w = charsPerLine(s.paper_width)
+  const w = charsPerLine(s.paper_width, s.settings?.line_chars)
   const p = new EscPos(w, s.printer_charset)
   const opt = s.settings
   const f = sale.fiscal ?? null
@@ -54,14 +54,15 @@ export function receiptBytes(sale: Sale, business: Business, s: ReceiptSettings,
 
   // Worker, title, the original coupon of a cancel / return
   if (sale.worker_name) p.align('right').wrap(`${x.L.worker}: ${sale.worker_name}`)
-  p.align('center').bold(true).size(w >= 48 ? 2 : 1).wrap(x.title).size(1).bold(false)
+  p.align('center').bold(true).size(w >= 42 ? 2 : 1).wrap(x.title).size(1).bold(false)
   for (const m of x.marks) p.line(m)
   if (x.refLine) p.wrap(x.refLine)
   if (x.reasonLine) p.wrap(x.reasonLine)
   p.align('left').feed(1)
 
   // Items: ARTIKULLI | SASIA X ÇMIMI | SHUMA (with the VAT letter); long names continue on the next lines
-  const cw = w >= 48 ? [22, 14, 12] : [10, 13, 9]
+  // the name takes what the quantity and amount columns leave (32 → 10, 42 → 16, 48 → 22, 64 → 38)
+  const cw = w >= 42 ? [w - 26, 14, 12] : [w - 22, 13, 9]
   const lines = (ls: ReceiptLine[]) => {
     p.cols([x.L.item, x.L.qtyPrice, x.L.amount], cw)
     p.rule('-')
@@ -109,7 +110,7 @@ export function receiptBytes(sale: Sale, business: Business, s: ReceiptSettings,
 
   if (f) {
     // ATK: QR = citizen coupon + signature, then the fiscal logo (coat of arms + RKS / MF, 19 x 9.5 mm)
-    p.qr(f.qr, s.paper_width === 58 ? 5 : 6).raw(0x0a)
+    p.qr(f.qr, s.paper_width < 70 ? 5 : 6).raw(0x0a)
     if (f.status === 'failed') p.wrap(`${x.L.rejected}: ${f.error ?? ''}`)
     p.image(RKS_MARK.width / 8, RKS_MARK.height, markBytes()).raw(0x0a)
   } else {
@@ -126,8 +127,8 @@ export function receiptBytes(sale: Sale, business: Business, s: ReceiptSettings,
 }
 
 /** A short test page for Settings → Printeri. */
-export function testPageBytes(businessName: string, s: Pick<ReceiptSettings, 'paper_width' | 'printer_charset'>): Uint8Array {
-  const w = charsPerLine(s.paper_width)
+export function testPageBytes(businessName: string, s: Pick<ReceiptSettings, 'paper_width' | 'printer_charset'> & { settings?: ReceiptSettings['settings'] }): Uint8Array {
+  const w = charsPerLine(s.paper_width, s.settings?.line_chars)
   const p = new EscPos(w, s.printer_charset)
   p.align('center').bold(true).size(2).line('KASA').size(1).bold(false)
   p.line(businessName)

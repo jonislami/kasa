@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import type { Role } from '@/lib/business'
+import type { PaperWidth } from '@/lib/printer/escpos'
 
 const NOT_MIGRATED = new Set(['42P01', 'PGRST205', 'PGRST202', '42883', '42703'])
 
@@ -52,7 +53,7 @@ export async function saveBusinessInfo(b: BusinessInfo): Promise<void> {
 export interface ReceiptSettings {
   receipt_header: string | null
   receipt_footer: string | null
-  paper_width: 58 | 80
+  paper_width: PaperWidth
   printer_chunk: number
   printer_charset: 'cp1250' | 'cp852' | 'replace'
   settings: {
@@ -63,6 +64,8 @@ export interface ReceiptSettings {
     show_vat?: boolean
     show_barcode?: boolean
     cut?: boolean
+    /** Characters per line when the printer prints narrower than the paper (e.g. 80 mm with 42); empty = by paper. */
+    line_chars?: number | null
   }
 }
 
@@ -108,6 +111,7 @@ export async function saveReceiptSettings(businessId: string, s: ReceiptSettings
     .from('business_settings')
     .update({ ...s, updated_at: new Date().toISOString() })
     .eq('business_id', businessId)
+  if (error?.code === '23514' && /paper_width/.test(error.message)) throw new Error('Kjo gjerësi letre kërkon migrimin supabase/migrations/0038_paper_widths_58_80_100.sql në Supabase.')
   if (error) fail(error)
   void supabase.rpc('log_action', { p_action: 'settings_change', p_entity: 'business_settings', p_entity_id: businessId, p_details: { section: 'printer' } })
 }

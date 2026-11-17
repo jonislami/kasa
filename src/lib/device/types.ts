@@ -67,6 +67,10 @@ export interface SystemPrint {
   list(): Promise<{ name: string; displayName: string; isDefault: boolean }[]>
   /** Prints the page as rendered for print (the receipt) on that printer (default printer when empty). */
   print(deviceName?: string): Promise<void>
+  /** ESC/POS bytes straight to that printer (RAW, without its driver); refused when Windows marks it offline. */
+  printRaw?(deviceName: string, data: Uint8Array): Promise<void>
+  /** Removes the waiting jobs of that printer (a stuck job would print later). */
+  clearQueue?(deviceName: string): Promise<void>
 }
 
 export interface DeviceAdapter {
