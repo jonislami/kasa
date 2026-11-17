@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { withDevicePaper } from '@/lib/printer/devicePaper'
 import type { Role } from '@/lib/business'
 import type { PaperWidth } from '@/lib/printer/escpos'
 
@@ -80,8 +81,13 @@ export const DEFAULT_RECEIPT: ReceiptSettings = {
 
 const RECEIPT_CACHE = 'kasa.receiptSettings'
 
-/** Printer/receipt settings; the last copy is kept on the device so printing works offline. */
+/** Printer/receipt settings for printing on this device: the business's, with this till's paper roll (Printeri → Letra). */
 export async function fetchReceiptSettings(): Promise<ReceiptSettings> {
+  return withDevicePaper(await fetchBusinessReceiptSettings())
+}
+
+/** The business's printer/receipt settings (what managers edit); the last copy is kept on the device so printing works offline. */
+export async function fetchBusinessReceiptSettings(): Promise<ReceiptSettings> {
   try {
     const { data, error } = await supabase.from('business_settings').select('receipt_header, receipt_footer, paper_width, printer_chunk, printer_charset, settings').maybeSingle()
     if (error) throw error
