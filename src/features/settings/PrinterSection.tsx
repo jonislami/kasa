@@ -9,6 +9,7 @@ import { isManagerRole } from '@/lib/business'
 import type { Sale } from '@/features/pos/api'
 import { Receipt } from '@/features/pos/Receipt'
 import { clearPrinterQueue, effectiveMode, printWindowsTest, setWindowsPrinter, setWindowsPrintMode, windowsPrinter, windowsPrintMode, THERMAL_RE, type WinPrintMode } from '@/lib/printer'
+import { charsPerLine, LINE_CHARS, PAPER_WIDTHS, type PaperWidth } from '@/lib/printer/escpos'
 import { DEFAULT_RECEIPT, fetchReceiptSettings, saveReceiptSettings, type ReceiptSettings } from './api'
 
 /** Bluetooth connection on this device (everyone) + receipt settings for the business (managers). */
@@ -36,7 +37,7 @@ export function PrinterSection() {
   })
 
   const set = <K extends keyof ReceiptSettings>(k: K, v: ReceiptSettings[K]) => setForm((f) => ({ ...f, [k]: v }))
-  const setOpt = (k: keyof ReceiptSettings['settings'], v: boolean | number) => setForm((f) => ({ ...f, settings: { ...f.settings, [k]: v } }))
+  const setOpt = (k: keyof ReceiptSettings['settings'], v: boolean | number | null) => setForm((f) => ({ ...f, settings: { ...f.settings, [k]: v } }))
 
   return (
     <div className="flex flex-col gap-5 xl:flex-row xl:items-start">
@@ -51,10 +52,16 @@ export function PrinterSection() {
               <Select
                 label="Gjerësia e letrës"
                 value={String(form.paper_width)}
-                onChange={(e) => set('paper_width', Number(e.target.value) as 58 | 80)}
+                onChange={(e) => set('paper_width', Number(e.target.value) as PaperWidth)}
+                options={PAPER_WIDTHS.map((p) => ({ value: String(p.value), label: `${p.value} mm (${p.chars} shenja)` }))}
+              />
+              <Select
+                label="Shenja për rresht"
+                value={String(form.settings.line_chars ?? '')}
+                onChange={(e) => setOpt('line_chars', e.target.value ? Number(e.target.value) : null)}
                 options={[
-                  { value: '80', label: '80 mm (48 shenja)' },
-                  { value: '58', label: '58 mm (32 shenja)' },
+                  { value: '', label: `Sipas letrës (${charsPerLine(form.paper_width)})` },
+                  ...LINE_CHARS.map((n) => ({ value: String(n), label: `${n} shenja${n === 42 ? ' – p.sh. 80 mm me zonë printimi 72 mm' : ''}` })),
                 ]}
               />
               <Select
@@ -177,7 +184,7 @@ function BluetoothCard({ settings }: { settings: ReceiptSettings }) {
           </span>
           <div>
             <h2 className="text-[17px] font-semibold">Printeri i faturave (Bluetooth)</h2>
-            <p className="text-sm text-muted">Printer termik 58mm ose 80mm · lidhet për këtë pajisje</p>
+            <p className="text-sm text-muted">Printer termik 57–112 mm · lidhet për këtë pajisje</p>
           </div>
         </div>
         <Badge tone={connected ? 'success' : 'neutral'}>{connected ? `I lidhur${name ? ` · ${name}` : ''}` : 'I palidhur'}</Badge>

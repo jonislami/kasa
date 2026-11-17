@@ -34,7 +34,7 @@ function chunks(text: string, width: number): string[] {
 
 /** The same receipt as the on-screen one (Receipt.tsx), as ESC/POS bytes – laid out as the ATK samples (Shtojca F). */
 export function receiptBytes(sale: Sale, business: Business, s: ReceiptSettings, opts: { copy?: boolean; drawer?: boolean } = {}): Uint8Array {
-  const w = charsPerLine(s.paper_width)
+  const w = charsPerLine(s.paper_width, s.settings?.line_chars)
   const p = new EscPos(w, s.printer_charset)
   const opt = s.settings
   const f = sale.fiscal ?? null
@@ -109,7 +109,7 @@ export function receiptBytes(sale: Sale, business: Business, s: ReceiptSettings,
 
   if (f) {
     // ATK: QR = citizen coupon + signature, then the fiscal logo (coat of arms + RKS / MF, 19 x 9.5 mm)
-    p.qr(f.qr, s.paper_width === 58 ? 5 : 6).raw(0x0a)
+    p.qr(f.qr, s.paper_width < 70 ? 5 : 6).raw(0x0a)
     if (f.status === 'failed') p.wrap(`${x.L.rejected}: ${f.error ?? ''}`)
     p.image(RKS_MARK.width / 8, RKS_MARK.height, markBytes()).raw(0x0a)
   } else {
@@ -126,8 +126,8 @@ export function receiptBytes(sale: Sale, business: Business, s: ReceiptSettings,
 }
 
 /** A short test page for Settings → Printeri. */
-export function testPageBytes(businessName: string, s: Pick<ReceiptSettings, 'paper_width' | 'printer_charset'>): Uint8Array {
-  const w = charsPerLine(s.paper_width)
+export function testPageBytes(businessName: string, s: Pick<ReceiptSettings, 'paper_width' | 'printer_charset'> & { settings?: ReceiptSettings['settings'] }): Uint8Array {
+  const w = charsPerLine(s.paper_width, s.settings?.line_chars)
   const p = new EscPos(w, s.printer_charset)
   p.align('center').bold(true).size(2).line('KASA').size(1).bold(false)
   p.line(businessName)

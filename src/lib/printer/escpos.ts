@@ -159,6 +159,20 @@ export class EscPos {
   }
 }
 
-export function charsPerLine(paper: 58 | 80): number {
-  return paper === 58 ? 32 : 48
+/** Paper rolls of thermal receipt printers and the characters per line in the normal font (12-dot font A). */
+export type PaperWidth = 57 | 58 | 76 | 80 | 112
+export const PAPER_WIDTHS: { value: PaperWidth; chars: number }[] = [
+  { value: 57, chars: 32 },
+  { value: 58, chars: 32 },
+  { value: 76, chars: 42 },
+  { value: 80, chars: 48 },
+  { value: 112, chars: 64 },
+]
+export const LINE_CHARS = [32, 42, 48, 64] as const
+
+/** Characters per line: the chosen number (for printers with a narrower print area, e.g. 80 mm with 42), else by paper. */
+export function charsPerLine(paper: number, override?: number | null): number {
+  if (override && LINE_CHARS.includes(override as (typeof LINE_CHARS)[number])) return override
+  return PAPER_WIDTHS.find((p) => p.value === paper)?.chars ?? (paper < 70 ? 32 : 48)
 }
+export const isNarrowPaper = (paper: number) => paper < 70

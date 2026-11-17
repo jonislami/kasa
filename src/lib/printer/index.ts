@@ -141,7 +141,7 @@ export async function clearPrinterQueue(name?: string | null): Promise<void> {
 }
 
 /** Test page: ESC/POS straight to the printer (raw mode) – shows at once whether the printer understands it. */
-export async function printWindowsTest(businessName: string, s: Pick<ReceiptSettings, 'paper_width' | 'printer_charset'>, name?: string | null) {
+export async function printWindowsTest(businessName: string, s: ReceiptSettings, name?: string | null) {
   const n = name ?? (await receiptPrinterName())
   if (!n || !device.systemPrint?.printRaw) throw new Error('Zgjidh printerin')
   await device.systemPrint.printRaw(n, testPageBytes(businessName, s))
