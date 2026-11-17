@@ -3,22 +3,31 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Bluetooth, Printer, Usb } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
 import { Badge, Button, Card, Input, Select, Toggle } from '@/components/ui'
-import { device } from '@/lib/device'
+import { device, isSefApp } from '@/lib/device'
+import { devicePaper, setDevicePaper, withDevicePaper, type DevicePaper } from '@/lib/printer/devicePaper'
 import { lastPrinterName, printerReady, testPageBytes } from '@/lib/printer'
 import { isManagerRole } from '@/lib/business'
 import type { Sale } from '@/features/pos/api'
 import { Receipt } from '@/features/pos/Receipt'
 import { clearPrinterQueue, effectiveMode, printWindowsTest, setWindowsPrinter, setWindowsPrintMode, windowsPrinter, windowsPrintMode, THERMAL_RE, type WinPrintMode } from '@/lib/printer'
 import { charsPerLine, LINE_CHARS, PAPER_WIDTHS, type PaperWidth } from '@/lib/printer/escpos'
-import { DEFAULT_RECEIPT, fetchReceiptSettings, saveReceiptSettings, type ReceiptSettings } from './api'
+import { DEFAULT_RECEIPT, fetchBusinessReceiptSettings, saveReceiptSettings, type ReceiptSettings } from './api'
 
 /** Bluetooth connection on this device (everyone) + receipt settings for the business (managers). */
 export function PrinterSection() {
   const { business, profile } = useBusiness()
   const manager = isManagerRole(profile.role)
   const qc = useQueryClient()
-  const settings = useQuery({ queryKey: ['receipt-settings'], queryFn: fetchReceiptSettings, networkMode: 'always' })
+  const settings = useQuery({ queryKey: ['receipt-settings-business'], queryFn: fetchBusinessReceiptSettings, networkMode: 'always' })
   const [form, setForm] = useState<ReceiptSettings>(DEFAULT_RECEIPT)
+  // this till's paper roll; what prints here is the business settings with it applied
+  const [paper, setPaper] = useState<DevicePaper>(devicePaper)
+  const local = withDevicePaper(form)
+  const pickPaper = (p: DevicePaper) => {
+    setDevicePaper(p)
+    setPaper(p)
+    void qc.invalidateQueries({ queryKey: ['receipt-settings'] })
+  }
   const [saved, setSaved] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -32,6 +41,7 @@ export function PrinterSection() {
       setSaved('Ndryshimet u ruajtën')
       setError(null)
       void qc.invalidateQueries({ queryKey: ['receipt-settings'] })
+      void qc.invalidateQueries({ queryKey: ['receipt-settings-business'] })
     },
     onError: (e: Error) => setError(e.message),
   })
@@ -42,8 +52,9 @@ export function PrinterSection() {
   return (
     <div className="flex flex-col gap-5 xl:flex-row xl:items-start">
       <div className="flex min-w-0 flex-1 flex-col gap-5">
-        {device.systemPrint && <WindowsPrinterCard settings={settings.data ?? DEFAULT_RECEIPT} />}
-        <BluetoothCard settings={form} />
+        {isSefApp && <DevicePaperCard value={paper} business={form} onChange={pickPaper} />}
+        {device.systemPrint && <WindowsPrinterCard settings={local} />}
+        <BluetoothCard settings={local} />
 
         {manager && (
           <Card className="p-5">
@@ -127,12 +138,44 @@ export function PrinterSection() {
       </div>
 
       <div className="rounded-card bg-[#E9EDEA] p-5 xl:sticky xl:top-6 xl:w-[360px] xl:shrink-0">
-        <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">Parapamja · {form.paper_width}mm</div>
+        <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">Parapamja · {local.paper_width}mm</div>
         <div className="overflow-x-auto rounded-md bg-white py-2 shadow-sm">
-          <Receipt sale={SAMPLE} business={business} settings={form} />
+          <Receipt sale={SAMPLE} business={business} settings={local} />
         </div>
       </div>
     </div>
+  )
+}
+
+/** The paper roll of the printer at this till (58 / 80 / 100 mm); every role sets it here, on the device. */
+function DevicePaperCard({ value, business, onChange }: { value: DevicePaper; business: ReceiptSettings; onChange: (p: DevicePaper) => void }) {
+  const paper = value.paper_width ?? business.paper_width
+  return (
+    <Card className="p-5">
+      <h2 className="text-[17px] font-semibold">Letra e printerit</h2>
+      <p className="mt-1 text-sm text-muted">Madhësia e rrotullës së letrës në printerin e kësaj arke.</p>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <Select
+          label="Gjerësia e letrës"
+          value={String(value.paper_width ?? '')}
+          onChange={(e) => onChange({ paper_width: e.target.value ? (Number(e.target.value) as PaperWidth) : null, line_chars: value.line_chars })}
+          options={[
+            { value: '', label: `Si te biznesi (${business.paper_width} mm)` },
+            ...PAPER_WIDTHS.map((p) => ({ value: String(p.value), label: `${p.value} mm` })),
+          ]}
+        />
+        <Select
+          label="Shenja për rresht"
+          value={String(value.line_chars ?? '')}
+          onChange={(e) => onChange({ paper_width: value.paper_width, line_chars: e.target.value ? Number(e.target.value) : null })}
+          options={[
+            { value: '', label: `Sipas letrës (${charsPerLine(paper, value.paper_width ? null : business.settings.line_chars)})` },
+            ...LINE_CHARS.map((n) => ({ value: String(n), label: `${n} shenja` })),
+          ]}
+        />
+      </div>
+      <p className="mt-2 text-xs text-muted">Nëse kuponi del i prerë në anë, zgjidh më pak shenja për rresht; nëse del shumë i ngushtë, më shumë.</p>
+    </Card>
   )
 }
 
@@ -313,8 +356,10 @@ function WindowsPrinterCard({ settings }: { settings: ReceiptSettings }) {
   const [mode, setMode] = useState<WinPrintMode | ''>(() => windowsPrintMode() ?? '')
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const def = list.data?.find((p) => p.isDefault)?.name
-  const auto = list.data?.find((p) => THERMAL_RE.test(p.name))?.name
-  const target = chosen || def || auto || null
+  // same order as printing (receiptPrinterName): a thermal printer, the default one first, else the Windows default
+  const thermal = list.data?.filter((p) => THERMAL_RE.test(p.name)) ?? []
+  const auto = (thermal.find((p) => p.isDefault) ?? thermal[0])?.name
+  const target = chosen || auto || def || null
   const used = mode || effectiveMode(target)
   const pick = (name: string) => {
     setChosen(name)
@@ -346,7 +391,7 @@ function WindowsPrinterCard({ settings }: { settings: ReceiptSettings }) {
           value={chosen}
           onChange={(e) => pick(e.target.value)}
           options={[
-            { value: '', label: def ? `Automatik – printeri kryesor (${def})` : `Automatik – printeri i kuponëve${auto ? ` (${auto})` : ''}` },
+            { value: '', label: auto ? `Automatik – printeri i kuponëve (${auto})` : `Automatik – printeri kryesor${def ? ` (${def})` : ''}` },
             ...(list.data ?? []).map((p) => ({ value: p.name, label: p.displayName + (p.isDefault ? ' (kryesor)' : '') })),
           ]}
         />
