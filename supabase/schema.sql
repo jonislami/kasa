@@ -152,7 +152,7 @@ create table if not exists public.business_settings (
                    references public.businesses (id) on delete cascade,
   receipt_header   text,
   receipt_footer   text default 'Faleminderit!',
-  paper_width      int not null default 80 check (paper_width in (58, 80)),
+  paper_width      int not null default 80 check (paper_width in (58, 80, 100)),
   printer_chunk    int not null default 180 check (printer_chunk between 20 and 512),
   printer_charset  text not null default 'replace' check (printer_charset in ('cp1250', 'cp852', 'replace')),
   low_stock_alerts boolean not null default true,

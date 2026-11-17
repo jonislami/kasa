@@ -307,7 +307,7 @@ function RegisterDialog({ value, onClose, onSaved }: { value: Partial<RegisterAp
           options={(Object.keys(PRINTER_LABELS) as RegisterApplication['printer'][]).map((k) => ({ value: k, label: PRINTER_LABELS[k] }))}
         />
         {f.printer !== 'none' && (
-          <Select label="Gjerësia e letrës" value={String(f.paper_width ?? 80)} onChange={(e) => setF({ ...f, paper_width: Number(e.target.value) as 58 | 80 })} options={[{ value: '80', label: '80 mm' }, { value: '58', label: '58 mm' }]} />
+          <Select label="Gjerësia e letrës" value={String(f.paper_width ?? 80)} onChange={(e) => setF({ ...f, paper_width: Number(e.target.value) as 58 | 80 | 100 })} options={[{ value: '80', label: '80 mm' }, { value: '58', label: '58 mm' }, { value: '100', label: '100 mm' }]} />
         )}
         <Input label="Kontakti në vend (emri, telefoni)" value={f.contact ?? ''} onChange={(e) => setF({ ...f, contact: e.target.value })} />
         <div className="sm:col-span-2">

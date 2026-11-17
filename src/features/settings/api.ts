@@ -111,7 +111,7 @@ export async function saveReceiptSettings(businessId: string, s: ReceiptSettings
     .from('business_settings')
     .update({ ...s, updated_at: new Date().toISOString() })
     .eq('business_id', businessId)
-  if (error?.code === '23514' && /paper_width/.test(error.message)) throw new Error('Kjo gjerësi letre kërkon migrimin supabase/migrations/0037_paper_widths.sql në Supabase.')
+  if (error?.code === '23514' && /paper_width/.test(error.message)) throw new Error('Kjo gjerësi letre kërkon migrimin supabase/migrations/0038_paper_widths_58_80_100.sql në Supabase.')
   if (error) fail(error)
   void supabase.rpc('log_action', { p_action: 'settings_change', p_entity: 'business_settings', p_entity_id: businessId, p_details: { section: 'printer' } })
 }

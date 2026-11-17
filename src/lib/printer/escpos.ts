@@ -164,15 +164,14 @@ export class EscPos {
 }
 
 /** Paper rolls of thermal receipt printers and the characters per line in the normal font (12-dot font A). */
-export type PaperWidth = 57 | 58 | 76 | 80 | 112
+export type PaperWidth = 58 | 80 | 100
 export const PAPER_WIDTHS: { value: PaperWidth; chars: number }[] = [
-  { value: 57, chars: 32 },
   { value: 58, chars: 32 },
-  { value: 76, chars: 42 },
   { value: 80, chars: 48 },
-  { value: 112, chars: 64 },
+  // 100 mm: about 88 mm print area, so 56 is safe; a printer with a wider head is set to 64 with line_chars
+  { value: 100, chars: 56 },
 ]
-export const LINE_CHARS = [32, 42, 48, 64] as const
+export const LINE_CHARS = [32, 42, 48, 56, 64] as const
 
 /** Characters per line: the chosen number (for printers with a narrower print area, e.g. 80 mm with 42), else by paper. */
 export function charsPerLine(paper: number, override?: number | null): number {

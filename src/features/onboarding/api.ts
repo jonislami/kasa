@@ -69,7 +69,7 @@ export interface RegisterApplication {
   location: string | null
   device_type: 'windows' | 'android' | 'ios' | 'web'
   printer: 'bluetooth' | 'usb' | 'network' | 'none'
-  paper_width: 58 | 80
+  paper_width: 58 | 80 | 100
   fiscal: boolean
   contact: string | null
   note: string | null

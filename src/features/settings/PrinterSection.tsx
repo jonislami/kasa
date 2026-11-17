@@ -184,7 +184,7 @@ function BluetoothCard({ settings }: { settings: ReceiptSettings }) {
           </span>
           <div>
             <h2 className="text-[17px] font-semibold">Printeri i faturave (Bluetooth)</h2>
-            <p className="text-sm text-muted">Printer termik 57–112 mm · lidhet për këtë pajisje</p>
+            <p className="text-sm text-muted">Printer termik 58, 80 ose 100 mm · lidhet për këtë pajisje</p>
           </div>
         </div>
         <Badge tone={connected ? 'success' : 'neutral'}>{connected ? `I lidhur${name ? ` · ${name}` : ''}` : 'I palidhur'}</Badge>
