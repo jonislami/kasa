@@ -36,6 +36,11 @@ export interface BookDoc {
   amt_a: number
   vat_nd: number
   total: number
+  /** 'kasa': the fiscal coupons of one day and till of a linked client (0039), read-only; else a document. */
+  source?: 'kasa'
+  /** Coupons and cancels / returns in that day's row. */
+  coupons?: number
+  returns?: number
 }
 
 // ---------------------------------------------------------------------------
@@ -362,7 +367,10 @@ export function checkBooks(docs: BookDoc[], vatRegistered: boolean, from: string
     const nui = nuiCell(d)
     if (!d.doc_no?.trim()) out.push({ level: 'error', doc: d, text: `${who}: mungon numri i faturës.` })
     if (!d.partner.trim()) out.push({ level: 'error', doc: d, text: `${who}: mungon emri i ${d.kind === 'sale' ? 'blerësit' : 'shitësit'}.` })
-    if (!nui) out.push({ level: d.kind === 'purchase' ? 'error' : 'warn', doc: d, text: `${who}: mungon NUI / numri fiskal${d.kind === 'sale' ? ' i blerësit (ose kodi sipas udhëzimit të ATK-së)' : ' i shitësit'}.` })
+    // a day of fiscal coupons is sold to final consumers: no buyer NUI
+    if (d.source === 'kasa') {
+      /* nothing to check */
+    } else if (!nui) out.push({ level: d.kind === 'purchase' ? 'error' : 'warn', doc: d, text: `${who}: mungon NUI / numri fiskal${d.kind === 'sale' ? ' i blerësit (ose kodi sipas udhëzimit të ATK-së)' : ' i shitësit'}.` })
     else if (!/^\d$/.test(nui) && !/^\d{9}$/.test(nui) && !(d.kind === 'purchase' && /^\d{10}$/.test(nui)))
       out.push({ level: 'error', doc: d, text: `${who}: NUI / numri fiskal "${nui}" duhet të ketë 9 shifra${d.kind === 'purchase' ? ' (ose 10 për numrin personal)' : ''}.` })
     const parts = r2(d.net_e + d.vat_e + d.net_d + d.vat_d + d.amt_c + d.amt_a + d.vat_nd)

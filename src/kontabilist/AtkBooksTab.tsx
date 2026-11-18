@@ -48,6 +48,11 @@ export function AtkBooksTab({ client }: { client: Client }) {
   const rowsOf = useMemo(() => Object.fromEntries(books.map((b) => [b, buildRows(b, docs.data ?? [])])) as Record<BookKind, ReturnType<typeof buildRows>>, [books, docs.data])
   const issues = useMemo(() => checkBooks(docs.data ?? [], client.vat_registered, period.from, period.to), [docs.data, client.vat_registered, period.from, period.to])
   const errors = issues.filter((i) => i.level === 'error')
+  // the fiscal coupons of the linked client's tills, one row per day and till (0039)
+  const kasa = useMemo(() => {
+    const rows = (docs.data ?? []).filter((d) => d.source === 'kasa')
+    return { rows: rows.length, days: new Set(rows.map((d) => d.date)).size, coupons: rows.reduce((n, d) => n + (d.coupons ?? 0), 0), returns: rows.reduce((n, d) => n + (d.returns ?? 0), 0), total: rows.reduce((n, d) => n + d.total, 0) }
+  }, [docs.data])
 
   const fileName = (b: BookKind) => `${BOOK_LABELS[b]} - ${client.name.replace(/[\\/:*?"<>|]+/g, ' ')} - ${period.from}_${period.to}.xlsx`
   const download = useMutation({ mutationFn: (b: BookKind) => downloadBook(fileName(b), b, rowsOf[b]) })
@@ -91,6 +96,13 @@ export function AtkBooksTab({ client }: { client: Client }) {
         <p className="mt-3 text-sm text-muted">
           {client.name} {client.vat_registered ? 'është në TVSH – shkarkohen librat "me TVSH".' : 'nuk është në TVSH – shkarkohen librat "jo TVSH".'} Skedari është modeli zyrtar i ATK-së, i mbushur me dokumentet e periudhës.
         </p>
+        {kasa.rows > 0 && (
+          <p className="mt-3 rounded-ctl bg-brand-100 px-4 py-3 text-sm text-brand-600">
+            Kuponat fiskalë të arkave SEF janë në librin e shitjes vetë: {kasa.coupons} kupona
+            {kasa.returns ? ` dhe ${kasa.returns} anulime/kthime` : ''} në {kasa.days} ditë, gjithsej {kasa.total.toFixed(2)} € – një rresht për çdo ditë dhe arkë,
+            si "Konsumatorë të fundit".
+          </p>
+        )}
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {books.map((b) => (
             <Button key={b} className="h-14 justify-start text-left" disabled={!docs.data} loading={download.isPending && download.variables === b} onClick={() => download.mutate(b)}>
