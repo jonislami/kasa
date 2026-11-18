@@ -1,167 +1,308 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
-import { CheckCircle2 } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { ArrowLeft, ArrowRight, CheckCircle2 } from 'lucide-react'
 import { useAuth } from '@/app/AuthProvider'
 import { PublicFooter, PublicHeader } from '@/features/landing/LandingPage'
-import { Button, Input, Select } from '@/components/ui'
-import { BUSINESS_TYPE_LIST, type BusinessType } from '@/lib/business'
-import { cn } from '@/lib/cn'
-import { registerBusiness, type RegisterInput } from './api'
+import { Button, Input } from '@/components/ui'
+import { registerBusiness } from './api'
+import { fetchActivities, nuiTaken, saveApplication, uploadDocument, type Activity } from './applicationApi'
+import {
+  CompanyStep,
+  DocumentsBlock,
+  EMPTY_APPLICATION,
+  Review,
+  STEPS,
+  Section,
+  Stepper,
+  TaxStep,
+  UnitsStep,
+  validateStep,
+  type ApplicationData,
+  type DocItem,
+  type Errors,
+} from './ApplicationForm'
 
-const EMPTY: RegisterInput = {
-  owner_name: '',
-  business_name: '',
-  type: 'market',
-  nui: '',
-  fiscal_number: '',
-  vat_number: '',
-  address: '',
-  city: '',
-  phone: '',
-  email: '',
-  password: '',
-  activity: '',
-  registers: 1,
-  note: '',
-  website: '',
+const DRAFT = 'kasa.register.v2'
+// shown until migration 0041 serves the list from the database
+const FALLBACK_ACTIVITIES: Activity[] = ['Tregti me pakicë', 'Tregti me shumicë', 'Gastronomi', 'Ndërtim', 'Shërbime', 'Automjete', 'Barnatore', 'Market', 'Autopjesë', 'Depo'].map(
+  (name, i) => ({ id: name, name, sort: i, active: true }),
+)
+
+function loadDraft(): { d: ApplicationData; step: number; done: number } {
+  try {
+    const v = JSON.parse(sessionStorage.getItem(DRAFT) ?? 'null') as { d: ApplicationData; step: number; done: number } | null
+    if (v?.d?.company && Array.isArray(v.d.units)) return { d: { ...EMPTY_APPLICATION, ...v.d, company: { ...EMPTY_APPLICATION.company, ...v.d.company }, tax: { ...EMPTY_APPLICATION.tax, ...v.d.tax } }, step: v.step || 1, done: v.done || 0 }
+  } catch {
+    /* a new form */
+  }
+  return { d: EMPTY_APPLICATION, step: 1, done: 0 }
 }
 
-/** /regjistrohu – the client applies; the account waits for the approval of the platform admin. */
+interface LocalFile {
+  key: string
+  file: File
+  url: string
+}
+const local = (f: File): LocalFile => ({ key: `${f.name}-${f.size}-${f.lastModified}-${Math.random()}`, file: f, url: URL.createObjectURL(f) })
+
+/** /regjistrohu – the application of a new business in four steps; the admin approves it. */
 export function RegisterPage() {
   const { status, signIn } = useAuth()
   const navigate = useNavigate()
-  const [f, setF] = useState<RegisterInput>(EMPTY)
+  const first = useMemo(loadDraft, [])
+  const [d, setD] = useState<ApplicationData>(first.d)
+  const [step, setStep] = useState(first.step)
+  const [done, setDone] = useState(first.done)
+  const [errors, setErrors] = useState<Errors>({})
+  const [nuiState, setNuiState] = useState<'checking' | 'taken' | 'free' | null>(null)
+  const [cert, setCert] = useState<LocalFile | null>(null)
+  const [others, setOthers] = useState<LocalFile[]>([])
+  const [docError, setDocError] = useState<string | null>(null)
+  const [password, setPassword] = useState('')
   const [password2, setPassword2] = useState('')
   const [accept, setAccept] = useState(false)
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [done, setDone] = useState(false)
-  if (status === 'ready' && !done) return <Navigate to="/" replace />
+  const [website, setWebsite] = useState('') // honeypot
+  const [phase, setPhase] = useState<'form' | 'sending' | 'sent'>('form')
+  const [sendError, setSendError] = useState<string | null>(null)
+  const [afterError, setAfterError] = useState<string | null>(null)
+  const acts = useQuery({ queryKey: ['business-activities'], queryFn: fetchActivities, retry: false, staleTime: 5 * 60_000 })
+  const activities = acts.data?.length ? acts.data.filter((a) => a.active) : FALLBACK_ACTIVITIES
 
-  const set = (k: keyof RegisterInput) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value })
-  const submit = async (e: FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    if (f.password !== password2) return setError('Fjalëkalimet nuk përputhen')
-    if (!accept) return setError('Prano kushtet e përdorimit')
-    setBusy(true)
+  useEffect(() => {
     try {
-      await registerBusiness({ ...f, nui: f.nui.replace(/\D/g, '') })
-      setDone(true)
-      // sign in right away: the owner sees the status of the application at /llogaria
-      // one retry: a brief network drop must not leave the owner on the "Hyr" screen
-      let err = await signIn(f.email, f.password, true)
-      if (err) {
-        await new Promise((r) => setTimeout(r, 1500))
-        err = await signIn(f.email, f.password, true)
-      }
-      if (!err) navigate('/llogaria', { replace: true })
-    } catch (err) {
-      setError((err as Error).message)
+      sessionStorage.setItem(DRAFT, JSON.stringify({ d, step, done }))
+    } catch {
+      /* storage unavailable */
     }
-    setBusy(false)
+  }, [d, step, done])
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [step])
+
+  if (status === 'ready' && phase === 'form') return <Navigate to="/" replace />
+
+  // a corrected field loses its error
+  const clear = (keys: string[]) => setErrors((e) => (keys.some((k) => k in e) ? Object.fromEntries(Object.entries(e).filter(([k]) => !keys.includes(k))) : e))
+  const setCompany = (p: Partial<ApplicationData['company']>) => {
+    clear(Object.keys(p))
+    if ('nui' in p) setNuiState(null)
+    setD((x) => {
+      const company = { ...x.company, ...p }
+      // the first unit follows the company's address until it is changed
+      const u0 = x.units[0]
+      const follow = u0 && !u0.name && (u0.address === x.company.address || !u0.address) && (u0.city === x.company.city || !u0.city)
+      const units = follow ? [{ ...u0, address: company.address, city: company.city, country: company.country }, ...x.units.slice(1)] : x.units
+      return { ...x, company, units }
+    })
   }
+  const setTax = (p: Partial<ApplicationData['tax']>) => {
+    clear(Object.keys(p))
+    setD((x) => ({ ...x, tax: { ...x.tax, ...p } }))
+  }
+
+  const checkNui = async (): Promise<boolean> => {
+    if (!/^\d{9}$/.test(d.company.nui)) return true
+    setNuiState('checking')
+    const taken = await nuiTaken(d.company.nui)
+    setNuiState(taken ? 'taken' : taken === false ? 'free' : null)
+    return !taken
+  }
+
+  const next = async () => {
+    const e = validateStep(step, d, { account: true })
+    setErrors(e)
+    if (Object.keys(e).length) return
+    if (step === 1 && !(await checkNui())) return
+    setDone(Math.max(done, step))
+    setStep(step + 1)
+  }
+  const go = (s: number) => {
+    setErrors({})
+    setStep(s)
+  }
+
+  const submit = async () => {
+    setSendError(null)
+    for (const s of [1, 2, 3]) {
+      const e = validateStep(s, d, { account: true })
+      if (Object.keys(e).length) {
+        setErrors(e)
+        setStep(s)
+        return
+      }
+    }
+    if (!cert) return setDocError('Ngarko certifikatën e regjistrimit të biznesit')
+    if (password.length < 8) return setSendError('Fjalëkalimi duhet të ketë të paktën 8 shenja')
+    if (password !== password2) return setSendError('Fjalëkalimet nuk përputhen')
+    if (!accept) return setSendError('Prano kushtet e përdorimit')
+    setPhase('sending')
+    const c = d.company
+    const email = c.email.trim().toLowerCase()
+    let businessId: string | null
+    try {
+      businessId = await registerBusiness({
+        owner_name: c.owner_name.trim(),
+        business_name: c.name.trim(),
+        type: c.type,
+        nui: c.nui,
+        fiscal_number: c.nui,
+        vat_number: d.tax.vat_registered ? d.tax.vat_number.trim() : '',
+        address: c.address.trim(),
+        city: c.city.trim(),
+        phone: c.phone.trim(),
+        email,
+        password,
+        activity: [...new Set(d.units.flatMap((u) => u.activities))].join(', ').slice(0, 200),
+        registers: Math.min(20, d.units.reduce((n, u) => n + u.registers, 0)),
+        note: d.partner_code.trim() ? `Kodi i partnerit: ${d.partner_code.trim()}` : '',
+        website,
+      })
+    } catch (err) {
+      setPhase('form')
+      setSendError((err as Error).message)
+      return
+    }
+    // the account exists: sign in, then the units, the tax profile and the documents
+    const problems: string[] = []
+    let err = await signIn(email, password, true)
+    if (err) {
+      await new Promise((r) => setTimeout(r, 1500))
+      err = await signIn(email, password, true)
+    }
+    if (err) problems.push('Hyrja nuk u krye – hyr me email-in dhe fjalëkalimin dhe plotëso aplikimin te llogaria.')
+    else {
+      try {
+        await saveApplication({
+          name: c.name.trim(),
+          nui: c.nui,
+          address: c.address.trim(),
+          country: c.country,
+          city: c.city.trim(),
+          owner_name: c.owner_name.trim(),
+          phone: c.phone.trim(),
+          partner_code: d.partner_code.trim(),
+          tax: d.tax,
+          units: d.units,
+          initial: true,
+        })
+      } catch (e) {
+        problems.push(`Njësitë dhe të dhënat tatimore: ${(e as Error).message}`)
+      }
+      if (businessId) {
+        for (const [kind, f] of [['certificate', cert.file], ...others.map((o) => ['other', o.file] as const)] as const) {
+          try {
+            await uploadDocument(businessId, kind, f)
+          } catch (e) {
+            problems.push(`Dokumenti ${f.name}: ${(e as Error).message}`)
+          }
+        }
+      }
+    }
+    try {
+      sessionStorage.removeItem(DRAFT)
+    } catch {
+      /* ignore */
+    }
+    setPhase('sent')
+    if (problems.length) setAfterError(problems.join(' '))
+    else navigate('/llogaria', { replace: true })
+  }
+
+  const docItems = (): { certificate: DocItem | null; others: DocItem[] } => ({
+    certificate: cert ? { key: cert.key, name: cert.file.name, size: cert.file.size, open: () => void window.open(cert.url, '_blank', 'noopener'), remove: () => setCert(null) } : null,
+    others: others.map((o) => ({ key: o.key, name: o.file.name, size: o.file.size, open: () => void window.open(o.url, '_blank', 'noopener'), remove: () => setOthers((x) => x.filter((y) => y.key !== o.key)) })),
+  })
 
   return (
     <div className="min-h-dvh bg-bg">
       <PublicHeader />
-      <section className="border-b border-line bg-white pb-24">
-        <div className="mx-auto max-w-[900px] px-5 pt-8 md:pt-12">
-          <h1 className="text-[30px] font-semibold tracking-[-0.03em] text-ink md:text-[40px]">Regjistro biznesin</h1>
-          <p className="mt-3 max-w-xl text-[16px] text-muted">
-            Plotëso të dhënat e biznesit një herë. Pas aprovimit e merr çelësin e arkës te llogaria jote dhe instalon KontoSef.
-          </p>
-          <ol className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-[#344054]">
-            {['Regjistrimi', 'Aprovimi', 'Instalimi'].map((s, i) => (
-              <li key={s} className="flex items-center gap-2">
-                <span className="num flex h-6 w-6 items-center justify-center rounded-full border border-field text-xs font-semibold">{i + 1}</span> {s}
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-      <main className="mx-auto -mt-16 max-w-[900px] px-5 pb-16">
-        {done ? (
-          <div className="rounded-[20px] border border-line bg-white p-8 text-center shadow-sm">
-            <CheckCircle2 className="mx-auto h-12 w-12 text-brand-600" />
-            <h2 className="mt-3 text-[22px] font-semibold tracking-[-0.015em]">Regjistrimi u dërgua</h2>
-            <p className="mt-2 text-muted">Pas aprovimit, te llogaria jote të dalin çelësat e arkave dhe shkarkimi i KontoSef-it.</p>
-            <Link to="/login" className="mt-5 inline-block">
-              <Button size="lg">Hyr</Button>
+      <main className="mx-auto max-w-[880px] px-4 pb-16 pt-8 md:px-6 md:pt-12">
+        <h1 className="text-[28px] font-semibold tracking-[-0.03em] text-ink md:text-[34px]">Regjistro biznesin</h1>
+        <p className="mt-2 max-w-xl text-[15px] text-muted">Katër hapa të shkurtër. Pas aprovimit merr çelësat e arkave te llogaria jote dhe instalon KontoSef.</p>
+
+        {phase === 'sent' ? (
+          <div className="mt-8 rounded-card border border-line bg-white p-8 text-center">
+            <CheckCircle2 className="mx-auto h-11 w-11 text-brand-600" />
+            <h2 className="mt-3 text-[21px] font-semibold tracking-[-0.015em]">Aplikimi u dërgua</h2>
+            <p className="mt-2 text-muted">Statusi i aplikimit shihet te llogaria jote. Të njoftojmë kur të aprovohet.</p>
+            {afterError && <p className="mx-auto mt-4 max-w-lg rounded-ctl bg-amber-100 px-4 py-3 text-left text-sm text-amber-700">{afterError}</p>}
+            <Link to="/llogaria" className="mt-5 inline-block">
+              <Button size="lg">Shko te llogaria</Button>
             </Link>
           </div>
         ) : (
-          <form onSubmit={submit} noValidate className="rounded-[20px] border border-line bg-white p-6 shadow-sm md:p-8">
-            <h2 className="text-[19px] font-semibold tracking-[-0.015em]">Lloji i biznesit</h2>
-            <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-5">
-              {BUSINESS_TYPE_LIST.map((t) => (
-                <button
-                  key={t.code}
-                  type="button"
-                  onClick={() => setF({ ...f, type: t.code as BusinessType })}
-                  className={cn('flex flex-col items-center gap-1.5 rounded-card border-2 px-2 py-3 text-center', f.type === t.code ? 'border-brand-600 bg-brand-100 text-brand-600' : 'border-line text-muted hover:border-field')}
-                >
-                  <t.icon className="h-6 w-6" />
-                  <span className="text-sm font-semibold leading-tight">{t.label}</span>
-                  <span className="text-[11px] leading-tight">{t.description}</span>
-                </button>
-              ))}
+          <>
+            <div className="mt-7">
+              <Stepper step={step} done={done} onGo={go} />
             </div>
-
-            <h2 className="mt-7 text-[19px] font-semibold tracking-[-0.015em]">Biznesi</h2>
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <Input label="Emri i biznesit" value={f.business_name} onChange={set('business_name')} autoComplete="organization" />
+            <div className="mt-5 rounded-card border border-line bg-white p-5 md:p-8">
+              <div className="mb-6">
+                <div className="text-[12px] font-semibold uppercase tracking-wide text-muted">Hapi {step} nga 4</div>
+                <h2 className="mt-1 text-[21px] font-semibold tracking-[-0.015em]">{STEPS[step - 1]}</h2>
               </div>
-              <Input label="Numri unik i biznesit (NUI)" inputMode="numeric" maxLength={9} value={f.nui} onChange={(e) => setF({ ...f, nui: e.target.value.replace(/\D/g, '') })} />
-              <Input label="Numri fiskal" value={f.fiscal_number} onChange={set('fiscal_number')} />
-              <Input label="Numri i TVSH-së (nëse ke)" value={f.vat_number ?? ''} onChange={set('vat_number')} />
-              <Input label="Veprimtaria" placeholder="p.sh. kafe-bar, market ushqimor" value={f.activity ?? ''} onChange={set('activity')} />
-              <Input label="Adresa" value={f.address} onChange={set('address')} autoComplete="street-address" />
-              <Input label="Qyteti" value={f.city} onChange={set('city')} autoComplete="address-level2" />
-              <Select
-                label="Sa arka të duhen"
-                value={String(f.registers ?? 1)}
-                onChange={(e) => setF({ ...f, registers: Number(e.target.value) })}
-                options={[1, 2, 3, 4, 5].map((n) => ({ value: String(n), label: n === 5 ? '5 ose më shumë' : String(n) }))}
-              />
-            </div>
+              {step === 1 && <CompanyStep d={d} setCompany={setCompany} setTax={setTax} errors={errors} account nuiState={nuiState} onNuiBlur={() => void checkNui()} />}
+              {step === 2 && <TaxStep d={d} setTax={setTax} errors={errors} />}
+              {step === 3 && <UnitsStep d={d} setUnits={(units) => (setErrors({}), setD((x) => ({ ...x, units })))} activities={activities} errors={errors} />}
+              {step === 4 && (
+                <div className="flex flex-col gap-6">
+                  <DocumentsBlock
+                    {...docItems()}
+                    onCertificate={(f) => setCert(local(f))}
+                    onOthers={(fs) => setOthers((x) => [...x, ...fs.map(local)].slice(0, 19))}
+                    error={docError}
+                    setError={setDocError}
+                    busy={phase === 'sending'}
+                  />
+                  <Section title="Kodi i partnerit" hint="Opsionale – nëse të ka rekomanduar një partner i KontoSef">
+                    <div className="max-w-xs">
+                      <Input value={d.partner_code} onChange={(e) => setD((x) => ({ ...x, partner_code: e.target.value }))} />
+                    </div>
+                  </Section>
+                  <Section title="Kontrollo të dhënat">
+                    <Review d={d} onEdit={go} docs={(cert ? 1 : 0) + others.length} />
+                  </Section>
+                  <Section title="Fjalëkalimi i llogarisë" hint={`Hyrja: ${d.company.email || 'email-i yt'}`}>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <Input label="Fjalëkalimi (të paktën 8 shenja)" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                      <Input label="Përsërite fjalëkalimin" type="password" autoComplete="new-password" value={password2} onChange={(e) => setPassword2(e.target.value)} />
+                    </div>
+                    <input tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} className="hidden" aria-hidden="true" />
+                    <label className="mt-5 flex items-start gap-3 text-[14px]">
+                      <input type="checkbox" className="mt-0.5 h-[18px] w-[18px] accent-brand-600" checked={accept} onChange={(e) => setAccept(e.target.checked)} />
+                      <span>Pranoj kushtet e përdorimit dhe që të dhënat të përdoren për aktivizimin e arkës dhe fiskalizimin në ATK.</span>
+                    </label>
+                  </Section>
+                  {sendError && <p className="rounded-ctl bg-warn-100 px-4 py-3 text-sm text-warn-700">{sendError}</p>}
+                </div>
+              )}
 
-            <h2 className="mt-7 text-[19px] font-semibold tracking-[-0.015em]">Pronari dhe llogaria</h2>
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <Input label="Emri dhe mbiemri i pronarit" value={f.owner_name} onChange={set('owner_name')} autoComplete="name" />
-              <Input label="Telefoni" type="tel" value={f.phone} onChange={set('phone')} autoComplete="tel" />
-              <div className="sm:col-span-2">
-                <Input label="Email" type="email" value={f.email} onChange={set('email')} autoComplete="email" />
+              <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">
+                {step > 1 ? (
+                  <Button variant="secondary" onClick={() => go(step - 1)} disabled={phase === 'sending'}>
+                    <ArrowLeft className="h-4 w-4" /> Kthehu
+                  </Button>
+                ) : (
+                  <span className="text-sm text-muted">
+                    Ke llogari?{' '}
+                    <Link to="/login" className="font-semibold text-brand-600 hover:underline">
+                      Hyr
+                    </Link>
+                  </span>
+                )}
+                {step < 4 ? (
+                  <Button onClick={() => void next()} loading={nuiState === 'checking'}>
+                    Vazhdo <ArrowRight className="h-4 w-4" />
+                  </Button>
+                ) : (
+                  <Button size="lg" loading={phase === 'sending'} onClick={() => void submit()}>
+                    Dërgo aplikimin
+                  </Button>
+                )}
               </div>
-              <Input label="Fjalëkalimi (të paktën 8 shenja)" type="password" autoComplete="new-password" value={f.password} onChange={set('password')} />
-              <Input label="Përsërite fjalëkalimin" type="password" autoComplete="new-password" value={password2} onChange={(e) => setPassword2(e.target.value)} />
-              <div className="sm:col-span-2">
-                <Input label="Shënim (opsional)" value={f.note ?? ''} onChange={set('note')} />
-              </div>
-              {/* honeypot: hidden from people, filled by bots */}
-              <input tabIndex={-1} autoComplete="off" value={f.website} onChange={set('website')} className="hidden" aria-hidden="true" />
             </div>
-
-            <label className="mt-6 flex items-start gap-3 text-[15px]">
-              <input type="checkbox" className="mt-0.5 h-5 w-5 accent-brand-600" checked={accept} onChange={(e) => setAccept(e.target.checked)} />
-              <span>
-                Pranoj kushtet e përdorimit dhe që të dhënat të përdoren për aktivizimin e arkës dhe fiskalizimin në ATK.
-              </span>
-            </label>
-            {error && <p className="mt-4 rounded-ctl bg-warn-100 px-4 py-3 text-sm text-warn-700">{error}</p>}
-            <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-              <span className="text-sm text-muted">
-                Ke llogari?{' '}
-                <Link to="/login" className="font-semibold text-brand-600 hover:underline">
-                  Hyr
-                </Link>
-              </span>
-              <Button type="submit" size="lg" loading={busy}>
-                Dërgo regjistrimin
-              </Button>
-            </div>
-          </form>
+            {Object.keys(errors).length > 0 && <p className="mt-3 text-center text-sm text-warn-700">Plotëso fushat e shënuara me të kuqe.</p>}
+          </>
         )}
       </main>
       <PublicFooter />

@@ -51,8 +51,9 @@ export interface RegisterInput {
   website?: string // honeypot
 }
 
-export async function registerBusiness(input: RegisterInput): Promise<void> {
-  const { error } = await supabase.functions.invoke('register-business', { body: input })
+/** Creates the owner account and the business (status pending); returns the business id. */
+export async function registerBusiness(input: RegisterInput): Promise<string | null> {
+  const { data, error } = await supabase.functions.invoke('register-business', { body: input })
   if (error) {
     if (error instanceof FunctionsHttpError) {
       const payload = await error.context.json().catch(() => null)
@@ -60,6 +61,7 @@ export async function registerBusiness(input: RegisterInput): Promise<void> {
     }
     throw new Error('Nuk ka lidhje me serverin. Provo përsëri pas pak.')
   }
+  return (data as { business_id?: string } | null)?.business_id ?? null
 }
 
 export interface RegisterApplication {
@@ -154,6 +156,9 @@ export const EVENT_LABELS: Record<string, string> = {
   activation_key: 'U krijua çelës aktivizimi',
   device_activated: 'Pajisja u aktivizua me çelës',
   register_added: 'U shtua një arkë',
+  unit_approved: 'Njësia u aprovua',
+  unit_rejected: 'Njësia u refuzua',
+  unit_pending: 'Njësia u kthye në shqyrtim',
 }
 
 // ---------------------------------------------------------------------------

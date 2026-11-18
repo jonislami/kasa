@@ -8,6 +8,7 @@ import { businessType } from '@/lib/business'
 import { formatKosovoDateTime } from '@/lib/clock'
 import { cn } from '@/lib/cn'
 import { LICENSE_LABELS, STATUS_LABELS, type BusinessStatus } from '@/features/onboarding/api'
+import { ActivitiesCard } from './ApplicationReview'
 import { decide, fetchOnboardingList, type OnboardingRow } from './onboardingApi'
 import { PlatformShell } from './PlatformPage'
 
@@ -131,6 +132,9 @@ export function ApplicationsPage() {
             </ul>
           )}
         </Card>
+        <div className="mt-4 max-w-[720px]">
+          <ActivitiesCard />
+        </div>
       </div>
       {approve.error && <p className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-ctl bg-warn-100 px-4 py-3 text-sm text-warn-700 shadow">{(approve.error as Error).message}</p>}
     </PlatformShell>

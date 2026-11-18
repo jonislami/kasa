@@ -11,6 +11,7 @@ import { formatKosovoDateTime } from '@/lib/clock'
 import { cn } from '@/lib/cn'
 import { DownloadCards } from '@/features/download/DownloadPage'
 import { TillKeysCard } from './TillKeys'
+import { AccountApplication } from './AccountApplication'
 import {
   APP_STATUS,
   DEVICE_LABELS,
@@ -78,7 +79,7 @@ export function AccountPage() {
           <>
             <Steps s={s} />
             <StatusCard s={s} />
-            {['pending', 'needs_info'].includes(s.business.status) && <DataCard s={s} onSaved={reload} />}
+            {['pending', 'needs_info'].includes(s.business.status) && <AccountApplication s={s} onSaved={reload} fallback={<DataCard s={s} onSaved={reload} />} />}
             {/* before 0036 an active business could wait for a till application: keep that card for it */}
             {s.business.status === 'active' && !s.can_install && <RegisterCard s={s} onSaved={reload} />}
             {s.can_install && <TillKeysCard />}
@@ -136,7 +137,7 @@ function StatusCard({ s }: { s: OnboardingState }) {
   const lic = s.license
   const text: Record<string, string> = {
     pending: 'Regjistrimi është në shqyrtim. Zakonisht aprovohet brenda një dite pune; kjo faqe përditësohet vetë.',
-    needs_info: 'Për të vazhduar na duhen disa të dhëna. Plotësoji më poshtë dhe kliko “Dërgo të dhënat”.',
+    needs_info: 'Për të vazhduar na duhen disa të dhëna. Korrigjoji më poshtë dhe kliko “Dërgo korrigjimet”.',
     approved: 'Regjistrimi u aprovua. Kryej pagesën sipas udhëzimeve më poshtë; pas konfirmimit hapet aplikimi për arkë.',
     active: s.can_install ? 'Llogaria është aktive. Merr çelësin e arkës më poshtë, shkarko KontoSef dhe fillo punën.' : 'Llogaria është aktive. Apliko për arkë; pas aprovimit të del “Install SEF”.',
     rejected: 'Regjistrimi u refuzua. Për sqarime na kontakto.',
