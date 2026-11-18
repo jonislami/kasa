@@ -36,9 +36,9 @@ export interface BookDoc {
   amt_a: number
   vat_nd: number
   total: number
-  /** 'kasa': the fiscal coupons of one day and till of a linked client (0039), read-only; else a document. */
+  /** 'kasa': one fiscal coupon of a linked client's SEF till (0039/0040), read-only; else a document. */
   source?: 'kasa'
-  /** Coupons and cancels / returns in that day's row. */
+  /** 1 for a coupon, or 1 in returns for a cancel / return. */
   coupons?: number
   returns?: number
 }
@@ -367,7 +367,7 @@ export function checkBooks(docs: BookDoc[], vatRegistered: boolean, from: string
     const nui = nuiCell(d)
     if (!d.doc_no?.trim()) out.push({ level: 'error', doc: d, text: `${who}: mungon numri i faturës.` })
     if (!d.partner.trim()) out.push({ level: 'error', doc: d, text: `${who}: mungon emri i ${d.kind === 'sale' ? 'blerësit' : 'shitësit'}.` })
-    // a day of fiscal coupons is sold to final consumers: no buyer NUI
+    // a fiscal coupon is sold to the final consumer ("Qytetar", code 1)
     if (d.source === 'kasa') {
       /* nothing to check */
     } else if (!nui) out.push({ level: d.kind === 'purchase' ? 'error' : 'warn', doc: d, text: `${who}: mungon NUI / numri fiskal${d.kind === 'sale' ? ' i blerësit (ose kodi sipas udhëzimit të ATK-së)' : ' i shitësit'}.` })
