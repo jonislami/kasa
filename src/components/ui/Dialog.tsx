@@ -40,7 +40,7 @@ export function Dialog({
   if (!open) return null
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-[#4d5c53]/70 md:items-center md:p-6"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-[#0F172A]/45 md:items-center md:p-6"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget && dismissable) onClose()
       }}
@@ -49,14 +49,14 @@ export function Dialog({
         role="dialog"
         aria-modal="true"
         className={cn(
-          'flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-[20px] bg-white shadow-2xl md:rounded-[20px]',
+          'flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-pop md:rounded-2xl',
           width,
         )}
       >
         {title && (
-          <div className="flex items-start justify-between gap-4 border-b border-line px-6 py-5">
-            <div>
-              <h2 className="text-xl font-semibold text-ink">{title}</h2>
+          <div className="flex items-start justify-between gap-4 border-b border-line px-6 py-4">
+            <div className="pt-1.5">
+              <h2 className="text-[17px] font-semibold tracking-[-0.01em] text-ink">{title}</h2>
               {subtitle && <p className="mt-0.5 text-sm text-muted">{subtitle}</p>}
             </div>
             {dismissable && (
@@ -64,7 +64,7 @@ export function Dialog({
                 type="button"
                 onClick={onClose}
                 aria-label="Mbyll"
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-bg text-ink hover:bg-line"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-ctl text-muted hover:bg-[#F0F2F5] hover:text-ink"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -72,7 +72,7 @@ export function Dialog({
           </div>
         )}
         <div className="overflow-y-auto px-6 py-5">{children}</div>
-        {footer && <div className="border-t border-line bg-[#F6F8F6] px-6 py-4 pb-safe">{footer}</div>}
+        {footer && <div className="border-t border-line bg-[#F9FAFB] px-6 py-4 pb-safe">{footer}</div>}
       </div>
     </div>,
     document.body,

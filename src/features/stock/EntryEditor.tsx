@@ -258,7 +258,7 @@ export function EntryEditor({
         />
       </div>
 
-      <div className="border-y border-line bg-[#FAFBFA] px-5 py-4">
+      <div className="border-y border-line bg-[#FAFBFC] px-5 py-4">
         <ProductPicker products={products} onPick={(p) => setDraft((d) => addLine(d, p))} />
       </div>
 
@@ -269,7 +269,7 @@ export function EntryEditor({
           {/* Desktop table */}
           <div className="hidden md:block">
             <table className="w-full border-collapse text-sm">
-              <thead className="bg-[#F8FAF8]">
+              <thead className="bg-[#F9FAFB]">
                 <tr className="text-left text-[13px] text-muted">
                   <th className="border-b border-line px-5 py-3 font-semibold">Produkti</th>
                   <th className="border-b border-line px-3 py-3 text-right font-semibold">Stoku aktual</th>
@@ -341,7 +341,7 @@ export function EntryEditor({
             {draft.lines.map((l, i) => (
               <li key={i} className="rounded-card border border-line bg-white p-4">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="text-[17px] font-semibold">{l.name}</div>
+                  <div className="text-[16px] font-semibold tracking-[-0.01em]">{l.name}</div>
                   <div className="flex items-center gap-1 text-sm">
                     <span className="text-muted">Stoku:</span> {stockCell(l)}
                     <button type="button" aria-label={`Hiq ${l.name}`} onClick={() => removeLine(i)} className="ml-1 flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-bg">
@@ -375,7 +375,7 @@ export function EntryEditor({
                       className="mt-1 h-12 w-full rounded-ctl border border-field px-3 text-[16px] text-ink tabular-nums"
                     />
                   </label>
-                  <div className="pb-3 text-right text-[17px] font-bold tabular-nums">{formatEUR(lineTotal(num(l.quantity), num(l.unit_cost)))}</div>
+                  <div className="pb-3 text-right text-[17px] font-semibold tracking-[-0.015em] tabular-nums">{formatEUR(lineTotal(num(l.quantity), num(l.unit_cost)))}</div>
                 </div>
                 {lots && (
                   <>
@@ -420,7 +420,7 @@ export function EntryEditor({
             ))}
           <div className="mt-1 flex items-baseline justify-between border-t border-dashed border-line pt-2">
             <span className="font-semibold">Totali i faturës</span>
-            <span className="text-[26px] font-bold tabular-nums">{formatEUR(totals.gross)}</span>
+            <span className="text-[26px] font-semibold tracking-[-0.015em] tabular-nums">{formatEUR(totals.gross)}</span>
           </div>
         </div>
       </div>

@@ -123,7 +123,7 @@ export function SalesDialog({
             </div>
             {error && <p className="rounded-ctl bg-warn-100 px-4 py-2.5 text-sm text-warn-700">{error}</p>}
             {voidStep === 'reason' ? (
-              <div className="flex flex-col gap-3 rounded-xl border border-[#F3C9AE] bg-[#FFF8F3] p-4">
+              <div className="flex flex-col gap-3 rounded-xl border border-[#F3C4BE] bg-[#FEF8F7] p-4">
                 <div className="font-semibold">Anulo faturën {formatInvoiceNo(selected.invoice_no)}?</div>
                 <div className="flex flex-wrap gap-2">
                   {VOID_REASONS.map((r) => (

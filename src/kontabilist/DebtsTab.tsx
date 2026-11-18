@@ -59,10 +59,10 @@ export function DebtsTab({ client, onChanged }: { client: Client; onChanged: () 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-6">
         <Card className="col-span-2 p-4 md:col-span-1">
           <div className="text-sm text-muted">Gjithsej</div>
-          <div className="text-[22px] font-bold tabular-nums">{d ? formatEUR(d.total) : '…'}</div>
+          <div className="text-[22px] font-semibold tracking-[-0.015em] tabular-nums">{d ? formatEUR(d.total) : '…'}</div>
         </Card>
         {BUCKETS.map((b) => (
-          <Card key={b.key} className={cn('p-4', b.key !== 'current' && d && d.buckets[b.key] > 0 && 'border-[#F3C5A8] bg-warn-100/40')}>
+          <Card key={b.key} className={cn('p-4', b.key !== 'current' && d && d.buckets[b.key] > 0 && 'border-[#F3C4BE] bg-warn-100/40')}>
             <div className="text-sm text-muted">{b.label}</div>
             <div className={cn('text-[18px] font-semibold tabular-nums', b.key !== 'current' && d && d.buckets[b.key] > 0 && 'text-warn-700')}>{d ? formatEUR(d.buckets[b.key]) : '…'}</div>
           </Card>
@@ -81,7 +81,7 @@ export function DebtsTab({ client, onChanged }: { client: Client; onChanged: () 
               const open = openRow === key
               return (
                 <li key={key}>
-                  <button type="button" onClick={() => setOpenRow(open ? null : key)} className="flex w-full items-center gap-3 px-5 py-3.5 text-left hover:bg-[#F8FAF8]">
+                  <button type="button" onClick={() => setOpenRow(open ? null : key)} className="flex w-full items-center gap-3 px-5 py-3.5 text-left hover:bg-[#F9FAFB]">
                     {open ? <ChevronDown className="h-4 w-4 text-muted" /> : <ChevronRight className="h-4 w-4 text-muted" />}
                     <div className="min-w-0 flex-1">
                       <div className="font-medium">{p.name}</div>
@@ -97,7 +97,7 @@ export function DebtsTab({ client, onChanged }: { client: Client; onChanged: () 
                     <table className="mb-2 w-full text-sm">
                       <tbody>
                         {p.docs.map((x) => (
-                          <tr key={x.id} className="cursor-pointer border-t border-line hover:bg-[#F8FAF8]" onClick={() => setDocId(x.id)}>
+                          <tr key={x.id} className="cursor-pointer border-t border-line hover:bg-[#F9FAFB]" onClick={() => setDocId(x.id)}>
                             <td className="py-2 pl-12">{x.doc_no ?? '—'}</td>
                             <td>{formatDay(x.doc_date)}</td>
                             <td>afati {formatDay(x.due_date)}</td>

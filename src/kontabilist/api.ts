@@ -142,7 +142,7 @@ export async function setClientPeriod(clientId: string, month: string, status: V
 }
 
 // ---------------------------------------------------------------------------
-// Books of one client: the accountant's own documents (+ the Kasa books when linked)
+// Books of one client: the accountant's own documents (+ the KontoSef books when linked)
 // ---------------------------------------------------------------------------
 interface Manual {
   sales: { gross: number; net: number; vat: number; docs: number }
@@ -158,7 +158,7 @@ interface Manual {
 
 export interface ClientBooks {
   client: Client
-  /** Kasa part only (null when the client is not linked or access was taken away). */
+  /** KontoSef part only (null when the client is not linked or access was taken away). */
   kasa: Summary | null
   /** Everything together, in the shape the shared book screens use. */
   summary: Summary

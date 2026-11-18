@@ -314,7 +314,7 @@ export function ProductsPage() {
               <>
                 <div className="hidden md:block">
                   <Table>
-                    <thead className="bg-[#F8FAF8]">
+                    <thead className="bg-[#F9FAFB]">
                       <tr>
                         {showBarcode && <Th className="pl-4">Barkodi</Th>}
                         <Th className={cn(!showBarcode && 'pl-4')}>Emri</Th>
@@ -334,7 +334,7 @@ export function ProductsPage() {
                           <tr
                             key={p.id}
                             onClick={() => openEdit(p)}
-                            className={cn('cursor-pointer hover:bg-[#F8FAF8]', selected && 'bg-brand-100/60 hover:bg-brand-100/60')}
+                            className={cn('cursor-pointer hover:bg-[#F9FAFB]', selected && 'bg-brand-100/60 hover:bg-brand-100/60')}
                           >
                             {showBarcode && <Td className="pl-4 text-muted">{p.barcode ?? '—'}</Td>}
                             <Td className={cn(!showBarcode && 'pl-4')}>
@@ -366,13 +366,13 @@ export function ProductsPage() {
                       <li key={p.id}>
                         <button type="button" onClick={() => openEdit(p)} className="flex w-full items-center justify-between gap-3 rounded-card border border-line bg-white px-4 py-3.5 text-left">
                           <div className="min-w-0">
-                            <div className="truncate text-[17px] font-semibold">{p.name}</div>
+                            <div className="truncate text-[16px] font-semibold tracking-[-0.01em]">{p.name}</div>
                             <div className="truncate text-sm text-muted">
                               {[p.category_id ? catName.get(p.category_id) : null, m != null ? `Marzha ${(m * 100).toFixed(1)}%` : null].filter(Boolean).join(' · ') || '—'}
                             </div>
                           </div>
                           <div className="shrink-0 text-right">
-                            <div className="text-[17px] font-bold tabular-nums">{formatEUR(p.sale_price)}</div>
+                            <div className="text-[17px] font-semibold tracking-[-0.015em] tabular-nums">{formatEUR(p.sale_price)}</div>
                             <div className="text-sm text-muted">
                               {p.kind === 'service' ? (p.duration_min ? `${p.duration_min} min` : 'shërbim') : showStock ? <StockBadge p={p} /> : unitLabel(p.unit)}
                             </div>
@@ -420,7 +420,7 @@ export function ProductsPage() {
         <button
           type="button"
           onClick={openNew}
-          className="fixed bottom-[calc(76px+env(safe-area-inset-bottom))] right-4 z-30 flex h-14 items-center gap-2 rounded-2xl bg-brand-600 px-5 text-[17px] font-semibold text-white shadow-lg shadow-brand-600/30 md:hidden"
+          className="fixed bottom-[calc(76px+env(safe-area-inset-bottom))] right-4 z-30 flex h-14 items-center gap-2 rounded-2xl bg-brand-600 px-5 text-[16px] font-semibold tracking-[-0.01em] text-white shadow-lg shadow-brand-600/30 md:hidden"
         >
           <Plus className="h-5 w-5" /> {info.terms.newItem}
         </button>
@@ -551,7 +551,7 @@ function CategoryPanel({
         <button
           type="button"
           onClick={() => setAdding(true)}
-          className="mt-2 flex h-10 w-full items-center justify-center rounded-ctl border border-dashed border-field text-sm font-medium text-brand-600 hover:bg-[#F0F7F3]"
+          className="mt-2 flex h-10 w-full items-center justify-center rounded-ctl border border-dashed border-field text-sm font-medium text-brand-600 hover:bg-[#F2F6FC]"
         >
           + Kategori e re
         </button>

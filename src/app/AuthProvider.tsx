@@ -90,7 +90,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false
     ;(async () => {
       const { data } = await supabase.auth.getSession()
-      if (data.session && localStorage.getItem(NO_REMEMBER_KEY) && !sessionStorage.getItem(ALIVE_KEY)) {
+      // (not on /fjalekalimi: there the session comes from the password link and must stay)
+      if (data.session && localStorage.getItem(NO_REMEMBER_KEY) && !sessionStorage.getItem(ALIVE_KEY) && window.location.pathname !== '/fjalekalimi') {
         await supabase.auth.signOut({ scope: 'local' })
         localStorage.removeItem(NO_REMEMBER_KEY)
         if (!cancelled) setSession(null)

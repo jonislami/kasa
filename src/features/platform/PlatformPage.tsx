@@ -10,7 +10,8 @@ import { Badge, Button, Card, Dialog, EmptyState, StatCard, Table, Td, Th } from
 import { BUSINESS_TYPE_LIST, businessType, type BusinessType } from '@/lib/business'
 import { cn } from '@/lib/cn'
 import { formatEUR } from '@/lib/money'
-import { fetchPlatformBusinesses, generatePassword, resetOwnerPassword, setBusinessActive, type PlatformBusiness } from './api'
+import { fetchPlatformBusinesses, setBusinessActive, type PlatformBusiness } from './api'
+import { OwnerPasswordDialog } from './OwnerPasswordDialog'
 import { CredentialsDialog, type Credentials } from './CredentialsDialog'
 import { NewBusinessDialog } from './NewBusinessDialog'
 
@@ -29,10 +30,10 @@ export function PlatformShell({ children }: { children: ReactNode }) {
     <Shell
       brand={
         <div className="flex items-center gap-3">
-          <LogoMark size={36} />
+          <LogoMark size={34} />
           <div>
-            <div className="text-[16px] font-bold leading-tight">Kasa</div>
-            <div className="text-xs font-semibold text-brand-400">Platforma · Admin</div>
+            <div className="text-[14px] font-semibold leading-tight tracking-[-0.015em] text-ink">KontoSef.app</div>
+            <div className="text-[12px] text-muted">Platforma · Admin</div>
           </div>
         </div>
       }
@@ -46,7 +47,7 @@ export function PlatformShell({ children }: { children: ReactNode }) {
   )
 }
 
-type Confirm = { kind: 'password' | 'toggle'; business: PlatformBusiness } | null
+type Confirm = { kind: 'toggle'; business: PlatformBusiness } | null
 
 function StatusBadge({ b }: { b: PlatformBusiness }) {
   if (!b.active) return <Badge tone="warn">Çaktivizuar</Badge>
@@ -63,6 +64,7 @@ export function PlatformPage() {
   const [newOpen, setNewOpen] = useState(false)
   const [credentials, setCredentials] = useState<Credentials | null>(null)
   const [confirm, setConfirm] = useState<Confirm>(null)
+  const [passwordFor, setPasswordFor] = useState<PlatformBusiness | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
 
   const list = useQuery({ queryKey: ['platform-businesses'], queryFn: fetchPlatformBusinesses })
@@ -104,23 +106,10 @@ export function PlatformPage() {
     onError: (e: Error) => setActionError(e.message),
   })
 
-  const reset = useMutation({
-    mutationFn: async (b: PlatformBusiness) => {
-      const password = generatePassword()
-      const res = await resetOwnerPassword(b.id, password)
-      return { b, password, email: res.email }
-    },
-    onSuccess: ({ b, password, email }) => {
-      setConfirm(null)
-      setCredentials({ title: `Fjalëkalim i ri për ${b.name}`, ownerName: b.owner_name ?? 'pronari', email, password })
-    },
-    onError: (e: Error) => setActionError(e.message),
-  })
-
   return (
     <PlatformShell>
       <PageHeader
-        eyebrow="Të gjitha bizneset që përdorin Kasa"
+        eyebrow="Të gjitha bizneset që përdorin KontoSef"
         title="Bizneset"
         actions={
           <Button onClick={() => setNewOpen(true)}>
@@ -196,12 +185,12 @@ export function PlatformPage() {
               {/* Desktop table */}
               <div className="hidden md:block">
                 <Table>
-                  <thead className="bg-[#F8FAF8]">
+                  <thead className="bg-[#F9FAFB]">
                     <tr>
                       <Th className="pl-4">Biznesi</Th>
                       <Th>Lloji</Th>
                       <Th>Pronari · email i hyrjes</Th>
-                      <Th className="text-right">Përdorues</Th>
+                      <Th className="hidden text-right 2xl:table-cell">Përdorues</Th>
                       <Th className="text-right">Shitjet sot</Th>
                       <Th>Statusi</Th>
                       <Th>Veprimet</Th>
@@ -230,18 +219,18 @@ export function PlatformPage() {
                             <div className="text-ink">{b.owner_name ?? '—'}</div>
                             <div className="text-xs text-muted">{b.owner_email}</div>
                           </Td>
-                          <Td className="text-right">{b.users_count}</Td>
+                          <Td className="hidden text-right 2xl:table-cell">{b.users_count}</Td>
                           <Td className="text-right font-semibold">{b.sales_today > 0 ? formatEUR(b.sales_today) : '—'}</Td>
                           <Td>
                             <StatusBadge b={b} />
                           </Td>
                           <Td>
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 whitespace-nowrap">
                               <Button size="sm" onClick={() => navigate(`/platforma/biznes/${b.id}`)}>
                                 Detajet
                               </Button>
-                              <Button size="sm" variant="secondary" onClick={() => setConfirm({ kind: 'password', business: b })}>
-                                Fjalëkalim i ri
+                              <Button size="sm" variant="secondary" onClick={() => setPasswordFor(b)}>
+                                Fjalëkalimi
                               </Button>
                               {b.active ? (
                                 <Button size="sm" variant="danger" onClick={() => setConfirm({ kind: 'toggle', business: b })}>
@@ -283,7 +272,7 @@ export function PlatformPage() {
                     </div>
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       <Button onClick={() => navigate(`/platforma/biznes/${b.id}`)}>Detajet</Button>
-                      <Button variant="secondary" onClick={() => setConfirm({ kind: 'password', business: b })}>
+                      <Button variant="secondary" onClick={() => setPasswordFor(b)}>
                         Fjalëkalim i ri
                       </Button>
                       <Button variant={b.active ? 'danger' : 'secondary'} onClick={() => setConfirm({ kind: 'toggle', business: b })}>
@@ -328,9 +317,7 @@ export function PlatformPage() {
         onClose={() => setConfirm(null)}
         width="md:max-w-[460px]"
         title={
-          confirm?.kind === 'password'
-            ? 'Fjalëkalim i ri?'
-            : confirm?.business.active
+          confirm?.business.active
               ? `Çaktivizo ${confirm?.business.name}?`
               : `Aktivizo ${confirm?.business.name}?`
         }
@@ -339,30 +326,30 @@ export function PlatformPage() {
             <Button variant="secondary" onClick={() => setConfirm(null)}>
               Anulo
             </Button>
-            {confirm?.kind === 'password' ? (
-              <Button loading={reset.isPending} onClick={() => confirm && reset.mutate(confirm.business)}>
-                Krijo fjalëkalimin
-              </Button>
-            ) : (
-              <Button
-                variant={confirm?.business.active ? 'danger' : 'primary'}
-                loading={toggle.isPending}
-                onClick={() => confirm && toggle.mutate(confirm.business)}
-              >
-                {confirm?.business.active ? 'Çaktivizo' : 'Aktivizo'}
-              </Button>
-            )}
+            <Button
+              variant={confirm?.business.active ? 'danger' : 'primary'}
+              loading={toggle.isPending}
+              onClick={() => confirm && toggle.mutate(confirm.business)}
+            >
+              {confirm?.business.active ? 'Çaktivizo' : 'Aktivizo'}
+            </Button>
           </div>
         }
       >
         <p className="text-[15px] text-muted">
-          {confirm?.kind === 'password'
-            ? `Fjalëkalimi i vjetër i pronarit (${confirm.business.owner_email}) nuk do të punojë më. Fjalëkalimi i ri shfaqet vetëm një herë.`
-            : confirm?.business.active
+          {confirm?.business.active
               ? 'Askush nga ky biznes nuk mund të hyjë derisa ta aktivizosh përsëri. Të dhënat ruhen.'
               : 'Përdoruesit e këtij biznesi mund të hyjnë përsëri.'}
         </p>
       </Dialog>
+      <OwnerPasswordDialog
+        business={passwordFor}
+        onClose={() => setPasswordFor(null)}
+        onSaved={(c) => {
+          setPasswordFor(null)
+          setCredentials(c)
+        }}
+      />
     </PlatformShell>
   )
 }

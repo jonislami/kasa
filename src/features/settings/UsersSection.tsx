@@ -45,7 +45,7 @@ export function UsersSection() {
     <Card className="overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-5">
         <div>
-          <h2 className="text-[17px] font-semibold">Përdoruesit & PIN-et</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Përdoruesit & PIN-et</h2>
           <p className="text-sm text-muted">{info.terms.worker}ët hyjnë me PIN në pajisjet e lidhura; menaxherët edhe me email.</p>
         </div>
         <Button onClick={() => setEditing('new')}>

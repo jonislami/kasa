@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Button, Dialog, Input } from '@/components/ui'
 import { BUSINESS_TYPE_LIST, businessType, type BusinessType } from '@/lib/business'
 import { cn } from '@/lib/cn'
-import { createBusiness, generatePassword } from './api'
+import { createBusiness, generatePassword, MIN_PASSWORD } from './api'
 import type { Credentials } from './CredentialsDialog'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -46,6 +46,7 @@ export function NewBusinessDialog({
     if (!name.trim()) return setError('Shkruaj emrin e biznesit')
     if (!ownerName.trim()) return setError('Shkruaj emrin e pronarit')
     if (!EMAIL_RE.test(email.trim())) return setError('Email-i nuk është i saktë')
+    if (password.length < MIN_PASSWORD) return setError(`Fjalëkalimi duhet të ketë të paktën ${MIN_PASSWORD} shenja`)
     setBusy(true)
     setError(null)
     try {
@@ -102,7 +103,7 @@ export function NewBusinessDialog({
                 aria-pressed={sel}
                 className={cn(
                   'flex flex-col items-start rounded-xl border p-3.5 text-left transition-colors',
-                  sel ? 'border-2 border-brand-600 bg-[#F0F7F3] p-[13px]' : 'border-line hover:bg-bg',
+                  sel ? 'border-2 border-brand-600 bg-[#F2F6FC] p-[13px]' : 'border-line hover:bg-bg',
                 )}
               >
                 <div
@@ -139,13 +140,13 @@ export function NewBusinessDialog({
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium">Fjalëkalimi (gjenerohet automatikisht)</span>
+          <span className="text-[13px] font-medium text-[#344054]">Fjalëkalimi (shkruaje vetë ose gjeneroje)</span>
           <div className="flex gap-2.5">
             <div className="min-w-0 flex-1">
-              <Input aria-label="Fjalëkalimi" readOnly mono value={password} />
+              <Input aria-label="Fjalëkalimi" mono autoComplete="off" spellCheck={false} value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
-            <Button variant="secondary" className="h-[46px] shrink-0" onClick={() => setPassword(generatePassword())}>
-              Rigjenero
+            <Button variant="secondary" className="h-[44px] shrink-0" onClick={() => setPassword(generatePassword())}>
+              Gjenero
             </Button>
           </div>
         </div>

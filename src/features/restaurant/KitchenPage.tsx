@@ -163,7 +163,7 @@ export function KitchenPage() {
                   <ul className="flex-1 divide-y divide-line px-4">
                     {t.items.map((i, k) => (
                       <li key={k} className="py-2">
-                        <div className="text-[17px] font-semibold">
+                        <div className="text-[16px] font-semibold tracking-[-0.01em]">
                           <span className="tabular-nums">{Number(i.quantity)}</span> × {i.name}
                         </div>
                         {i.modifiers?.length > 0 && <div className="text-sm text-muted">{i.modifiers.join(', ')}</div>}

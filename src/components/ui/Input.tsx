@@ -10,8 +10,8 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const inputClass =
-  'w-full h-[46px] rounded-ctl border border-field bg-white px-3.5 text-ink placeholder:text-[#8A968F] ' +
-  'focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20 disabled:bg-bg read-only:bg-[#F2F5F2]'
+  'w-full h-[44px] rounded-ctl border border-field bg-white px-3 text-ink shadow-card placeholder:text-[#98A2B3] transition-colors hover:border-[#B5BCC7] ' +
+  'focus:border-brand-600 focus:outline-none focus:ring-[3px] focus:ring-brand-600/15 disabled:bg-bg disabled:text-muted read-only:bg-[#F9FAFB]'
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   { label, hint, error, labelRight, mono, className, id, ...rest },
@@ -24,7 +24,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       {(label || labelRight) && (
         <div className="flex items-center justify-between">
           {label && (
-            <label htmlFor={inputId} className="text-sm font-medium text-ink">
+            <label htmlFor={inputId} className="text-[13px] font-medium text-[#344054]">
               {label}
             </label>
           )}
@@ -38,9 +38,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         {...rest}
       />
       {error ? (
-        <p className="text-sm text-warn-700">{error}</p>
+        <p className="text-[13px] text-warn-700">{error}</p>
       ) : hint ? (
-        <p className="text-sm text-muted">{hint}</p>
+        <p className="text-[13px] text-muted">{hint}</p>
       ) : null}
     </div>
   )

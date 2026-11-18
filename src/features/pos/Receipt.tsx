@@ -166,7 +166,7 @@ export function QrImage({ text, className }: { text: string; className?: string 
       alive = false
     }
   }, [text])
-  if (!svg) return <div className={cn('aspect-square bg-[#F2F5F2]', className)} />
+  if (!svg) return <div className={cn('aspect-square bg-[#F3F4F6]', className)} />
   return <div className={cn('aspect-square [&>svg]:h-full [&>svg]:w-full', className)} dangerouslySetInnerHTML={{ __html: svg }} />
 }
 

@@ -59,7 +59,7 @@ export function RequireBusiness({ children }: { children: ReactNode }) {
     return <Blocked title="Të dhënat nuk u ngarkuan" text={error ?? 'Provo përsëri pas pak.'} />
   if (!ctx?.profile) {
     if (ctx?.is_platform_admin) return <Navigate to="/platforma" replace />
-    if (ctx?.accountant) return <Blocked title="Kjo është llogari kontabilisti" text="Hyr me këtë email në programin Kasa Kontabilist." />
+    if (ctx?.accountant) return <Blocked title="Kjo është llogari kontabilisti" text="Hyr me këtë email në programin KontoSef Kontabilist." />
     return <Blocked title="Llogaria nuk ka biznes" text="Kjo llogari nuk është e lidhur me asnjë biznes. Kontakto administratorin." />
   }
   if (!ctx.business?.active) {
@@ -73,7 +73,7 @@ export function RequireBusiness({ children }: { children: ReactNode }) {
     return <Blocked title="Llogaria është çaktivizuar" text="Kontakto pronarin ose menaxherin e biznesit." />
   // The web app is for managing the business; workers sell with their PIN in the till program (SEF).
   if (!isSefApp && ctx.profile.role === 'worker')
-    return <Blocked title="Punëtorët punojnë në programin e arkës" text="Hyr me PIN-in tënd në programin Kasa të instaluar në arkë. Aplikacioni web është për pronarin dhe menaxherët." />
+    return <Blocked title="Punëtorët punojnë në programin e arkës" text="Hyr me PIN-in tënd në programin KontoSef të instaluar në arkë. Aplikacioni web është për pronarin dhe menaxherët." />
   return <>{children}</>
 }
 

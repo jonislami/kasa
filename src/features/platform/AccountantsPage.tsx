@@ -21,7 +21,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 type Confirm = { kind: 'password' | 'toggle'; a: PlatformAccountant } | null
 
-/** /platforma/kontabilistet – accounts for the separate "Kasa Kontabilist" program. */
+/** /platforma/kontabilistet – accounts for the separate "KontoSef Kontabilist" program. */
 export function AccountantsPage() {
   const qc = useQueryClient()
   const [search, setSearch] = useState('')
@@ -61,7 +61,7 @@ export function AccountantsPage() {
   return (
     <PlatformShell>
       <PageHeader
-        eyebrow="Llogaritë për programin Kasa Kontabilist"
+        eyebrow="Llogaritë për programin KontoSef Kontabilist"
         title="Kontabilistët"
         actions={
           <Button onClick={() => setNewOpen(true)}>
@@ -72,7 +72,7 @@ export function AccountantsPage() {
       <div className="grid grid-cols-2 gap-3 px-4 py-5 md:gap-4 md:px-8 md:py-0 lg:grid-cols-3">
         <StatCard label="Kontabilistë aktivë" value={all.filter((a) => a.active).length} />
         <StatCard label="Klientë gjithsej" value={all.reduce((s, a) => s + a.clients, 0)} />
-        <StatCard label="Të lidhur me Kasa" value={all.reduce((s, a) => s + a.kasa_clients, 0)} />
+        <StatCard label="Të lidhur me KontoSef" value={all.reduce((s, a) => s + a.kasa_clients, 0)} />
       </div>
 
       <div className="px-4 pb-8 md:px-8 md:py-5">
@@ -104,7 +104,7 @@ export function AccountantsPage() {
             <EmptyState icon={<Calculator className="h-6 w-6" />} title={all.length === 0 ? 'Ende pa kontabilistë' : 'Asnjë nuk përputhet'} text={all.length === 0 ? 'Krijo llogarinë e parë me "Kontabilist i ri".' : undefined} />
           ) : (
             <Table>
-              <thead className="bg-[#F8FAF8]">
+              <thead className="bg-[#F9FAFB]">
                 <tr>
                   <Th className="pl-4">Kontabilisti</Th>
                   <Th className="hidden md:table-cell">Email-i i hyrjes</Th>
@@ -125,7 +125,7 @@ export function AccountantsPage() {
                     <Td className="hidden md:table-cell">{a.email}</Td>
                     <Td className="text-right">
                       {a.clients}
-                      {a.kasa_clients > 0 && <span className="text-xs text-muted"> ({a.kasa_clients} Kasa)</span>}
+                      {a.kasa_clients > 0 && <span className="text-xs text-muted"> ({a.kasa_clients} KontoSef)</span>}
                     </Td>
                     <Td className="hidden whitespace-nowrap lg:table-cell">{a.last_sign_in_at ? formatKosovoDateTime(a.last_sign_in_at) : 'ende pa hyrë'}</Td>
                     <Td>{a.active ? <Badge tone="success">Aktiv</Badge> : <Badge tone="warn">Çaktivizuar</Badge>}</Td>
@@ -238,7 +238,7 @@ function NewAccountantDialog({ open, onClose, onCreated }: { open: boolean; onCl
       open={open}
       onClose={close}
       title="Kontabilist i ri"
-      subtitle="Llogari për programin Kasa Kontabilist. Kontabilisti i shton vetë klientët e tij."
+      subtitle="Llogari për programin KontoSef Kontabilist. Kontabilisti i shton vetë klientët e tij."
       width="md:max-w-[520px]"
       footer={
         <div className="flex items-center justify-end gap-2.5">

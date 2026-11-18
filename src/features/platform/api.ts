@@ -56,12 +56,23 @@ export function createBusiness(input: {
   return callPlatformAdmin<{ business_id: string; email: string }>({ action: 'create_business', ...input })
 }
 
+/** Shortest password Supabase accepts (the admin may choose any password from here up). */
+export const MIN_PASSWORD = 6
+
+/** Where the owner lands from the link: this site's page for choosing the new password. */
+export const PASSWORD_PAGE = () => `${window.location.origin}/fjalekalimi`
+
+/** One-time link for the owner to choose a new password; with send_email it is also e-mailed (needs Resend). */
+export function ownerPasswordLink(business_id: string, send_email: boolean) {
+  return callPlatformAdmin<{ email: string; link: string; emailed: boolean }>({ action: 'password_link', business_id, redirect_to: PASSWORD_PAGE(), send_email })
+}
+
 export function resetOwnerPassword(business_id: string, password: string) {
   return callPlatformAdmin<{ email: string }>({ action: 'reset_password', business_id, password })
 }
 
 // ---------------------------------------------------------------------------
-// Accountants (the separate "Kasa Kontabilist" program)
+// Accountants (the separate "KontoSef Kontabilist" program)
 // ---------------------------------------------------------------------------
 export interface PlatformAccountant {
   user_id: string
@@ -99,7 +110,7 @@ export function resetAccountantPassword(user_id: string, password: string) {
 }
 
 /** Where accountants sign in (set VITE_KONTABILIST_URL to the web address of the program). */
-export const KONTABILIST_ADDRESS = (import.meta.env.VITE_KONTABILIST_URL as string | undefined)?.trim() || 'Programi "Kasa Kontabilist"'
+export const KONTABILIST_ADDRESS = (import.meta.env.VITE_KONTABILIST_URL as string | undefined)?.trim() || 'Programi "KontoSef Kontabilist"'
 
 /** 10 characters without look-alikes (0/O, 1/l/I), at least one of each class. */
 export function generatePassword(length = 10): string {

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import { activateWithKey, clearLink, fetchPinWorkers, getLink, pinLogin, PinLoginError, type DeviceLink, type PinWorker } from '@/lib/deviceLink'
 
-const COLORS = ['bg-brand-600', 'bg-bt-600', 'bg-[#A16207]', 'bg-[#7C3AED]', 'bg-[#BE123C]', 'bg-[#0F766E]']
+const COLORS = ['bg-brand-600', 'bg-[#475467]', 'bg-[#A16207]', 'bg-[#7C3AED]', 'bg-[#BE123C]', 'bg-[#0F766E]']
 const initials = (n: string) =>
   n
     .split(/\s+/)
@@ -136,7 +136,7 @@ export function PinLogin() {
                   }}
                   className="flex w-full items-center gap-3 rounded-card border border-line bg-white p-3 text-left hover:border-brand-600 disabled:opacity-50"
                 >
-                  <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white', COLORS[i % COLORS.length])}>{initials(w.full_name)}</span>
+                  <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white', COLORS[i % COLORS.length])}>{initials(w.full_name)}</span>
                   <span className="min-w-0">
                     <span className="block truncate font-semibold">{w.full_name}</span>
                     <span className="block text-xs text-muted">{w.locked ? 'I bllokuar' : w.role === 'worker' ? 'Punëtor' : w.role === 'manager' ? 'Menaxher' : 'Pronari'}</span>
@@ -169,7 +169,7 @@ export function PinLogin() {
         <ChevronLeft className="h-4 w-4" /> Ndrysho punëtorin
       </button>
       <div className="text-center">
-        <div className="text-[20px] font-bold">{selected.full_name}</div>
+        <div className="text-[20px] font-semibold tracking-[-0.015em]">{selected.full_name}</div>
         <div className="text-sm text-muted">Shkruaj PIN-in 4-shifror</div>
         <div className="mt-5 flex justify-center gap-3" aria-label={`${pin.length} nga 4 shifra`}>
           {[0, 1, 2, 3].map((i) => (
@@ -249,7 +249,7 @@ function ActivationForm({
       <p className="mt-1 text-sm text-muted">
         {replacing
           ? `Kjo arkë është e lidhur tani me ${replacing}. Me çelës të ri lidhet me biznesin ose arkën e çelësit; lidhja e vjetër mbetet derisa çelësi i ri të pranohet.`
-          : 'Shkruaj çelësin e aktivizimit që të dërgoi administratori i Kasa-s. Kjo bëhet vetëm njëherë në këtë pajisje.'}
+          : 'Shkruaj çelësin e aktivizimit që të dërgoi administratori i KontoSef-it. Kjo bëhet vetëm njëherë në këtë pajisje.'}
       </p>
       <label className="mt-5 block text-sm font-medium" htmlFor="activation-key">
         Çelësi i aktivizimit

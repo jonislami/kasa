@@ -202,11 +202,11 @@ function TableTile({ t, order, onClick, style, className }: { t: Draft; order?: 
       className={cn(
         'relative flex flex-col items-center justify-center gap-0.5 border-2 p-2 text-center transition-colors',
         t.shape === 'round' ? 'rounded-full' : 'rounded-card',
-        busy ? 'border-brand-600 bg-brand-100' : 'border-line bg-[#FAFBFA] enabled:hover:border-brand-600',
+        busy ? 'border-brand-600 bg-brand-100' : 'border-line bg-[#FAFBFC] enabled:hover:border-brand-600',
         className,
       )}
     >
-      <span className="text-[20px] font-bold leading-none">{t.name}</span>
+      <span className="text-[20px] font-semibold tracking-[-0.015em] leading-none">{t.name}</span>
       {order ? (
         <>
           <span className="text-sm font-semibold tabular-nums text-brand-900">{formatEUR(order.total)}</span>

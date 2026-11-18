@@ -42,7 +42,8 @@ export const CACHE_MAX_AGE = 7 * 24 * 3600 * 1000
 
 /** Only finished, successful reads are stored – never a half-loaded or failed one. */
 export function shouldPersist(q: Query): boolean {
-  return q.state.status === 'success' && q.state.data !== undefined
+  // a Map does not survive JSON (it comes back as {}), so those are fetched again instead
+  return q.state.status === 'success' && q.state.data !== undefined && !(q.state.data instanceof Map)
 }
 
 /** The cache belongs to one signed-in person; another person on the same device starts clean. */

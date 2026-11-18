@@ -1,5 +1,5 @@
-// The accountant program is not a PWA: Kasa's shared layout imports the service-worker hook,
-// which resolves to this no-op in the Kasa Kontabilist build (vite.kontabilist.config.ts).
+// The accountant program is not a PWA: KontoSef's shared layout imports the service-worker hook,
+// which resolves to this no-op in the KontoSef Kontabilist build (vite.kontabilist.config.ts).
 import { useState } from 'react'
 
 export function useRegisterSW(_options?: unknown) {

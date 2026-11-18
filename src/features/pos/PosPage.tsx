@@ -576,7 +576,7 @@ export function PosPage() {
           onClick={() => setQuickAdd({ barcode: null })}
           title={business.type === 'salon' ? 'Shto shërbimin' : 'Shto produktin'}
           aria-label={business.type === 'salon' ? 'Shto shërbimin' : 'Shto produktin'}
-          className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600 text-white hover:bg-[#0b5a41]"
+          className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600 text-white hover:bg-[#1A4390]"
         >
           <Plus className="h-6 w-6" />
         </button>
@@ -751,8 +751,8 @@ export function PosPage() {
             <div className="text-center">
               <div className="text-sm text-muted">{receipt.offline ? 'Ruajtur pa internet – dërgohet më vonë' : tr('Pagesa u krye', lang)}</div>
               {receipt.change_amount > 0 && (
-                <div className="mt-1 text-[28px] font-bold">
-                  Kusuri <span className="text-warn-700">{formatEUR(receipt.change_amount)}</span>
+                <div className="mt-1 text-[28px] font-semibold tracking-[-0.015em]">
+                  Kusuri <span className="text-ok-700">{formatEUR(receipt.change_amount)}</span>
                 </div>
               )}
             </div>
@@ -814,7 +814,7 @@ export function PosPage() {
   // ================= DESKTOP =================
   if (wide) {
     return (
-      <div className="flex h-[calc(100dvh-44px)] gap-5 p-6 pt-3">
+      <div className="flex h-[calc(100dvh-44px-69px)] gap-5 p-6 pt-3">
         <div className="flex min-w-0 flex-1 flex-col gap-4">
           <div className="flex items-center gap-3">
             {searchBox}
@@ -823,7 +823,6 @@ export function PosPage() {
             </Button>
             {toolbar}
           </div>
-          {staffBar}
           {staffBar}
         {offlineBanner}
           {messages}
@@ -907,7 +906,7 @@ export function PosPage() {
               cartLines
             )}
           </div>
-          <div className="border-t border-line bg-[#F8FAF8] px-5 py-3 text-sm">
+          <div className="border-t border-line bg-[#F9FAFB] px-5 py-3 text-sm">
             {totals.discountTotal > 0 && (
               <div className="flex justify-between py-0.5 text-warn-700">
                 <span>Zbritje</span>
@@ -928,7 +927,7 @@ export function PosPage() {
               ))}
             <div className="mt-2 flex items-end justify-between border-t border-dashed border-field pt-2">
               <span className="text-base font-semibold">{tr('Totali', lang)}</span>
-              <span className="text-[32px] font-bold leading-none tabular-nums">{formatEUR(totals.total)}</span>
+              <span className="text-[32px] font-semibold tracking-[-0.015em] leading-none tabular-nums">{formatEUR(totals.total)}</span>
             </div>
           </div>
           <div className="flex flex-col gap-3 border-t border-line p-5">
@@ -946,7 +945,7 @@ export function PosPage() {
                   onClick={() => setMethod(m)}
                   className={cn(
                     'h-11 rounded-xl border text-sm font-semibold',
-                    method === m ? 'border-2 border-brand-600 bg-[#F0F7F3] text-brand-900' : 'border-field bg-white',
+                    method === m ? 'border-2 border-brand-600 bg-[#F2F6FC] text-brand-900' : 'border-field bg-white',
                   )}
                 >
                   {label}
@@ -988,7 +987,7 @@ export function PosPage() {
                 </div>
                 <div className="flex w-[110px] flex-col gap-1">
                   <span className="text-right text-xs text-muted">Kusuri</span>
-                  <div className={cn('flex h-11 items-center justify-end rounded-ctl px-3 text-lg font-bold tabular-nums', change != null && change < 0 ? 'bg-warn-100 text-warn-700' : 'bg-[#FFF4EC] text-warn-700')}>
+                  <div className={cn('flex h-11 items-center justify-end rounded-ctl px-3 text-lg font-semibold tabular-nums', change == null ? 'bg-[#F2F4F7] text-muted' : change < 0 ? 'bg-warn-100 text-warn-700' : 'bg-ok-100 text-ok-700')}>
                     {change == null ? '—' : formatEUR(change)}
                   </div>
                 </div>
@@ -1021,7 +1020,7 @@ export function PosPage() {
       <div className="sticky top-[calc(var(--topbar,0px)+env(safe-area-inset-top))] z-20 border-b border-line bg-white px-4 pb-3 pt-4">
         <div className="mb-3 flex items-start justify-between">
           <div>
-            <h1 className="text-[26px] font-bold leading-tight">{tr('Faturë e re', lang)}</h1>
+            <h1 className="text-[26px] font-semibold tracking-[-0.015em] leading-tight">{tr('Faturë e re', lang)}</h1>
             <div className="text-sm text-muted">
               {registerName ?? 'Arka'} · {new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 }).format(totals.itemsCount)} artikuj
             </div>
@@ -1041,7 +1040,7 @@ export function PosPage() {
           </button>
         </div>
         {search.trim() && (
-          <ul className="absolute inset-x-4 top-full z-30 mt-1 max-h-[55dvh] overflow-y-auto rounded-xl border border-line bg-white shadow-xl">
+          <ul className="absolute inset-x-4 top-full z-30 mt-1 max-h-[55dvh] overflow-y-auto rounded-xl border border-line bg-white shadow-pop">
             {results.slice(0, 40).map((p) => (
               <li key={p.id}>
                 <button
@@ -1106,7 +1105,7 @@ export function PosPage() {
           <span className="text-[15px] text-muted">
             Totali <span className="text-sm">(TVSH {formatEUR(totals.vatTotal)} e përfshirë)</span>
           </span>
-          <span className="text-[34px] font-bold leading-none tabular-nums">{formatEUR(totals.total)}</span>
+          <span className="text-[34px] font-semibold tracking-[-0.015em] leading-none tabular-nums">{formatEUR(totals.total)}</span>
         </div>
         <div className="grid grid-cols-[1fr_1.6fr] gap-2.5">
           <Button variant="secondary" size="lg" disabled={!cart.lines.length} loading={busy && !cashOpen} onClick={payCard}>

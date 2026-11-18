@@ -99,13 +99,13 @@ export function BankTab({ client, from, to, onChanged }: { client: Client; from:
               <span className="truncate">{a.name}</span>
               {a.to_match > 0 && <Badge tone="amber">{a.to_match} pa rakorduar</Badge>}
             </div>
-            <div className={cn('mt-1 text-[22px] font-bold tabular-nums', a.balance < 0 && 'text-warn-700')}>{formatEUR(a.balance)}</div>
+            <div className={cn('mt-1 text-[22px] font-semibold tracking-[-0.015em] tabular-nums', a.balance < 0 && 'text-warn-700')}>{formatEUR(a.balance)}</div>
             {a.iban && <div className="truncate text-xs text-muted">{a.iban}</div>}
           </button>
         ))}
         <div className="flex flex-col justify-between gap-2 rounded-card border border-dashed border-field p-4">
           <div className="text-sm text-muted">Gjithsej sot</div>
-          <div className="text-[22px] font-bold tabular-nums">{formatEUR(total)}</div>
+          <div className="text-[22px] font-semibold tracking-[-0.015em] tabular-nums">{formatEUR(total)}</div>
           <div className="flex gap-2">
             <Button size="sm" variant="secondary" onClick={() => setEditAcc({ kind: 'bank', name: '', opening_balance: 0 })}>
               <Plus className="h-4 w-4" /> Llogari
@@ -206,7 +206,7 @@ function Ledger({
     <Card className="overflow-hidden">
       <div className="flex flex-col gap-3 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h2 className="flex items-center gap-2 text-[17px] font-semibold">
+          <h2 className="flex items-center gap-2 text-[16px] font-semibold tracking-[-0.01em]">
             {account.kind === 'cash' ? 'Libri i arkës' : 'Libri bankar'} · {account.name}
             <button type="button" aria-label="Ndrysho llogarinë" onClick={onEdit} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-bg">
               <Pencil className="h-4 w-4" />
@@ -249,7 +249,7 @@ function Ledger({
         <EmptyState title="Asnjë lëvizje në këtë periudhë" text="Pagesat e faturave me këtë llogari, ekstraktet dhe lëvizjet e tjera dalin këtu." />
       ) : (
         <Table>
-          <thead className="bg-[#F8FAF8]">
+          <thead className="bg-[#F9FAFB]">
             <tr>
               <Th className="pl-5">Data</Th>
               <Th>Përshkrimi</Th>
@@ -515,21 +515,21 @@ function CashFlowCard({ clientId, from, to }: { clientId: string; from: string; 
   const groups = Object.entries(d?.groups ?? {}).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
   return (
     <Card className="p-5">
-      <h2 className="text-[17px] font-semibold">Rrjedha e parasë</h2>
+      <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Rrjedha e parasë</h2>
       {!d ? (
         <p className="py-6 text-center text-muted">Duke ngarkuar…</p>
       ) : (
         <>
           <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-            <div className="rounded-ctl bg-[#F4F6F3] p-3">
+            <div className="rounded-ctl bg-[#F7F8FA] p-3">
               <div className="text-xs text-muted">Në fillim</div>
               <div className="font-semibold tabular-nums">{formatEUR(d.opening)}</div>
             </div>
-            <div className="rounded-ctl bg-[#F4F6F3] p-3">
+            <div className="rounded-ctl bg-[#F7F8FA] p-3">
               <div className="text-xs text-muted">Ndryshimi</div>
               <div className={cn('font-semibold tabular-nums', d.closing - d.opening < 0 && 'text-warn-700')}>{formatEUR(d.closing - d.opening)}</div>
             </div>
-            <div className="rounded-ctl bg-[#F4F6F3] p-3">
+            <div className="rounded-ctl bg-[#F7F8FA] p-3">
               <div className="text-xs text-muted">Në fund</div>
               <div className="font-semibold tabular-nums">{formatEUR(d.closing)}</div>
             </div>
@@ -587,7 +587,7 @@ function LoansCard({ clientId, accounts, onChanged }: { clientId: string; accoun
   return (
     <Card className="p-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-[17px] font-semibold">Kreditë dhe këstet</h2>
+        <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Kreditë dhe këstet</h2>
         <Button size="sm" variant="secondary" onClick={() => setEdit({ lender: '', principal: 0, rate_pct: 0, months: 12, start_date: kosovoDateISO(), account_id: accounts.find((a) => a.kind === 'bank')?.id ?? null })}>
           <Plus className="h-4 w-4" /> Kredi
         </Button>
@@ -611,7 +611,7 @@ function LoansCard({ clientId, accounts, onChanged }: { clientId: string; accoun
                 <div className="text-sm text-muted">
                   {l.rate_pct}% · {l.months} muaj nga {formatDay(l.start_date)} · paguar {formatEUR(l.repaid)} ({pct}%)
                 </div>
-                <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-[#E9EEEA]">
+                <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-[#E8EBEF]">
                   <div className="h-full bg-brand-600" style={{ width: `${pct}%` }} />
                 </div>
               </li>

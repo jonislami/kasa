@@ -75,7 +75,7 @@ export function CoaTab({ client }: { client: Client }) {
     <Card className="overflow-hidden">
       <div className="flex flex-col gap-3 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h2 className="text-[17px] font-semibold">Plani kontabël</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Plani kontabël</h2>
           <p className="text-sm text-muted">Faturat, pagesat, banka, TVSH-ja dhe amortizimi kontohen vetë në këto konto.</p>
         </div>
         <div className="flex gap-2">
@@ -96,7 +96,7 @@ export function CoaTab({ client }: { client: Client }) {
           if (!rows.length) return null
           return (
             <div key={c}>
-              <div className="border-t border-line bg-[#F6F9F7] px-5 py-2 text-[13px] font-semibold text-muted">{label}</div>
+              <div className="border-t border-line bg-[#F6F8FB] px-5 py-2 text-[13px] font-semibold text-muted">{label}</div>
               <ul className="divide-y divide-line">
                 {rows.map((a) => (
                   <li key={a.code} className={cn('flex items-center gap-3 px-5 py-2.5', !a.active && 'opacity-50')}>
@@ -174,7 +174,7 @@ export function JournalTab({ client, from, to }: { client: Client; from: string;
     <Card className="overflow-hidden">
       <div className="flex flex-col gap-3 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h2 className="text-[17px] font-semibold">Ditari</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Ditari</h2>
           <p className="text-sm text-muted">
             Debi {formatEUR(totals.dr)} · Kredi {formatEUR(totals.cr)} {Math.abs(totals.dr - totals.cr) < 0.01 ? <Badge tone="success">Barazohet</Badge> : <Badge tone="warn">Nuk barazohet</Badge>}
           </p>
@@ -387,7 +387,7 @@ export function LedgerTab({ client, from, to }: { client: Client; from: string; 
         <EmptyState title={`Asnjë lëvizje në ${account} ${name}`} />
       ) : (
         <Table>
-          <thead className="bg-[#F6F9F7]">
+          <thead className="bg-[#F6F8FB]">
             <tr>
               <Th className="pl-5">Data</Th>
               <Th>Përshkrimi</Th>
@@ -431,7 +431,7 @@ export function TrialBalanceTab({ client, from, to }: { client: Client; from: st
     <Card className="overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
         <div>
-          <h2 className="text-[17px] font-semibold">Bilanci provues</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Bilanci provues</h2>
           <p className="text-sm text-muted">
             {formatDay(from)} – {formatDay(to)} · {Math.abs(t.d - t.c) < 0.01 && Math.abs(t.cl) < 0.01 ? <Badge tone="success">Debia = Kredia</Badge> : <Badge tone="warn">Nuk barazohet</Badge>}
           </p>
@@ -444,7 +444,7 @@ export function TrialBalanceTab({ client, from, to }: { client: Client; from: st
         <p className={tb.error ? 'px-5 py-6 text-sm text-warn-700' : 'py-10 text-center text-muted'}>{tb.error ? (tb.error as Error).message : 'Duke ngarkuar…'}</p>
       ) : (
         <Table>
-          <thead className="bg-[#F6F9F7]">
+          <thead className="bg-[#F6F8FB]">
             <tr>
               <Th className="pl-5">Konto</Th>
               <Th className="text-right">Fillimi</Th>
@@ -555,7 +555,7 @@ export function StatementsTab({ client, from, to }: { client: Client; from: stri
   const content = d && view && (
     <div className="grid gap-4 md:gap-5 xl:grid-cols-2">
       <Card className="p-5">
-        <h2 className="mb-3 text-[17px] font-semibold">Bilanci i gjendjes më {formatDay(d.as_of)}</h2>
+        <h2 className="mb-3 text-[16px] font-semibold tracking-[-0.01em]">Bilanci i gjendjes më {formatDay(d.as_of)}</h2>
         {block('Pasuritë', d.assets, view.assets)}
         {block('Detyrimet', d.liabilities, view.liabilities)}
         {block('Kapitali', d.equity, view.equity, { label: 'Rezultati (fitimi / humbja)', amount: d.result_to_date })}
@@ -564,12 +564,12 @@ export function StatementsTab({ client, from, to }: { client: Client; from: stri
         </div>
       </Card>
       <Card className="p-5">
-        <h2 className="mb-3 text-[17px] font-semibold">
+        <h2 className="mb-3 text-[16px] font-semibold tracking-[-0.01em]">
           Pasqyra e të ardhurave {formatDay(d.from)} – {formatDay(d.as_of)}
         </h2>
         {block('Të hyrat', d.income, view.income)}
         {block('Shpenzimet', d.expenses, view.expenses)}
-        <div className={cn('mt-2 flex justify-between rounded-ctl px-3 py-3 text-[17px] font-bold', view.result >= 0 ? 'bg-brand-100 text-brand-600' : 'bg-warn-100 text-warn-700')}>
+        <div className={cn('mt-2 flex justify-between rounded-ctl px-3 py-3 text-[17px] font-semibold tracking-[-0.015em]', view.result >= 0 ? 'bg-brand-100 text-brand-600' : 'bg-warn-100 text-warn-700')}>
           <span>{view.result >= 0 ? 'Fitimi' : 'Humbja'}</span>
           <span className="tabular-nums">{formatEUR(view.result)}</span>
         </div>
@@ -592,7 +592,7 @@ export function StatementsTab({ client, from, to }: { client: Client; from: stri
         content &&
         createPortal(
           <div className="print-root print-a4 hidden bg-white text-[11px] text-black">
-            <div className="mb-2 text-[16px] font-bold">{client.name} – Pasqyrat financiare</div>
+            <div className="mb-2 text-[16px] font-semibold tracking-[-0.015em]">{client.name} – Pasqyrat financiare</div>
             {content}
           </div>,
           document.body,
@@ -629,7 +629,7 @@ export function AssetsTab({ client }: { client: Client }) {
     <Card className="overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
         <div>
-          <h2 className="text-[17px] font-semibold">Mjetet themelore dhe amortizimi</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Mjetet themelore dhe amortizimi</h2>
           <p className="text-sm text-muted">
             Vlera blerëse {formatEUR(t.cost)} · e amortizuar {formatEUR(t.dep)} · vlera aktuale {formatEUR(t.cost - t.dep)} · amortizimi këtë vit {formatEUR(t.year)}
           </p>
@@ -644,7 +644,7 @@ export function AssetsTab({ client }: { client: Client }) {
         <EmptyState title="Asnjë mjet themelor" text="Regjistro pajisjet, automjetet, mobiliet; amortizimi mujor kontohet vetë (6600 / 2290)." />
       ) : (
         <Table>
-          <thead className="bg-[#F6F9F7]">
+          <thead className="bg-[#F6F8FB]">
             <tr>
               <Th className="pl-5">Aseti</Th>
               <Th className="text-right">Vlera blerëse</Th>
@@ -656,7 +656,7 @@ export function AssetsTab({ client }: { client: Client }) {
           </thead>
           <tbody>
             {list.map((a) => (
-              <tr key={a.id} className="cursor-pointer hover:bg-[#F6F9F7]" onClick={() => setEdit(a)}>
+              <tr key={a.id} className="cursor-pointer hover:bg-[#F6F8FB]" onClick={() => setEdit(a)}>
                 <Td className="pl-5">
                   <div className="font-medium">{a.name}</div>
                   <div className="text-xs text-muted">
@@ -743,7 +743,7 @@ export function CloseTab({ client }: { client: Client }) {
     <Card className="overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
         <div>
-          <h2 className="text-[17px] font-semibold">Mbyllja e muajit</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Mbyllja e muajit</h2>
           <p className="text-sm text-muted">Një muaj i mbyllur nuk ndryshohet më: asnjë faturë, pagesë, lëvizje ose regjistrim me datë në të.</p>
         </div>
         <Select value={String(year)} onChange={(e) => setYear(Number(e.target.value))} options={[0, 1, 2].map((i) => ({ value: String(Number(thisMonth.slice(0, 4)) - i), label: String(Number(thisMonth.slice(0, 4)) - i) }))} />

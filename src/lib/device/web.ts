@@ -177,7 +177,7 @@ export const printer: PrinterTransport = {
     let reason: string | undefined
     if (!bluetooth) {
       reason = isIOS()
-        ? 'iPhone/iPad nuk lejon Bluetooth në shfletues. Përdor aplikacionin Kasa nga App Store, ose printo nga shfletuesi.'
+        ? 'iPhone/iPad nuk lejon Bluetooth në shfletues. Përdor aplikacionin KontoSef nga App Store, ose printo nga shfletuesi.'
         : 'Ky shfletues nuk e mbështet Bluetooth-in. Përdor Chrome ose Edge, ose printo nga shfletuesi.'
     }
     return { bluetooth, usbSerial, reason }

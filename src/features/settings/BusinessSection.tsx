@@ -30,7 +30,7 @@ export function BusinessSection() {
 
   return (
     <Card className="p-5">
-      <h2 className="text-[17px] font-semibold">Të dhënat e biznesit</h2>
+      <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Të dhënat e biznesit</h2>
       <p className="mt-1 text-sm text-muted">Dalin në faturë dhe dërgohen te ATK me çdo kupon fiskal. Lloji: {businessType(business.type).label} (nuk ndryshohet).</p>
       <form
         className="mt-4 grid gap-3 sm:grid-cols-2"

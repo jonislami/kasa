@@ -105,7 +105,7 @@ export function BusinessAdminPage() {
 
             <div className="grid gap-4 lg:grid-cols-2">
               <Card className="p-5">
-                <h2 className="text-[17px] font-semibold">Të dhënat e regjistrimit</h2>
+                <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Të dhënat e regjistrimit</h2>
                 <dl className="mt-3 grid grid-cols-[150px_1fr] gap-x-3 gap-y-1.5 text-sm">
                   {(
                     [
@@ -136,7 +136,7 @@ export function BusinessAdminPage() {
             <DevicesCard d={d} onChanged={refresh} />
 
             <Card className="p-5">
-              <h2 className="text-[17px] font-semibold">Historiku</h2>
+              <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Historiku</h2>
               <ul className="mt-3 flex flex-col gap-1.5 text-sm">
                 {d.events.map((e) => (
                   <li key={e.id} className="flex gap-3">
@@ -195,7 +195,7 @@ function DecisionDialog({ id, action, onClose, onDone }: { id: string; action: D
         </div>
       }
     >
-      {action === 'suspend' && <p className="mb-3 text-sm text-muted">Qasja në Kasa ndalet menjëherë për të gjithë përdoruesit e biznesit.</p>}
+      {action === 'suspend' && <p className="mb-3 text-sm text-muted">Qasja në KontoSef ndalet menjëherë për të gjithë përdoruesit e biznesit.</p>}
       <Input label={t?.note} value={note} onChange={(e) => setNote(e.target.value)} />
       {run.error && <p className="mt-3 text-sm text-warn-700">{(run.error as Error).message}</p>}
     </Dialog>
@@ -218,7 +218,7 @@ function LicenseCard({ id, d, onSaved }: { id: string; d: AdminDetailT; onSaved:
     <Card className="p-5">
       <div className="flex items-center gap-2">
         <ShieldCheck className="h-5 w-5 text-brand-600" />
-        <h2 className="text-[17px] font-semibold">Licenca</h2>
+        <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Licenca</h2>
         {c && (
           <Badge tone={c.state === 'active' ? 'success' : c.state === 'expiring' || c.state === 'grace' ? 'amber' : 'warn'}>
             {LICENSE_LABELS[c.state]}
@@ -269,7 +269,7 @@ function RegistersCard({ d, onChanged }: { d: AdminDetailT; onChanged: () => voi
     <Card className="p-5">
       <div className="flex items-center gap-2">
         <MonitorSmartphone className="h-5 w-5 text-brand-600" />
-        <h2 className="text-[17px] font-semibold">Aplikimet për arkë</h2>
+        <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Aplikimet për arkë</h2>
         <span className="text-sm text-muted">· arkat: {d.registers.map((r) => r.name).join(', ') || '—'}</span>
       </div>
       {d.register_applications.length === 0 ? (
@@ -342,7 +342,7 @@ function DevicesCard({ d, onChanged }: { d: AdminDetailT; onChanged: () => void 
   const active = d.devices.filter((x) => x.active).length
   return (
     <Card className="p-5">
-      <h2 className="text-[17px] font-semibold">
+      <h2 className="text-[16px] font-semibold tracking-[-0.01em]">
         Pajisjet e licencës <span className={cn('text-sm font-normal', active >= max ? 'text-warn-700' : 'text-muted')}>· {active} / {max} aktive</span>
       </h2>
       {d.devices.length === 0 ? (
@@ -416,7 +416,7 @@ function ActivationKeysCard({ d, onChanged }: { d: AdminDetailT; onChanged: () =
   return (
     <Card className="p-5">
       <div className="flex flex-wrap items-center gap-3">
-        <h2 className="flex-1 text-[17px] font-semibold">Çelësat e aktivizimit (programi SEF)</h2>
+        <h2 className="flex-1 text-[16px] font-semibold tracking-[-0.01em]">Çelësat e aktivizimit (programi SEF)</h2>
         <Button size="sm" disabled={!active} onClick={() => setOpen(true)}>
           <KeyRound className="h-4 w-4" /> Gjenero çelës
         </Button>

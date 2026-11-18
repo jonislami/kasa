@@ -173,7 +173,7 @@ export interface OwnerRegister {
 async function ownerRpc<T>(fn: string, args?: Record<string, unknown>): Promise<T> {
   const { data, error } = await supabase.rpc(fn, args)
   if (error) {
-    if (['PGRST202', '42883'].includes(error.code ?? '')) throw new OwnerKeysNotMigrated('Çelësin e arkës ta dërgon administratori i Kasa-s.')
+    if (['PGRST202', '42883'].includes(error.code ?? '')) throw new OwnerKeysNotMigrated('Çelësin e arkës ta dërgon administratori i KontoSef-it.')
     throw new Error(error.message)
   }
   return data as T

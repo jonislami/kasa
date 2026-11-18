@@ -144,7 +144,7 @@ export async function mfaEnroll(): Promise<{ factorId: string; qr: string; secre
   for (const f of list.data?.all ?? []) {
     if (f.status === 'unverified') await supabase.auth.mfa.unenroll({ factorId: f.id })
   }
-  const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Kasa Kontabilist ' + new Date().toISOString().slice(0, 16) })
+  const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'KontoSef Kontabilist ' + new Date().toISOString().slice(0, 16) })
   if (error || !data) throw new Error('Nuk u nis: ' + (error?.message ?? ''))
   return { factorId: data.id, qr: data.totp.qr_code, secret: data.totp.secret }
 }

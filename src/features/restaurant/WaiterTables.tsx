@@ -88,19 +88,28 @@ export function WaiterTables() {
               type="button"
               onClick={() => navigate(`/tavolinat/${t.id}`)}
               className={cn(
-                'flex min-h-[124px] flex-col justify-between rounded-[18px] p-5 text-left text-white shadow-sm transition-transform active:scale-[0.98]',
-                state === 'free' && 'bg-brand-600 hover:bg-[#0B5C43]',
-                state === 'mine' && 'bg-bt-600 hover:bg-[#1A43BF]',
-                state === 'busy' && 'bg-[#DC2626] hover:bg-[#C21F1F]',
+                'relative flex min-h-[124px] flex-col justify-between overflow-hidden rounded-card border p-5 pl-6 text-left text-ink shadow-card transition-[transform,border-color] active:scale-[0.98]',
+                // a coloured edge + light tint: free green, mine blue, someone else's red
+                "before:absolute before:inset-y-0 before:left-0 before:w-1.5 before:content-['']",
+                state === 'free' && 'border-line bg-white before:bg-[#12B76A] hover:border-[#12B76A]',
+                state === 'mine' && 'border-[#C3D3EE] bg-brand-50 before:bg-brand-600 hover:border-brand-600',
+                state === 'busy' && 'border-[#F3C4BE] bg-[#FEF6F5] before:bg-[#D92D20] hover:border-[#D92D20]',
               )}
             >
-              <span className="text-[19px] font-bold leading-tight">{t.name}</span>
-              <span className="text-[14px] font-medium text-white/85">
+              <span className="text-[20px] font-semibold leading-tight tracking-[-0.015em]">{t.name}</span>
+              <span
+                className={cn(
+                  'text-[14px] font-medium',
+                  state === 'free' && 'text-ok-700',
+                  state === 'mine' && 'text-brand-700',
+                  state === 'busy' && 'text-warn-700',
+                )}
+              >
                 {!o ? (
                   'Lirë'
                 ) : (
                   <>
-                    <span className="block text-[17px] font-bold text-white tabular-nums">{formatEUR(o.total)}</span>
+                    <span className="block text-[17px] font-semibold tracking-[-0.015em] text-ink tabular-nums">{formatEUR(o.total)}</span>
                     {state === 'mine' ? 'Imja' : 'E zënë'} · {minutesSince(o.opened_at)}
                     {o.ready > 0 && ` · ${o.ready} gati`}
                     {o.unsent > 0 && ` · ${o.unsent} pa konfirmuar`}
@@ -116,11 +125,11 @@ export function WaiterTables() {
             key={o.id}
             type="button"
             onClick={() => navigate(`/tavolinat/merr?order=${o.id}`)}
-            className="flex min-h-[124px] flex-col justify-between rounded-[18px] bg-[#EA580C] p-5 text-left text-white shadow-sm hover:bg-[#D24E0A] active:scale-[0.98]"
+            className="relative flex min-h-[124px] flex-col justify-between overflow-hidden rounded-card border border-[#F9DBAF] bg-[#FFFAEB] p-5 pl-6 text-left text-ink shadow-card before:absolute before:inset-y-0 before:left-0 before:w-1.5 before:bg-[#DC6803] before:content-[''] hover:border-[#DC6803] active:scale-[0.98]"
           >
-            <span className="text-[19px] font-bold leading-tight">Me vete #{o.order_no}</span>
-            <span className="text-[14px] font-medium text-white/85">
-              <span className="block text-[17px] font-bold text-white tabular-nums">{formatEUR(o.total)}</span>
+            <span className="text-[19px] font-semibold tracking-[-0.015em] leading-tight">Me vete #{o.order_no}</span>
+            <span className="text-[14px] font-medium text-[#B54708]">
+              <span className="block text-[17px] font-semibold tracking-[-0.015em] text-ink tabular-nums">{formatEUR(o.total)}</span>
               {minutesSince(o.opened_at)}
               {o.ready > 0 && ` · ${o.ready} gati`}
             </span>
@@ -130,12 +139,12 @@ export function WaiterTables() {
         <button
           type="button"
           onClick={() => navigate('/tavolinat/merr')}
-          className="flex min-h-[124px] flex-col justify-between rounded-[18px] bg-[#F97316] p-5 text-left text-white shadow-md shadow-orange-500/20 hover:bg-[#EA580C] active:scale-[0.98]"
+          className="flex min-h-[124px] flex-col justify-between rounded-card border-2 border-dashed border-[#B54708]/40 bg-white p-5 text-left text-[#B54708] hover:bg-[#FFFAF5] active:scale-[0.98]"
         >
-          <span className="flex items-center gap-2 text-[19px] font-bold leading-tight">
+          <span className="flex items-center gap-2 text-[19px] font-semibold tracking-[-0.015em] leading-tight">
             <ShoppingBag className="h-5 w-5" /> Me vete
           </span>
-          <span className="text-[14px] font-medium text-white/85">Porosi për të marrë</span>
+          <span className="text-[14px] font-medium text-[#B54708]/80">Porosi për të marrë</span>
         </button>
       </div>
     </div>
@@ -147,13 +156,13 @@ function Stat({ label, value, tone }: { label: string; value: string | number; t
     <div
       className={cn(
         'min-w-[136px] rounded-card border px-5 py-3.5',
-        tone === 'red' && 'border-[#FBCFCF] bg-[#FEF2F2] text-[#DC2626]',
-        tone === 'green' && 'border-[#C9EBD9] bg-[#F0FAF4] text-brand-600',
-        tone === 'blue' && 'border-[#CBD8F7] bg-[#EFF4FE] text-bt-600',
+        tone === 'red' && 'border-[#F3C4BE] bg-white text-[#B42318]',
+        tone === 'green' && 'border-line bg-white text-ok-700',
+        tone === 'blue' && 'border-line bg-white text-brand-600',
       )}
     >
-      <div className="text-xs font-bold uppercase tracking-wide">{label}</div>
-      <div className="mt-1 text-[28px] font-bold leading-none tabular-nums">{value}</div>
+      <div className="text-[12px] font-medium uppercase tracking-[0.05em] text-muted">{label}</div>
+      <div className="mt-1.5 text-[26px] font-semibold leading-none tracking-[-0.02em] tabular-nums">{value}</div>
     </div>
   )
 }

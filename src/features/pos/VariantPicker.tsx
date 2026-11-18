@@ -86,7 +86,7 @@ export function VariantPicker({
                     onClick={() => setSize(s)}
                     className={cn(
                       'h-12 min-w-[56px] rounded-xl border px-3 font-semibold',
-                      size === s ? 'border-ink bg-ink text-white' : out ? 'border-line bg-[#F2F5F2] text-muted line-through' : 'border-line bg-white',
+                      size === s ? 'border-ink bg-ink text-white' : out ? 'border-line bg-[#F3F4F6] text-muted line-through' : 'border-line bg-white',
                     )}
                   >
                     {s}

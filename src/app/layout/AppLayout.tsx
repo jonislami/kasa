@@ -128,10 +128,10 @@ export function AppLayout() {
     <Shell
       brand={
         <div className="flex items-center gap-3">
-          <LogoMark size={36} />
+          <LogoMark size={34} />
           <div className="min-w-0">
-            <div className="truncate text-[16px] font-bold leading-tight">{business.name}</div>
-            <div className="truncate text-xs text-white/60">{profile.role === 'accountant' ? `Klient · ${info.shortLabel}` : business.city || info.label}</div>
+            <div className="truncate text-[14px] font-semibold leading-tight text-ink">{business.name}</div>
+            <div className="truncate text-[12px] text-muted">{profile.role === 'accountant' ? `Klient · ${info.shortLabel}` : business.city || info.label}</div>
           </div>
         </div>
       }
@@ -150,12 +150,12 @@ export function AppLayout() {
 /** Page header used on every screen: dark on phones, plain on desktop. */
 export function PageHeader({ eyebrow, title, actions }: { eyebrow?: ReactNode; title: ReactNode; actions?: ReactNode }) {
   return (
-    <header className="bg-brand-900 px-5 pb-6 pt-5 text-white md:flex md:items-end md:justify-between md:gap-4 md:bg-transparent md:px-8 md:pb-6 md:pt-8 md:text-ink">
-      <div>
-        {eyebrow && <div className="text-sm text-white/60 md:text-muted">{eyebrow}</div>}
-        <h1 className="text-[26px] font-bold leading-tight md:text-[30px]">{title}</h1>
+    <header className="bg-brand-900 px-5 pb-5 pt-4 text-white md:flex md:items-end md:justify-between md:gap-4 md:bg-transparent md:px-8 md:pb-5 md:pt-7 md:text-ink">
+      <div className="min-w-0">
+        {eyebrow && <div className="mb-0.5 text-[13px] text-white/60 md:text-muted">{eyebrow}</div>}
+        <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.02em] md:text-[26px]">{title}</h1>
       </div>
-      {actions && <div className="mt-4 flex flex-wrap gap-2 md:mt-0">{actions}</div>}
+      {actions && <div className="mt-4 flex min-w-0 max-w-full flex-wrap gap-2 md:mt-0 [&>*]:min-w-0 [&>*]:max-w-full">{actions}</div>}
     </header>
   )
 }

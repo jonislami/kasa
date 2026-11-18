@@ -25,11 +25,11 @@ export function TabBar({ items, onSignOut }: { items: NavItem[]; onSignOut: () =
               type="button"
               onClick={() => setOpen(true)}
               className={cn(
-                'flex min-h-[60px] flex-1 flex-col items-center justify-center gap-1 text-[12px] font-medium',
+                'flex min-h-[58px] flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium tracking-[-0.005em]',
                 restActive ? 'text-brand-600' : 'text-muted',
               )}
             >
-              <MoreHorizontal className="h-6 w-6" strokeWidth={2} />
+              <MoreHorizontal className="h-[22px] w-[22px]" strokeWidth={2} />
               Më shumë
             </button>
           )}
@@ -37,8 +37,8 @@ export function TabBar({ items, onSignOut }: { items: NavItem[]; onSignOut: () =
       </nav>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-end bg-black/40 md:hidden" onClick={() => setOpen(false)}>
-          <div className="w-full rounded-t-[20px] bg-white px-4 pb-safe pt-3" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-end bg-[#0F172A]/45 md:hidden" onClick={() => setOpen(false)}>
+          <div className="w-full rounded-t-2xl bg-white px-4 pb-safe pt-3" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-2 py-2">
               <span className="text-lg font-semibold">Më shumë</span>
               <button type="button" onClick={() => setOpen(false)} aria-label="Mbyll" className="flex h-11 w-11 items-center justify-center rounded-xl bg-bg">
@@ -55,7 +55,7 @@ export function TabBar({ items, onSignOut }: { items: NavItem[]; onSignOut: () =
                     end={item.end ?? item.to === '/'}
                     onClick={() => setOpen(false)}
                     className={({ isActive }) =>
-                      cn('flex min-h-[52px] items-center gap-3 rounded-xl px-3 text-base font-medium', isActive ? 'bg-brand-100 text-brand-600' : 'text-ink')
+                      cn('flex min-h-[50px] items-center gap-3 rounded-ctl px-3 text-[15px] font-medium', isActive ? 'bg-brand-100 text-brand-700' : 'text-ink')
                     }
                   >
                     <Icon className="h-5 w-5" /> {item.label}
@@ -88,14 +88,14 @@ function Tab({ item }: { item: NavItem }) {
       end={item.end ?? item.to === '/'}
       className={({ isActive }) =>
         cn(
-          'flex min-h-[60px] flex-1 flex-col items-center justify-center gap-1 text-[12px] font-medium',
+          'flex min-h-[58px] flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium tracking-[-0.005em]',
           isActive ? 'text-brand-600' : 'text-muted',
         )
       }
     >
       {({ isActive }) => (
         <>
-          <Icon className="h-6 w-6" strokeWidth={isActive ? 2.2 : 2} />
+          <Icon className="h-[22px] w-[22px]" strokeWidth={isActive ? 2.2 : 1.8} />
           {item.short ?? item.label}
         </>
       )}

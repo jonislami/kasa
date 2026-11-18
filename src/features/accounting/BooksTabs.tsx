@@ -140,7 +140,7 @@ export function SalesTab({ s }: { s: Summary }) {
             <EmptyState title="Asnjë shitje në këtë periudhë" />
           ) : (
             <Table>
-              <thead className="bg-[#F8FAF8]">
+              <thead className="bg-[#F9FAFB]">
                 <tr>
                   <Th className="pl-5">Data</Th>
                   <Th>Kuponët</Th>
@@ -188,7 +188,7 @@ export function SalesTab({ s }: { s: Summary }) {
         ) : (
           <>
             <Table>
-              <thead className="bg-[#F8FAF8]">
+              <thead className="bg-[#F9FAFB]">
                 <tr>
                   <Th className="pl-5">Nr.</Th>
                   <Th>Data / ora</Th>
@@ -343,7 +343,7 @@ export function PurchasesTab({ s }: { s: Summary }) {
 
       <Card className="overflow-hidden">
         <div className="flex flex-col gap-3 px-5 py-4 md:flex-row md:items-center md:justify-between">
-          <h2 className="text-[17px] font-semibold">Faturat e blerjes</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Faturat e blerjes</h2>
           <SearchBox value={q} onChange={setQ} placeholder="Furnitori, NUI ose nr. i faturës" />
         </div>
         {!docs.data ? (
@@ -353,7 +353,7 @@ export function PurchasesTab({ s }: { s: Summary }) {
         ) : (
           <>
             <Table>
-              <thead className="bg-[#F8FAF8]">
+              <thead className="bg-[#F9FAFB]">
                 <tr>
                   <Th className="pl-5">Data</Th>
                   <Th>Furnitori</Th>
@@ -394,7 +394,7 @@ export function PurchasesTab({ s }: { s: Summary }) {
 
       {bySupplier.length > 0 && (
         <Card className="overflow-hidden lg:max-w-[720px]">
-          <h2 className="px-5 pt-5 text-[17px] font-semibold">Sipas furnitorit</h2>
+          <h2 className="px-5 pt-5 text-[16px] font-semibold tracking-[-0.01em]">Sipas furnitorit</h2>
           <Table className="mt-3">
             <thead>
               <tr>
@@ -534,7 +534,7 @@ export function ExpensesTab({ s }: { s: Summary }) {
       <div className="grid gap-4 md:gap-5 lg:grid-cols-[1fr_340px] lg:items-start">
         <Card className="overflow-hidden">
           <div className="flex items-center justify-between gap-3 px-5 py-4">
-            <h2 className="text-[17px] font-semibold">Shpenzimet e periudhës</h2>
+            <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Shpenzimet e periudhës</h2>
             <Button onClick={() => setEdit(blank())}>
               <Plus className="h-4 w-4" /> Shpenzim i ri
             </Button>
@@ -545,7 +545,7 @@ export function ExpensesTab({ s }: { s: Summary }) {
             <EmptyState title="Asnjë shpenzim" text="Regjistro qiranë, rrymën, pagat dhe shpenzimet e tjera që të dalin te fitimi dhe te TVSH-ja e zbritshme." />
           ) : (
             <Table>
-              <thead className="bg-[#F8FAF8]">
+              <thead className="bg-[#F9FAFB]">
                 <tr>
                   <Th className="pl-5">Data</Th>
                   <Th>Kategoria</Th>
@@ -584,7 +584,7 @@ export function ExpensesTab({ s }: { s: Summary }) {
         </Card>
 
         <Card className="overflow-hidden">
-          <h2 className="px-5 pt-5 text-[17px] font-semibold">Sipas kategorisë</h2>
+          <h2 className="px-5 pt-5 text-[16px] font-semibold tracking-[-0.01em]">Sipas kategorisë</h2>
           {s.expense_categories.length === 0 ? (
             <p className="px-5 py-6 text-sm text-muted">Ende pa shpenzime.</p>
           ) : (
@@ -739,7 +739,7 @@ export function StockTab({ s }: { s: Summary }) {
       <Card className="overflow-hidden">
         <div className="flex flex-col gap-3 px-5 py-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="text-[17px] font-semibold">Gjendja e stokut sot</h2>
+            <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Gjendja e stokut sot</h2>
             <p className="text-sm text-muted">Sasia dhe çmimet janë të çastit, jo të fundit të periudhës.</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -756,7 +756,7 @@ export function StockTab({ s }: { s: Summary }) {
         ) : (
           <>
             <Table>
-              <thead className="bg-[#F8FAF8]">
+              <thead className="bg-[#F9FAFB]">
                 <tr>
                   <Th className="pl-5">Artikulli</Th>
                   <Th className="hidden md:table-cell">Kategoria</Th>

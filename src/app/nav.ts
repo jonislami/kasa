@@ -22,6 +22,7 @@ export interface NavItem {
   short?: string // label in the phone tab bar
   icon: LucideIcon
   end?: boolean // active only on the exact path
+  group?: string // section label in the desktop sidebar
 }
 
 /**
@@ -39,17 +40,17 @@ export function navFor(type: BusinessType, role: Role): { main: NavItem[]; botto
     return { main: workerScreens(type), bottom: [] }
   }
 
-  const main: NavItem[] = [{ to: '/', label: 'Paneli', icon: LayoutGrid }]
+  const main: NavItem[] = [{ to: '/', label: 'Paneli', icon: LayoutGrid, group: 'Përmbledhje' }]
   // Selling happens only in the installed SEF app; the web app manages the business and shows how it goes.
-  if (hasModule(type, 'tables')) main.push({ to: '/tavolinat', label: isSefApp ? 'Tavolinat' : 'Plani i tavolinave', short: 'Tavolinat', icon: Armchair })
-  if (hasModule(type, 'appointments')) main.push({ to: '/terminet', label: 'Terminet', icon: CalendarDays })
-  if (isSefApp) main.push({ to: '/arka', label: 'Arka / Shitja', short: 'Arka', icon: ShoppingCart })
-  main.push({ to: '/produktet', label: info.terms.catalog, icon: Package })
-  if (hasModule(type, 'stock')) main.push({ to: '/stoku', label: 'Stoku & Hyrjet', short: 'Stoku', icon: Truck })
-  main.push({ to: '/raportet', label: 'Raportet', icon: BarChart3 })
-  main.push({ to: '/puna', label: 'Puna e punëtorëve', short: 'Puna', icon: Users })
-  main.push({ to: '/regjistri', label: 'Regjistri', icon: ScrollText })
-  main.push({ to: '/fiskalizimi', label: 'Fiskalizimi', icon: ShieldCheck })
+  if (hasModule(type, 'tables')) main.push({ to: '/tavolinat', label: isSefApp ? 'Tavolinat' : 'Plani i tavolinave', short: 'Tavolinat', icon: Armchair, group: 'Puna e ditës' })
+  if (hasModule(type, 'appointments')) main.push({ to: '/terminet', label: 'Terminet', icon: CalendarDays, group: 'Puna e ditës' })
+  if (isSefApp) main.push({ to: '/arka', label: 'Arka / Shitja', short: 'Arka', icon: ShoppingCart, group: 'Puna e ditës' })
+  main.push({ to: '/produktet', label: info.terms.catalog, icon: Package, group: 'Menaxhimi' })
+  if (hasModule(type, 'stock')) main.push({ to: '/stoku', label: 'Stoku & Hyrjet', short: 'Stoku', icon: Truck, group: 'Menaxhimi' })
+  main.push({ to: '/raportet', label: 'Raportet', icon: BarChart3, group: 'Analiza dhe kontrolli' })
+  main.push({ to: '/puna', label: 'Puna e punëtorëve', short: 'Puna', icon: Users, group: 'Menaxhimi' })
+  main.push({ to: '/regjistri', label: 'Regjistri', icon: ScrollText, group: 'Analiza dhe kontrolli' })
+  main.push({ to: '/fiskalizimi', label: 'Fiskalizimi', icon: ShieldCheck, group: 'Analiza dhe kontrolli' })
   const bottom: NavItem[] = [{ to: '/cilesimet', label: 'Cilësimet', icon: Settings }]
   if (role === 'admin') bottom.unshift({ to: '/llogaria', label: 'Llogaria dhe abonimi', short: 'Llogaria', icon: BadgeCheck })
   return { main, bottom }

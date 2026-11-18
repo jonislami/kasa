@@ -299,7 +299,7 @@ export function OrderPage() {
         {notice && <p className="rounded-ctl bg-brand-100 px-3 py-2 text-sm font-medium text-brand-600">{notice}</p>}
         <div className="flex items-end justify-between">
           <span className="font-semibold">Për të paguar</span>
-          <span className="text-[30px] font-bold leading-none tabular-nums">{formatEUR(total)}</span>
+          <span className="text-[30px] font-semibold tracking-[-0.015em] leading-none tabular-nums">{formatEUR(total)}</span>
         </div>
         <div className="grid grid-cols-2 gap-2.5">
           <Button variant="secondary" size="lg" disabled={!unsent.length} loading={busy && unsent.length > 0} onClick={send}>
@@ -342,7 +342,7 @@ export function OrderPage() {
           {menuPane}
           {unsent.length > 0 && (
             <div className="sticky bottom-[calc(var(--tabbar,60px)+env(safe-area-inset-bottom)+8px)] z-20 mt-4 lg:hidden">
-              <Button size="lg" className="w-full shadow-lg" loading={busy} onClick={send}>
+              <Button size="lg" className="w-full shadow-pop" loading={busy} onClick={send}>
                 <Send className="h-4 w-4" /> Konfirmo porosinë ({unsent.length}) · {formatEUR(unsent.reduce((a, i) => a + i.quantity * i.unit_price, 0))}
               </Button>
             </div>
@@ -401,7 +401,7 @@ export function OrderPage() {
                       return o
                     }, `U kalua në tavolinën ${t.name}`)
                 }}
-                className="h-16 rounded-xl border border-line font-bold hover:border-brand-600"
+                className="h-16 rounded-ctl border border-line font-semibold hover:border-brand-600"
               >
                 {t.name}
                 <span className="block text-xs font-normal text-muted">{t.area}</span>
@@ -427,8 +427,8 @@ export function OrderPage() {
           <div className="flex flex-col gap-4">
             <div className="text-center">
               <div className="text-sm text-muted">Pagesa u krye</div>
-              <div className="mt-1 text-[28px] font-bold tabular-nums">{formatEUR(receipt.total)}</div>
-              {receipt.change_amount > 0 && <div className="font-semibold text-warn-700">Kusuri {formatEUR(receipt.change_amount)}</div>}
+              <div className="mt-1 text-[28px] font-semibold tracking-[-0.015em] tabular-nums">{formatEUR(receipt.total)}</div>
+              {receipt.change_amount > 0 && <div className="font-semibold text-ok-700">Kusuri {formatEUR(receipt.change_amount)}</div>}
             </div>
             <div className="max-h-[45dvh] overflow-y-auto rounded-xl border border-line py-2">
               <Receipt sale={receipt} business={business} settings={receiptSettings.data} />
@@ -634,7 +634,7 @@ function PayDialog({ open, order, menu, registerId, onClose, onPaid }: { open: b
             </div>
             <div className="w-[120px]">
               <div className="mb-1.5 text-right text-sm font-medium">Kusuri</div>
-              <div className="flex h-12 items-center justify-end rounded-ctl bg-[#FFF4EC] px-3 text-lg font-bold tabular-nums text-warn-700">{change == null ? '—' : formatEUR(change)}</div>
+              <div className={cn('flex h-12 items-center justify-end rounded-ctl px-3 text-lg font-semibold tabular-nums', change == null ? 'bg-[#F2F4F7] text-muted' : change < 0 ? 'bg-warn-100 text-warn-700' : 'bg-ok-100 text-ok-700')}>{change == null ? '—' : formatEUR(change)}</div>
             </div>
           </div>
         )}

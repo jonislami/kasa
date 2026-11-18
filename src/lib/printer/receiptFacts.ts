@@ -270,7 +270,7 @@ export function receiptFacts(sale: Sale, business: Business, copy?: boolean, lan
     sefNo: t('NR. IDENTIFIKUES I SEF', lang),
     daily: t(fiscal ? 'KUPON FISKAL DITOR NR.' : 'KUPON DITOR NR.', lang),
     notFiscal: t('Ky kupon nuk është fiskal.', lang),
-    poweredBy: t('Mundësuar nga Kasa', lang),
+    poweredBy: t('Mundësuar nga KontoSef.app', lang),
     rejected: t('ATK e refuzoi', lang),
   }
   return {

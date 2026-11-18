@@ -508,7 +508,7 @@ export async function setPeriodStatus(month: string, status: VatStatus, note?: s
 }
 
 // ---------------------------------------------------------------------------
-// The owner's side (Cilësimet → Kontabilisti): requests from the Kasa Kontabilist program
+// The owner's side (Cilësimet → Kontabilisti): requests from the KontoSef Kontabilist program
 // ---------------------------------------------------------------------------
 export interface BusinessAccountant {
   client_id: string
@@ -551,7 +551,7 @@ export async function revokeAccountant(userId: string): Promise<void> {
   if (error) fail(error)
 }
 
-/** The accountant program opens a linked Kasa business (read-only books through RLS). */
+/** The accountant program opens a linked KontoSef business (read-only books through RLS). */
 export async function setActiveBusiness(businessId: string | null): Promise<void> {
   const { error } = await supabase.rpc('set_active_business', { p_business: businessId })
   if (error) fail(error)

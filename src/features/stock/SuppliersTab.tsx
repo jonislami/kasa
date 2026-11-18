@@ -114,7 +114,7 @@ export function SuppliersTab({ suppliers, entries, onChanged }: { suppliers: Sup
   return (
     <Card className="overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
-        <h2 className="text-[17px] font-semibold">Furnitorët</h2>
+        <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Furnitorët</h2>
         <div className="flex gap-2">
           <Button variant="secondary" size="sm" onClick={() => setShowArchived((v) => !v)}>
             {showArchived ? 'Aktivët' : 'Të arkivuarit'}
@@ -128,7 +128,7 @@ export function SuppliersTab({ suppliers, entries, onChanged }: { suppliers: Sup
         <EmptyState icon={<Truck className="h-6 w-6" />} title={showArchived ? 'Asnjë furnitor i arkivuar' : 'Ende pa furnitorë'} text="Furnitorët zgjidhen te hyrja e mallit." />
       ) : (
         <Table>
-          <thead className="bg-[#F8FAF8]">
+          <thead className="bg-[#F9FAFB]">
             <tr>
               <Th className="pl-5">Emri</Th>
               <Th className="hidden md:table-cell">NUI</Th>
@@ -142,7 +142,7 @@ export function SuppliersTab({ suppliers, entries, onChanged }: { suppliers: Sup
             {list.map((s) => {
               const st = stats.get(s.id)
               return (
-                <tr key={s.id} onClick={() => setEditing(s)} className="cursor-pointer hover:bg-[#F8FAF8]">
+                <tr key={s.id} onClick={() => setEditing(s)} className="cursor-pointer hover:bg-[#F9FAFB]">
                   <Td className="pl-5">
                     <div className="font-semibold">{s.name}</div>
                     <div className="text-xs text-muted md:hidden">{[s.nui, s.phone].filter(Boolean).join(' · ')}</div>

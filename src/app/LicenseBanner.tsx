@@ -14,7 +14,7 @@ export function LicenseBanner() {
     l.state === 'expiring'
       ? `Abonimi skadon më ${day(l.expires_on)}${l.days_left != null ? ` (pas ${l.days_left} ditësh)` : ''}.`
       : l.state === 'grace'
-        ? `Abonimi ka skaduar. Kasa punon normalisht deri më ${day(l.grace_until)}; pastaj ndalen shitjet e reja.`
+        ? `Abonimi ka skaduar. KontoSef punon normalisht deri më ${day(l.grace_until)}; pastaj ndalen shitjet e reja.`
         : 'Abonimi ka skaduar: shitjet e reja janë ndalur. Raportet dhe të dhënat shihen normalisht.'
   return (
     <div className={l.state === 'expiring' ? 'bg-amber-100 text-amber-700' : 'bg-warn-100 text-warn-700'}>

@@ -33,10 +33,10 @@ function InstalledAppUpdate() {
   )
   if (!version) return null
   return (
-    <div className="fixed inset-x-3 bottom-6 z-[60] mx-auto flex max-w-[460px] items-center gap-3 rounded-card bg-ink px-4 py-3 text-white shadow-2xl md:left-auto md:right-6">
+    <div className="fixed inset-x-3 bottom-6 z-[60] mx-auto flex max-w-[460px] items-center gap-3 rounded-card bg-ink px-4 py-3 text-white shadow-pop md:left-auto md:right-6">
       <RefreshCw className="h-5 w-5 shrink-0 text-brand-400" />
       <div className="min-w-0 flex-1 text-sm">
-        <div className="font-semibold">{download ? `Version i ri: Kasa ${version}` : `Kasa ${version} është gati`}</div>
+        <div className="font-semibold">{download ? `Version i ri: KontoSef ${version}` : `KontoSef ${version} është gati`}</div>
         <div className="text-white/70">
           {download ? 'Shkarkoje dhe instaloje mbi aplikacionin e tanishëm; të dhënat mbeten.' : 'Instalohet tani ose herën tjetër që hapet programi.'}
         </div>
@@ -65,8 +65,8 @@ export function DeviceChooserDialog() {
     setList(null)
   }
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#4d5c53]/70 p-6">
-      <div className="w-full max-w-[440px] rounded-[20px] bg-white p-5 shadow-2xl">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#4B5565]/70 p-6">
+      <div className="w-full max-w-[440px] rounded-[20px] bg-white p-5 shadow-pop">
         <div className="text-lg font-semibold">{list.kind === 'bluetooth' ? 'Zgjidh printerin Bluetooth' : 'Zgjidh printerin USB'}</div>
         <p className="mt-1 text-sm text-muted">{list.devices.length ? 'Pajisjet që u gjetën:' : 'Duke kërkuar… ndize printerin dhe afroje.'}</p>
         <ul className="mt-3 max-h-[50vh] divide-y divide-line overflow-y-auto rounded-card border border-line">
@@ -109,16 +109,16 @@ function WebUpdatePrompt() {
 
   if (!needRefresh && !offlineReady) return null
   return (
-    <div className="fixed inset-x-3 bottom-[calc(84px+env(safe-area-inset-bottom))] z-[60] mx-auto flex max-w-[460px] items-center gap-3 rounded-card bg-ink px-4 py-3 text-white shadow-2xl md:bottom-6 md:right-6 md:left-auto">
+    <div className="fixed inset-x-3 bottom-[calc(84px+env(safe-area-inset-bottom))] z-[60] mx-auto flex max-w-[460px] items-center gap-3 rounded-card bg-ink px-4 py-3 text-white shadow-pop md:bottom-6 md:right-6 md:left-auto">
       <RefreshCw className="h-5 w-5 shrink-0 text-brand-400" />
       <div className="min-w-0 flex-1 text-sm">
         {needRefresh ? (
           <>
-            <div className="font-semibold">Versioni i ri i Kasa-s është gati</div>
+            <div className="font-semibold">Versioni i ri i KontoSef-it është gati</div>
             <div className="text-white/70">Rifreskoje kur të mbarosh shitjen.</div>
           </>
         ) : (
-          <div className="font-semibold">Kasa tani punon edhe pa internet</div>
+          <div className="font-semibold">KontoSef tani punon edhe pa internet</div>
         )}
       </div>
       {needRefresh && (
@@ -202,7 +202,7 @@ export function OfflineBar() {
   )
 }
 
-/** "Instalo Kasa" – for the web version (Chrome/Edge/Android) and instructions for iPhone. */
+/** "Instalo KontoSef" – for the web version (Chrome/Edge/Android) and instructions for iPhone. */
 export function InstallCard({ className }: { className?: string }) {
   const state = useInstallState()
   const [msg, setMsg] = useState<string | null>(null)
@@ -211,7 +211,7 @@ export function InstallCard({ className }: { className?: string }) {
     <div className={cn('flex flex-wrap items-center gap-3 rounded-card border border-line bg-white px-5 py-4', className)}>
       <img src="/icon-192.png" alt="" className="h-11 w-11 rounded-xl" />
       <div className="min-w-0 flex-1">
-        <div className="font-semibold">Instalo Kasa në këtë pajisje</div>
+        <div className="font-semibold">Instalo KontoSef në këtë pajisje</div>
         <div className="text-sm text-muted">
           {state === 'ios'
             ? 'Në Safari shtyp Ndaj (katrori me shigjetë) → "Shto në ekranin bazë". Hapet si aplikacion dhe punon edhe pa internet.'
@@ -222,7 +222,7 @@ export function InstallCard({ className }: { className?: string }) {
       {state === 'available' && (
         <Button
           onClick={async () => {
-            if (await promptInstall()) setMsg('Kasa u instalua')
+            if (await promptInstall()) setMsg('KontoSef u instalua')
           }}
         >
           <Download className="h-4 w-4" /> Instalo
@@ -257,7 +257,7 @@ export function ClockBar() {
         onClick={() => setOpen((v) => !v)}
         className={cn(
           'flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-medium tabular-nums',
-          ok ? 'bg-brand-100 text-brand-600' : off ? 'bg-warn-100 text-warn-700' : 'bg-white/10 text-white/80 md:bg-[#EEF1EE] md:text-muted',
+          ok ? 'bg-brand-100 text-brand-600' : off ? 'bg-warn-100 text-warn-700' : 'bg-white/10 text-white/80 md:bg-[#EFF1F4] md:text-muted',
         )}
         aria-label="Ora dhe kontrolli i saj"
       >
@@ -266,10 +266,10 @@ export function ClockBar() {
         <span className="hidden sm:inline">· {ok ? 'Ora e saktë' : off ? `Ora e pajisjes gabon ${formatDrift(clock.drift ?? 0)}` : clock.drift !== null ? 'Ora e fundit e njohur' : 'Ora pa kontroll'}</span>
       </button>
       {open && (
-        <div className="absolute right-4 top-full z-50 mt-2 w-[300px] rounded-card border border-line bg-white p-4 text-sm text-ink shadow-xl md:right-8">
+        <div className="absolute right-4 top-full z-50 mt-2 w-[300px] rounded-card border border-line bg-white p-4 text-sm text-ink shadow-pop md:right-8">
           <div className="font-semibold">{ok ? 'Ora është e saktë' : off ? 'Ora e pajisjes nuk është e saktë' : 'Ora nuk u kontrollua'}</div>
           <p className="mt-1 text-muted">
-            Kasa përdor orën e vet nga serveri (ora zyrtare), jo orën e pajisjes – në ekran dhe në fatura.
+            KontoSef përdor orën e vet nga serveri (ora zyrtare), jo orën e pajisjes – në ekran dhe në fatura.
             {checked ? ` Kontrolluar ${checked}.` : ' Kontrollohet sapo të ketë internet.'}
           </p>
           {clock.drift !== null && Math.abs(clock.drift) >= 1000 && (
@@ -277,7 +277,7 @@ export function ClockBar() {
               Ora e pajisjes: {new Date(Date.now()).toLocaleTimeString('sq-AL', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} ({formatDrift(clock.drift)} {clock.drift > 0 ? 'përpara' : 'prapa'})
             </p>
           )}
-          {off && <p className="mt-2 font-medium text-warn-700">Rregulloje orën e pajisjes: Cilësimet → Data dhe ora → "Vendos automatikisht". Kasa vazhdon me orën e saktë.</p>}
+          {off && <p className="mt-2 font-medium text-warn-700">Rregulloje orën e pajisjes: Cilësimet → Data dhe ora → "Vendos automatikisht". KontoSef vazhdon me orën e saktë.</p>}
           <p className="mt-2 text-xs text-muted">Kufiri i lejuar: 1 minutë. Me fiskalizimin (Faza 9) ora krahasohet edhe me serverin e ATK-së.</p>
           <button type="button" className="mt-3 font-semibold text-brand-600" onClick={() => void checkClock()}>
             Kontrollo tani
@@ -310,7 +310,7 @@ export function FiscalBar() {
   const urgent = state.failed > 0 || (left !== null && left < 12)
   return (
     <div className="px-4 pt-3 md:px-8 md:pt-5 print:hidden">
-      <div className={cn('flex flex-wrap items-center gap-3 rounded-card border px-4 py-3 text-sm', urgent ? 'border-[#F3C5A8] bg-warn-100 text-warn-700' : 'border-[#F5D98B] bg-amber-100 text-amber-700')}>
+      <div className={cn('flex flex-wrap items-center gap-3 rounded-card border px-4 py-3 text-sm', urgent ? 'border-[#F3C4BE] bg-warn-100 text-warn-700' : 'border-[#F5D98B] bg-amber-100 text-amber-700')}>
         <AlertTriangle className="h-5 w-5 shrink-0" />
         <div className="min-w-0 flex-1">
           <div className="font-semibold">

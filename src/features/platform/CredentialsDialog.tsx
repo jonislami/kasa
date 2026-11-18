@@ -14,7 +14,7 @@ export interface Credentials {
   address?: string
 }
 
-async function copy(text: string): Promise<boolean> {
+export async function copy(text: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(text)
     return true
@@ -23,7 +23,7 @@ async function copy(text: string): Promise<boolean> {
   }
 }
 
-function CopyField({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+export function CopyField({ label, value, highlight, compact }: { label: string; value: string; highlight?: boolean; compact?: boolean }) {
   const [done, setDone] = useState(false)
   return (
     <div>
@@ -31,10 +31,10 @@ function CopyField({ label, value, highlight }: { label: string; value: string; 
       <div
         className={cn(
           'flex items-center gap-2 rounded-xl border py-1.5 pl-4 pr-1.5',
-          highlight ? 'border-brand-600 bg-[#F0F7F3]' : 'border-line bg-[#F6F8F6]',
+          highlight ? 'border-brand-600 bg-[#F2F6FC]' : 'border-line bg-[#F7F8FA]',
         )}
       >
-        <span className={cn('min-w-0 flex-1 break-all font-mono font-semibold', highlight ? 'text-xl' : 'text-[16px]')}>{value}</span>
+        <span className={cn('min-w-0 flex-1 break-all font-mono', compact ? 'py-1 text-[12.5px] leading-relaxed text-[#344054]' : 'font-semibold', !compact && (highlight ? 'text-xl' : 'text-[16px]'))}>{value}</span>
         <Button
           size="sm"
           variant="secondary"
@@ -59,7 +59,7 @@ export function CredentialsDialog({ data, onClose }: { data: Credentials | null;
   if (!data) return null
   const address = data.address ?? `${window.location.origin}/login`
   const message =
-    `Përshëndetje ${data.ownerName},\n\nTë dhënat për hyrje në Kasa:\n` +
+    `Përshëndetje ${data.ownerName},\n\nTë dhënat për hyrje në KontoSef:\n` +
     `Adresa: ${address}\nEmail-i: ${data.email}\nFjalëkalimi: ${data.password}\n\n` +
     `Mund të hysh nga çdo pajisje (kompjuter, telefon).`
 

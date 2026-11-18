@@ -20,7 +20,7 @@ export function ArchivePage({ me }: { me: AccMe }) {
         <button type="button" onClick={() => navigate('/')} className="mb-3 flex items-center gap-1 text-sm font-semibold text-muted hover:text-ink">
           <ChevronLeft className="h-4 w-4" /> Kompanitë
         </button>
-        <h1 className="text-[30px] font-bold leading-tight md:text-[34px]">Arkiva e dokumenteve</h1>
+        <h1 className="text-[30px] font-semibold tracking-[-0.015em] leading-tight md:text-[34px]">Arkiva e dokumenteve</h1>
         <p className="mt-1 text-muted">Faturat, kontratat, deklaratat, ekstraktet bankare dhe dokumentet e punëtorëve të të gjithë klientëve, sipas vitit dhe muajit.</p>
         <div className="mt-5">
           <ArchivePanel canBackup={me.accountant?.role !== 'assistant'} />
@@ -113,7 +113,7 @@ export function ArchivePanel({ clientId, clientName, canBackup }: { clientId?: s
       ) : (
         groups.map(([m, list]) => (
           <Card key={m} className="overflow-hidden">
-            <div className="flex items-center justify-between bg-[#F6F9F7] px-5 py-2.5 text-sm font-semibold text-muted">
+            <div className="flex items-center justify-between bg-[#F6F8FB] px-5 py-2.5 text-sm font-semibold text-muted">
               <span>{monthName(m)}</span>
               <span>{list.length}</span>
             </div>

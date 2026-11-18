@@ -51,7 +51,7 @@ export function FiscalPage() {
         <PageHeader title="Fiskalizimi" />
         <div className="px-4 md:px-8">
           <Card className="p-6">
-            <h2 className="text-[17px] font-semibold">Fiskalizimi nuk është aktivizuar ende</h2>
+            <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Fiskalizimi nuk është aktivizuar ende</h2>
             <p className="mt-1 text-muted">Administratori duhet të ekzekutojë migrimin supabase/migrations/0015_fiscal.sql dhe të vendosë Edge Function "fiscal-relay".</p>
           </Card>
         </div>
@@ -71,7 +71,7 @@ export function FiscalPage() {
         {c && !c.application_id && (
           <p className="flex items-start gap-2 rounded-ctl bg-amber-100 px-4 py-3 text-sm text-amber-700">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-            Kasa nuk e ka ende Application ID nga ATK për mjedisin {c.env === 'prod' ? 'prodhim' : 'test'}. Hapat 1 dhe 2 mund t'i plotësosh; regjistrimi i arkës hapet kur ta vendosë
+            KontoSef nuk e ka ende Application ID nga ATK për mjedisin {c.env === 'prod' ? 'prodhim' : 'test'}. Hapat 1 dhe 2 mund t'i plotësosh; regjistrimi i arkës hapet kur ta vendosë
             administratori i platformës.
           </p>
         )}
@@ -98,7 +98,7 @@ function Steps({ unitDone, posDone, registered }: { unitDone: boolean; posDone: 
     <div className="grid gap-3 md:grid-cols-3">
       {steps.map((s) => (
         <Card key={s.n} className="flex items-center gap-3 p-4">
-          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[15px] font-bold ${s.done ? 'bg-brand-600 text-white' : 'bg-[#EEF1EE] text-muted'}`}>
+          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[15px] font-bold ${s.done ? 'bg-brand-600 text-white' : 'bg-[#EFF1F4] text-muted'}`}>
             {s.done ? <CheckCircle2 className="h-5 w-5" /> : s.n}
           </div>
           <div className="min-w-0">
@@ -119,7 +119,7 @@ function UnitCard({ ctx, owner, hasRegistered, onSaved }: { ctx: NonNullable<Awa
 
   return (
     <Card className="p-5">
-      <h2 className="text-[17px] font-semibold">Hapi 1 – Njësia fiskale</h2>
+      <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Hapi 1 – Njësia fiskale</h2>
       <p className="mt-1 max-w-3xl text-sm text-muted">
         Të dhënat nga aplikimi i njësisë në portalin e ATK-së. Numri i fiskalizimit merret nga EDI. {ctx.unit_saved_at && `Ruajtur më ${formatKosovoDateTime(ctx.unit_saved_at)}.`}
       </p>
@@ -179,7 +179,7 @@ function RegistersCard({
   return (
     <Card className="overflow-hidden">
       <div className="px-5 pt-5">
-        <h2 className="text-[17px] font-semibold">Hapi 2 dhe 3 – Arkat (POS)</h2>
+        <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Hapi 2 dhe 3 – Arkat (POS)</h2>
         <p className="mt-1 max-w-3xl text-sm text-muted">
           Çdo arkë ka POS ID-në që ATK e jep në portal dhe çelësin e vet që nuk del kurrë nga pajisja. Regjistrimi bëhet <strong>në programin e arkës</strong> (Windows ose Android), kur pronari ose menaxheri hyn me PIN.
         </p>
@@ -341,7 +341,7 @@ function RegisterDialog({ reg, onClose, onDone }: { reg: FiscalRegisterRow | nul
           <p className="text-sm text-muted">
             Nëse të dhënat e shfletuesit fshihen ose pajisja ndërrohet, arka duhet çregjistruar dhe regjistruar përsëri. Për arkë të përhershme përdor programin për Windows ose aplikacionin.
           </p>
-          {step && <p className="rounded-ctl bg-[#F2F5F2] px-4 py-2.5 text-sm">{step}</p>}
+          {step && <p className="rounded-ctl bg-[#F3F4F6] px-4 py-2.5 text-sm">{step}</p>}
           {run.error && <p className="rounded-ctl bg-warn-100 px-4 py-2.5 text-sm text-warn-700">{(run.error as Error).message}</p>}
         </div>
       )}
@@ -398,7 +398,7 @@ function QueueCard() {
   const left = hoursLeft(state.oldest)
   return (
     <Card className="p-5">
-      <h2 className="text-[17px] font-semibold">Kuponët në këtë pajisje</h2>
+      <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Kuponët në këtë pajisje</h2>
       <p className="mt-1 text-sm text-muted">
         {state.waiting} pa u dërguar{state.failed > 0 && `, ${state.failed} të refuzuar nga ATK`}.
         {left !== null && ` Afati i ATK-së (48 orë): ${left > 0 ? `edhe ${Math.floor(left)} orë` : 'ka kaluar – njofto ATK-në'}.`}

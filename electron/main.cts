@@ -23,7 +23,7 @@ function appVariant(): 'kasa' | 'kontabilist' {
   }
 }
 const VARIANT = appVariant()
-const TITLE = VARIANT === 'kontabilist' ? 'Kasa Kontabilist' : 'Kasa'
+const TITLE = VARIANT === 'kontabilist' ? 'KontoSef Kontabilist' : 'KontoSef.app'
 
 const SCHEME = 'app'
 const HOST = VARIANT === 'kontabilist' ? 'kontabilist' : 'kasa'

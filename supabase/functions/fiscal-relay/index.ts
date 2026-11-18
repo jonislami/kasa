@@ -1,4 +1,4 @@
-// Edge Function: fiscal-relay – the bridge between Kasa and the ATK fiscalization service (SEF).
+// Edge Function: fiscal-relay – the bridge between KontoSef and the ATK fiscalization service (SEF).
 // ATK's servers do not allow calls from a browser (no CORS), so every request passes through here.
 // The signing key never comes here: the device signs, this function only forwards and records.
 //   { action: 'verify',  register_id }
@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
     if (reg.fiscal_status === 'registered') return fail('Kjo arkë është regjistruar tashmë. Çregjistroje para se ta regjistrosh në një pajisje tjetër.')
     const env = biz.fiscal_env
     const appId = await applicationId(env)
-    if (!appId) return fail(`Mungon Application ID e Kasa-s për mjedisin ${env}. Administratori i platformës e vendos te fiscal_config.`)
+    if (!appId) return fail(`Mungon Application ID e KontoSef-it për mjedisin ${env}. Administratori i platformës e vendos te fiscal_config.`)
 
     if (action === 'verify') {
       const r = await callAtk(env, `/ca/verify/${encodeURIComponent(biz.nui)}`, {

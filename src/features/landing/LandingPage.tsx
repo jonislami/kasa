@@ -1,18 +1,7 @@
 import { Link } from 'react-router-dom'
-import {
-  BarChart3,
-  Bluetooth,
-  KeyRound,
-  Laptop,
-  ShieldCheck,
-  WifiOff,
-  Monitor,
-  Smartphone,
-  Tablet,
-  Globe,
-} from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { SafeAreaStrip } from '@/app/layout/AppLayout'
-import { LogoMark } from '@/components/Logo'
+import { Logo } from '@/components/Logo'
 import { BUSINESS_TYPE_LIST } from '@/lib/business'
 
 const typeTexts: Record<string, string> = {
@@ -24,39 +13,37 @@ const typeTexts: Record<string, string> = {
 }
 
 const features = [
-  { icon: Laptop, title: 'Kompjuter dhe telefon', text: 'E njëjta llogari në Windows, Android, iPhone dhe në shfletues.' },
-  { icon: WifiOff, title: 'Punon pa internet', text: 'Arka vazhdon të shesë; faturat dërgohen sapo kthehet lidhja.' },
-  { icon: Bluetooth, title: 'Printer me Bluetooth', text: 'Printerë termikë 58 dhe 80mm, me një prekje nga cilësimet.', blue: true },
-  { icon: KeyRound, title: 'Arkëtarë me PIN', text: 'Çdo arkëtar hyn me PIN-in e vet dhe sheh vetëm arkën.' },
-  { icon: BarChart3, title: 'Raporte', text: 'Shitjet, fitimi, TVSH sipas normës dhe sipas arkëtarit.' },
-  { icon: ShieldCheck, title: 'Fiskalizim në ATK', text: 'Arka regjistrohet një herë; çdo faturë dërgohet me numrin fiskal.' },
+  { title: 'Fiskalizim në ATK', text: 'Arka regjistrohet një herë; çdo kupon nënshkruhet në pajisje dhe dërgohet me numrin fiskal.' },
+  { title: 'Raporte financiare', text: 'Shitjet, fitimi dhe TVSH-ja sipas normës (E, D, C, A), sipas ditës, arkës dhe punëtorit.' },
+  { title: 'Punon pa internet', text: 'Arka vazhdon të shesë; kuponët ruhen të enkriptuar dhe dërgohen sapo kthehet lidhja.' },
+  { title: 'Punëtorë me PIN', text: 'Secili hyn me PIN-in e vet dhe sheh vetëm punën e vet. Anulimet kërkojnë miratimin e menaxherit.' },
+  { title: 'Kompjuter dhe telefon', text: 'E njëjta llogari në Windows, Android, iPhone dhe në shfletues.' },
+  { title: 'Printer termik', text: 'Printerë 58, 80 dhe 100 mm me Bluetooth ose USB, direkt nga arka.' },
 ]
 
 const steps = [
-  { title: 'Na kontakto', text: 'Na trego llojin e biznesit dhe sa arka ke. Ne e hapim llogarinë për ty.' },
-  { title: 'Merr të dhënat e hyrjes', text: 'Të dërgojmë email-in dhe fjalëkalimin në WhatsApp. Shkarko aplikacionin dhe hyr.' },
-  { title: 'Shto produktet dhe shit', text: 'Importo produktet nga Excel, lidh printerin dhe nis faturën e parë.' },
+  { title: 'Regjistro biznesin', text: 'Plotëso të dhënat një herë dhe zgjidh llojin e biznesit.' },
+  { title: 'Merr çelësin e arkës', text: 'Pas aprovimit, shkarko programin dhe aktivizoje me çelësin.' },
+  { title: 'Shto produktet dhe shit', text: 'Importo produktet nga Excel, lidh printerin dhe nis kuponin e parë.' },
 ]
 
 export function PublicHeader() {
   return (
     <>
       <SafeAreaStrip />
-      <header className="bg-brand-900 pt-safe text-white">
-        <div className="mx-auto flex h-[72px] max-w-[1200px] items-center justify-between px-5">
-          <Link to="/" className="flex items-center gap-2.5">
-            <LogoMark size={36} />
-            <span className="text-xl font-bold">Kasa</span>
+      <header className="sticky top-0 z-30 border-b border-line bg-white/95 pt-safe backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-[1160px] items-center justify-between px-5">
+          <Link to="/" aria-label="KontoSef.app">
+            <Logo size={30} />
           </Link>
-          <nav className="flex items-center gap-6 text-sm text-white/85">
-            <a href="/#per-ke" className="hidden hover:text-white md:inline">Për kë është</a>
-            <a href="/#perfshihet" className="hidden hover:text-white md:inline">Çfarë përfshihet</a>
-            <a href="/#si-fillohet" className="hidden hover:text-white md:inline">Si fillohet</a>
-            <Link to="/shkarko" className="hidden hover:text-white sm:inline">Shkarko</Link>
-            <Link to="/regjistrohu" className="hidden h-10 items-center rounded-ctl border border-white/25 px-4 font-semibold text-white hover:bg-brand-800 sm:flex">
+          <nav className="flex items-center gap-1 text-[14px] font-medium text-[#344054]">
+            <a href="/#per-ke" className="hidden rounded-ctl px-3 py-2 hover:bg-[#F5F6F8] md:inline">Për kë është</a>
+            <a href="/#perfshihet" className="hidden rounded-ctl px-3 py-2 hover:bg-[#F5F6F8] md:inline">Çfarë përfshihet</a>
+            <Link to="/shkarko" className="hidden rounded-ctl px-3 py-2 hover:bg-[#F5F6F8] sm:inline">Shkarko</Link>
+            <Link to="/regjistrohu" className="ml-2 hidden h-9 items-center rounded-ctl border border-field px-3.5 font-semibold text-ink hover:bg-[#F9FAFB] sm:flex">
               Regjistrohu
             </Link>
-            <Link to="/login" className="flex h-10 items-center rounded-ctl bg-white px-5 font-semibold text-ink hover:bg-bg">
+            <Link to="/login" className="ml-2 flex h-9 items-center rounded-ctl bg-brand-600 px-4 font-semibold text-white hover:bg-brand-700">
               Hyr
             </Link>
           </nav>
@@ -68,35 +55,32 @@ export function PublicHeader() {
 
 export function PublicFooter() {
   return (
-    <footer className="bg-brand-900 text-white">
-      <div className="mx-auto max-w-[1200px] px-5 py-12">
+    <footer className="border-t border-line bg-white">
+      <div className="mx-auto max-w-[1160px] px-5 py-10">
         <div className="grid gap-8 md:grid-cols-[2fr_1fr_1fr]">
           <div>
-            <div className="flex items-center gap-2.5">
-              <LogoMark size={32} />
-              <span className="text-lg font-bold">Kasa</span>
-            </div>
-            <p className="mt-3 max-w-sm text-sm text-white/70">
-              Arka për bizneset e vogla në Kosovë – market, kafiteri, barnatore, butik dhe sallon.
+            <Logo size={26} />
+            <p className="mt-3 max-w-sm text-[14px] leading-relaxed text-muted">
+              Arka, stoku, raportet dhe fiskalizimi për bizneset në Kosovë.
             </p>
           </div>
-          <div className="text-sm">
-            <div className="font-semibold">Produkti</div>
-            <ul className="mt-3 flex flex-col gap-3 text-white/70">
-              <li><a href="/#perfshihet" className="hover:text-white">Çfarë përfshihet</a></li>
-              <li><Link to="/shkarko" className="hover:text-white">Shkarko</Link></li>
-              <li><Link to="/login" className="hover:text-white">Hyr</Link></li>
+          <div className="text-[14px]">
+            <div className="font-semibold text-ink">Produkti</div>
+            <ul className="mt-3 flex flex-col gap-2 text-muted">
+              <li><a href="/#perfshihet" className="hover:text-ink">Çfarë përfshihet</a></li>
+              <li><Link to="/shkarko" className="hover:text-ink">Shkarko</Link></li>
+              <li><Link to="/login" className="hover:text-ink">Hyr</Link></li>
             </ul>
           </div>
-          <div className="text-sm">
-            <div className="font-semibold">Kontakti</div>
-            <ul className="mt-3 flex flex-col gap-2 text-white/70">
+          <div className="text-[14px]">
+            <div className="font-semibold text-ink">Kontakti</div>
+            <ul className="mt-3 flex flex-col gap-2 text-muted">
               <li>Prishtinë, Kosovë</li>
             </ul>
           </div>
         </div>
-        <div className="mt-10 flex flex-col justify-between gap-2 border-t border-white/10 pt-6 text-xs text-white/60 sm:flex-row">
-          <span>© {new Date().getFullYear()} Kasa</span>
+        <div className="mt-10 flex flex-col justify-between gap-2 border-t border-line pt-6 text-[13px] text-muted sm:flex-row">
+          <span>© {new Date().getFullYear()} KontoSef.app</span>
           <span>Kushtet e përdorimit · Privatësia</span>
         </div>
       </div>
@@ -104,159 +88,195 @@ export function PublicFooter() {
   )
 }
 
-function HeroReceipt() {
-  const rows = [
-    ['Qumësht i freskët 1L × 2', '€1.90'],
-    ['Bukë e bardhë 500g', '€0.50'],
-    ['Kafe e bluar 200g', '€2.90'],
-  ]
+/** A real screen of the program in a quiet window frame (demo data, no real business). */
+function Screen({ src, alt, title, className, width, height }: { src: string; alt: string; title: string; className?: string; width: number; height: number }) {
   return (
-    <div className="w-full max-w-[500px] rounded-[18px] bg-white p-5 text-ink shadow-2xl">
-      <div className="flex items-center justify-between">
-        <span className="font-semibold">Fatura #01284</span>
-        <span className="rounded-md bg-brand-100 px-2 py-0.5 text-xs font-semibold text-brand-600">Arka 1</span>
+    <figure className={`overflow-hidden rounded-card border border-line bg-white shadow-pop ${className ?? ''}`}>
+      <div className="flex h-8 items-center gap-1.5 border-b border-line bg-[#F9FAFB] px-3">
+        <span className="h-2.5 w-2.5 rounded-full bg-[#E4E7EC]" />
+        <span className="h-2.5 w-2.5 rounded-full bg-[#E4E7EC]" />
+        <span className="h-2.5 w-2.5 rounded-full bg-[#E4E7EC]" />
+        <span className="ml-3 truncate text-[11px] font-medium text-muted">{title}</span>
       </div>
-      <div className="mt-3 divide-y divide-line text-sm">
-        {rows.map(([n, p]) => (
-          <div key={n} className="flex justify-between py-2.5">
-            <span>{n}</span>
-            <span className="font-semibold tabular-nums">{p}</span>
-          </div>
-        ))}
-      </div>
-      <div className="mt-2 flex items-end justify-between border-t border-line pt-4">
-        <span className="text-sm text-muted">Totali</span>
-        <span className="text-[30px] font-bold tabular-nums">€5.30</span>
-      </div>
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <div className="flex h-12 items-center justify-center rounded-ctl border border-field text-sm font-semibold">Kartelë</div>
-        <div className="flex h-12 items-center justify-center rounded-ctl bg-brand-600 text-sm font-semibold text-white">Paguaj kesh</div>
-      </div>
-      <div className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-bt-600">
-        <Bluetooth className="h-3.5 w-3.5" /> POS-80 Printer · i lidhur
-      </div>
+      <img src={src} alt={alt} width={width} height={height} loading="lazy" decoding="async" className="block h-auto w-full" />
+    </figure>
+  )
+}
+
+function SectionTitle({ eyebrow, title, text }: { eyebrow: string; title: string; text?: string }) {
+  return (
+    <div className="max-w-2xl">
+      <div className="text-[13px] font-semibold text-brand-600">{eyebrow}</div>
+      <h2 className="mt-2 text-[26px] font-semibold leading-tight tracking-[-0.025em] text-ink md:text-[32px]">{title}</h2>
+      {text && <p className="mt-3 text-[15px] leading-relaxed text-muted">{text}</p>}
     </div>
   )
 }
 
 export function LandingPage() {
   return (
-    <div className="min-h-dvh bg-bg">
+    <div className="min-h-dvh bg-white">
       <PublicHeader />
 
       {/* Hero */}
-      <section className="bg-brand-900 text-white">
-        <div className="mx-auto grid max-w-[1200px] items-center gap-10 px-5 pb-16 pt-8 md:grid-cols-2 md:pb-24 md:pt-14">
-          <div>
-            <span className="inline-block rounded-full border border-brand-400/40 px-3 py-1 text-xs font-medium text-brand-400">
-              Për bizneset në Kosovë
-            </span>
-            <h1 className="mt-5 text-[38px] font-bold leading-[1.05] tracking-tight md:text-[56px]">
-              Arka që i njeh shitjet, stokun dhe faturat e tua.
+      <section className="border-b border-line bg-[linear-gradient(180deg,#FFFFFF_0%,#F3F5F8_100%)]">
+        <div className="mx-auto max-w-[1160px] px-5 pt-12 md:pt-20">
+          <div className="mx-auto max-w-3xl text-center">
+            <div className="text-[13px] font-semibold text-brand-600">Për marketet, kafiteritë dhe bizneset në Kosovë</div>
+            <h1 className="mt-4 text-[36px] font-semibold leading-[1.08] tracking-[-0.035em] text-ink md:text-[54px]">
+              Shitja, stoku dhe fiskalizimi, në rregull çdo ditë.
             </h1>
-            <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-white/70">
-              Kasa është arka për market, kafiteri, barnatore, butik dhe sallon. Punon në kompjuter dhe telefon, edhe kur bie
-              interneti, dhe printon faturën me Bluetooth.
+            <p className="mx-auto mt-5 max-w-2xl text-[17px] leading-relaxed text-muted">
+              KontoSef.app është arka dhe pasqyra financiare për market, kafiteri, barnatore, butik dhe sallon. Punon në kompjuter
+              dhe telefon, edhe kur bie interneti.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/regjistrohu" className="flex h-[52px] items-center rounded-ctl bg-brand-400 px-6 font-semibold text-brand-900 hover:brightness-105">
-                Regjistro biznesin
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
+              <Link to="/regjistrohu" className="flex h-12 items-center gap-2 rounded-ctl bg-brand-600 px-5 text-[15px] font-semibold text-white shadow-card hover:bg-brand-700">
+                Regjistro biznesin <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link to="/shkarko" className="flex h-[52px] items-center rounded-ctl border border-white/20 px-6 font-semibold hover:bg-brand-800">
+              <Link to="/shkarko" className="flex h-12 items-center rounded-ctl border border-field bg-white px-5 text-[15px] font-semibold text-ink shadow-card hover:bg-[#F9FAFB]">
                 Shkarko aplikacionin
               </Link>
             </div>
           </div>
-          <div className="flex justify-center md:justify-end">
-            <HeroReceipt />
+          <Screen
+            src="/screens/arka.jpg"
+            alt="Arka e KontoSef.app në një market: produktet me stok, fatura me TVSH sipas normës dhe pagesa"
+            title="KontoSef.app · Arka e marketit"
+            width={1600}
+            height={1000}
+            className="mx-auto mt-12 max-w-[1060px] translate-y-px rounded-b-none border-b-0 md:mt-16"
+          />
+        </div>
+      </section>
+
+      {/* Markets */}
+      <section className="bg-white">
+        <div className="mx-auto grid max-w-[1160px] items-center gap-12 px-5 py-16 md:grid-cols-[1fr_auto] md:py-24">
+          <div>
+            <SectionTitle
+              eyebrow="Për marketet"
+              title="Barkodi, peshorja dhe stoku – në të njëjtën arkë"
+              text="Skano produktin ose kërko me emër, shit me copë ose me kg, dhe stoku ulet vetë. Kuponi del me TVSH të ndarë sipas normës, i nënshkruar dhe i dërguar në ATK."
+            />
+            <ul className="mt-8 grid gap-4 text-[15px] sm:grid-cols-2">
+              {[
+                ['Shitje me barkod', 'Skaner USB ose kamera e telefonit; produkti hyn në faturë menjëherë.'],
+                ['Copë, kg, pako, litër', 'Djathi, frutat dhe perimet shiten me peshë, deri në gram.'],
+                ['Stok i ulët', 'Paralajmërim kur produkti bie nën minimum, dhe lista se çfarë duhet porositur.'],
+                ['Hyrjet e mallit', 'Fatura e furnitorit regjistrohet një herë – stoku dhe çmimi i blerjes përditësohen.'],
+              ].map(([t, d]) => (
+                <li key={t} className="border-l-2 border-brand-600 pl-4">
+                  <div className="font-semibold text-ink">{t}</div>
+                  <p className="mt-1 text-[14px] leading-relaxed text-muted">{d}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="flex items-end justify-center gap-5">
+            <figure className="w-[190px] overflow-hidden rounded-[28px] border-[6px] border-brand-900 bg-white shadow-pop sm:w-[220px]">
+              <img src="/screens/arka-telefon.jpg" alt="Arka e marketit në telefon: qumësht, bukë, ujë, djathë me peshë" width={640} height={1385} loading="lazy" decoding="async" className="block h-auto w-full" />
+            </figure>
+            <figure className="hidden w-[210px] overflow-hidden rounded-card border border-line bg-white shadow-pop sm:block">
+              <img src="/screens/kuponi.jpg" alt="Kuponi i printuar 80 mm me TVSH E 18% dhe D 8%" width={520} height={1090} loading="lazy" decoding="async" className="block h-auto w-full" />
+            </figure>
           </div>
         </div>
       </section>
 
-      <main className="mx-auto max-w-[1200px] px-5">
+      {/* Cafés and restaurants */}
+      <section className="border-y border-line bg-[#F7F8FA]">
+        <div className="mx-auto max-w-[1160px] px-5 py-16 md:py-24">
+          <div className="grid items-end gap-8 md:grid-cols-[1fr_auto]">
+            <SectionTitle
+              eyebrow="Për kafiteritë dhe restorantet"
+              title="Tavolinat, porositë dhe kuzhina, me një shikim"
+              text="Kamarieri sheh menjëherë cilat tavolina janë të lira, të zëna ose të vetat. Porosia shkon në bar ose kuzhinë, llogaria ndahet dhe paguhet në tavolinë."
+            />
+            <ul className="flex flex-wrap gap-x-5 gap-y-2 text-[14px] text-[#344054] md:justify-end">
+              {[['bg-[#12B76A]', 'E lirë'], ['bg-brand-600', 'Imja'], ['bg-[#D92D20]', 'E zënë']].map(([c, l]) => (
+                <li key={l} className="flex items-center gap-2">
+                  <span className={`h-2.5 w-2.5 rounded-full ${c}`} /> {l}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="mt-10 grid items-end gap-6 lg:grid-cols-[1fr_auto]">
+            <Screen src="/screens/tavolinat.jpg" alt="Tavolinat e kafiterisë: të lira, të zëna dhe të kamarierit, me totalin e secilës" title="KontoSef.app · Tavolinat" width={1600} height={1000} />
+            <figure className="mx-auto hidden w-[220px] overflow-hidden rounded-[28px] border-[6px] border-brand-900 bg-white shadow-pop lg:block">
+              <img src="/screens/tavolinat-telefon.jpg" alt="Tavolinat në telefonin e kamarierit" width={640} height={1385} loading="lazy" decoding="async" className="block h-auto w-full" />
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      {/* Owner's panel */}
+      <section className="bg-white">
+        <div className="mx-auto max-w-[1160px] px-5 py-16 md:py-24">
+          <SectionTitle
+            eyebrow="Për pronarin"
+            title="Shitjet, fitimi dhe TVSH-ja e ditës – nga kudo"
+            text="Paneli tregon shitjet sot dhe krahasimin me dje, fitimin bruto, keshin dhe kartelën, TVSH-në sipas normës dhe çfarë duhet porositur. Raportet dhe puna e çdo punëtori janë një klik larg."
+          />
+          <Screen src="/screens/paneli.jpg" alt="Paneli i pronarit: shitjet sot, kuponët, fitimi, stoku i ulët, grafiku i javës dhe TVSH sipas normës" title="KontoSef.app · Paneli" width={1600} height={1000} className="mt-10" />
+        </div>
+      </section>
+
+      <main className="mx-auto max-w-[1160px] px-5">
         {/* Types */}
-        <section id="per-ke" className="scroll-mt-6 py-16 md:py-20">
-          <div className="text-xs font-bold uppercase tracking-widest text-brand-600">Për kë është</div>
-          <h2 className="mt-2 max-w-xl text-[30px] font-bold leading-tight tracking-tight md:text-[36px]">
-            Një arkë, e përshtatur për llojin e biznesit tënd
-          </h2>
-          <p className="mt-3 text-muted">Kur hapet biznesi zgjedh llojin, dhe Kasa i shfaq vetëm ekranet që të duhen.</p>
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            {BUSINESS_TYPE_LIST.map((t) => {
-              const Icon = t.icon
-              return (
-                <div key={t.code} className="rounded-card border border-line bg-white p-6">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-100 text-brand-600">
-                    <Icon className="h-6 w-6" />
-                  </div>
-                  <div className="mt-5 font-semibold">{t.label}</div>
-                  <p className="mt-2 text-sm leading-relaxed text-muted">{typeTexts[t.code]}</p>
-                </div>
-              )
-            })}
+        <section id="per-ke" className="scroll-mt-20 py-16 md:py-24">
+          <SectionTitle
+            eyebrow="Për kë është"
+            title="Një platformë, e përshtatur për llojin e biznesit"
+            text="Kur hapet biznesi zgjidhet lloji, dhe KontoSef.app shfaq vetëm ekranet që të duhen."
+          />
+          <div className="mt-10 grid border-t border-line sm:grid-cols-2 lg:grid-cols-5">
+            {BUSINESS_TYPE_LIST.map((t) => (
+              <div key={t.code} className="border-b border-line py-6 pr-6 lg:border-b-0">
+                <div className="text-[15px] font-semibold text-ink">{t.label}</div>
+                <p className="mt-2 text-[14px] leading-relaxed text-muted">{typeTexts[t.code]}</p>
+              </div>
+            ))}
           </div>
         </section>
 
         {/* Features */}
-        <section id="perfshihet" className="scroll-mt-6 pb-16 md:pb-20">
-          <div className="text-xs font-bold uppercase tracking-widest text-brand-600">Çfarë përfshihet</div>
-          <h2 className="mt-2 max-w-xl text-[30px] font-bold leading-tight tracking-tight md:text-[36px]">
-            Gjithçka që i duhet arkës, pa programe shtesë
-          </h2>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map(({ icon: Icon, title, text, blue }) => (
-              <div key={title} className="flex gap-4 rounded-card border border-line bg-white p-6">
-                <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${blue ? 'bg-[#E6EDFD] text-bt-600' : 'bg-brand-100 text-brand-600'}`}>
-                  <Icon className="h-6 w-6" />
-                </div>
-                <div>
-                  <div className="font-semibold">{title}</div>
-                  <p className="mt-1 text-sm leading-relaxed text-muted">{text}</p>
-                </div>
+        <section id="perfshihet" className="scroll-mt-20 pb-16 md:pb-24">
+          <SectionTitle eyebrow="Çfarë përfshihet" title="Gjithçka që i duhet arkës dhe kontabilitetit, pa programe shtesë" />
+          <div className="mt-10 grid gap-px overflow-hidden rounded-card border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
+            {features.map(({ title, text }) => (
+              <div key={title} className="bg-white p-6">
+                <div className="text-[15px] font-semibold text-ink">{title}</div>
+                <p className="mt-2 text-[14px] leading-relaxed text-muted">{text}</p>
               </div>
             ))}
           </div>
         </section>
 
         {/* Steps */}
-        <section id="si-fillohet" className="scroll-mt-6 pb-16 md:pb-20">
-          <div className="text-xs font-bold uppercase tracking-widest text-brand-600">Si fillohet</div>
-          <h2 className="mt-2 text-[30px] font-bold leading-tight tracking-tight md:text-[36px]">Gati për shitje brenda ditës</h2>
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
+        <section id="si-fillohet" className="scroll-mt-20 pb-16 md:pb-24">
+          <SectionTitle eyebrow="Si fillohet" title="Gati për shitje brenda ditës" />
+          <ol className="mt-10 grid gap-8 md:grid-cols-3">
             {steps.map((s, i) => (
-              <div key={s.title} className="rounded-card border border-line bg-white p-6">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-900 text-sm font-semibold text-white">{i + 1}</div>
-                <div className="mt-4 font-semibold">{s.title}</div>
-                <p className="mt-2 text-sm leading-relaxed text-muted">{s.text}</p>
-              </div>
+              <li key={s.title} className="border-t-2 border-ink pt-5">
+                <div className="num text-[13px] font-semibold text-muted">0{i + 1}</div>
+                <div className="mt-2 text-[15px] font-semibold text-ink">{s.title}</div>
+                <p className="mt-2 text-[14px] leading-relaxed text-muted">{s.text}</p>
+              </li>
             ))}
-          </div>
+          </ol>
         </section>
 
         {/* Download */}
         <section className="pb-20">
-          <div className="grid items-center gap-8 rounded-[20px] border border-line bg-white p-7 md:grid-cols-2 md:p-10">
+          <div className="flex flex-col items-start justify-between gap-6 rounded-card bg-brand-900 px-7 py-9 text-white md:flex-row md:items-center md:px-10">
             <div>
-              <div className="text-xs font-bold uppercase tracking-widest text-brand-600">Shkarko</div>
-              <h2 className="mt-2 text-[26px] font-bold tracking-tight md:text-[30px]">Instaloje në pajisjen që përdor</h2>
-              <p className="mt-3 text-muted">Windows, Android, iPhone/iPad, ose hape direkt në shfletues.</p>
+              <h2 className="text-[22px] font-semibold tracking-[-0.02em] md:text-[26px]">Instaloje në pajisjen që përdor</h2>
+              <p className="mt-2 text-[15px] text-white/65">Windows, Android, iPhone/iPad, ose direkt në shfletues.</p>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { icon: Monitor, t: 'Windows', s: '.exe' },
-                { icon: Smartphone, t: 'Android', s: 'Google Play · APK' },
-                { icon: Tablet, t: 'iPhone / iPad', s: 'App Store' },
-                { icon: Globe, t: 'Në shfletues', s: 'Chrome, Edge, Safari' },
-              ].map(({ icon: Icon, t, s }) => (
-                <Link key={t} to="/shkarko" className="flex items-center gap-3 rounded-ctl border border-field px-4 py-3 hover:bg-bg">
-                  <Icon className="h-5 w-5 shrink-0 text-muted" />
-                  <div className="min-w-0">
-                    <div className="truncate text-sm font-semibold">{t}</div>
-                    <div className="truncate text-xs text-muted">{s}</div>
-                  </div>
-                </Link>
-              ))}
-            </div>
+            <Link to="/shkarko" className="flex h-11 shrink-0 items-center gap-2 rounded-ctl bg-white px-5 text-[14px] font-semibold text-ink hover:bg-[#F2F4F7]">
+              Shkarko <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
         </section>
       </main>

@@ -4,7 +4,7 @@ import { Check } from 'lucide-react'
 import { useAuth } from '@/app/AuthProvider'
 import { FullScreenLoader, SetupMissing } from '@/app/AuthGuard'
 import { SafeAreaStrip } from '@/app/layout/AppLayout'
-import { LogoMark } from '@/components/Logo'
+import { Logo } from '@/components/Logo'
 import { Button, Input } from '@/components/ui'
 import { supabaseConfigured } from '@/lib/supabase'
 import { isSefApp } from '@/lib/device'
@@ -50,30 +50,29 @@ export function LoginPage() {
     <div className="flex min-h-dvh flex-col md:flex-row">
       <SafeAreaStrip />
       {/* Brand panel */}
-      <section className="flex flex-col bg-brand-900 px-6 pb-8 pt-[calc(env(safe-area-inset-top)+24px)] text-white md:w-[46.5%] md:px-12 md:py-12">
-        <Link to="/" className="flex items-center gap-3">
-          <LogoMark size={44} />
-          <span className="text-xl font-bold">Kasa</span>
+      <section className="flex flex-col bg-brand-900 px-6 pb-7 pt-[calc(env(safe-area-inset-top)+20px)] text-white md:w-[44%] md:max-w-[620px] md:px-12 md:py-11">
+        <Link to="/" className="flex items-center gap-2.5" aria-label="KontoSef.app">
+          <Logo size={34} tone="light" />
         </Link>
-        <div className="mt-8 md:my-auto">
-          <h1 className="text-[28px] font-bold leading-[1.1] tracking-tight md:text-[44px]">Shitja, stoku dhe raportet në një vend.</h1>
-          <p className="mt-4 hidden max-w-md text-[17px] leading-relaxed text-white/70 md:block">
-            Arka e shpejtë me barkod, hyrjet e mallit nga furnitorët dhe pasqyra e ditës – nga kompjuteri ose telefoni.
+        <div className="mt-7 md:my-auto">
+          <h1 className="text-[24px] font-semibold leading-[1.15] tracking-[-0.025em] md:text-[38px]">Shitja, stoku dhe fiskalizimi – në rregull çdo ditë.</h1>
+          <p className="mt-4 hidden max-w-md text-[16px] leading-relaxed text-white/60 md:block">
+            Arka, hyrjet e mallit, TVSH-ja dhe raportet e biznesit tënd në një vend – nga kompjuteri ose telefoni.
           </p>
         </div>
-        <ul className="mt-auto hidden flex-wrap gap-x-6 gap-y-2 text-sm text-white/70 md:flex">
-          {['Punon edhe pa internet', 'Printer me Bluetooth', 'Disa arka e përdorues'].map((t) => (
-            <li key={t} className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-brand-400" /> {t}
+        <ul className="mt-auto hidden flex-col gap-2.5 border-t border-white/10 pt-6 text-[14px] text-white/65 md:flex">
+          {['Fiskalizim në ATK, edhe pa internet', 'Punëtorë me PIN, të dhëna të ndara për biznes', 'Windows, Android, iPhone dhe shfletues'].map((t) => (
+            <li key={t} className="flex items-center gap-2.5">
+              <Check className="h-4 w-4 text-brand-400" strokeWidth={2.2} /> {t}
             </li>
           ))}
         </ul>
       </section>
 
       {/* Form */}
-      <section className="flex flex-1 items-start justify-center bg-bg px-6 py-8 md:items-center md:py-12">
-        <div className="w-full max-w-[420px]">
-          <h2 className="text-[28px] font-bold tracking-tight">{tr('Mirë se erdhe')}</h2>
+      <section className="flex flex-1 items-start justify-center bg-white px-6 py-8 md:items-center md:py-12">
+        <div className="w-full max-w-[400px]">
+          <h2 className="text-[24px] font-semibold tracking-[-0.025em]">{tr('Mirë se erdhe')}</h2>
           {isSefApp ? (
             <>
               <p className="mt-1 text-muted">{tr('Hyr me PIN-in tënd për të shitur')}</p>
@@ -100,18 +99,18 @@ export function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   labelRight={
-                    <button type="button" onClick={() => setShowForgot((v) => !v)} className="text-sm font-semibold text-brand-600 underline">
+                    <button type="button" onClick={() => setShowForgot((v) => !v)} className="text-[13px] font-medium text-brand-600 hover:underline">
                       Harrove fjalëkalimin?
                     </button>
                   }
                 />
                 {showForgot && (
                   <p className="rounded-ctl bg-amber-100 px-4 py-3 text-sm text-amber-700">
-                    Fjalëkalimin e ri ta jep administratori i Kasa-s (pronari) ose pronari i biznesit (menaxherët).
+                    Fjalëkalimin e ri ta jep administratori i KontoSef-it (pronari) ose pronari i biznesit (menaxherët).
                   </p>
                 )}
-                <label className="flex cursor-pointer items-center gap-3 text-[15px]">
-                  <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="h-5 w-5 rounded accent-brand-600" />
+                <label className="flex cursor-pointer items-center gap-2.5 text-[14px] text-[#344054]">
+                  <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="h-4 w-4 rounded accent-brand-600" />
                   Më mbaj të kyçur në këtë pajisje
                 </label>
                 {error && <p className="rounded-ctl bg-warn-100 px-4 py-3 text-sm text-warn-700">{error}</p>}

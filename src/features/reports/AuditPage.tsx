@@ -8,7 +8,7 @@ import { supabase } from '@/lib/supabase'
 import { PageHeader } from '@/app/layout/AppLayout'
 import { Badge, Button, Card, EmptyState, Select } from '@/components/ui'
 import { formatEUR } from '@/lib/money'
-import { fetchPeople } from '@/features/stock/api'
+import { fetchPeople, peopleMap } from '@/features/stock/api'
 import { fetchAccountants } from '@/features/accounting/api'
 import { fetchAudit, periodRange, type AuditRow, type PeriodKey } from './api'
 
@@ -138,7 +138,7 @@ export function AuditPage() {
   // The accountant is not in profiles; without migration 0012 the list is simply empty.
   const accountants = useQuery({ queryKey: ['accountants', business.id], queryFn: () => fetchAccountants().catch(() => []), staleTime: 5 * 60_000 })
   const names = useMemo(() => {
-    const m = new Map(people.data ?? [])
+    const m = new Map(peopleMap(people.data))
     for (const a of accountants.data ?? []) m.set(a.user_id, `${a.full_name || a.email} (kontabilist)`)
     return m
   }, [people.data, accountants.data])
@@ -234,7 +234,7 @@ export function AuditPage() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-sm">
-                <thead className="bg-[#F8FAF8]">
+                <thead className="bg-[#F9FAFB]">
                   <tr className="text-left text-[13px] text-muted">
                     <th className="border-b border-line px-4 py-3 font-semibold">Data / ora</th>
                     <th className="border-b border-line px-3 py-3 font-semibold">Përdoruesi</th>

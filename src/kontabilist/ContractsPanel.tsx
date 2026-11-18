@@ -22,15 +22,15 @@ export function ContractsPanel() {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
         <Card className="p-4">
           <div className="text-sm text-muted">Tarifat mujore (aktive)</div>
-          <div className="mt-1 text-[20px] font-bold tabular-nums">{formatEUR(monthly)}</div>
+          <div className="mt-1 text-[20px] font-semibold tracking-[-0.015em] tabular-nums">{formatEUR(monthly)}</div>
         </Card>
         <Card className="p-4">
           <div className="text-sm text-muted">Klientët i detyrohen zyrës</div>
-          <div className="mt-1 text-[20px] font-bold tabular-nums">{formatEUR(open)}</div>
+          <div className="mt-1 text-[20px] font-semibold tracking-[-0.015em] tabular-nums">{formatEUR(open)}</div>
         </Card>
         <Card className="p-4">
           <div className="text-sm text-muted">Pa kontratë</div>
-          <div className="mt-1 text-[20px] font-bold tabular-nums">{(contracts.data ?? []).filter((r) => r.client_active && !r.contract).length}</div>
+          <div className="mt-1 text-[20px] font-semibold tracking-[-0.015em] tabular-nums">{(contracts.data ?? []).filter((r) => r.client_active && !r.contract).length}</div>
         </Card>
       </div>
       <Card className="overflow-hidden">

@@ -56,7 +56,7 @@ export function PortalPage() {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center gap-4 px-6 text-center">
         <LogoMark size={48} />
-        <h1 className="text-[22px] font-bold">Portali i klientit</h1>
+        <h1 className="text-[22px] font-semibold tracking-[-0.015em]">Portali i klientit</h1>
         <p className="max-w-[380px] text-muted">{me.error ? (me.error as Error).message : 'Kjo llogari nuk ka qasje në asnjë kompani. Kontakto zyrën e kontabilitetit.'}</p>
         <Button variant="secondary" onClick={() => void signOut()}>
           Dil
@@ -75,7 +75,7 @@ export function PortalPage() {
               <select
                 value={client.client_id}
                 onChange={(e) => setClientId(e.target.value)}
-                className="max-w-full truncate rounded-md bg-transparent text-[16px] font-bold focus:outline-none"
+                className="max-w-full truncate rounded-md bg-transparent text-[16px] font-semibold tracking-[-0.015em] focus:outline-none"
               >
                 {clients.map((c) => (
                   <option key={c.client_id} value={c.client_id} className="text-ink">
@@ -84,7 +84,7 @@ export function PortalPage() {
                 ))}
               </select>
             ) : (
-              <div className="truncate text-[16px] font-bold leading-tight">{client.name}</div>
+              <div className="truncate text-[16px] font-semibold tracking-[-0.015em] leading-tight">{client.name}</div>
             )}
             <div className="truncate text-xs font-semibold text-brand-400">Kontabiliteti: {client.office_name ?? 'zyra'}</div>
           </div>
@@ -109,7 +109,7 @@ export function PortalPage() {
         {tab === 'dokumentet' && <Documents clientId={client.client_id} />}
         {tab === 'mesazhet' && (
           <Card className="p-4 md:p-5">
-            <h2 className="mb-3 text-[17px] font-semibold">Mesazhet me {client.office_name ?? 'kontabilistin'}</h2>
+            <h2 className="mb-3 text-[16px] font-semibold tracking-[-0.01em]">Mesazhet me {client.office_name ?? 'kontabilistin'}</h2>
             <MessageThread
               queryKey={['portal-messages', client.client_id]}
               load={() => fetchMessages(client.client_id)}
@@ -148,7 +148,7 @@ function MonthPicker({ month, onChange, max }: { month: string; onChange: (m: st
         <ChevronLeft className="h-4 w-4" />
       </button>
       <span className="min-w-[130px] px-2 text-center font-semibold">{monthName(month)}</span>
-      <button type="button" aria-label="Muaji tjetër" disabled={Boolean(max && month >= max)} className="flex h-10 w-10 items-center justify-center hover:bg-bg disabled:text-[#B8C2BC]" onClick={() => onChange(addMonths(month, 1))}>
+      <button type="button" aria-label="Muaji tjetër" disabled={Boolean(max && month >= max)} className="flex h-10 w-10 items-center justify-center hover:bg-bg disabled:text-[#B5BCC7]" onClick={() => onChange(addMonths(month, 1))}>
         <ChevronRight className="h-4 w-4" />
       </button>
     </div>
@@ -202,21 +202,21 @@ function Overview({ clientId, go }: { clientId: string; go: (t: Tab) => void }) 
             ].map(([l, v, s]) => (
               <Card key={l as string} className="p-4">
                 <div className="text-sm text-muted">{l}</div>
-                <div className="mt-1 text-[20px] font-bold tabular-nums">{formatEUR(v as number)}</div>
+                <div className="mt-1 text-[20px] font-semibold tracking-[-0.015em] tabular-nums">{formatEUR(v as number)}</div>
                 <div className="text-xs text-muted">{s}</div>
               </Card>
             ))}
           </div>
-          {d.kasa_linked && <p className="text-sm text-muted">Shitjet nga arka Kasa i sheh në aplikacionin Kasa; këtu janë faturat që regjistron zyra.</p>}
+          {d.kasa_linked && <p className="text-sm text-muted">Shitjet nga arka KontoSef i sheh në aplikacionin KontoSef; këtu janë faturat që regjistron zyra.</p>}
           <div className="grid gap-4 lg:grid-cols-3">
             <Card className="p-5 lg:col-span-2">
-              <h2 className="text-[17px] font-semibold">Viti {month.slice(0, 4)}</h2>
+              <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Viti {month.slice(0, 4)}</h2>
               <div className="mt-4 flex h-[160px] items-end gap-2">
                 {d.months.map((m) => (
                   <div key={m.month} className="flex flex-1 flex-col items-center gap-1">
                     <div className="flex h-[130px] w-full items-end justify-center gap-0.5">
                       <div className="w-1/2 max-w-[18px] rounded-t bg-brand-600" style={{ height: `${(m.sales / max) * 100}%` }} title={`Shitjet ${formatEUR(m.sales)}`} />
-                      <div className="w-1/2 max-w-[18px] rounded-t bg-[#B9D9C8]" style={{ height: `${(m.purchases / max) * 100}%` }} title={`Blerjet ${formatEUR(m.purchases)}`} />
+                      <div className="w-1/2 max-w-[18px] rounded-t bg-[#C3D3EE]" style={{ height: `${(m.purchases / max) * 100}%` }} title={`Blerjet ${formatEUR(m.purchases)}`} />
                     </div>
                     <span className="text-[11px] text-muted">{m.month.slice(5, 7)}</span>
                   </div>
@@ -227,16 +227,16 @@ function Overview({ clientId, go }: { clientId: string; go: (t: Tab) => void }) 
                   <span className="h-2.5 w-2.5 rounded-sm bg-brand-600" /> Shitjet
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="h-2.5 w-2.5 rounded-sm bg-[#B9D9C8]" /> Blerjet
+                  <span className="h-2.5 w-2.5 rounded-sm bg-[#C3D3EE]" /> Blerjet
                 </span>
               </div>
             </Card>
             <Card className="flex flex-col gap-3 p-5">
-              <h2 className="text-[17px] font-semibold">TVSH-ja e fundit</h2>
+              <h2 className="text-[16px] font-semibold tracking-[-0.01em]">TVSH-ja e fundit</h2>
               {d.vat_return ? (
                 <>
                   <div className="text-sm text-muted">{monthName(d.vat_return.month)}</div>
-                  <div className="text-[22px] font-bold tabular-nums">{d.vat_return.amount > 0 ? formatEUR(d.vat_return.amount) : d.vat_return.credit > 0 ? `Kredi ${formatEUR(d.vat_return.credit)}` : formatEUR(0)}</div>
+                  <div className="text-[22px] font-semibold tracking-[-0.015em] tabular-nums">{d.vat_return.amount > 0 ? formatEUR(d.vat_return.amount) : d.vat_return.credit > 0 ? `Kredi ${formatEUR(d.vat_return.credit)}` : formatEUR(0)}</div>
                   <Badge tone={d.vat_return.status === 'filed' ? 'success' : 'amber'}>{d.vat_return.status === 'filed' ? `Deklaruar ${d.vat_return.filed_at ? formatDay(d.vat_return.filed_at) : ''}` : 'Në përgatitje'}</Badge>
                   {d.vat_return.amount > 0 && <div className="text-sm text-muted">{d.vat_return.paid_at ? `Paguar ${formatDay(d.vat_return.paid_at)}` : 'Për pagesë në ATK'}</div>}
                 </>
@@ -307,7 +307,7 @@ function Invoices({ clientId }: { clientId: string }) {
         ].map(([l, v]) => (
           <Card key={l as string} className="p-4">
             <div className="text-sm text-muted">{l}</div>
-            <div className="mt-1 text-[18px] font-bold tabular-nums">{formatEUR(v as number)}</div>
+            <div className="mt-1 text-[18px] font-semibold tracking-[-0.015em] tabular-nums">{formatEUR(v as number)}</div>
           </Card>
         ))}
       </div>
@@ -402,8 +402,8 @@ function Documents({ clientId }: { clientId: string }) {
   return (
     <div className="flex flex-col gap-4">
       <Card className="p-5">
-        <div className="flex flex-col items-center gap-3 rounded-card border-2 border-dashed border-field bg-[#F8FAF8] px-4 py-6 text-center">
-          <div className="text-[17px] font-semibold">Dërgo fatura dhe dokumente te kontabilisti</div>
+        <div className="flex flex-col items-center gap-3 rounded-card border-2 border-dashed border-field bg-[#F9FAFB] px-4 py-6 text-center">
+          <div className="text-[16px] font-semibold tracking-[-0.01em]">Dërgo fatura dhe dokumente te kontabilisti</div>
           <p className="max-w-[460px] text-sm text-muted">Bëj foto faturave të blerjes, kuponave ose ngarko PDF – edhe disa njëherësh. Kontabilisti i lexon dhe i regjistron.</p>
           <div className="flex flex-wrap justify-center gap-2">
             <Button onClick={() => pick(null, true)} disabled={upload.isPending}>
@@ -426,7 +426,7 @@ function Documents({ clientId }: { clientId: string }) {
       </Card>
 
       <Card className="overflow-hidden">
-        <h2 className="px-5 pt-4 text-[17px] font-semibold">Kontabilisti kërkon</h2>
+        <h2 className="px-5 pt-4 text-[16px] font-semibold tracking-[-0.01em]">Kontabilisti kërkon</h2>
         {data.isLoading ? (
           <p className="py-6 text-center text-muted">Duke ngarkuar…</p>
         ) : data.error ? (
@@ -476,7 +476,7 @@ function Documents({ clientId }: { clientId: string }) {
 
       {uploads.length > 0 && (
         <Card className="overflow-hidden">
-          <h2 className="px-5 pt-4 text-[17px] font-semibold">Të dërguarat</h2>
+          <h2 className="px-5 pt-4 text-[16px] font-semibold tracking-[-0.01em]">Të dërguarat</h2>
           <ul className="mt-2 divide-y divide-line">
             {uploads.map((u) => (
               <li key={u.id} className="flex items-center gap-3 px-5 py-2.5">
@@ -597,7 +597,7 @@ function OfficeTab({ clientId }: { clientId: string }) {
       <Card className="p-5">
         <div className="flex items-center gap-3">
           <Building2 className="h-6 w-6 text-brand-600" />
-          <h2 className="text-[17px] font-semibold">{o?.name ?? 'Zyra e kontabilitetit'}</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">{o?.name ?? 'Zyra e kontabilitetit'}</h2>
         </div>
         <div className="mt-3 flex flex-col gap-1 text-sm">
           {o?.address && <div>{[o.address, o.city].filter(Boolean).join(', ')}</div>}
@@ -623,7 +623,7 @@ function OfficeTab({ clientId }: { clientId: string }) {
       </Card>
       <Card className="overflow-hidden lg:col-span-2">
         <div className="flex items-center justify-between px-5 pt-4">
-          <h2 className="text-[17px] font-semibold">Faturat e zyrës</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Faturat e zyrës</h2>
           {open > 0 && <span className="font-semibold text-amber-700">Për pagesë {formatEUR(open)}</span>}
         </div>
         {invs.length === 0 ? (
@@ -669,7 +669,7 @@ function SharedFilesCard({ clientId }: { clientId: string }) {
   if (!list.length) return null
   return (
     <Card className="overflow-hidden">
-      <h2 className="px-5 pt-4 text-[17px] font-semibold">Nga zyra</h2>
+      <h2 className="px-5 pt-4 text-[16px] font-semibold tracking-[-0.01em]">Nga zyra</h2>
       <ul className="mt-2 divide-y divide-line">
         {list.map((f) => (
           <li key={f.id}>

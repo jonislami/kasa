@@ -93,7 +93,7 @@ export function BackupSection() {
 
   return (
     <Card className="p-5">
-      <h2 className="text-[17px] font-semibold">Kopje rezervë (Backup)</h2>
+      <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Kopje rezervë (Backup)</h2>
       <p className="mt-1 text-sm text-muted">
         Të dhënat ruhen në server automatikisht. Këtu shkarkon një kopje në Excel: produktet me çmimet, furnitorët, faturat dhe rreshtat e 12 muajve të fundit, lëvizjet e stokut.
       </p>

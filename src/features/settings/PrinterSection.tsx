@@ -58,7 +58,7 @@ export function PrinterSection() {
 
         {manager && (
           <Card className="p-5">
-            <h2 className="text-[17px] font-semibold">Printimi</h2>
+            <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Printimi</h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <Select
                 label="Gjerësia e letrës"
@@ -112,7 +112,7 @@ export function PrinterSection() {
 
         {manager && (
           <Card className="p-5">
-            <h2 className="text-[17px] font-semibold">Pamja e faturës</h2>
+            <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Pamja e faturës</h2>
             <p className="mt-1 text-sm text-muted">Emri, adresa, NUI dhe telefoni merren nga "Të dhënat e biznesit".</p>
             <div className="mt-4 grid gap-3">
               <Input label="Rresht shtesë nën emër (opsional)" value={form.receipt_header ?? ''} onChange={(e) => set('receipt_header', e.target.value || null)} placeholder="p.sh. Dyqani qendror" />
@@ -137,7 +137,7 @@ export function PrinterSection() {
         )}
       </div>
 
-      <div className="rounded-card bg-[#E9EDEA] p-5 xl:sticky xl:top-6 xl:w-[360px] xl:shrink-0">
+      <div className="rounded-card bg-[#E8EBEF] p-5 xl:sticky xl:top-6 xl:w-[360px] xl:shrink-0">
         <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">Parapamja · {local.paper_width}mm</div>
         <div className="overflow-x-auto rounded-md bg-white py-2 shadow-sm">
           <Receipt sale={SAMPLE} business={business} settings={local} />
@@ -152,7 +152,7 @@ function DevicePaperCard({ value, business, onChange }: { value: DevicePaper; bu
   const paper = value.paper_width ?? business.paper_width
   return (
     <Card className="p-5">
-      <h2 className="text-[17px] font-semibold">Letra e printerit</h2>
+      <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Letra e printerit</h2>
       <p className="mt-1 text-sm text-muted">Madhësia e rrotullës së letrës në printerin e kësaj arke.</p>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <Select
@@ -226,7 +226,7 @@ function BluetoothCard({ settings }: { settings: ReceiptSettings }) {
             <Bluetooth className="h-5 w-5" />
           </span>
           <div>
-            <h2 className="text-[17px] font-semibold">Printeri i faturave (Bluetooth)</h2>
+            <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Printeri i faturave (Bluetooth)</h2>
             <p className="text-sm text-muted">Printer termik 58, 80 ose 100 mm · lidhet për këtë pajisje</p>
           </div>
         </div>
@@ -383,7 +383,7 @@ function WindowsPrinterCard({ settings }: { settings: ReceiptSettings }) {
   })
   return (
     <Card className="p-5">
-      <h2 className="text-[17px] font-semibold">Printeri i Windows</h2>
+      <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Printeri i Windows</h2>
       <p className="mt-1 text-sm text-muted">Kuponi printohet drejt në këtë printer, pa dritaren e printimit.</p>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <Select

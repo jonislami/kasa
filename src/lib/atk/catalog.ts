@@ -1,5 +1,5 @@
 // Official ATK lists "Kategoritë e mallrave dhe shërbimeve" and "Njësitë matëse" (SEF documents, pages 87–88).
-// Built in and fixed: used by the Kasa till (CouponItem.Type / Unit) and the accountant program.
+// Built in and fixed: used by the KontoSef till (CouponItem.Type / Unit) and the accountant program.
 
 export interface AtkCategory {
   nr: number
@@ -138,5 +138,5 @@ export function unitCode(label: string | null | undefined): string | null {
   return ATK_UNITS.find((u) => u.name.toLowerCase() === l || u.code.toLowerCase() === l)?.code ?? aliases[l] ?? null
 }
 
-/** Default ATK category of a Kasa business type, used when a product gets none. */
+/** Default ATK category of a KontoSef business type, used when a product gets none. */
 export const DEFAULT_CATEGORY: Record<string, string> = { market: 'AU', restaurant: 'UR', pharmacy: 'BM', boutique: 'VM', salon: 'SHZ' }

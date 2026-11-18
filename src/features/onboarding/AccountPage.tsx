@@ -56,12 +56,12 @@ export function AccountPage() {
         <div className="mx-auto flex h-[68px] max-w-[1000px] items-center gap-3 px-4 md:px-6">
           <LogoMark size={36} />
           <div className="min-w-0 flex-1">
-            <div className="truncate text-[17px] font-bold">{s?.business.name ?? ctx?.business?.name ?? 'Kasa'}</div>
+            <div className="truncate text-[17px] font-semibold tracking-[-0.015em]">{s?.business.name ?? ctx?.business?.name ?? 'KontoSef'}</div>
             <div className="text-xs font-semibold text-brand-400">Llogaria dhe aktivizimi</div>
           </div>
           {ctx?.business?.active && (
             <Link to="/" className="hidden h-10 items-center rounded-ctl bg-white/10 px-3 text-sm font-semibold hover:bg-white/20 sm:flex">
-              Hap Kasa
+              Hap KontoSef
             </Link>
           )}
           <button type="button" onClick={() => void signOut()} className="flex h-10 items-center gap-2 rounded-ctl bg-white/10 px-3 text-sm font-semibold hover:bg-white/20">
@@ -89,7 +89,7 @@ export function AccountPage() {
                     <Download className="h-5 w-5" />
                   </div>
                   <div>
-                    <h2 className="text-[19px] font-bold">Shkarko Kasa</h2>
+                    <h2 className="text-[19px] font-semibold tracking-[-0.015em]">Shkarko KontoSef</h2>
                     <p className="text-sm text-muted">Instalo programin në pajisjen e arkës dhe shkruaj çelësin e asaj arke; biznesi dhe konfigurimi ngarkohen vetë.</p>
                   </div>
                 </div>
@@ -138,14 +138,14 @@ function StatusCard({ s }: { s: OnboardingState }) {
     pending: 'Regjistrimi është në shqyrtim. Zakonisht aprovohet brenda një dite pune; kjo faqe përditësohet vetë.',
     needs_info: 'Për të vazhduar na duhen disa të dhëna. Plotësoji më poshtë dhe kliko “Dërgo të dhënat”.',
     approved: 'Regjistrimi u aprovua. Kryej pagesën sipas udhëzimeve më poshtë; pas konfirmimit hapet aplikimi për arkë.',
-    active: s.can_install ? 'Llogaria është aktive. Merr çelësin e arkës më poshtë, shkarko Kasa dhe fillo punën.' : 'Llogaria është aktive. Apliko për arkë; pas aprovimit të del “Install SEF”.',
+    active: s.can_install ? 'Llogaria është aktive. Merr çelësin e arkës më poshtë, shkarko KontoSef dhe fillo punën.' : 'Llogaria është aktive. Apliko për arkë; pas aprovimit të del “Install SEF”.',
     rejected: 'Regjistrimi u refuzua. Për sqarime na kontakto.',
-    suspended: 'Llogaria është pezulluar. Kasa nuk punon derisa të riaktivizohet – na kontakto.',
+    suspended: 'Llogaria është pezulluar. KontoSef nuk punon derisa të riaktivizohet – na kontakto.',
   }
   return (
     <Card className={cn('p-5', st === 'needs_info' || st === 'rejected' || st === 'suspended' ? 'border-warn-700/30' : '')}>
       <div className="flex flex-wrap items-center gap-3">
-        <h2 className="text-[19px] font-bold">Statusi</h2>
+        <h2 className="text-[19px] font-semibold tracking-[-0.015em]">Statusi</h2>
         <Badge tone={st === 'active' ? 'success' : st === 'rejected' || st === 'suspended' ? 'warn' : 'amber'}>{STATUS_LABELS[st]}</Badge>
         {st === 'active' && (
           <Badge tone={lic.state === 'active' ? 'success' : lic.state === 'expiring' || lic.state === 'grace' ? 'amber' : 'warn'}>
@@ -163,9 +163,9 @@ function StatusCard({ s }: { s: OnboardingState }) {
       {st === 'active' && (lic.state === 'expiring' || lic.state === 'grace' || lic.state === 'expired') && (
         <p className="mt-3 rounded-ctl bg-warn-100 px-4 py-3 text-sm text-warn-700">
           {lic.state === 'expiring'
-            ? `Abonimi skadon më ${day(lic.expires_on)}. Paguaje me kohë që Kasa të mos ndalet.`
+            ? `Abonimi skadon më ${day(lic.expires_on)}. Paguaje me kohë që KontoSef të mos ndalet.`
             : lic.state === 'grace'
-              ? `Abonimi ka skaduar. Deri më ${day(lic.grace_until)} Kasa punon normalisht; pastaj ndalen shitjet e reja.`
+              ? `Abonimi ka skaduar. Deri më ${day(lic.grace_until)} KontoSef punon normalisht; pastaj ndalen shitjet e reja.`
               : 'Abonimi ka skaduar: shitjet e reja janë ndalur. Raportet dhe të dhënat shihen. Paguaj abonimin për ta riaktivizuar.'}
         </p>
       )}
@@ -192,7 +192,7 @@ function DataCard({ s, onSaved }: { s: OnboardingState; onSaved: () => void }) {
   const set = (k: keyof typeof f) => (e: { target: { value: string } }) => (setOk(false), setF({ ...f, [k]: e.target.value }))
   return (
     <Card className="p-5 md:p-6">
-      <h2 className="text-[19px] font-bold">Të dhënat e biznesit</h2>
+      <h2 className="text-[19px] font-semibold tracking-[-0.015em]">Të dhënat e biznesit</h2>
       <p className="text-sm text-muted">{businessType(b.type).label} · regjistruar {day(b.created_at)} · {b.owner_email}</p>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <Input label="Emri i biznesit" value={f.name} onChange={set('name')} />
@@ -228,7 +228,7 @@ function RegisterCard({ s, onSaved }: { s: OnboardingState; onSaved: () => void 
             <MonitorSmartphone className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-[19px] font-bold">Apliko për arkë</h2>
+            <h2 className="text-[19px] font-semibold tracking-[-0.015em]">Apliko për arkë</h2>
             <p className="text-sm text-muted">Për çdo arkë (pajisje) ku do të shitet; pas aprovimit konfigurohet edhe në ATK.</p>
           </div>
         </div>
@@ -327,7 +327,7 @@ function HistoryCard({ s }: { s: OnboardingState }) {
   if (!s.events.length) return null
   return (
     <Card className="p-5">
-      <h2 className="text-[17px] font-semibold">Historiku</h2>
+      <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Historiku</h2>
       <ul className="mt-3 flex flex-col gap-2 text-sm">
         {s.events.map((e, i) => (
           <li key={i} className="flex gap-3">

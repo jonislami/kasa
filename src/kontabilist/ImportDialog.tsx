@@ -161,7 +161,7 @@ export function ImportDialog({ clientId, kind, open, onClose, onDone }: { client
         </div>
       }
     >
-      <label className="flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-field bg-[#F8FAF8] px-4 text-center hover:border-brand-600">
+      <label className="flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-field bg-[#F9FAFB] px-4 text-center hover:border-brand-600">
         <FileSpreadsheet className="h-7 w-7 text-brand-600" />
         <span className="font-semibold">{parsed ? parsed.file : 'Zgjidh skedarin Excel (.xlsx)'}</span>
         <span className="text-sm text-muted">Rreshti i parë me tituj; çdo rresht tjetër një faturë.</span>

@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Monitor, Plus, Smartphone } from 'lucide-react'
 import { Badge, Button, Card, Dialog, EmptyState, Input, Select } from '@/components/ui'
 import { device } from '@/lib/device'
-import { fetchPeople } from '@/features/stock/api'
+import { fetchPeople, peopleMap } from '@/features/stock/api'
 import { fetchDevices, fetchRegisters, saveRegister, SettingsNotMigrated, updateDevice, type DeviceRow, type Register } from './api'
 
 const dtFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
@@ -31,7 +31,7 @@ export function RegistersSection() {
       <Card className="overflow-hidden">
         <div className="flex items-center justify-between gap-3 px-5 pt-5">
           <div>
-            <h2 className="text-[17px] font-semibold">Arkat</h2>
+            <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Arkat</h2>
             <p className="text-sm text-muted">POS ID-në dhe regjistrimin në ATK i bën te faqja Fiskalizimi.</p>
           </div>
           <Button size="sm" onClick={() => setEditReg('new')}>
@@ -60,7 +60,7 @@ export function RegistersSection() {
 
       <Card className="overflow-hidden">
         <div className="px-5 pt-5">
-          <h2 className="text-[17px] font-semibold">Pajisjet e lidhura</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Pajisjet e lidhura</h2>
           <p className="text-sm text-muted">Një pajisje lidhet kur pronari ose menaxheri hyn në të me email. Në to punëtorët hyjnë me PIN.</p>
         </div>
         {devices.error instanceof SettingsNotMigrated ? (
@@ -82,12 +82,12 @@ export function RegistersSection() {
                       {!d.active && <Badge tone="warn">E bllokuar</Badge>}
                     </div>
                     <div className="text-sm text-muted">
-                      {[d.register_id ? regName.get(d.register_id) : 'pa arkë', d.app_version ? `v${d.app_version}` : null, `parë ${s.text}`, d.last_user_id ? people.data?.get(d.last_user_id) : null]
+                      {[d.register_id ? regName.get(d.register_id) : 'pa arkë', d.app_version ? `v${d.app_version}` : null, `parë ${s.text}`, d.last_user_id ? peopleMap(people.data).get(d.last_user_id) : null]
                         .filter(Boolean)
                         .join(' · ')}
                     </div>
                   </div>
-                  <span className={`h-2.5 w-2.5 rounded-full ${s.online && d.active ? 'bg-brand-400' : 'bg-field'}`} />
+                  <span className={`h-2.5 w-2.5 rounded-full ${s.online && d.active ? 'bg-[#12B76A]' : 'bg-field'}`} />
                   <Button size="sm" variant="secondary" onClick={() => setEditDev(d)}>
                     Ndrysho
                   </Button>

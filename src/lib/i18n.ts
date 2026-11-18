@@ -85,7 +85,7 @@ const SR: Record<string, string> = {
   'KUPON FISKAL DITOR NR.': 'DNEVNI FISKALNI KUPON BR.',
   'KUPON DITOR NR.': 'DNEVNI KUPON BR.',
   'Ky kupon nuk është fiskal.': 'Ovaj kupon nije fiskalni.',
-  'Mundësuar nga Kasa': 'Omogućeno od Kasa',
+  'Mundësuar nga KontoSef.app': 'Omogućeno od KontoSef.app',
   'ATK e refuzoi': 'ATK je odbio',
   'BLLOKU I VEÇANTË I KUPONËVE – NR.': 'POSEBNI BLOK KUPONA – BR.',
   // till

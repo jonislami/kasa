@@ -53,13 +53,13 @@ export function DownloadPage() {
   return (
     <div className="min-h-dvh bg-bg">
       <PublicHeader />
-      <section className="bg-brand-900 pb-24 text-white">
+      <section className="border-b border-line bg-white pb-24">
         <div className="mx-auto max-w-[1200px] px-5 pt-8 md:pt-12">
-          <h1 className="text-[34px] font-bold tracking-tight md:text-[48px]">Shkarko Kasa</h1>
-          <p className="mt-3 max-w-xl text-[17px] text-white/75">
+          <h1 className="text-[30px] font-semibold tracking-[-0.03em] text-ink md:text-[40px]">Shkarko KontoSef.app</h1>
+          <p className="mt-3 max-w-xl text-[16px] text-muted">
             Zgjidh pajisjen. Hyn me të njëjtin email dhe fjalëkalim kudo, dhe të dhënat janë të njëjta në të gjitha.
           </p>
-          <p className="mt-3 text-sm text-white/55">
+          <p className="mt-3 text-[13px] text-muted">
             {release.isLoading
               ? 'Duke kontrolluar versionin e fundit…'
               : r && version
@@ -73,10 +73,10 @@ export function DownloadPage() {
         {allowed ? (
           <DownloadCards />
         ) : (
-          <div className="rounded-[20px] border border-line bg-white p-7 shadow-sm md:p-9">
-            <h2 className="text-[22px] font-bold">Shkarkimi hapet pas aktivizimit</h2>
+          <div className="rounded-card border border-line bg-white p-7 shadow-card md:p-9">
+            <h2 className="text-[22px] font-semibold tracking-[-0.015em]">Shkarkimi hapet pas aktivizimit</h2>
             <p className="mt-2 max-w-2xl text-muted">
-              Kasa instalohet pasi të regjistrohet dhe të aprovohet biznesi. Pastaj te llogaria jote të dalin shkarkimi dhe
+              KontoSef instalohet pasi të regjistrohet dhe të aprovohet biznesi. Pastaj te llogaria jote të dalin shkarkimi dhe
               <b> çelësi për çdo arkë</b>.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
@@ -117,7 +117,7 @@ export function DownloadCards({ businessLabel }: { businessLabel?: string }) {
   return (
     <>
       {businessLabel && (
-        <p className="mb-4 rounded-ctl bg-brand-100 px-4 py-3 text-sm text-brand-600">
+        <p className="mb-4 rounded-ctl border border-[#D3DEF2] bg-brand-50 px-4 py-3 text-sm text-brand-700">
           Programi hapet vetë si <b>{businessLabel}</b> pasi të hysh me llogarinë e biznesit – pa module që nuk të duhen.
         </p>
       )}
@@ -130,7 +130,7 @@ export function DownloadCards({ businessLabel }: { businessLabel?: string }) {
             exe ? (
               <a href={exe.browser_download_url} className="block">
                 <Button block size="lg">
-                  Shkarko {exe.name}
+                  Shkarko për Windows (.exe)
                 </Button>
               </a>
             ) : (
@@ -142,7 +142,7 @@ export function DownloadCards({ businessLabel }: { businessLabel?: string }) {
           steps={[
             'Hap skedarin e shkarkuar nga dosja Downloads.',
             'Nëse Windows pyet, zgjidh "Më shumë info" → "Ekzekuto gjithsesi".',
-            'Hap Kasa nga Desktop-i dhe hyr me email-in tënd. Programi përditësohet vetë.',
+            'Hap KontoSef nga Desktop-i dhe hyr me email-in tënd. Programi përditësohet vetë.',
           ]}
         />
 
@@ -179,7 +179,7 @@ export function DownloadCards({ businessLabel }: { businessLabel?: string }) {
           steps={[
             'Hape Google Play dhe shtyp "Instalo" (ose hap APK-në e shkarkuar).',
             'Për APK: lejo "Instalo nga burime të panjohura" kur ta kërkojë telefoni.',
-            'Hap Kasa, hyr dhe lejo Bluetooth-in për printerin.',
+            'Hap KontoSef, hyr dhe lejo Bluetooth-in për printerin.',
           ]}
         />
 
@@ -200,7 +200,7 @@ export function DownloadCards({ businessLabel }: { businessLabel?: string }) {
               </Button>
             )
           }
-          steps={['Hape App Store dhe kërko "Kasa", ose shtyp butonin më lart.', 'Shtyp "Merr" dhe konfirmo me Face ID.', 'Hap Kasa, hyr dhe lejo Bluetooth-in kur të pyesë.']}
+          steps={['Hape App Store dhe kërko "KontoSef", ose shtyp butonin më lart.', 'Shtyp "Merr" dhe konfirmo me Face ID.', 'Hap KontoSef, hyr dhe lejo Bluetooth-in kur të pyesë.']}
           note={APP_STORE_URL ? undefined : 'Deri sa të dalë në App Store, përdore në Safari dhe "Shto në ekranin bazë". Printimi në iPhone bëhet nga Safari (AirPrint) ose me aplikacionin kur të publikohet.'}
         />
 
@@ -211,7 +211,7 @@ export function DownloadCards({ businessLabel }: { businessLabel?: string }) {
           actions={
             <Link to="/login" className="block">
               <Button block size="lg">
-                Hape Kasa në shfletues
+                Hape KontoSef në shfletues
               </Button>
             </Link>
           }
@@ -224,7 +224,7 @@ export function DownloadCards({ businessLabel }: { businessLabel?: string }) {
           ]}
           note="Printeri me Bluetooth punon në Chrome dhe Edge. Në Safari përdor aplikacionin për iPhone."
         />
-            </div>
+      </div>
     </>
   )
 }
@@ -245,13 +245,13 @@ function PlatformCard({
   note?: string
 }) {
   return (
-    <div className="rounded-[20px] border border-line bg-white p-6 shadow-sm md:p-7">
+    <div className="rounded-card border border-line bg-white p-6 shadow-card md:p-7">
       <div className="flex items-center gap-4">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand-900 text-brand-400">
-          <Icon className="h-7 w-7" />
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] border border-line bg-[#F9FAFB] text-[#344054]">
+          <Icon className="h-5 w-5" />
         </div>
         <div>
-          <h2 className="text-[22px] font-bold">{title}</h2>
+          <h2 className="text-[18px] font-semibold tracking-[-0.015em]">{title}</h2>
           <div className="mt-1 flex flex-wrap gap-1.5">
             {chips.filter(Boolean).map((c) => (
               <Badge key={String(c)}>{c}</Badge>
@@ -260,15 +260,15 @@ function PlatformCard({
         </div>
       </div>
       <div className="mt-5">{actions}</div>
-      <ol className="mt-5 flex flex-col gap-3 border-t border-line pt-5 text-[15px]">
+      <ol className="mt-5 flex flex-col gap-2.5 border-t border-line pt-5 text-[14px]">
         {steps.map((s, i) => (
           <li key={i} className="flex gap-3">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-600">{i + 1}</span>
+            <span className="num flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-field text-[11px] font-semibold text-muted">{i + 1}</span>
             <span className="text-muted">{s}</span>
           </li>
         ))}
       </ol>
-      {note && <p className={cn('mt-4 rounded-ctl bg-amber-100 px-4 py-3 text-sm text-amber-700')}>{note}</p>}
+      {note && <p className={cn('mt-4 rounded-ctl border border-[#F1DFA8] bg-amber-100 px-4 py-3 text-[13px] text-amber-700')}>{note}</p>}
     </div>
   )
 }

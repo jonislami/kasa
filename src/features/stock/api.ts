@@ -345,3 +345,6 @@ export function formatDate(iso: string): string {
 export function formatDateTime(iso: string): string {
   return dateTimeFmt.format(new Date(iso))
 }
+
+/** The names map from fetchPeople; a copy restored from an older device cache may not be a Map. */
+export const peopleMap = (v: unknown): Map<string, string> => (v instanceof Map ? (v as Map<string, string>) : new Map())

@@ -9,6 +9,8 @@
   }
   body {
     @apply bg-bg font-sans text-ink antialiased;
+    font-feature-settings: "cv11", "ss03";
+    letter-spacing: -0.006em;
     overflow-x: clip;
     overscroll-behavior: none;
     touch-action: manipulation;
@@ -62,6 +64,10 @@
 }
 
 @layer utilities {
+  .num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum", "cv11";
+  }
   .pt-safe {
     padding-top: env(safe-area-inset-top);
   }

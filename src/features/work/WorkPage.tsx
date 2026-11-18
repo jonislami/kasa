@@ -155,7 +155,7 @@ function ManagerWork({ workerTerm, commission }: { workerTerm: string; commissio
 
         <div className="grid gap-4 md:gap-5 lg:grid-cols-2">
           <Card className="overflow-hidden">
-            <h2 className="px-5 pt-5 text-[17px] font-semibold">
+            <h2 className="px-5 pt-5 text-[16px] font-semibold tracking-[-0.01em]">
               Veprimet {w ? `e ${w.worker.name.split(' ')[0]}` : ''} {multiDay ? '' : period === 'today' ? 'sot' : 'dje'}
             </h2>
             {loadState(work) === 'offline' ? (
@@ -174,9 +174,9 @@ function ManagerWork({ workerTerm, commission }: { workerTerm: string; commissio
           </Card>
 
           <Card className="overflow-hidden">
-            <h2 className="px-5 pt-5 text-[17px] font-semibold">Krahasimi i punëtorëve</h2>
+            <h2 className="px-5 pt-5 text-[16px] font-semibold tracking-[-0.01em]">Krahasimi i punëtorëve</h2>
             <Table className="mt-3">
-              <thead className="bg-[#F8FAF8]">
+              <thead className="bg-[#F9FAFB]">
                 <tr>
                   <Th className="pl-5">Punëtori</Th>
                   <Th className="text-right">Fatura</Th>
@@ -188,7 +188,7 @@ function ManagerWork({ workerTerm, commission }: { workerTerm: string; commissio
               </thead>
               <tbody>
                 {rows.map((r) => (
-                  <tr key={r.worker_id} onClick={() => setSelected(r.worker_id)} className={cn('cursor-pointer hover:bg-[#F8FAF8]', selected === r.worker_id && 'bg-brand-100/50')}>
+                  <tr key={r.worker_id} onClick={() => setSelected(r.worker_id)} className={cn('cursor-pointer hover:bg-[#F9FAFB]', selected === r.worker_id && 'bg-brand-100/50')}>
                     <Td className="pl-5 font-semibold">{r.name}</Td>
                     <Td className="text-right">{r.invoices}</Td>
                     <Td className="text-right">{formatEUR(r.total)}</Td>

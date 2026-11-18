@@ -22,6 +22,7 @@ export function useWallet(): number | null {
 
 const initials = (name: string) =>
   name
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ') // D.P.Z. " LON - TON " → letters only, no quotes or dots
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
@@ -78,39 +79,39 @@ export function WorkerShell({
     { to: '/cilesimet', label: 'Printeri', icon: Printer },
   ]
 
-  const railBtn = 'flex w-[72px] flex-col items-center justify-center gap-1 rounded-2xl py-3 text-[10px] font-bold uppercase tracking-wide'
+  const railBtn = 'flex w-[72px] flex-col items-center justify-center gap-1.5 rounded-xl py-3 text-[11px] font-medium'
 
   return (
     <div className="min-h-dvh bg-bg md:flex" style={{ '--topbar': '56px', '--tabbar': '0px', '--chrome': '56px' } as CSSProperties}>
       {/* ---------- rail (md+) ---------- */}
-      <aside className="sticky top-0 hidden h-dvh w-[96px] shrink-0 flex-col items-center gap-3 bg-brand-900 py-4 text-white md:flex print:hidden">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-600 text-[19px] font-bold" title={businessName}>
+      <aside className="sticky top-0 hidden h-dvh w-[96px] shrink-0 flex-col items-center gap-3 border-r border-white/5 bg-brand-900 py-4 text-white md:flex print:hidden">
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 text-[16px] font-semibold tracking-[-0.015em] ring-1 ring-white/10" title={businessName}>
           {initials(businessName)}
         </div>
         <nav className="mt-3 flex flex-col gap-2">
           {tabs.map((t) => (
-            <NavLink key={t.to} to={t.to} className={({ isActive }) => cn(railBtn, 'min-h-[68px]', isActive ? 'bg-bt-600 text-white shadow-lg shadow-black/20' : 'text-white/70 hover:bg-white/10')}>
-              <t.icon className="h-6 w-6" />
+            <NavLink key={t.to} to={t.to} className={({ isActive }) => cn(railBtn, 'min-h-[68px]', isActive ? 'bg-white text-brand-900' : 'text-white/65 hover:bg-white/[0.07] hover:text-white')}>
+              <t.icon className="h-[22px] w-[22px]" strokeWidth={1.9} />
               <span className="leading-tight">{tr(t.short ?? t.label, lang)}</span>
             </NavLink>
           ))}
-          <button type="button" onClick={() => setMenu(true)} className={cn(railBtn, 'text-white/60 hover:bg-white/10')}>
-            <MoreHorizontal className="h-6 w-6" />
+          <button type="button" onClick={() => setMenu(true)} className={cn(railBtn, 'text-white/55 hover:bg-white/[0.07] hover:text-white')}>
+            <MoreHorizontal className="h-[22px] w-[22px]" strokeWidth={1.9} />
             {tr('Më shumë', lang)}
           </button>
         </nav>
 
         <div className="mt-auto flex flex-col items-center gap-2">
-          <div className="w-[72px] rounded-2xl bg-[#173A2B] px-1 py-2.5 text-center">
-            <div className="text-[10px] font-bold uppercase tracking-wide text-brand-400">Kuleta</div>
-            <div className="mt-0.5 text-[15px] font-bold tabular-nums text-brand-400">{wallet === null ? '…' : compactEUR(wallet)}</div>
+          <div className="w-[72px] rounded-xl border border-white/10 bg-white/[0.04] px-1 py-2.5 text-center">
+            <div className="text-[10px] font-medium uppercase tracking-[0.06em] text-white/50">Kuleta</div>
+            <div className="mt-0.5 text-[15px] font-semibold tabular-nums text-white">{wallet === null ? '…' : compactEUR(wallet)}</div>
           </div>
-          <div className="max-w-[80px] truncate text-[10px] font-semibold uppercase tracking-wide text-white/50">{userSub}</div>
-          <button type="button" onClick={() => setClosing(true)} className={cn(railBtn, 'bg-[#3A2A12] text-[#F59E0B] hover:bg-[#4A3516]')}>
-            <Square className="h-5 w-5 fill-current" />
+          <div className="max-w-[80px] truncate text-[11px] text-white/45">{userSub}</div>
+          <button type="button" onClick={() => setClosing(true)} className={cn(railBtn, 'text-[#FCD34D] hover:bg-white/[0.07]')}>
+            <Square className="h-5 w-5" strokeWidth={1.9} />
             {tr('Mbyll ditën', lang)}
           </button>
-          <button type="button" onClick={() => void doSignOut()} className={cn(railBtn, 'bg-[#3A1717] text-[#F87171] hover:bg-[#4A1D1D]')}>
+          <button type="button" onClick={() => void doSignOut()} className={cn(railBtn, 'text-[#FCA5A5] hover:bg-white/[0.07]')}>
             <LogOut className="h-5 w-5" />
             {tr('Dil', lang)}
           </button>
@@ -121,9 +122,9 @@ export function WorkerShell({
         {/* ---------- top bar: phone dark, md+ light header ---------- */}
         <header className="sticky top-0 z-40 bg-brand-900 pt-safe text-white md:static md:border-b md:border-line md:bg-white md:pt-0 md:text-ink print:hidden">
           <div className="flex h-14 items-center gap-3 px-3 md:h-[68px] md:px-6">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-sm font-bold md:hidden">{initials(businessName)}</div>
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10 text-sm font-semibold md:hidden">{initials(businessName)}</div>
             <div className="min-w-0">
-              <div className="truncate text-[15px] font-bold leading-tight md:text-[19px]">
+              <div className="truncate text-[15px] font-semibold leading-tight tracking-[-0.015em] md:text-[17px]">
                 <span className="md:hidden">{businessName}</span>
                 <span className="hidden md:inline">Mirë se erdhe, {userName}</span>
               </div>
@@ -132,14 +133,14 @@ export function WorkerShell({
             {tabs.length > 1 && (
               <nav className="ml-1 flex gap-1 rounded-xl bg-white/10 p-1 md:hidden">
                 {tabs.map((t) => (
-                  <NavLink key={t.to} to={t.to} className={({ isActive }) => cn('flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold', isActive ? 'bg-white text-brand-900' : 'text-white/80')}>
+                  <NavLink key={t.to} to={t.to} className={({ isActive }) => cn('flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold', isActive ? 'bg-white text-brand-900' : 'text-white/75')}>
                     <t.icon className="h-4 w-4" />
                   </NavLink>
                 ))}
               </nav>
             )}
             <div className="flex-1" />
-            <span className="hidden text-[17px] font-medium tabular-nums text-muted md:block">{clockFmt.format(now)}</span>
+            <span className="hidden text-[15px] font-medium tabular-nums text-muted md:block">{clockFmt.format(now)}</span>
             <button type="button" aria-label="Menuja" onClick={() => setMenu(true)} className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 md:hidden">
               <Menu className="h-5 w-5" />
             </button>
@@ -154,8 +155,8 @@ export function WorkerShell({
 
       {/* ---------- menu: Puna ime sot, kitchen, printer, close the day, sign out ---------- */}
       {menu && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-black/40 md:justify-start" onClick={() => setMenu(false)}>
-          <div className="flex h-full w-[300px] max-w-[85vw] flex-col bg-white pt-safe shadow-2xl md:ml-[96px]" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex justify-end bg-[#0F172A]/45 md:justify-start" onClick={() => setMenu(false)}>
+          <div className="flex h-full w-[300px] max-w-[85vw] flex-col bg-white pt-safe shadow-pop md:ml-[96px]" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-line px-5 py-4">
               <div className="min-w-0">
                 <div className="truncate font-semibold">{userName}</div>
@@ -170,7 +171,7 @@ export function WorkerShell({
             </div>
             <nav className="flex flex-col p-2">
               {[...tabs.map((t) => ({ to: t.to, label: t.label, icon: t.icon })), ...extra].map((i) => (
-                <NavLink key={i.to} to={i.to} className={({ isActive }) => cn('flex min-h-[48px] items-center gap-3 rounded-xl px-3 text-[15px] font-medium', isActive ? 'bg-brand-100 text-brand-600' : 'hover:bg-bg')}>
+                <NavLink key={i.to} to={i.to} className={({ isActive }) => cn('flex min-h-[46px] items-center gap-3 rounded-ctl px-3 text-[15px] font-medium', isActive ? 'bg-brand-100 text-brand-700' : 'text-[#344054] hover:bg-[#F5F6F8]')}>
                   <i.icon className="h-5 w-5" />
                   {tr(i.label, lang)}
                 </NavLink>
@@ -183,11 +184,11 @@ export function WorkerShell({
                   setMenu(false)
                   setClosing(true)
                 }}
-                className="flex min-h-[48px] w-full items-center gap-3 rounded-xl px-3 text-[15px] font-medium text-amber-700 hover:bg-amber-100"
+                className="flex min-h-[46px] w-full items-center gap-3 rounded-ctl px-3 text-[15px] font-medium text-amber-700 hover:bg-amber-100"
               >
                 <Square className="h-5 w-5" /> {tr('Mbyll ditën', lang)}
               </button>
-              <button type="button" onClick={() => void doSignOut()} className="flex min-h-[48px] w-full items-center gap-3 rounded-xl px-3 text-[15px] font-medium text-warn-700 hover:bg-warn-100">
+              <button type="button" onClick={() => void doSignOut()} className="flex min-h-[46px] w-full items-center gap-3 rounded-ctl px-3 text-[15px] font-medium text-warn-700 hover:bg-warn-100">
                 <LogOut className="h-5 w-5" /> {tr('Dil', lang)}
               </button>
             </div>
@@ -269,7 +270,7 @@ function CloseDayDialog({ open, onClose, onDone }: { open: boolean; onClose: () 
 
 function Line({ l, r }: { l: string; r: ReactNode }) {
   return (
-    <div className="flex items-center justify-between rounded-ctl bg-[#F4F6F3] px-3 py-2">
+    <div className="flex items-center justify-between rounded-ctl border border-line bg-[#F9FAFB] px-3 py-2">
       <span className="text-muted">{l}</span>
       <span className="tabular-nums">{r}</span>
     </div>

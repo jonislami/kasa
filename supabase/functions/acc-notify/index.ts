@@ -1,4 +1,4 @@
-// Edge Function: acc-notify (Kasa Kontabilist) – e-mails through Resend.
+// Edge Function: acc-notify (KontoSef Kontabilist) – e-mails through Resend.
 //   POST { kind: 'request' | 'invoice' | 'report' | 'office_message' | 'client_message', id, month? }
 //       with the user's JWT: acc_notify_context checks who may send what to whom, logs it, returns the content.
 //   POST { kind: 'cron_monthly', month? } with header x-cron-secret = CRON_SECRET
@@ -30,18 +30,18 @@ function layout(office: Office, title: string, body: string, appUrl: string, cta
   const name = esc(office.name ?? 'Zyra e kontabilitetit')
   return `<!doctype html><html><body style="margin:0;background:#F4F6F3;font-family:Inter,Segoe UI,Arial,sans-serif;color:#14201A">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F6F3;padding:24px 12px"><tr><td align="center">
-<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border:1px solid #E2E7E3;border-radius:14px;overflow:hidden">
-<tr><td style="background:#10241B;color:#fff;padding:18px 24px;font-size:17px;font-weight:700">${name}</td></tr>
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border:1px solid #E6E8EC;border-radius:14px;overflow:hidden">
+<tr><td style="background:#0F1B2D;color:#fff;padding:18px 24px;font-size:17px;font-weight:700">${name}</td></tr>
 <tr><td style="padding:24px">
 <h1 style="margin:0 0 14px;font-size:20px">${esc(title)}</h1>
 ${body}
 <p style="margin:24px 0 0"><a href="${esc(appUrl)}" style="display:inline-block;background:#0E6B4E;color:#fff;text-decoration:none;font-weight:600;padding:12px 20px;border-radius:10px">${esc(cta)}</a></p>
 </td></tr>
-<tr><td style="padding:16px 24px;border-top:1px solid #E2E7E3;font-size:12px;color:#56645C">${name}${office.address ? ' · ' + esc(office.address) : ''}${office.phone ? ' · ' + esc(office.phone) : ''}${office.email ? ' · ' + esc(office.email) : ''}<br>Ky email u dërgua nga programi Kasa Kontabilist.</td></tr>
+<tr><td style="padding:16px 24px;border-top:1px solid #E6E8EC;font-size:12px;color:#5F6B7A">${name}${office.address ? ' · ' + esc(office.address) : ''}${office.phone ? ' · ' + esc(office.phone) : ''}${office.email ? ' · ' + esc(office.email) : ''}<br>Ky email u dërgua nga programi KontoSef Kontabilist.</td></tr>
 </table></td></tr></table></body></html>`
 }
-const row = (k: string, v: string) => `<tr><td style="padding:6px 0;color:#56645C">${esc(k)}</td><td style="padding:6px 0;text-align:right;font-weight:600">${v}</td></tr>`
-const table = (rows: string) => `<table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #E2E7E3;margin-top:8px">${rows}</table>`
+const row = (k: string, v: string) => `<tr><td style="padding:6px 0;color:#5F6B7A">${esc(k)}</td><td style="padding:6px 0;text-align:right;font-weight:600">${v}</td></tr>`
+const table = (rows: string) => `<table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #E6E8EC;margin-top:8px">${rows}</table>`
 const quotes = (msgs: unknown) =>
   ((msgs as string[]) ?? []).map((m) => `<p style="margin:0 0 8px;padding:10px 12px;background:#F4F6F3;border-radius:10px;white-space:pre-wrap">${esc(m)}</p>`).join('')
 
@@ -99,7 +99,7 @@ async function sendEmail(to: string[], subject: string, html: string, text: stri
   const key = Deno.env.get('RESEND_API_KEY')
   const from = Deno.env.get('EMAIL_FROM')
   if (!key || !from) return 'Email-et nuk janë konfiguruar (RESEND_API_KEY / EMAIL_FROM në Supabase)'
-  const name = (fromName ?? 'Kasa Kontabilist').replace(/["<>]/g, '').slice(0, 60)
+  const name = (fromName ?? 'KontoSef Kontabilist').replace(/["<>]/g, '').slice(0, 60)
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },

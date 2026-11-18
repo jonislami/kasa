@@ -14,6 +14,7 @@ import {
   fetchInventoryCounts,
   fetchMovements,
   fetchPeople,
+  peopleMap as toPeopleMap,
   fetchSuppliers,
   formatDateTime,
   REASON_LABELS,
@@ -105,7 +106,7 @@ export function StockPage() {
     [stockProducts],
   )
 
-  const peopleMap = people.data ?? new Map<string, string>()
+  const peopleMap = toPeopleMap(people.data)
   const notMigrated = [suppliers.error, entries.error].some((e) => e instanceof StockNotMigrated)
   const catalogMissing = [products.error, categories.error].some((e) => e instanceof CatalogNotMigrated)
 
@@ -268,8 +269,8 @@ function LowStockCard({ low, onAdd }: { low: Product[]; onAdd: () => void }) {
     )
   }
   return (
-    <div className="rounded-card border border-[#F3C9AE] bg-[#FFF4EC] p-5">
-      <div className="flex items-center gap-2 text-[17px] font-semibold text-warn-700">
+    <div className="rounded-card border border-[#F3C4BE] bg-[#FEF6F5] p-5">
+      <div className="flex items-center gap-2 text-[16px] font-semibold tracking-[-0.01em] text-warn-700">
         <AlertTriangle className="h-5 w-5" />
         {low.length} {low.length === 1 ? 'produkt' : 'produkte'} nën minimum
       </div>
@@ -287,7 +288,7 @@ function LowStockCard({ low, onAdd }: { low: Product[]; onAdd: () => void }) {
       <button
         type="button"
         onClick={onAdd}
-        className="mt-4 h-11 w-full rounded-ctl border border-[#F3C9AE] bg-white font-semibold text-warn-700 hover:bg-warn-100"
+        className="mt-4 h-11 w-full rounded-ctl border border-[#F3C4BE] bg-white font-semibold text-warn-700 hover:bg-warn-100"
       >
         Shto të gjitha në hyrje
       </button>
@@ -335,7 +336,7 @@ function RecentCard({ entries }: { entries: StockEntry[] }) {
 
   return (
     <Card className="p-5">
-      <h2 className="text-[17px] font-semibold">Lëvizjet e fundit</h2>
+      <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Lëvizjet e fundit</h2>
       {items.length === 0 ? (
         <p className="mt-2 text-sm text-muted">Ende asgjë.</p>
       ) : (
@@ -345,7 +346,7 @@ function RecentCard({ entries }: { entries: StockEntry[] }) {
               <span
                 className={cn(
                   'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
-                  i.icon === 'in' ? 'bg-brand-100 text-brand-600' : i.icon === 'out' ? 'bg-warn-100 text-warn-700' : 'bg-[#EEF1EE] text-muted',
+                  i.icon === 'in' ? 'bg-brand-100 text-brand-600' : i.icon === 'out' ? 'bg-warn-100 text-warn-700' : 'bg-[#EFF1F4] text-muted',
                 )}
               >
                 {i.icon === 'in' ? <ArrowDown className="h-4 w-4" /> : i.icon === 'out' ? <AlertTriangle className="h-4 w-4" /> : <Equal className="h-4 w-4" />}

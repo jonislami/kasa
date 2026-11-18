@@ -121,7 +121,7 @@ function PayrollMonthView({ client }: { client: Client }) {
             <ChevronLeft className="h-4 w-4" />
           </button>
           <span className="min-w-[140px] px-2 text-center font-semibold">{label}</span>
-          <button type="button" aria-label="Muaji tjetër" className="flex h-10 w-10 items-center justify-center hover:bg-bg disabled:text-[#B8C2BC]" disabled={month >= monthStart()} onClick={() => setMonth(addMonths(month, 1))}>
+          <button type="button" aria-label="Muaji tjetër" className="flex h-10 w-10 items-center justify-center hover:bg-bg disabled:text-[#B5BCC7]" disabled={month >= monthStart()} onClick={() => setMonth(addMonths(month, 1))}>
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
@@ -192,7 +192,7 @@ function PayrollMonthView({ client }: { client: Client }) {
             ].map(([l, v]) => (
               <Card key={l as string} className="p-4">
                 <div className="text-sm text-muted">{l}</div>
-                <div className="mt-1 text-[20px] font-bold tabular-nums">{formatEUR(v as number)}</div>
+                <div className="mt-1 text-[20px] font-semibold tracking-[-0.015em] tabular-nums">{formatEUR(v as number)}</div>
               </Card>
             ))}
           </div>
@@ -214,7 +214,7 @@ function PayrollMonthView({ client }: { client: Client }) {
               <span>Afati i deklarimit WPK: {formatDay(`${addMonths(month, 1).slice(0, 8)}15`)}</span>
             </div>
             <Table>
-              <thead className="bg-[#F6F9F7]">
+              <thead className="bg-[#F6F8FB]">
                 <tr>
                   <Th className="pl-5">Punëtori</Th>
                   <Th className="text-right">Paga bazë</Th>
@@ -334,7 +334,7 @@ function Payslips({ client, lines, month }: { client: Client; lines: PayrollLine
               {client.nui && <div>NUI {client.nui}</div>}
             </div>
             <div className="text-right">
-              <div className="text-[18px] font-bold">FLETËPAGESA</div>
+              <div className="text-[18px] font-semibold tracking-[-0.015em]">FLETËPAGESA</div>
               <div>{monthName(month)}</div>
             </div>
           </div>
@@ -410,7 +410,7 @@ function EmployeesView({ client }: { client: Client }) {
     <Card className="overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
         <div>
-          <h2 className="text-[17px] font-semibold">Punëtorët</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Punëtorët</h2>
           <p className="text-sm text-muted">{list.filter((e) => e.active).length} aktivë · pushimet e vitit {year}</p>
         </div>
         <Button onClick={() => setEdit({ start_date: kosovoDateISO(), contract: 'indefinite', primary_job: true, emp_pension_pct: 5, er_pension_pct: 5, gross_salary: 0, active: true })}>
@@ -447,7 +447,7 @@ function EmployeesView({ client }: { client: Client }) {
                 {e.leaves.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-2">
                     {e.leaves.map((l) => (
-                      <span key={l.id} className="flex items-center gap-1 rounded-full bg-[#F1F5F2] py-1 pl-3 pr-1 text-xs">
+                      <span key={l.id} className="flex items-center gap-1 rounded-full bg-[#F2F4F7] py-1 pl-3 pr-1 text-xs">
                         {LEAVE_LABELS[l.kind]} · {formatDay(l.from_date)}–{formatDay(l.to_date)} · {l.days} ditë
                         <button type="button" aria-label="Fshi" onClick={() => delLeave.mutate(l.id)} className="flex h-6 w-6 items-center justify-center rounded-full text-muted hover:text-warn-700">
                           <Trash2 className="h-3.5 w-3.5" />
@@ -523,7 +523,7 @@ function EmployeeDialog({ clientId, value, onClose, onSaved }: { clientId: strin
           </label>
         )}
         {(f.gross_salary ?? 0) > 0 && (
-          <div className="grid grid-cols-2 gap-2 rounded-card bg-[#F4F6F3] p-3 text-sm sm:col-span-2 sm:grid-cols-5">
+          <div className="grid grid-cols-2 gap-2 rounded-card bg-[#F7F8FA] p-3 text-sm sm:col-span-2 sm:grid-cols-5">
             <div>
               <div className="text-muted">Kontr. punëtori</div>
               <div className="font-semibold tabular-nums">{formatEUR(p.emp)}</div>
@@ -612,7 +612,7 @@ function YearView({ client }: { client: Client }) {
   return (
     <Card className="overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
-        <h2 className="text-[17px] font-semibold">Pagat sipas muajve</h2>
+        <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Pagat sipas muajve</h2>
         <div className="flex items-center gap-2">
           <Select value={String(year)} onChange={(e) => setYear(Number(e.target.value))} options={[0, 1, 2].map((i) => ({ value: String(Number(kosovoDateISO().slice(0, 4)) - i), label: String(Number(kosovoDateISO().slice(0, 4)) - i) }))} />
           <Button
@@ -632,7 +632,7 @@ function YearView({ client }: { client: Client }) {
         <EmptyState title={`Asnjë listë pagash në ${year}`} />
       ) : (
         <Table>
-          <thead className="bg-[#F6F9F7]">
+          <thead className="bg-[#F6F8FB]">
             <tr>
               <Th className="pl-5">Muaji</Th>
               <Th className="text-right">Punëtorë</Th>
