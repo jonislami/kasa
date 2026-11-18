@@ -6,8 +6,9 @@ import { Badge, Button, Card, Dialog, EmptyState, Input, Select } from '@/compon
 import { device } from '@/lib/device'
 import { fetchPeople, peopleMap } from '@/features/stock/api'
 import { fetchDevices, fetchRegisters, saveRegister, SettingsNotMigrated, updateDevice, type DeviceRow, type Register } from './api'
+import { SqDateFormat } from '@/lib/sqDate'
 
-const dtFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+const dtFmt = new SqDateFormat({ timeZone: KOSOVO_TZ, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 
 function seen(iso: string): { text: string; online: boolean } {
   const min = (Date.now() - new Date(iso).getTime()) / 60000

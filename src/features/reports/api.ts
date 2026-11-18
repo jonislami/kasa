@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase'
 import { kosovoDateISO, KOSOVO_TZ } from '@/lib/clock'
 import type { Role } from '@/lib/business'
 import type { VatCode } from '@/lib/vat'
+import { SqDateFormat } from '@/lib/sqDate'
 
 /** Thrown when migration 0004 has not been run yet – pages show a clear message. */
 export class ReportsNotMigrated extends Error {
@@ -54,8 +55,8 @@ export function periodRange(key: PeriodKey, custom?: { from: string; to: string 
   }
 }
 
-const longFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, day: 'numeric', month: 'long', year: 'numeric' })
-const dayFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, day: 'numeric', month: 'long' })
+const longFmt = new SqDateFormat({ timeZone: KOSOVO_TZ, day: 'numeric', month: 'long', year: 'numeric' })
+const dayFmt = new SqDateFormat({ timeZone: KOSOVO_TZ, day: 'numeric', month: 'long' })
 
 export function formatRange(from: string, to: string): string {
   const a = new Date(from + 'T00:00:00')

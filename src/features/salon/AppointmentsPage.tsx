@@ -11,6 +11,7 @@ import { kosovoDateISO, kosovoParts, kosovoTime, kosovoToIso, serverNow } from '
 import { formatEUR } from '@/lib/money'
 import { fetchPosProducts } from '@/features/pos/api'
 import { addDays } from '@/features/reports/api'
+import { SqDateFormat } from '@/lib/sqDate'
 import {
   fetchAppointments,
   fetchStaff,
@@ -28,7 +29,7 @@ import {
 const START_H = 8
 const END_H = 21
 const PX_PER_MIN = 1 // 60 px per hour
-const dayFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: 'Europe/Belgrade', weekday: 'long', day: 'numeric', month: 'long' })
+const dayFmt = new SqDateFormat({ timeZone: 'Europe/Belgrade', weekday: 'long', day: 'numeric', month: 'long' })
 
 function title(date: string): string {
   const s = dayFmt.format(new Date(kosovoToIso(date, '12:00')))

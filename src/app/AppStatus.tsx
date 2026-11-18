@@ -11,8 +11,9 @@ import { promptInstall, useInstallState } from '@/lib/pwa'
 import { checkClock, formatDrift, serverNow, useClock, KOSOVO_TZ } from '@/lib/clock'
 import { syncQueue, useOfflineQueue } from '@/features/pos/offline'
 import { fiscalQueueState, flushFiscal, hoursLeft, onFiscalQueueChange, type FiscalQueueState } from '@/lib/fiscal'
+import { SqDateFormat, formatSq } from '@/lib/sqDate'
 
-const timeFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })
+const timeFmt = new SqDateFormat({ timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })
 
 /** A new version is ready (web: service worker · Windows app: GitHub Releases). */
 export function UpdatePrompt() {
@@ -247,8 +248,8 @@ export function ClockBar() {
 
   const ok = clock.status === 'ok'
   const off = clock.status === 'off'
-  const time = new Date(now).toLocaleTimeString('sq-AL', { timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit', second: '2-digit' })
-  const checked = clock.checkedAt ? new Date(clock.checkedAt).toLocaleTimeString('sq-AL', { timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' }) : null
+  const time = formatSq(now, { timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  const checked = clock.checkedAt ? formatSq(clock.checkedAt, { timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' }) : null
 
   return (
     <div className="relative flex justify-end bg-brand-900 px-4 pb-1 pt-2 md:bg-transparent md:px-8 md:pb-0 md:pt-4">
@@ -274,7 +275,7 @@ export function ClockBar() {
           </p>
           {clock.drift !== null && Math.abs(clock.drift) >= 1000 && (
             <p className="mt-1 text-muted">
-              Ora e pajisjes: {new Date(Date.now()).toLocaleTimeString('sq-AL', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} ({formatDrift(clock.drift)} {clock.drift > 0 ? 'përpara' : 'prapa'})
+              Ora e pajisjes: {formatSq(Date.now(), { hour: '2-digit', minute: '2-digit', second: '2-digit' })} ({formatDrift(clock.drift)} {clock.drift > 0 ? 'përpara' : 'prapa'})
             </p>
           )}
           {off && <p className="mt-2 font-medium text-warn-700">Rregulloje orën e pajisjes: Cilësimet → Data dhe ora → "Vendos automatikisht". KontoSef vazhdon me orën e saktë.</p>}

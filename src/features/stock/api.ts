@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase'
 import { kosovoDateISO, KOSOVO_TZ } from '@/lib/clock'
 import { round2 } from '@/lib/money'
 import type { VatCode } from '@/lib/vat'
+import { SqDateFormat } from '@/lib/sqDate'
 
 /** Thrown when migration 0003 has not been run yet – the page shows a clear message. */
 export class StockNotMigrated extends Error {
@@ -335,8 +336,8 @@ export function todayISO(): string {
   return kosovoDateISO()
 }
 
-const dateFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, day: '2-digit', month: '2-digit', year: 'numeric' })
-const dateTimeFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+const dateFmt = new SqDateFormat({ timeZone: KOSOVO_TZ, day: '2-digit', month: '2-digit', year: 'numeric' })
+const dateTimeFmt = new SqDateFormat({ timeZone: KOSOVO_TZ, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 
 export function formatDate(iso: string): string {
   return dateFmt.format(new Date(iso.length === 10 ? iso + 'T00:00:00' : iso))

@@ -27,8 +27,9 @@ import {
 } from './api'
 import { BarChart, BarLabels, Delta } from './charts'
 import { InvoiceDialog } from './InvoiceDialog'
+import { SqDateFormat } from '@/lib/sqDate'
 
-const dtFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+const dtFmt = new SqDateFormat({ timeZone: KOSOVO_TZ, day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 const PERIOD_LABEL: Record<PeriodKey, string> = { today: 'nga dje', yesterday: 'nga pardje', '7': 'nga java e kaluar', month: 'nga periudha e kaluar', custom: 'nga periudha e kaluar' }
 
 export function ReportsPage() {

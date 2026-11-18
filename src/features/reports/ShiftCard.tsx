@@ -5,8 +5,9 @@ import { Clock, LogIn, LogOut } from 'lucide-react'
 import { Button, Dialog, Input } from '@/components/ui'
 import { formatEUR } from '@/lib/money'
 import { endShift, fetchOpenShift, formatMinutes, ReportsNotMigrated, startShift } from './api'
+import { SqDateFormat } from '@/lib/sqDate'
 
-const timeFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })
+const timeFmt = new SqDateFormat({ timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })
 
 /** Clock in / out for the signed-in person (worker panel and "Puna ime"). */
 export function ShiftCard() {

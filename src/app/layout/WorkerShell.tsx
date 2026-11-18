@@ -12,6 +12,7 @@ import { formatEUR } from '@/lib/money'
 import { endShift, fetchWork } from '@/features/reports/api'
 import { t as tr, useLang } from '@/lib/i18n'
 import type { NavItem } from '@/app/nav'
+import { SqDateFormat } from '@/lib/sqDate'
 
 /** Cash the worker holds now: change at the start of the shift + cash taken today. */
 export function useWallet(): number | null {
@@ -32,7 +33,7 @@ const initials = (name: string) =>
 /** €26 instead of €26.00 in the narrow rail. */
 const compactEUR = (v: number) => (Number.isInteger(Math.round(v * 100) / 100) ? `€${Math.round(v)}` : formatEUR(v))
 
-const clockFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })
+const clockFmt = new SqDateFormat({ timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })
 
 /**
  * The worker's screen – no sidebar menu of the business, only the work:

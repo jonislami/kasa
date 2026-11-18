@@ -28,6 +28,7 @@ import { fetchReceiptSettings } from '@/features/settings/api'
 import { fetchFiscalContext } from '@/lib/fiscal'
 import { t as tr, useLang } from '@/lib/i18n'
 import { fiscalizeSale } from './fiscal'
+import { formatSq } from '@/lib/sqDate'
 
 const parseNum = (s: string) => {
   const n = Number(s.trim().replace(',', '.'))
@@ -682,7 +683,7 @@ export function PosPage() {
     <div className="flex items-center gap-2 rounded-ctl bg-amber-100 px-3 py-2 text-sm text-amber-700">
       <BookOpen className="h-4 w-4 shrink-0" />
       <span className="min-w-0 flex-1">
-        Kupon nga blloku nr. <b>{bookEntry.serial}</b>, lëshuar më {new Date(bookEntry.at).toLocaleString('en-GB', { timeZone: KOSOVO_TZ, dateStyle: 'short', timeStyle: 'short' })}
+        Kupon nga blloku nr. <b>{bookEntry.serial}</b>, lëshuar më {formatSq(bookEntry.at, { timeZone: KOSOVO_TZ, day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
       </span>
       <button type="button" className="font-semibold underline" onClick={() => setBookEntry(null)}>
         Anulo
@@ -780,7 +781,7 @@ export function PosPage() {
               <li key={h.id} className="flex items-center gap-2">
                 <button type="button" onClick={() => restoreHeld(h)} className="min-w-0 flex-1 rounded-xl border border-line px-4 py-3 text-left hover:bg-bg">
                   <div className="truncate font-semibold">{h.label}</div>
-                  <div className="text-xs text-muted">{new Date(h.saved_at).toLocaleTimeString('sq-AL', { timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })}</div>
+                  <div className="text-xs text-muted">{formatSq(h.saved_at, { timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })}</div>
                 </button>
                 <button
                   type="button"
@@ -886,7 +887,7 @@ export function PosPage() {
               {appointment && (
                 <div className="mt-1 text-sm font-medium text-brand-600">
                   Klienti: {appointment.customer_name} · termini{' '}
-                  {new Date(appointment.starts_at).toLocaleTimeString('sq-AL', { timeZone: 'Europe/Belgrade', hour: '2-digit', minute: '2-digit' })}
+                  {formatSq(appointment.starts_at, { timeZone: 'Europe/Belgrade', hour: '2-digit', minute: '2-digit' })}
                 </div>
               )}
             </div>

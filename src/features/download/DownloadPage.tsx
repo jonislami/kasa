@@ -7,6 +7,7 @@ import { PublicFooter, PublicHeader } from '@/features/landing/LandingPage'
 import { Badge, Button } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import { device } from '@/lib/device'
+import { SqDateFormat } from '@/lib/sqDate'
 
 /**
  * /shkarko – Windows (.exe) and Android (APK) come from the latest GitHub Release, built by
@@ -35,7 +36,7 @@ async function latestRelease(): Promise<Release | null> {
 }
 
 const mb = (bytes: number) => `${Math.round(bytes / 1024 / 1024)} MB`
-const dateFmt = new Intl.DateTimeFormat('sq-AL', { day: 'numeric', month: 'long', year: 'numeric' })
+const dateFmt = new SqDateFormat({ day: 'numeric', month: 'long', year: 'numeric' })
 
 export function DownloadPage() {
   const release = useQuery({ queryKey: ['latest-release'], queryFn: latestRelease, staleTime: 10 * 60_000, retry: 1 })

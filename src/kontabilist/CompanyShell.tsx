@@ -41,6 +41,7 @@ import { useAuth } from '@/app/AuthProvider'
 import { LogoMark } from '@/components/Logo'
 import { cn } from '@/lib/cn'
 import type { AccMe, Client } from './api'
+import { SqDateFormat } from '@/lib/sqDate'
 
 export interface MenuItem {
   key: string
@@ -103,7 +104,7 @@ export const MENU: { group: string; icon: LucideIcon; items: MenuItem[] }[] = [
   { group: 'Kompania', icon: Building2, items: [{ key: 'klienti', label: 'Të dhënat e kompanisë', icon: Building2 }, { key: 'zyra', label: 'Zyra: kontrata, detyrat, kërkesat', icon: Briefcase }, { key: 'arkiva', label: 'Arkiva e dokumenteve', icon: Archive }] },
 ]
 
-const longDate = new Intl.DateTimeFormat('sq-AL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Belgrade' })
+const longDate = new SqDateFormat({ weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Belgrade' })
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 const initial = (s: string) => (s.trim()[0] ?? '?').toUpperCase()
 

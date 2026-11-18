@@ -12,6 +12,7 @@ import { deleteNote, fetchClientContract, fetchNotes, NOTE_KINDS, saveNote, type
 import { createPortalUser, fetchOfficeMessages, fetchPortalUsers, sendOfficeMessage, setPortalPassword, setPortalUserActive, type PortalUser } from './portal/api'
 import { MessageThread } from './portal/MessageThread'
 import { notifyQuietly, sendNotify } from './notify'
+import { SqDateFormat } from '@/lib/sqDate'
 
 /** Zyra (per client): service contract and what the client owes the office, tasks, document requests, communication. */
 export function ClientOfficeTab({ client, me }: { client: Client; me: AccMe }) {
@@ -328,7 +329,7 @@ function ReportEmailCard({ client }: { client: Client }) {
           <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Raporti mujor me email</h2>
           <p className="text-sm text-muted">Shitjet, blerjet, TVSH, pagat, borxhet dhe dokumentet që mungojnë – te email-i i kompanisë dhe përdoruesit e portalit.</p>
         </div>
-        <Select value={month} onChange={(e) => setMonth(e.target.value)} options={months.map((m) => ({ value: m, label: new Intl.DateTimeFormat('sq-AL', { month: 'long', year: 'numeric' }).format(new Date(m + 'T12:00:00')) }))} />
+        <Select value={month} onChange={(e) => setMonth(e.target.value)} options={months.map((m) => ({ value: m, label: new SqDateFormat({ month: 'long', year: 'numeric' }).format(new Date(m + 'T12:00:00')) }))} />
         <Button loading={send.isPending} onClick={() => (setMsg(null), send.mutate())}>
           <Mail className="h-4 w-4" /> Dërgo
         </Button>

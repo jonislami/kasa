@@ -6,8 +6,9 @@ import { Badge, Card, EmptyState, StatCard } from '@/components/ui'
 import { formatEUR, formatInvoiceNo } from '@/lib/money'
 import { fetchWork, formatMinutes, PAY_LABEL, ReportsNotMigrated, type WorkEvent } from './api'
 import { InvoiceDialog } from './InvoiceDialog'
+import { SqDateFormat } from '@/lib/sqDate'
 
-const timeFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })
+const timeFmt = new SqDateFormat({ timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })
 
 /** "Puna ime sot" – the signed-in worker's own work today (no prices of purchase, no others). */
 export function MyWork({ showCommission }: { showCommission: boolean }) {

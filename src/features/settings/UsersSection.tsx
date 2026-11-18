@@ -9,8 +9,9 @@ import { businessType, hasModule, ROLE_LABELS } from '@/lib/business'
 import { cn } from '@/lib/cn'
 import { createUser, fetchUsers, setUserPassword, setUserPin, SettingsNotMigrated, updateUser, type BusinessUser } from './api'
 import { fetchStaff, setSpecialty } from '@/features/salon/api'
+import { SqDateFormat } from '@/lib/sqDate'
 
-const dtFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+const dtFmt = new SqDateFormat({ timeZone: KOSOVO_TZ, day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 const WEAK = new Set(['0000', '1111', '1234', '2222', '3333', '4444', '5555', '6666', '7777', '8888', '9999', '4321'])
 
 function pinError(pin: string, pin2: string): string | null {

@@ -15,12 +15,13 @@ import { discardQueued, syncQueue, type QueuedSale } from './offline'
 import { PAYMENT_KIND_LABELS } from './api'
 import { EcouponButton } from './EcouponDialog'
 import { Receipt } from './Receipt'
+import { formatSq } from '@/lib/sqDate'
 
 const VOID_REASONS = ['Gabim në arkë', 'Klienti ndërroi mendje', 'Pagesa nuk u krye', 'Tjetër']
 const KIND_LABEL = { sale: null, void: 'Anulim', refund: 'Kthim' } as const
 const PAY_LABEL = { cash: 'Kesh', card: 'Kartelë', mixed: 'Kesh + Kartelë' } as const
 
-const time = (iso: string) => new Date(iso).toLocaleTimeString('sq-AL', { timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })
+const time = (iso: string) => formatSq(iso, { timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })
 
 export function SalesDialog({
   open,

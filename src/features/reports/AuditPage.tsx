@@ -11,6 +11,7 @@ import { formatEUR } from '@/lib/money'
 import { fetchPeople, peopleMap } from '@/features/stock/api'
 import { fetchAccountants } from '@/features/accounting/api'
 import { fetchAudit, periodRange, type AuditRow, type PeriodKey } from './api'
+import { SqDateFormat } from '@/lib/sqDate'
 
 type Tone = 'success' | 'warn' | 'amber' | 'neutral' | 'info'
 
@@ -53,7 +54,7 @@ const ACTIONS: Record<string, { label: string; tone: Tone }> = {
 
 const REASONS: Record<string, string> = { damage: 'i dëmtuar', expired: 'skadim', loss: 'humbje', own_use: 'përdorim i brendshëm', return_supplier: 'kthim te furnitori', correction: 'korrigjim', other: 'tjetër' }
 
-const dtFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })
+const dtFmt = new SqDateFormat({ timeZone: KOSOVO_TZ, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })
 
 function eur(v: unknown): string {
   return v == null || v === '' ? '—' : formatEUR(Number(v))

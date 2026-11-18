@@ -31,9 +31,10 @@ import { MyWork } from '@/features/reports/MyWork'
 import { ShiftCard } from '@/features/reports/ShiftCard'
 import { ExpiryCard } from '@/features/stock/LotsTab'
 import { fetchLots } from '@/lib/lots'
+import { SqDateFormat } from '@/lib/sqDate'
 
-const dateFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-const timeFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })
+const dateFmt = new SqDateFormat({ timeZone: KOSOVO_TZ, weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+const timeFmt = new SqDateFormat({ timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })
 
 function todayLong(): string {
   const s = dateFmt.format(serverDate())
