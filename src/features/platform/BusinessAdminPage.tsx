@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { ApplicationReview } from './ApplicationReview'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, ChevronLeft, Copy, KeyRound, MonitorSmartphone, ShieldCheck } from 'lucide-react'
@@ -102,6 +103,7 @@ export function BusinessAdminPage() {
               </p>
             )}
             {b.status_note && <p className="rounded-ctl bg-amber-100 px-4 py-3 text-sm text-amber-700">Mesazhi për klientin: {b.status_note}</p>}
+            <ApplicationReview businessId={b.id} registration={b.registration as Record<string, unknown>} open={b.status === 'pending' || b.status === 'needs_info'} onChanged={refresh} />
 
             <div className="grid gap-4 lg:grid-cols-2">
               <Card className="p-5">
