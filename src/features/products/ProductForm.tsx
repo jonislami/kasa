@@ -278,7 +278,7 @@ export function ProductForm({
         </div>
       )}
 
-      <div className="flex items-center justify-between rounded-ctl bg-[#F0F7F3] px-4 py-3 text-sm">
+      <div className="flex items-center justify-between rounded-ctl bg-[#F2F6FC] px-4 py-3 text-sm">
         <span className="text-muted">Marzha e llogaritur</span>
         <span className={cn('font-semibold tabular-nums', m != null && m < 0 ? 'text-warn-700' : 'text-brand-600')}>
           {m == null ? '—' : `${(m * 100).toFixed(1)}%`}

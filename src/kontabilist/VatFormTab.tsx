@@ -115,7 +115,7 @@ export function VatFormTab({ client }: { client: Client }) {
             <ChevronLeft className="h-4 w-4" />
           </button>
           <span className="min-w-[140px] px-2 text-center font-semibold">{monthName(month)}</span>
-          <button type="button" aria-label="Muaji tjetër" className="flex h-10 w-10 items-center justify-center hover:bg-bg disabled:text-[#B8C2BC]" disabled={month >= monthStart()} onClick={() => setMonth(addMonths(month, 1))}>
+          <button type="button" aria-label="Muaji tjetër" className="flex h-10 w-10 items-center justify-center hover:bg-bg disabled:text-[#B5BCC7]" disabled={month >= monthStart()} onClick={() => setMonth(addMonths(month, 1))}>
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
@@ -216,7 +216,7 @@ export function VatFormTab({ client }: { client: Client }) {
               <span>[72] TVSH që duhet të paguhet (30−67−68) &gt; 0</span>
               <span className="tabular-nums">{formatEUR(boxes['72'])}</span>
             </div>
-            {d.kasa && <p className="mt-3 text-xs text-muted">Përfshihen edhe shitjet e arkës Kasa të këtij biznesi.</p>}
+            {d.kasa && <p className="mt-3 text-xs text-muted">Përfshihen edhe shitjet e arkës KontoSef të këtij biznesi.</p>}
           </Card>
         </>
       )}
@@ -385,7 +385,7 @@ function PrintForm({ data, boxes, month }: { data: NonNullable<ReturnType<typeof
           ))}
         </tbody>
       </table>
-      <p className="mt-3 text-[9px]">Përgatitur në Kasa Kontabilist · Nr. Formës TV-A7 · plotësohet dhe dorëzohet në EDI të ATK-së.</p>
+      <p className="mt-3 text-[9px]">Përgatitur në KontoSef Kontabilist · Nr. Formës TV-A7 · plotësohet dhe dorëzohet në EDI të ATK-së.</p>
     </div>
   )
 }

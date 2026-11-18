@@ -37,8 +37,8 @@ export function TillKeysCard({ className }: { className?: string }) {
             <KeyRound className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-[19px] font-bold">Arkat dhe çelësat</h2>
-            <p className="text-sm text-muted">Instalo Kasa në pajisjen e arkës dhe shkruaj çelësin njëherë. Një çelës vlen për një pajisje.</p>
+            <h2 className="text-[19px] font-semibold tracking-[-0.015em]">Arkat dhe çelësat</h2>
+            <p className="text-sm text-muted">Instalo KontoSef në pajisjen e arkës dhe shkruaj çelësin njëherë. Një çelës vlen për një pajisje.</p>
           </div>
         </div>
         {canAdd && (
@@ -104,14 +104,14 @@ function KeyDialog({ data, onClose }: { data: { register: string; key: string; e
         </div>
       }
     >
-      <div className="flex items-center gap-2 rounded-xl border border-brand-600 bg-[#F0F7F3] py-2 pl-4 pr-2">
-        <span className="min-w-0 flex-1 select-all break-all font-mono text-[22px] font-bold tracking-wide">{data?.key}</span>
+      <div className="flex items-center gap-2 rounded-xl border border-brand-600 bg-[#F2F6FC] py-2 pl-4 pr-2">
+        <span className="min-w-0 flex-1 select-all break-all font-mono text-[22px] font-semibold tracking-[-0.015em] tracking-wide">{data?.key}</span>
         <Button size="sm" variant="secondary" onClick={() => void copy()}>
           {copied ? <Check className="h-4 w-4 text-brand-600" /> : 'Kopjo'}
         </Button>
       </div>
       <ol className="mt-4 list-decimal space-y-1 pl-5 text-[15px]">
-        <li>Shkarko dhe instalo Kasa në pajisjen e arkës.</li>
+        <li>Shkarko dhe instalo KontoSef në pajisjen e arkës.</li>
         <li>Hape programin dhe shkruaj këtë çelës.</li>
         <li>Punëtorët hyjnë me PIN-in e tyre.</li>
       </ol>

@@ -223,7 +223,7 @@ export function DocDetailDialog({
             {d.lines.length > 0 && (
               <div className="overflow-x-auto rounded-card border border-line">
                 <table className="w-full min-w-[560px] text-sm">
-                  <thead className="bg-[#F8FAF8] text-left text-muted">
+                  <thead className="bg-[#F9FAFB] text-left text-muted">
                     <tr>
                       <th className="px-3 py-2">Përshkrimi</th>
                       <th className="px-2 text-right">Sasia</th>
@@ -252,7 +252,7 @@ export function DocDetailDialog({
             )}
 
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-card bg-[#F4F6F3] p-4 text-[15px]">
+              <div className="rounded-card bg-[#F7F8FA] p-4 text-[15px]">
                 <Totals d={d} />
               </div>
               <div className="flex flex-col gap-2 text-[15px]">
@@ -502,7 +502,7 @@ function PrintInvoice({ d, client }: { d: Detail; client: Client }) {
       <div className="flex items-start justify-between gap-6">
         <div className="max-w-[60%]">{sale ? me : them}</div>
         <div className="text-right">
-          <div className="text-[20px] font-bold">{title}</div>
+          <div className="text-[20px] font-semibold tracking-[-0.015em]">{title}</div>
           <div className="text-[14px] font-semibold">Nr. {d.doc_no}</div>
           <div>Data: {formatDay(d.doc_date)}</div>
           {d.due_date && <div>Afati i pagesës: {formatDay(d.due_date)}</div>}

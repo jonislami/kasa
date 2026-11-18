@@ -72,7 +72,7 @@ export function WorkPage({ me }: { me: AccMe }) {
         <button type="button" onClick={() => navigate('/')} className="mb-3 flex items-center gap-1 text-sm font-semibold text-muted hover:text-ink">
           <ChevronLeft className="h-4 w-4" /> Kompanitë
         </button>
-        <h1 className="text-[30px] font-bold leading-tight md:text-[34px]">Puna e zyrës</h1>
+        <h1 className="text-[30px] font-semibold tracking-[-0.015em] leading-tight md:text-[34px]">Puna e zyrës</h1>
         {s && (
           <p className="mt-1 text-muted">
             {s.my_tasks} detyra të mia · {s.overdue_tasks > 0 && <span className="font-semibold text-warn-700">{s.overdue_tasks} me afat të kaluar · </span>}
@@ -158,7 +158,7 @@ export function TasksPanel({ clientId }: { clientId?: string }) {
                 {l}
               </button>
             ))}
-          {clientId && <h2 className="text-[17px] font-semibold">Detyrat</h2>}
+          {clientId && <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Detyrat</h2>}
         </div>
         <Button size="sm" onClick={() => setEdit({ client_id: clientId ?? null, priority: 'normal', repeat: 'none', due_date: addDays(today, 7) })}>
           <Plus className="h-4 w-4" /> Detyrë e re
@@ -322,7 +322,7 @@ export function RequestsPanel({ clientId, clientEmail, clientPhone }: { clientId
     <Card className="overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
         <div className="flex flex-wrap items-center gap-2">
-          {clientId && <h2 className="mr-2 text-[17px] font-semibold">Kërkesat për dokumente</h2>}
+          {clientId && <h2 className="mr-2 text-[16px] font-semibold tracking-[-0.01em]">Kërkesat për dokumente</h2>}
           {(Object.keys(REQUEST_STATUS) as RequestStatus[]).map((k) => (
             <button key={k} type="button" onClick={() => setStatus(k)} className={cn('h-9 rounded-full border px-3 text-sm font-semibold', status === k ? 'border-brand-600 bg-brand-100 text-brand-600' : 'border-line bg-white text-muted')}>
               {REQUEST_STATUS[k]}
@@ -589,7 +589,7 @@ function BillingPanel() {
         ].map(([l, v]) => (
           <Card key={l as string} className="p-4">
             <div className="text-sm text-muted">{l}</div>
-            <div className="mt-1 text-[20px] font-bold tabular-nums">{formatEUR(v as number)}</div>
+            <div className="mt-1 text-[20px] font-semibold tracking-[-0.015em] tabular-nums">{formatEUR(v as number)}</div>
           </Card>
         ))}
       </div>
@@ -782,13 +782,13 @@ function OfficeInvoicePrint({ invoices, office }: { invoices: OfficeInvoice[]; o
           <div className="flex justify-between border-b-2 border-black pb-3">
             <div>
               {office.logo && <img src={office.logo} alt="" className="mb-2 max-h-14 max-w-[160px] object-contain" />}
-              <div className="text-[16px] font-bold">{office.office_name ?? 'Zyra e kontabilitetit'}</div>
+              <div className="text-[16px] font-semibold tracking-[-0.015em]">{office.office_name ?? 'Zyra e kontabilitetit'}</div>
               <div>{[office.address, office.city].filter(Boolean).join(', ')}</div>
               {office.nui && <div>NUI {office.nui}{office.vat_no ? ` · TVSH ${office.vat_no}` : ''}</div>}
               <div>{[office.phone, office.email].filter(Boolean).join(' · ')}</div>
             </div>
             <div className="text-right">
-              <div className="text-[20px] font-bold">FATURË</div>
+              <div className="text-[20px] font-semibold tracking-[-0.015em]">FATURË</div>
               <div>Nr. {i.inv_no}</div>
               <div>Data {formatDay(i.issue_date)}</div>
               {i.due_date && <div>Afati {formatDay(i.due_date)}</div>}

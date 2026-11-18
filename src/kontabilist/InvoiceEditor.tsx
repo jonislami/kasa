@@ -143,7 +143,7 @@ export function InvoiceEditor({ clientId, value, onClose, onSaved }: { clientId:
         footer={
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="text-[15px]">
-              Totali <span className="text-[22px] font-bold tabular-nums">{formatEUR(f.doc_type === 'credit_note' ? -amounts.total : amounts.total)}</span>
+              Totali <span className="text-[22px] font-semibold tracking-[-0.015em] tabular-nums">{formatEUR(f.doc_type === 'credit_note' ? -amounts.total : amounts.total)}</span>
             </div>
             <div className="flex gap-2">
               <Button variant="secondary" onClick={onClose}>
@@ -281,7 +281,7 @@ export function InvoiceEditor({ clientId, value, onClose, onSaved }: { clientId:
           {mode === 'lines' ? (
             <div className="overflow-x-auto rounded-card border border-line">
               <table className="w-full min-w-[820px] text-sm">
-                <thead className="bg-[#F8FAF8] text-left text-muted">
+                <thead className="bg-[#F9FAFB] text-left text-muted">
                   <tr>
                     <th className="px-3 py-2">Përshkrimi</th>
                     <th className="w-[110px] px-2">Njësia</th>
@@ -395,7 +395,7 @@ export function InvoiceEditor({ clientId, value, onClose, onSaved }: { clientId:
                 />
               )}
             </div>
-            <div className="rounded-card bg-[#F4F6F3] p-4 text-[15px]">
+            <div className="rounded-card bg-[#F7F8FA] p-4 text-[15px]">
               {[
                 ['Baza 18%', amounts.net_e],
                 ['TVSH 18%', amounts.vat_e],

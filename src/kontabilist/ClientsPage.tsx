@@ -43,8 +43,8 @@ function VatBadge({ c, late, ended }: { c: ClientRow; late: boolean; ended: bool
 }
 
 function LinkBadge({ c }: { c: ClientRow }) {
-  if (c.link_status === 'approved') return <span className="rounded-full border border-[#C7D2FE] bg-[#EEF2FF] px-2.5 py-0.5 text-xs font-semibold text-[#4338CA]">Lidhur me Kasa</span>
-  if (c.link_status === 'pending') return <span className="rounded-full border border-[#FDE68A] bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">Kasa · në pritje</span>
+  if (c.link_status === 'approved') return <span className="rounded-full border border-[#D3DEF2] bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-700">Lidhur me KontoSef</span>
+  if (c.link_status === 'pending') return <span className="rounded-full border border-[#FDE68A] bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">KontoSef · në pritje</span>
   return null
 }
 
@@ -89,7 +89,7 @@ export function ClientsPage({ me }: { me: AccMe }) {
       <div className="mx-auto w-full max-w-[1320px] px-4 pb-12 pt-6 md:px-8 md:pt-10">
         {/* title + tools */}
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-          <h1 className="text-[30px] font-bold leading-tight md:text-[34px] lg:mr-4">Kompanitë</h1>
+          <h1 className="text-[30px] font-semibold tracking-[-0.015em] leading-tight md:text-[34px] lg:mr-4">Kompanitë</h1>
           <div className="relative flex-1 lg:max-w-[380px]">
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
             <input
@@ -120,12 +120,12 @@ export function ClientsPage({ me }: { me: AccMe }) {
               options={[
                 { value: 'all', label: `Të gjitha (${active.length})` },
                 { value: 'todo', label: `Punët e hapura (${stats.todo})` },
-                { value: 'kasa', label: 'Të lidhura me Kasa' },
+                { value: 'kasa', label: 'Të lidhura me KontoSef' },
                 ...(all.some((c) => !c.active) ? [{ value: 'archived', label: `Të arkivuara (${all.filter((c) => !c.active).length})` }] : []),
               ]}
             />
             {me.accountant?.role !== 'assistant' && (
-              <Button size="lg" className="h-[48px] bg-brand-600 hover:bg-[#0B5C43]" onClick={() => setNewOpen(true)}>
+              <Button size="lg" className="h-[48px] bg-brand-600 hover:bg-[#1A4390]" onClick={() => setNewOpen(true)}>
                 <Plus className="h-5 w-5" /> Kompani e re
               </Button>
             )}
@@ -139,7 +139,7 @@ export function ClientsPage({ me }: { me: AccMe }) {
               <ChevronLeft className="h-4 w-4" />
             </button>
             <span className="min-w-[120px] px-1 text-center font-semibold text-ink">{monthName(month)}</span>
-            <button type="button" aria-label="Muaji tjetër" className="flex h-9 w-9 items-center justify-center hover:bg-bg disabled:text-[#B8C2BC]" disabled={month >= monthStart()} onClick={() => setMonth((m) => addMonths(m, 1))}>
+            <button type="button" aria-label="Muaji tjetër" className="flex h-9 w-9 items-center justify-center hover:bg-bg disabled:text-[#B5BCC7]" disabled={month >= monthStart()} onClick={() => setMonth((m) => addMonths(m, 1))}>
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
@@ -186,14 +186,14 @@ export function ClientsPage({ me }: { me: AccMe }) {
                     <Plus className="h-6 w-6" />
                   </span>
                   <span className="font-semibold">Shto kompani</span>
-                  <span className="max-w-[240px] text-center text-sm">Çdo biznes – edhe ata që nuk përdorin arkën Kasa.</span>
+                  <span className="max-w-[240px] text-center text-sm">Çdo biznes – edhe ata që nuk përdorin arkën KontoSef.</span>
                 </button>
               )}
             </div>
           ) : (
             <Card className="overflow-hidden">
               <Table>
-                <thead className="bg-[#F8FAF8]">
+                <thead className="bg-[#F9FAFB]">
                   <tr>
                     <Th className="pl-5">Kompania</Th>
                     <Th className="hidden md:table-cell">NUI</Th>
@@ -206,7 +206,7 @@ export function ClientsPage({ me }: { me: AccMe }) {
                 </thead>
                 <tbody>
                   {rows.map((c) => (
-                    <tr key={c.id} onClick={() => navigate(`/klient/${c.id}`)} className="cursor-pointer hover:bg-[#F8FAF8]">
+                    <tr key={c.id} onClick={() => navigate(`/klient/${c.id}`)} className="cursor-pointer hover:bg-[#F9FAFB]">
                       <Td className="pl-5">
                         <div className="flex items-center gap-3">
                           <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[15px] font-bold text-white', avatarColor(c.name))}>{initial(c.name)}</span>
@@ -298,13 +298,13 @@ function CompanyCard({ c, late, ended, onOpen }: { c: ClientRow; late: boolean; 
       className="group relative flex min-h-[230px] cursor-pointer flex-col rounded-[18px] border border-line bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
     >
       <div className="flex items-start justify-between">
-        <span className={cn('flex h-14 w-14 items-center justify-center rounded-2xl text-[22px] font-bold text-white', avatarColor(c.name))}>{initial(c.name)}</span>
+        <span className={cn('flex h-14 w-14 items-center justify-center rounded-2xl text-[22px] font-semibold tracking-[-0.015em] text-white', avatarColor(c.name))}>{initial(c.name)}</span>
         <div ref={ref} className="relative" onClick={(e) => e.stopPropagation()}>
           <button type="button" aria-label="Veprimet" onClick={() => setMenu((m) => !m)} className="flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-bg hover:text-ink">
             <MoreVertical className="h-5 w-5" />
           </button>
           {menu && (
-            <div className="absolute right-0 top-10 z-20 w-[220px] overflow-hidden rounded-card border border-line bg-white py-1 shadow-xl">
+            <div className="absolute right-0 top-10 z-20 w-[220px] overflow-hidden rounded-card border border-line bg-white py-1 shadow-pop">
               {[
                 ['', 'Hape'],
                 ['shitjet', 'Faturat e shitjes'],
@@ -321,7 +321,7 @@ function CompanyCard({ c, late, ended, onOpen }: { c: ClientRow; late: boolean; 
           )}
         </div>
       </div>
-      <div className="mt-5 text-[20px] font-bold leading-tight">{c.name}</div>
+      <div className="mt-5 text-[20px] font-semibold tracking-[-0.015em] leading-tight">{c.name}</div>
       <div className="mt-1 text-[15px] text-muted">{[c.city, 'Kosovë'].filter(Boolean).join(', ')}</div>
       <div className="mt-3 flex flex-wrap gap-2">
         <LinkBadge c={c} />
@@ -329,7 +329,7 @@ function CompanyCard({ c, late, ended, onOpen }: { c: ClientRow; late: boolean; 
       </div>
       <div className="mt-auto flex items-center justify-between border-t border-line pt-4 text-sm">
         <span className="flex items-center gap-2 font-semibold">
-          <span className={cn('h-2 w-2 rounded-full', c.active ? 'bg-brand-400' : 'bg-[#B8C2BC]')} />
+          <span className={cn('h-2 w-2 rounded-full', c.active ? 'bg-[#12B76A]' : 'bg-[#B5BCC7]')} />
           {c.active ? 'Aktiv' : 'Arkivuar'}
         </span>
         <span className="flex items-center gap-2 text-muted">
@@ -356,28 +356,28 @@ export function TopShell({ me, onPassword, children }: { me: AccMe; onPassword: 
     <div className="min-h-dvh bg-bg">
       <div className="fixed inset-x-0 top-0 z-50 h-safe-top bg-brand-900" />
       <header className="sticky top-0 z-40 bg-brand-900 pt-safe text-white">
-        <div className="flex h-[68px] items-center gap-3 px-4 md:px-8">
+        <div className="flex h-16 items-center gap-3 px-4 md:px-8">
           {logo.data?.logo ? <img src={logo.data.logo} alt="" className="h-9 w-9 rounded-lg bg-white object-contain p-0.5" /> : <LogoMark size={36} />}
           <div className="min-w-0">
-            <div className="truncate text-[17px] font-bold leading-tight">{me.accountant?.office_name || 'Kasa Kontabilist'}</div>
-            <div className="text-xs font-semibold text-brand-400">Kontabilist</div>
+            <div className="truncate text-[15px] font-semibold leading-tight tracking-[-0.015em]">{me.accountant?.office_name || "KontoSef Kontabilist"}</div>
+            <div className="text-[12px] text-white/55">Kontabilist</div>
           </div>
           <div className="flex-1" />
-          <button type="button" onClick={() => navigate('/arkiva')} className="hidden h-11 items-center gap-2 rounded-ctl px-3 font-semibold text-white/80 hover:bg-white/10 hover:text-white md:flex">
+          <button type="button" onClick={() => navigate('/arkiva')} className="hidden h-11 items-center gap-2 rounded-ctl px-3 text-[14px] font-medium text-white/75 hover:bg-white/[0.07] hover:text-white md:flex">
             <Archive className="h-4 w-4" /> Arkiva
           </button>
-          <button type="button" onClick={() => navigate('/puna')} className="flex h-11 items-center gap-2 rounded-ctl px-3 font-semibold text-white/80 hover:bg-white/10 hover:text-white">
+          <button type="button" onClick={() => navigate('/puna')} className="flex h-11 items-center gap-2 rounded-ctl px-3 text-[14px] font-medium text-white/75 hover:bg-white/[0.07] hover:text-white">
             <Briefcase className="h-4 w-4" /> <span className="hidden sm:inline">Puna</span>
           </button>
-          <button type="button" onClick={() => navigate('/zyra')} className="hidden h-11 items-center gap-2 rounded-ctl px-3 font-semibold text-white/80 hover:bg-white/10 hover:text-white md:flex">
+          <button type="button" onClick={() => navigate('/zyra')} className="hidden h-11 items-center gap-2 rounded-ctl px-3 text-[14px] font-medium text-white/75 hover:bg-white/[0.07] hover:text-white md:flex">
             <Users className="h-4 w-4" /> Zyra
           </button>
           <div className="relative">
-            <button type="button" onClick={() => setMenu((m) => !m)} aria-label="Llogaria" className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-400 text-[16px] font-bold text-brand-900">
+            <button type="button" onClick={() => setMenu((m) => !m)} aria-label="Llogaria" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-[14px] font-semibold text-white ring-1 ring-white/15">
               {initial(name)}
             </button>
             {menu && (
-              <div className="absolute right-0 top-12 z-50 w-[260px] overflow-hidden rounded-card border border-line bg-white text-ink shadow-xl" onMouseLeave={() => setMenu(false)}>
+              <div className="absolute right-0 top-11 z-50 w-[260px] overflow-hidden rounded-card border border-line bg-white text-ink shadow-pop" onMouseLeave={() => setMenu(false)}>
                 <div className="border-b border-line px-4 py-3">
                   <div className="truncate font-semibold">{name}</div>
                   <div className="truncate text-sm text-muted">{me.accountant?.email}</div>

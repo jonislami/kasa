@@ -36,7 +36,7 @@ export function BarChart({ bars, height = 220, emptyText = 'Ende pa shitje' }: {
                 {b.value > 0 ? compact(b.value) : ''}
               </span>
             )}
-            <div className={cn('w-full rounded-t-md', b.highlight ? 'bg-brand-600' : 'bg-[#BFE3D0]')} style={{ height: h }} />
+            <div className={cn('w-full rounded-t-[3px]', b.highlight ? 'bg-brand-600' : 'bg-[#D3DEF2]')} style={{ height: h }} />
           </div>
         )
       })}
@@ -65,15 +65,15 @@ export function BarLabels({ bars }: { bars: Bar[] }) {
 export function RankBars({ rows }: { rows: { key: string; label: string; value: number; text: string }[] }) {
   const max = Math.max(...rows.map((r) => r.value), 0)
   return (
-    <ul className="flex flex-col gap-4">
+    <ul className="flex flex-col gap-3.5">
       {rows.map((r) => (
         <li key={r.key}>
-          <div className="flex justify-between gap-3 text-[15px]">
+          <div className="flex justify-between gap-3 text-[14px]">
             <span className="truncate">{r.label}</span>
-            <span className="shrink-0 font-semibold tabular-nums">{r.text}</span>
+            <span className="shrink-0 font-medium tabular-nums">{r.text}</span>
           </div>
-          <div className="mt-1.5 h-2 rounded-full bg-[#E8ECE9]">
-            <div className="h-2 rounded-full bg-brand-600" style={{ width: `${max ? Math.max((r.value / max) * 100, 2) : 0}%` }} />
+          <div className="mt-1.5 h-1.5 rounded-full bg-[#EEF0F3]">
+            <div className="h-1.5 rounded-full bg-brand-600" style={{ width: `${max ? Math.max((r.value / max) * 100, 2) : 0}%` }} />
           </div>
         </li>
       ))}
@@ -86,7 +86,7 @@ export function Delta({ value, label }: { value: number | null; label: string })
   const up = value >= 0
   return (
     <span className="text-muted">
-      <span className={cn('font-semibold', up ? 'text-brand-600' : 'text-warn-700')}>
+      <span className={cn('font-semibold', up ? 'text-ok-700' : 'text-warn-700')}>
         {up ? '▲' : '▼'} {Math.abs(value * 100).toFixed(1)}%
       </span>{' '}
       {label}

@@ -6,18 +6,18 @@ type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'dark' | 'bluetoot
 type Size = 'sm' | 'md' | 'lg'
 
 const variants: Record<Variant, string> = {
-  primary: 'bg-brand-600 text-white hover:bg-[#0b5a41] disabled:bg-brand-600/50',
-  secondary: 'bg-white text-ink border border-field hover:bg-bg disabled:text-muted',
-  ghost: 'bg-transparent text-ink hover:bg-black/5',
-  danger: 'bg-white text-warn-700 border border-[#F3C9AE] hover:bg-warn-100',
-  dark: 'bg-ink text-white hover:bg-black',
+  primary: 'bg-brand-600 text-white shadow-card hover:bg-brand-700 disabled:bg-brand-600/45',
+  secondary: 'bg-white text-ink border border-field shadow-card hover:bg-[#F9FAFB] hover:border-[#B5BCC7] disabled:text-muted',
+  ghost: 'bg-transparent text-ink hover:bg-[#F0F2F5]',
+  danger: 'bg-white text-warn-700 border border-[#F3C4BE] shadow-card hover:bg-warn-100',
+  dark: 'bg-brand-900 text-white hover:bg-brand-800',
   bluetooth: 'bg-bt-600 text-white hover:bg-[#1a43bf]',
 }
 
 const sizes: Record<Size, string> = {
-  sm: 'h-9 px-3 text-sm rounded-ctl',
-  md: 'min-h-btn px-4 text-[15px] rounded-ctl',
-  lg: 'h-[54px] px-5 text-base rounded-xl',
+  sm: 'h-9 px-3 text-[13px] rounded-ctl',
+  md: 'min-h-btn px-4 text-[14px] rounded-ctl',
+  lg: 'h-[52px] px-5 text-[15px] rounded-[10px]',
 }
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -37,8 +37,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       type={type}
       disabled={disabled || loading}
       className={cn(
-        'inline-flex select-none items-center justify-center gap-2 font-semibold transition-colors disabled:cursor-not-allowed',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600/40',
+        'inline-flex select-none items-center justify-center gap-2 font-semibold tracking-[-0.01em] transition-colors disabled:cursor-not-allowed',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600/35 focus-visible:ring-offset-1',
         variants[variant],
         sizes[size],
         block && 'w-full',

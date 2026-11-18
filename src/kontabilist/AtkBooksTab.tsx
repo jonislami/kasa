@@ -81,7 +81,7 @@ export function AtkBooksTab({ client }: { client: Client }) {
                   ‹
                 </button>
                 <span className="flex-1 text-center font-semibold">{period.label}</span>
-                <button type="button" aria-label="Periudha tjetër" className="h-full w-11 text-lg hover:bg-bg disabled:text-[#B8C2BC]" disabled={period.to >= today} onClick={() => step(1)}>
+                <button type="button" aria-label="Periudha tjetër" className="h-full w-11 text-lg hover:bg-bg disabled:text-[#B5BCC7]" disabled={period.to >= today} onClick={() => step(1)}>
                   ›
                 </button>
               </div>

@@ -116,7 +116,7 @@ export function MenuItemPage() {
         {notice && <div className="rounded-card border border-brand-600/30 bg-brand-100 px-4 py-3 font-medium text-brand-600">{notice}</div>}
 
         <Card className="p-5">
-          <h2 className="text-[17px] font-semibold">Ku dërgohet porosia</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Ku dërgohet porosia</h2>
           {item.category_id ? (
             <>
               <p className="mt-1 text-sm text-muted">Vlen për gjithë kategorinë "{cat?.name}". Fletëporosia del në ekranin dhe printerin e asaj stacioni.</p>
@@ -143,7 +143,7 @@ export function MenuItemPage() {
         <Card className="p-5">
           <div className="flex flex-wrap items-end justify-between gap-2">
             <div>
-              <h2 className="text-[17px] font-semibold">Receta</h2>
+              <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Receta</h2>
               <p className="text-sm text-muted">Sa përbërës shkon për 1 {unitLabel(item.unit)}. Kur shitet, zbritet stoku i përbërësve.</p>
             </div>
             <div className="text-right text-sm">
@@ -196,7 +196,7 @@ export function MenuItemPage() {
         </Card>
 
         <Card className="p-5">
-          <h2 className="text-[17px] font-semibold">Opsionet (modifikuesit)</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Opsionet (modifikuesit)</h2>
           <p className="text-sm text-muted">P.sh. "Qumështi": i zakonshëm, bajame +€0.30. Opsionet me çmim dalin si rresht i veçantë në faturë.</p>
           <div className="mt-3 flex flex-col gap-3">
             {groups.map((g, gi) => (

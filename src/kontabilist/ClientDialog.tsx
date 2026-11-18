@@ -24,7 +24,7 @@ export const EMPTY_CLIENT: ClientInput = {
 
 const LEGAL_FORMS = ['Biznes individual', 'Ortakëri e përgjithshme', 'Ortakëri e kufizuar', 'SH.P.K.', 'SH.A.', 'OJQ', 'Ndërmarrje publike', 'Degë e shoqërisë së huaj']
 
-/** New client / edit client of the accountant (any business, in Kasa or not). */
+/** New client / edit client of the accountant (any business, in KontoSef or not). */
 export function ClientDialog({ value, onClose, onSaved }: { value: ClientInput | null; onClose: () => void; onSaved: (id: string) => void }) {
   const [form, setForm] = useState<ClientInput | null>(null)
   const [seed, setSeed] = useState<ClientInput | null>(null)
@@ -51,7 +51,7 @@ export function ClientDialog({ value, onClose, onSaved }: { value: ClientInput |
         onClose()
       }}
       title={form.id ? 'Të dhënat e klientit' : 'Klient i ri'}
-      subtitle={form.id ? undefined : 'Çdo biznes – edhe ata që nuk përdorin Kasa. Lidhjen me Kasa e bën pastaj te klienti.'}
+      subtitle={form.id ? undefined : 'Çdo biznes – edhe ata që nuk përdorin KontoSef. Lidhjen me KontoSef e bën pastaj te klienti.'}
       width="md:max-w-[620px]"
       footer={
         <div className="flex items-center justify-end gap-2">

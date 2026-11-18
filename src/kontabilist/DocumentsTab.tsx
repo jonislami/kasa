@@ -64,7 +64,7 @@ export function DocumentsTab({ client, kind, from, to, onChanged }: { client: Cl
     <Card className="overflow-hidden">
       <div className="flex flex-col gap-3 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h2 className="text-[17px] font-semibold">{t.list}</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">{t.list}</h2>
           {kind !== 'proforma' && docs.data && (
             <p className="text-sm text-muted">
               {kind === 'sale' ? 'Pa arkëtuar' : 'Pa paguar'}: <span className={sum.open > 0 ? 'font-semibold text-warn-700' : ''}>{formatEUR(sum.open)}</span>
@@ -106,7 +106,7 @@ export function DocumentsTab({ client, kind, from, to, onChanged }: { client: Cl
       ) : (
         <>
           <Table>
-            <thead className="bg-[#F8FAF8]">
+            <thead className="bg-[#F9FAFB]">
               <tr>
                 <Th className="pl-5">Data</Th>
                 <Th>{t.partner}</Th>
@@ -121,7 +121,7 @@ export function DocumentsTab({ client, kind, from, to, onChanged }: { client: Cl
             </thead>
             <tbody>
               {list.slice(0, SHOWN).map((d) => (
-                <tr key={d.id} className="cursor-pointer hover:bg-[#F8FAF8]" onClick={() => setOpenId(d.id)}>
+                <tr key={d.id} className="cursor-pointer hover:bg-[#F9FAFB]" onClick={() => setOpenId(d.id)}>
                   <Td className="whitespace-nowrap pl-5">{formatDay(d.doc_date)}</Td>
                   <Td>
                     <div className="font-medium">{d.partner_name || '—'}</div>

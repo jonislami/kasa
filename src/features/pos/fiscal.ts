@@ -1,4 +1,4 @@
-// The till's side of fiscalization: turns a Kasa sale (sale, cancel, return) into the ATK coupon via
+// The till's side of fiscalization: turns a KontoSef sale (sale, cancel, return) into the ATK coupon via
 // src/lib/fiscal. Returns null when this register on this device is not registered at ATK.
 import { fetchSaleFiscal, fiscalize, type FiscalReceipt, type FiscalSale } from '@/lib/fiscal'
 import { groupItems } from '@/lib/printer/receiptFacts'

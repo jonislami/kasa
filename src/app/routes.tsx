@@ -8,6 +8,7 @@ import { workerHome } from './nav'
 import { LandingPage } from '@/features/landing/LandingPage'
 import { DownloadPage } from '@/features/download/DownloadPage'
 import { LoginPage } from '@/features/auth/LoginPage'
+import { NewPasswordPage } from '@/features/auth/NewPasswordPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { supabaseConfigured } from '@/lib/supabase'
 import { isSefApp } from '@/lib/device'
@@ -56,9 +57,9 @@ function Home() {
   }
   if (status === 'loading') return <FullScreenLoader />
   if (ctx?.is_platform_admin && !ctx.profile) return <Navigate to="/platforma" replace />
-  // Accountants work in their own program (Kasa Kontabilist), not in the till app.
+  // Accountants work in their own program (KontoSef Kontabilist), not in the till app.
   if (ctx?.accountant && ctx.profile?.role !== 'admin' && ctx.profile?.role !== 'manager' && ctx.profile?.role !== 'worker')
-    return <Blocked title="Kjo është llogari kontabilisti" text="Hyr me këtë email në programin Kasa Kontabilist. Ky aplikacion është për arkën e bizneseve." />
+    return <Blocked title="Kjo është llogari kontabilisti" text="Hyr me këtë email në programin KontoSef Kontabilist. Ky aplikacion është për arkën e bizneseve." />
   return (
     <RequireBusiness>
       <AppLayout />
@@ -85,6 +86,7 @@ export function AppRoutes() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/shkarko" element={<DownloadPage />} />
+      <Route path="/fjalekalimi" element={<NewPasswordPage />} />
       <Route
         path="/regjistrohu"
         element={

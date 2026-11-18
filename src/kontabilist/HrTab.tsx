@@ -39,7 +39,7 @@ function EmployeesView({ client, list, loading, error }: { client: Client; list:
       <Card className="overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
           <div>
-            <h2 className="text-[17px] font-semibold">Punonjësit</h2>
+            <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Punonjësit</h2>
             <p className="text-sm text-muted">Të dhënat personale dhe profesionale, kontrata, orari, paga, historiku dhe kontrata e punës.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -375,11 +375,11 @@ function AttendanceView({ client }: { client: Client }) {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full border-collapse text-xs">
-              <thead className="bg-[#F6F9F7] text-muted">
+              <thead className="bg-[#F6F8FB] text-muted">
                 <tr>
-                  <th className="sticky left-0 z-10 min-w-[160px] bg-[#F6F9F7] px-3 py-2 text-left font-medium">Punonjësi</th>
+                  <th className="sticky left-0 z-10 min-w-[160px] bg-[#F6F8FB] px-3 py-2 text-left font-medium">Punonjësi</th>
                   {dates.map((d) => (
-                    <th key={d} className={cn('w-8 px-0.5 py-2 text-center font-medium', !isWorkingDay(d, 5) && 'text-[#B8C2BC]')} title={hol.get(d)}>
+                    <th key={d} className={cn('w-8 px-0.5 py-2 text-center font-medium', !isWorkingDay(d, 5) && 'text-[#B5BCC7]')} title={hol.get(d)}>
                       {Number(d.slice(8, 10))}
                     </th>
                   ))}
@@ -489,7 +489,7 @@ function LeavesView({ client, year, setYear, list, loading }: { client: Client; 
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] text-sm">
-              <thead className="bg-[#F6F9F7] text-left text-muted">
+              <thead className="bg-[#F6F8FB] text-left text-muted">
                 <tr>
                   <th className="px-5 py-2 font-medium">Punonjësi</th>
                   <th className="px-2 py-2 text-right font-medium">Të fituara</th>
@@ -535,7 +535,7 @@ function LeavesView({ client, year, setYear, list, loading }: { client: Client; 
                         </td>
                       </tr>
                       {yearLeaves.map((l) => (
-                        <tr key={l.id} className="bg-[#FBFCFB] text-[13px]">
+                        <tr key={l.id} className="bg-[#FAFBFC] text-[13px]">
                           <td className="py-1.5 pl-9 pr-2 text-muted" colSpan={4}>
                             {LEAVE_LABELS[l.kind]} · {formatDay(l.from_date)} – {formatDay(l.to_date)} · {days(l.days)} ditë
                             {l.decision_no ? ` · vendimi ${l.decision_no}` : ''}

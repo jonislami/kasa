@@ -1,4 +1,4 @@
-// Edge Function: acc-scan (Kasa Kontabilist, phase K6; four kinds and ATK categories since 0032)
+// Edge Function: acc-scan (KontoSef Kontabilist, phase K6; four kinds and ATK categories since 0032)
 // Reads an invoice (photo or PDF already uploaded to bucket acc-files and registered with acc_scan_add) with Claude
 // and stores what it read with the RPC acc_scan_result. The scan's kind (purchase / expense / investment / sale)
 // tells who the other party is: for a sale the client issued the document and the customer goes into supplier_*.

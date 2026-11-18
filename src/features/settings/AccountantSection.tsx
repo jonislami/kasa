@@ -8,7 +8,7 @@ import { formatKosovoDateTime } from '@/lib/clock'
 import { AccountingNotMigrated, addAccountantByEmail, fetchAccountants, respondAccountantRequest, revokeAccountant, type BusinessAccountant } from '@/features/accounting/api'
 
 /**
- * Cilësimet → Kontabilisti. The accountant works in the separate "Kasa Kontabilist" program. Two ways in:
+ * Cilësimet → Kontabilisti. The accountant works in the separate "KontoSef Kontabilist" program. Two ways in:
  *  - the owner adds the accountant here with the accountant's email → the business appears at once among
  *    the accountant's clients (already approved);
  *  - the accountant asks for access with this business's NUI → the owner approves here.
@@ -75,9 +75,9 @@ export function AccountantSection() {
     <>
       <Card className="overflow-hidden">
         <div className="px-5 pt-5">
-          <h2 className="text-[17px] font-semibold">Kontabilisti</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Kontabilisti</h2>
           <p className="mt-1 max-w-2xl text-sm text-muted">
-            Kontabilisti punon me programin <strong>Kasa Kontabilist</strong>. Shtoje këtu me email-in e tij, ose ai kërkon qasje me NUI-n e biznesit tënd dhe ti e miraton. Me
+            Kontabilisti punon me programin <strong>KontoSef Kontabilist</strong>. Shtoje këtu me email-in e tij, ose ai kërkon qasje me NUI-n e biznesit tënd dhe ti e miraton. Me
             qasje, ai sheh shitjet, blerjet, stokun, raportet dhe TVSH-në – vetëm lexim. Nuk shet, nuk ndryshon çmime apo stok dhe nuk i sheh punëtorët, PIN-et, arkat e cilësimet.
           </p>
           {!business.nui && (
@@ -116,7 +116,7 @@ export function AccountantSection() {
           {add.error && <p className="mt-2 rounded-ctl bg-warn-100 px-4 py-2.5 text-sm text-warn-700">{(add.error as Error).message}</p>}
           {added && (
             <p className="mt-2 rounded-ctl bg-brand-100 px-4 py-2.5 text-sm text-brand-600">
-              U shtua: <strong>{added}</strong>. Biznesi i del menjëherë te klientët në programin Kasa Kontabilist.
+              U shtua: <strong>{added}</strong>. Biznesi i del menjëherë te klientët në programin KontoSef Kontabilist.
             </p>
           )}
         </div>
@@ -139,7 +139,7 @@ export function AccountantSection() {
           <div className="mt-4 border-t border-line">
             {pending.length > 0 && (
               <>
-                <div className="bg-[#F8FAF8] px-5 py-2 text-[13px] font-semibold text-muted">Kërkesa për qasje</div>
+                <div className="bg-[#F9FAFB] px-5 py-2 text-[13px] font-semibold text-muted">Kërkesa për qasje</div>
                 <ul className="divide-y divide-line">
                   {pending.map((a) => (
                     <li key={a.client_id} className="flex flex-wrap items-center gap-3 px-5 py-3.5">
@@ -164,7 +164,7 @@ export function AccountantSection() {
             )}
             {approved.length > 0 && (
               <>
-                <div className="border-t border-line bg-[#F8FAF8] px-5 py-2 text-[13px] font-semibold text-muted">Me qasje</div>
+                <div className="border-t border-line bg-[#F9FAFB] px-5 py-2 text-[13px] font-semibold text-muted">Me qasje</div>
                 <ul className="divide-y divide-line">
                   {approved.map((a) => (
                     <li key={a.client_id} className="flex flex-wrap items-center gap-3 px-5 py-3.5">

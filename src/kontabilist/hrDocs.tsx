@@ -240,7 +240,7 @@ export function LeaveDecision({ client, e, leave, ent }: { client: Client; e: Em
         Në bazë të Ligjit të Punës Nr. 03/L-212, kontratës së punës dhe {annual ? 'kërkesës së punëtorit/es' : 'dokumentacionit të paraqitur'}, {client.name}
         {client.representative ? `, përmes përfaqësuesit ${client.representative},` : ''} merr këtë:
       </p>
-      <p className="mt-6 text-center text-[16px] font-bold">VENDIM</p>
+      <p className="mt-6 text-center text-[16px] font-semibold tracking-[-0.015em]">VENDIM</p>
       <p className="mb-6 text-center font-bold">për {annual ? 'shfrytëzimin e pushimit vjetor' : kindText}</p>
       <ol className="ml-5 list-decimal space-y-2">
         <li>
@@ -280,7 +280,7 @@ export function LeaveReport({ client, e, year }: { client: Client; e: Employee; 
   return (
     <div>
       <CompanyHead client={client} />
-      <p className="text-center text-[16px] font-bold">RAPORTI I PUSHIMEVE PËR VITIN {year}</p>
+      <p className="text-center text-[16px] font-semibold tracking-[-0.015em]">RAPORTI I PUSHIMEVE PËR VITIN {year}</p>
       <table className="mt-5 w-full border-collapse text-[12px]">
         <tbody>
           <tr>
@@ -394,7 +394,7 @@ export function LeaveReportAll({ client, list, year }: { client: Client; list: E
   return (
     <div>
       <CompanyHead client={client} />
-      <p className="mb-4 text-center text-[16px] font-bold">RAPORTI I PUSHIMEVE VJETORE – {year}</p>
+      <p className="mb-4 text-center text-[16px] font-semibold tracking-[-0.015em]">RAPORTI I PUSHIMEVE VJETORE – {year}</p>
       <table className="w-full border-collapse text-[11px]">
         <thead>
           <tr>

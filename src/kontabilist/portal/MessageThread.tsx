@@ -43,7 +43,7 @@ export function MessageThread({
 
   return (
     <div className={cn('flex flex-col', className)}>
-      <div className="flex max-h-[55vh] min-h-[200px] flex-col gap-2 overflow-y-auto rounded-card bg-[#F4F6F3] p-3">
+      <div className="flex max-h-[55vh] min-h-[200px] flex-col gap-2 overflow-y-auto rounded-card bg-[#F7F8FA] p-3">
         {list.isLoading ? (
           <p className="m-auto text-sm text-muted">Duke ngarkuar…</p>
         ) : list.error ? (

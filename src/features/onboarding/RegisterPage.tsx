@@ -65,16 +65,16 @@ export function RegisterPage() {
   return (
     <div className="min-h-dvh bg-bg">
       <PublicHeader />
-      <section className="bg-brand-900 pb-24 text-white">
+      <section className="border-b border-line bg-white pb-24">
         <div className="mx-auto max-w-[900px] px-5 pt-8 md:pt-12">
-          <h1 className="text-[32px] font-bold tracking-tight md:text-[44px]">Regjistro biznesin</h1>
-          <p className="mt-3 max-w-xl text-[17px] text-white/75">
-            Plotëso të dhënat e biznesit një herë. Pas aprovimit e merr çelësin e arkës te llogaria jote dhe instalon Kasa.
+          <h1 className="text-[30px] font-semibold tracking-[-0.03em] text-ink md:text-[40px]">Regjistro biznesin</h1>
+          <p className="mt-3 max-w-xl text-[16px] text-muted">
+            Plotëso të dhënat e biznesit një herë. Pas aprovimit e merr çelësin e arkës te llogaria jote dhe instalon KontoSef.
           </p>
-          <ol className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/70">
+          <ol className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-[#344054]">
             {['Regjistrimi', 'Aprovimi', 'Instalimi'].map((s, i) => (
               <li key={s} className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/15 text-xs font-bold">{i + 1}</span> {s}
+                <span className="num flex h-6 w-6 items-center justify-center rounded-full border border-field text-xs font-semibold">{i + 1}</span> {s}
               </li>
             ))}
           </ol>
@@ -84,15 +84,15 @@ export function RegisterPage() {
         {done ? (
           <div className="rounded-[20px] border border-line bg-white p-8 text-center shadow-sm">
             <CheckCircle2 className="mx-auto h-12 w-12 text-brand-600" />
-            <h2 className="mt-3 text-[22px] font-bold">Regjistrimi u dërgua</h2>
-            <p className="mt-2 text-muted">Pas aprovimit, te llogaria jote të dalin çelësat e arkave dhe shkarkimi i Kasa-s.</p>
+            <h2 className="mt-3 text-[22px] font-semibold tracking-[-0.015em]">Regjistrimi u dërgua</h2>
+            <p className="mt-2 text-muted">Pas aprovimit, te llogaria jote të dalin çelësat e arkave dhe shkarkimi i KontoSef-it.</p>
             <Link to="/login" className="mt-5 inline-block">
               <Button size="lg">Hyr</Button>
             </Link>
           </div>
         ) : (
           <form onSubmit={submit} noValidate className="rounded-[20px] border border-line bg-white p-6 shadow-sm md:p-8">
-            <h2 className="text-[19px] font-bold">Lloji i biznesit</h2>
+            <h2 className="text-[19px] font-semibold tracking-[-0.015em]">Lloji i biznesit</h2>
             <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-5">
               {BUSINESS_TYPE_LIST.map((t) => (
                 <button
@@ -108,7 +108,7 @@ export function RegisterPage() {
               ))}
             </div>
 
-            <h2 className="mt-7 text-[19px] font-bold">Biznesi</h2>
+            <h2 className="mt-7 text-[19px] font-semibold tracking-[-0.015em]">Biznesi</h2>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <Input label="Emri i biznesit" value={f.business_name} onChange={set('business_name')} autoComplete="organization" />
@@ -127,7 +127,7 @@ export function RegisterPage() {
               />
             </div>
 
-            <h2 className="mt-7 text-[19px] font-bold">Pronari dhe llogaria</h2>
+            <h2 className="mt-7 text-[19px] font-semibold tracking-[-0.015em]">Pronari dhe llogaria</h2>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <Input label="Emri dhe mbiemri i pronarit" value={f.owner_name} onChange={set('owner_name')} autoComplete="name" />
               <Input label="Telefoni" type="tel" value={f.phone} onChange={set('phone')} autoComplete="tel" />

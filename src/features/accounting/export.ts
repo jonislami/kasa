@@ -1,5 +1,6 @@
 import { VAT_LABELS, type VatCode } from '@/lib/vat'
 import { unitLabel } from '@/lib/units'
+import { formatSq } from '@/lib/sqDate'
 import {
   EXPENSE_LABELS,
   formatDay,
@@ -71,7 +72,7 @@ export function salesDocsSheet(sm: Summary, docs: SaleDoc[]): Sheet {
       ...docs.map((d) => [
         int(d.invoice_no),
         s(formatDay(d.sale_date)),
-        s(new Date(d.created_at).toLocaleTimeString('sq-AL', { timeZone: 'Europe/Belgrade', hour: '2-digit', minute: '2-digit' })),
+        s(formatSq(d.created_at, { timeZone: 'Europe/Belgrade', hour: '2-digit', minute: '2-digit' })),
         s(KIND[d.kind]),
         d.ref_sale_id && no.has(d.ref_sale_id) ? int(no.get(d.ref_sale_id)!) : s(''),
         s(d.register_id ? reg.get(d.register_id) ?? '' : ''),
@@ -177,7 +178,7 @@ export function cashSheet(sm: Summary): Sheet {
       [b('Fillimi'), b('Mbyllja'), b('Arka'), b('Kusuri në fillim'), b('Shitje kesh'), b('Pritet në arkë'), b('E numëruar'), b('Diferenca')],
       ...sm.shifts.map((h) => {
         const expected = h.opening + h.cash_sales
-        const fmt = (iso: string) => new Date(iso).toLocaleString('sq-AL', { timeZone: 'Europe/Belgrade', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+        const fmt = (iso: string) => formatSq(iso, { timeZone: 'Europe/Belgrade', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
         return [s(fmt(h.started_at)), s(h.ended_at ? fmt(h.ended_at) : 'e hapur'), s(h.register), num(h.opening), num(h.cash_sales), num(expected), h.counted == null ? s('') : num(h.counted), h.counted == null ? s('') : num(h.counted - expected)]
       }),
     ],

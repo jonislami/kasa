@@ -56,7 +56,7 @@ export function CommissionReport() {
   return (
     <Card className="overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
-        <h2 className="text-[17px] font-semibold">Raporti i komisionit</h2>
+        <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Raporti i komisionit</h2>
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted">Periudha</span>
           <Select aria-label="Muaji" value={month} onChange={(e) => setMonth(e.target.value)} className="h-11 w-auto" options={months.map((m) => ({ value: m.value, label: m.label }))} />
@@ -71,7 +71,7 @@ export function CommissionReport() {
         <EmptyState title="Ende pa shërbime në këtë muaj" />
       ) : (
         <table className="w-full text-sm">
-          <thead className="bg-[#F8FAF8]">
+          <thead className="bg-[#F9FAFB]">
             <tr className="text-left text-[13px] text-muted">
               <th className="border-y border-line px-5 py-3 font-semibold">Punëtori</th>
               <th className="border-y border-line px-3 py-3 text-right font-semibold">Shërbime</th>
@@ -89,7 +89,7 @@ export function CommissionReport() {
                 <td className="border-b border-line px-3 py-3 text-right tabular-nums">{Number(r.services.toFixed(2))}</td>
                 <td className="border-b border-line px-3 py-3 text-right tabular-nums">{formatEUR(r.value)}</td>
                 <td className="hidden w-[160px] border-b border-line px-3 py-3 md:table-cell">
-                  <div className="h-2 rounded-full bg-[#E8ECE9]">
+                  <div className="h-2 rounded-full bg-[#E7EAEE]">
                     <div className="h-2 rounded-full" style={{ width: `${max ? Math.max((r.value / max) * 100, 2) : 0}%`, background: staffColor(r.staff_id, staff.data ?? []) }} />
                   </div>
                 </td>

@@ -56,14 +56,14 @@ const TABS: { key: TabKey; label: string; title: string }[] = [
 const PERIOD_KEY = 'kasa.acc.period'
 
 /**
- * Where the shared book screens live: one client in the Kasa Kontabilist program (the owner's
- * /kontabiliteti page in Kasa is not used any more; AccountingPage stays for a later return). Decides links, how the VAT status is saved and what is refreshed.
+ * Where the shared book screens live: one client in the KontoSef Kontabilist program (the owner's
+ * /kontabiliteti page in KontoSef is not used any more; AccountingPage stays for a later return). Decides links, how the VAT status is saved and what is refreshed.
  */
 export interface BooksScope {
   link: (tab: string) => string
   setStatus: (month: string, status: VatStatus) => Promise<void>
   invalidate: () => void
-  /** false for a client that does not use Kasa: no till, shifts or stock. */
+  /** false for a client that does not use KontoSef: no till, shifts or stock. */
   kasa: boolean
 }
 const ScopeContext = createContext<BooksScope | null>(null)
@@ -234,7 +234,7 @@ export function PeriodPicker({ period, onChange, disableNext }: { period: Period
     { value: 'quarter', label: 'Tremujor' },
     { value: 'year', label: 'Vit' },
   ]
-  const arrow = 'flex h-[44px] w-[40px] items-center justify-center text-ink hover:bg-bg disabled:text-[#B8C2BC] disabled:hover:bg-white'
+  const arrow = 'flex h-[44px] w-[40px] items-center justify-center text-ink hover:bg-bg disabled:text-[#B5BCC7] disabled:hover:bg-white'
   return (
     <div className="flex items-center gap-2 text-ink">
       <select
@@ -277,7 +277,7 @@ export function VatTable({ title, rows, vatLabel = 'TVSH', hint }: { title: stri
   return (
     <Card className="overflow-hidden">
       <div className="px-5 pt-5">
-        <h2 className="text-[17px] font-semibold">{title}</h2>
+        <h2 className="text-[16px] font-semibold tracking-[-0.01em]">{title}</h2>
         {hint && <p className="mt-1 text-sm text-muted">{hint}</p>}
       </div>
       <Table className="mt-3">
@@ -293,7 +293,7 @@ export function VatTable({ title, rows, vatLabel = 'TVSH', hint }: { title: stri
           {shown.map((v) => (
             <tr key={v.code}>
               <Td className="pl-5">
-                <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-md bg-[#EEF1EE] text-xs font-bold">{v.code}</span>
+                <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-md bg-[#EFF1F4] text-xs font-bold">{v.code}</span>
                 {rateLabel(v.code)}
               </Td>
               <Td className="text-right">{formatEUR(v.net)}</Td>
@@ -414,7 +414,7 @@ export function OverviewTab({ s, period }: { s: Summary; period: Period }) {
 
       <div className="grid gap-4 md:gap-5 lg:grid-cols-2">
         <Card className="p-5">
-          <h2 className="text-[17px] font-semibold">Për t'u bërë</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Për t'u bërë</h2>
           <div className="mt-2 flex flex-col">
             {s.business.vat_registered &&
               monthsOf(period).map((m) => (
@@ -446,7 +446,7 @@ export function OverviewTab({ s, period }: { s: Summary; period: Period }) {
         </Card>
 
         <Card className="p-5">
-          <h2 className="text-[17px] font-semibold">Shitjet ditore</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Shitjet ditore</h2>
           <div className="mt-6">
             <BarChart bars={bars} />
             <BarLabels bars={bars} />
@@ -456,7 +456,7 @@ export function OverviewTab({ s, period }: { s: Summary; period: Period }) {
 
       <div className="grid gap-4 md:gap-5 lg:grid-cols-2">
         <Card className="p-5">
-          <h2 className="text-[17px] font-semibold">Të dhënat e tatimpaguesit</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Të dhënat e tatimpaguesit</h2>
           <div className="mt-2">
             <Line label="Emri" value={s.business.name} />
             <Line label="NUI" value={s.business.nui || '—'} />
@@ -466,7 +466,7 @@ export function OverviewTab({ s, period }: { s: Summary; period: Period }) {
           </div>
         </Card>
         {scope.kasa && <Card className="p-5">
-          <h2 className="text-[17px] font-semibold">Arka dhe stoku</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Arka dhe stoku</h2>
           <div className="mt-2">
             <Line label="Arkëtuar me kesh" value={formatEUR(s.sales.cash)} />
             <Line label="Arkëtuar me kartelë" value={formatEUR(s.sales.card)} />
@@ -500,7 +500,7 @@ export function VatTab({ s, period }: { s: Summary; period: Period }) {
 
       {s.business.vat_registered && (
         <Card className="p-5">
-          <h2 className="text-[17px] font-semibold">Statusi i deklaratës</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Statusi i deklaratës</h2>
           <div className="mt-2 flex flex-col">
             {monthsOf(period).map((m) => (
               <div key={m} className="border-b border-line py-3 last:border-b-0">
@@ -536,7 +536,7 @@ export function ProfitTab({ s }: { s: Summary }) {
         <StatCard label={p.result >= 0 ? 'Fitimi para tatimit' : 'Humbja'} value={formatEUR(p.result)} tone={p.result < 0 ? 'warn' : 'default'} />
       </div>
       <Card className="p-5 lg:max-w-[720px]">
-        <h2 className="text-[17px] font-semibold">Pasqyra e të ardhurave</h2>
+        <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Pasqyra e të ardhurave</h2>
         <p className="mt-1 text-sm text-muted">{p.vat ? 'Shumat pa TVSH.' : 'Shumat siç janë paguar (biznesi nuk e zbret TVSH-në).'}</p>
         <div className="mt-2">
           <Line label="Të hyrat nga shitja" value={formatEUR(p.revenue)} />
@@ -574,13 +574,13 @@ export function CashTab({ s }: { s: Summary }) {
       </div>
 
       <Card className="overflow-hidden">
-        <h2 className="px-5 pt-5 text-[17px] font-semibold">Ndërrimet</h2>
+        <h2 className="px-5 pt-5 text-[16px] font-semibold tracking-[-0.01em]">Ndërrimet</h2>
         <p className="px-5 pt-1 text-sm text-muted">Pritet në arkë = kusuri në fillim + shitjet me kesh të ndërrimit. Kontroll i brendshëm, nuk dërgohet në ATK.</p>
         {s.shifts.length === 0 ? (
           <EmptyState title="Asnjë ndërrim në këtë periudhë" />
         ) : (
           <Table className="mt-3">
-            <thead className="bg-[#F8FAF8]">
+            <thead className="bg-[#F9FAFB]">
               <tr>
                 <Th className="pl-5">Fillimi</Th>
                 <Th>Mbyllja</Th>
@@ -617,12 +617,12 @@ export function CashTab({ s }: { s: Summary }) {
       </Card>
 
       <Card className="overflow-hidden">
-        <h2 className="px-5 pt-5 text-[17px] font-semibold">Arkëtimet sipas ditës</h2>
+        <h2 className="px-5 pt-5 text-[16px] font-semibold tracking-[-0.01em]">Arkëtimet sipas ditës</h2>
         {s.daily.length === 0 ? (
           <EmptyState title="Asnjë shitje në këtë periudhë" />
         ) : (
           <Table className="mt-3">
-            <thead className="bg-[#F8FAF8]">
+            <thead className="bg-[#F9FAFB]">
               <tr>
                 <Th className="pl-5">Data</Th>
                 <Th className="text-right">Kuponë</Th>

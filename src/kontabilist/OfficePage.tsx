@@ -48,7 +48,7 @@ export function OfficePage({ me }: { me: AccMe }) {
         <button type="button" onClick={() => navigate('/')} className="mb-3 flex items-center gap-1 text-sm font-semibold text-muted hover:text-ink">
           <ChevronLeft className="h-4 w-4" /> Kompanitë
         </button>
-        <h1 className="text-[30px] font-bold leading-tight md:text-[34px]">{office.data?.office_name || me.accountant?.office_name || 'Zyra'}</h1>
+        <h1 className="text-[30px] font-semibold tracking-[-0.015em] leading-tight md:text-[34px]">{office.data?.office_name || me.accountant?.office_name || 'Zyra'}</h1>
         <p className="mt-1 text-muted">
           {me.accountant?.full_name} · {ROLE_LABELS[(me.accountant?.role ?? 'admin') as OfficeRole]}
         </p>
@@ -91,7 +91,7 @@ function TeamTab({ members, admin }: { members: Member[]; admin: boolean }) {
     <Card className="overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
         <div>
-          <h2 className="text-[17px] font-semibold">Ekipi i zyrës</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Ekipi i zyrës</h2>
           <p className="text-sm text-muted">{members.filter((m) => m.active).length} anëtarë aktivë</p>
         </div>
         {admin && (
@@ -169,7 +169,7 @@ function MemberDialog({ value, onClose }: { value: Member | 'new' | null; onClos
       open={Boolean(value)}
       onClose={onClose}
       title={isNew ? 'Anëtar i ri i zyrës' : f.full_name}
-      subtitle={isNew ? 'Hyn në Kasa Kontabilist me këtë email dhe fjalëkalim' : m?.email}
+      subtitle={isNew ? 'Hyn në KontoSef Kontabilist me këtë email dhe fjalëkalim' : m?.email}
       width="md:max-w-[640px]"
       footer={
         <div className="flex justify-end gap-2">
@@ -240,7 +240,7 @@ function MemberDialog({ value, onClose }: { value: Member | 'new' | null; onClos
           </label>
         )}
         {!isNew && m && (
-          <div className="rounded-card bg-[#F4F6F3] p-3 sm:col-span-2">
+          <div className="rounded-card bg-[#F7F8FA] p-3 sm:col-span-2">
             <div className="flex items-end gap-2">
               <div className="flex-1">
                 <Input label="Fjalëkalim i ri" type="text" autoComplete="new-password" value={newPw} onChange={(e) => setNewPw(e.target.value)} />
@@ -305,7 +305,7 @@ function HistoryTab({ members, admin }: { members: Member[]; admin: boolean }) {
         <EmptyState icon={<History className="h-6 w-6" />} title="Asnjë veprim në këtë periudhë" />
       ) : (
         <Table>
-          <thead className="bg-[#F6F9F7]">
+          <thead className="bg-[#F6F8FB]">
             <tr>
               <Th className="pl-5">Koha</Th>
               <Th>Anëtari</Th>
@@ -361,7 +361,7 @@ function SecurityTab({ requireMfa, officeName, admin }: { requireMfa: boolean; o
         <div className="flex items-center gap-3">
           <ShieldCheck className={cn('h-6 w-6', on ? 'text-brand-600' : 'text-muted')} />
           <div className="flex-1">
-            <h2 className="text-[17px] font-semibold">Hyrja me dy faktorë</h2>
+            <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Hyrja me dy faktorë</h2>
             <p className="text-sm text-muted">Pas fjalëkalimit kërkohet kodi nga aplikacioni i autentikimit në telefon.</p>
           </div>
           <Badge tone={on ? 'success' : 'neutral'}>{on ? 'Aktiv' : 'Joaktiv'}</Badge>
@@ -390,7 +390,7 @@ function SecurityTab({ requireMfa, officeName, admin }: { requireMfa: boolean; o
       {admin && <EmailSettingsCard />}
       {admin && (
         <Card className="p-5">
-          <h2 className="text-[17px] font-semibold">Cilësimet e zyrës</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Cilësimet e zyrës</h2>
           <div className="mt-4 flex flex-col gap-4">
             <div className="flex items-end gap-2">
               <div className="flex-1">
@@ -450,7 +450,7 @@ function OfficeProfileCard() {
           {f.logo ? <img src={f.logo} alt="Logoja" className="max-h-full max-w-full object-contain" /> : <span className="text-xs text-muted">Logo</span>}
         </div>
         <div className="flex-1">
-          <h2 className="text-[17px] font-semibold">Të dhënat e zyrës për faturat</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Të dhënat e zyrës për faturat</h2>
           <div className="mt-1 flex gap-2">
             <label className="cursor-pointer text-sm font-semibold text-brand-600 hover:underline">
               {f.logo ? 'Ndrysho logon' : 'Ngarko logon'}
@@ -516,7 +516,7 @@ function SessionsCard({ admin }: { admin: boolean }) {
     <Card className="p-5 lg:col-span-2">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-[17px] font-semibold">Seancat e hapura</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Seancat e hapura</h2>
           <p className="text-sm text-muted">{admin ? 'Pajisjet ku janë të kyçur anëtarët e zyrës.' : 'Pajisjet ku je i kyçur.'} Hyrjet shënohen te Historiku i veprimeve.</p>
         </div>
         <Button variant="secondary" size="sm" loading={others.isPending} onClick={() => confirm('Të dalësh nga të gjitha pajisjet e tjera?') && others.mutate()}>
@@ -575,7 +575,7 @@ function OfficeBackupCard() {
   })
   return (
     <Card className="p-5">
-      <h2 className="text-[17px] font-semibold">Backup i zyrës</h2>
+      <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Backup i zyrës</h2>
       <p className="mt-1 text-sm text-muted">
         Të gjitha të dhënat e të gjithë klientëve (faturat, pagesat, TVSH, pagat, ditari, lista e skedarëve, detyrat, mesazhet) në një skedar JSON. Ruaje në kompjuter ose në një disk tjetër, p.sh. çdo muaj. Skedarët (PDF/foto) mbeten në arkivë.
       </p>
@@ -605,7 +605,7 @@ function EmailSettingsCard() {
   )
   return (
     <Card className="p-5 lg:col-span-2">
-      <h2 className="text-[17px] font-semibold">Email-et</h2>
+      <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Email-et</h2>
       {settings.error ? (
         <p className="mt-2 text-sm text-warn-700">{(settings.error as Error).message}</p>
       ) : (
@@ -688,7 +688,7 @@ function RestoreCard() {
   const count = (b: Record<string, unknown>, k: string) => (Array.isArray(b[k]) ? (b[k] as unknown[]).length : 0)
   return (
     <Card className="p-5 lg:col-span-2">
-      <h2 className="text-[17px] font-semibold">Rikthe nga backup-i</h2>
+      <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Rikthe nga backup-i</h2>
       <p className="mt-1 text-sm text-muted">
         Çdo klient i zgjedhur hapet si <b>klient i ri</b> i zyrës, me faturat, pagesat, arkën dhe bankën, TVSH-në, pagat, ditarin, mjetet themelore, detyrat dhe mesazhet. Klientët ekzistues nuk preken.
         Nuk rikthehen skedarët PDF/foto, skanimet dhe faturat e zyrës.

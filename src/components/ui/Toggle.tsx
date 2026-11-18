@@ -20,14 +20,14 @@ export function Toggle({
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={cn(
-        'relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors disabled:opacity-50',
+        'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50',
         checked ? 'bg-brand-600' : 'bg-field',
       )}
     >
       <span
         className={cn(
           'inline-block h-5 w-5 rounded-full bg-white shadow transition-transform',
-          checked ? 'translate-x-6' : 'translate-x-1',
+          checked ? 'translate-x-[22px]' : 'translate-x-[2px]',
         )}
       />
     </button>

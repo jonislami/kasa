@@ -1,4 +1,4 @@
-// Builds the two ATK messages of one receipt from a Kasa sale.
+// Builds the two ATK messages of one receipt from a KontoSef sale.
 // Units (github.com/fiskalizimi, "Important notes" + the sample coupon):
 //   item Price and item Total → €0.0001 (×10000)
 //   coupon Total, Payments, TaxGroups, TotalTax, TotalNoTax, TotalDiscount → cents (×100)

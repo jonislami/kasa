@@ -15,12 +15,13 @@ import { discardQueued, syncQueue, type QueuedSale } from './offline'
 import { PAYMENT_KIND_LABELS } from './api'
 import { EcouponButton } from './EcouponDialog'
 import { Receipt } from './Receipt'
+import { formatSq } from '@/lib/sqDate'
 
 const VOID_REASONS = ['Gabim në arkë', 'Klienti ndërroi mendje', 'Pagesa nuk u krye', 'Tjetër']
 const KIND_LABEL = { sale: null, void: 'Anulim', refund: 'Kthim' } as const
 const PAY_LABEL = { cash: 'Kesh', card: 'Kartelë', mixed: 'Kesh + Kartelë' } as const
 
-const time = (iso: string) => new Date(iso).toLocaleTimeString('sq-AL', { timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })
+const time = (iso: string) => formatSq(iso, { timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })
 
 export function SalesDialog({
   open,
@@ -123,7 +124,7 @@ export function SalesDialog({
             </div>
             {error && <p className="rounded-ctl bg-warn-100 px-4 py-2.5 text-sm text-warn-700">{error}</p>}
             {voidStep === 'reason' ? (
-              <div className="flex flex-col gap-3 rounded-xl border border-[#F3C9AE] bg-[#FFF8F3] p-4">
+              <div className="flex flex-col gap-3 rounded-xl border border-[#F3C4BE] bg-[#FEF8F7] p-4">
                 <div className="font-semibold">Anulo faturën {formatInvoiceNo(selected.invoice_no)}?</div>
                 <div className="flex flex-wrap gap-2">
                   {VOID_REASONS.map((r) => (

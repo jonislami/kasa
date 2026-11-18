@@ -34,7 +34,7 @@ export function PasswordPage() {
         <div className="mb-5 flex items-center gap-3">
           <LogoMark size={40} />
           <div>
-            <div className="text-[18px] font-bold">Fjalëkalimi i ri</div>
+            <div className="text-[18px] font-semibold tracking-[-0.015em]">Fjalëkalimi i ri</div>
             <div className="text-sm text-muted">Zgjidh fjalëkalimin me të cilin do të hysh</div>
           </div>
           <KeyRound className="ml-auto h-6 w-6 text-brand-600" />

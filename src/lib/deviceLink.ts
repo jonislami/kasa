@@ -36,8 +36,8 @@ export function defaultDeviceName(): string {
   const ua = navigator.userAgent
   const browser = /Edg\//.test(ua) ? 'Edge' : /OPR\//.test(ua) ? 'Opera' : /Chrome\//.test(ua) ? 'Chrome' : /Firefox\//.test(ua) ? 'Firefox' : /Safari\//.test(ua) ? 'Safari' : 'Shfletues'
   const os = /Android/.test(ua) ? 'Android' : /iPhone/.test(ua) ? 'iPhone' : /iPad/.test(ua) ? 'iPad' : /Windows/.test(ua) ? 'Windows' : /Mac OS/.test(ua) ? 'Mac' : /Linux/.test(ua) ? 'Linux' : ''
-  if (device.platform === 'electron') return `Kasa · ${os || 'Windows'}`
-  if (device.platform === 'capacitor') return `Kasa · ${os || 'telefon'}`
+  if (device.platform === 'electron') return `KontoSef · ${os || 'Windows'}`
+  if (device.platform === 'capacitor') return `KontoSef · ${os || 'telefon'}`
   return [browser, os].filter(Boolean).join(' · ')
 }
 

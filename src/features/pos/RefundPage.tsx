@@ -151,12 +151,12 @@ export function RefundPage() {
       <Link to="/arka" className="inline-flex items-center gap-1 text-sm font-semibold text-brand-600">
         <ChevronLeft className="h-4 w-4" /> Kthehu te arka
       </Link>
-      <h1 className="mt-1 text-[26px] font-bold md:text-[30px]">Kthim malli</h1>
+      <h1 className="mt-1 text-[26px] font-semibold tracking-[-0.015em] md:text-[30px]">Kthim malli</h1>
 
       <div className="mt-5 flex flex-col gap-5 lg:flex-row lg:items-start">
         <div className="flex min-w-0 flex-1 flex-col gap-5">
           <Card className="p-5">
-            <h2 className="text-[17px] font-semibold">1. Gjej faturën</h2>
+            <h2 className="text-[16px] font-semibold tracking-[-0.01em]">1. Gjej faturën</h2>
             <form
               className="mt-3 flex gap-2"
               onSubmit={(e) => {
@@ -193,7 +193,7 @@ export function RefundPage() {
           {sale && (
             <>
               <Card className="p-5">
-                <h2 className="text-[17px] font-semibold">2. Zgjidh artikujt që kthehen</h2>
+                <h2 className="text-[16px] font-semibold tracking-[-0.01em]">2. Zgjidh artikujt që kthehen</h2>
                 <ul className="mt-3 flex flex-col gap-2.5">
                   {sale.items.map((i) => {
                     const q = qty[i.id] ?? 0
@@ -202,7 +202,7 @@ export function RefundPage() {
                     return (
                       <li
                         key={i.id}
-                        className={cn('flex items-center gap-3 rounded-xl border px-4 py-3', on ? 'border-2 border-brand-600 bg-[#F0F7F3] px-[15px] py-[11px]' : 'border-line', max <= 0 && 'opacity-50')}
+                        className={cn('flex items-center gap-3 rounded-xl border px-4 py-3', on ? 'border-2 border-brand-600 bg-[#F2F6FC] px-[15px] py-[11px]' : 'border-line', max <= 0 && 'opacity-50')}
                       >
                         <button
                           type="button"
@@ -246,7 +246,7 @@ export function RefundPage() {
               </Card>
 
               <Card className="p-5">
-                <h2 className="text-[17px] font-semibold">3. Arsyeja</h2>
+                <h2 className="text-[16px] font-semibold tracking-[-0.01em]">3. Arsyeja</h2>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {REASONS.map((r) => (
                     <button
@@ -275,7 +275,7 @@ export function RefundPage() {
 
         {sale && (
           <Card className="p-5 lg:sticky lg:top-6 lg:w-[320px]">
-            <h2 className="text-[17px] font-semibold">Përmbledhje e kthimit</h2>
+            <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Përmbledhje e kthimit</h2>
             <div className="mt-3 flex justify-between text-sm text-muted">
               <span>Artikuj</span>
               <span className="tabular-nums">{summary.count}</span>
@@ -286,7 +286,7 @@ export function RefundPage() {
             </div>
             <div className="flex items-end justify-between py-3">
               <span className="font-semibold">Kthehen klientit</span>
-              <span className="text-[30px] font-bold tabular-nums">{formatEUR(summary.total)}</span>
+              <span className="text-[30px] font-semibold tracking-[-0.015em] tabular-nums">{formatEUR(summary.total)}</span>
             </div>
             <label className="mb-3 flex cursor-pointer items-start gap-3 rounded-ctl border border-line px-3 py-2.5 text-[15px]">
               <input type="checkbox" className="mt-0.5 h-5 w-5 accent-brand-600" checked={exchange} onChange={(e) => setExchange(e.target.checked)} />
@@ -353,7 +353,7 @@ export function RefundPage() {
           <div className="flex flex-col gap-4">
             <div className="text-center">
               <div className="text-sm text-muted">{exchange ? 'Artikulli u kthye' : 'Kthimi u krye'}</div>
-              <div className="mt-1 text-[28px] font-bold">
+              <div className="mt-1 text-[28px] font-semibold tracking-[-0.015em]">
                 {exchange ? 'Kredi për ndërrim ' : 'Jepi klientit '}
                 <span className={exchange ? 'text-brand-600' : 'text-warn-700'}>{formatEUR(Math.abs(done.total))}</span>
               </div>

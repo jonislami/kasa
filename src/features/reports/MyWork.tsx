@@ -6,8 +6,9 @@ import { Badge, Card, EmptyState, StatCard } from '@/components/ui'
 import { formatEUR, formatInvoiceNo } from '@/lib/money'
 import { fetchWork, formatMinutes, PAY_LABEL, ReportsNotMigrated, type WorkEvent } from './api'
 import { InvoiceDialog } from './InvoiceDialog'
+import { SqDateFormat } from '@/lib/sqDate'
 
-const timeFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })
+const timeFmt = new SqDateFormat({ timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })
 
 /** "Puna ime sot" – the signed-in worker's own work today (no prices of purchase, no others). */
 export function MyWork({ showCommission }: { showCommission: boolean }) {
@@ -47,7 +48,7 @@ export function MyWork({ showCommission }: { showCommission: boolean }) {
       </div>
 
       <Card className="mt-4 overflow-hidden">
-        <h2 className="px-5 pt-5 text-[17px] font-semibold">Faturat e mia të sotme</h2>
+        <h2 className="px-5 pt-5 text-[16px] font-semibold tracking-[-0.01em]">Faturat e mia të sotme</h2>
         {loadState(work) === 'offline' ? (
               <OfflineEmpty />
             ) : loadState(work) === 'loading' ? (
@@ -75,7 +76,7 @@ export function DocRow({ e, onOpen }: { e: WorkEvent; onOpen: () => void }) {
       : `nga ${formatInvoiceNo(e.ref_invoice_no ?? 0)}${e.reason ? ` · ${e.reason}` : ''}`
   return (
     <li>
-      <button type="button" onClick={onOpen} className="flex w-full items-center gap-4 px-5 py-3 text-left hover:bg-[#F8FAF8]">
+      <button type="button" onClick={onOpen} className="flex w-full items-center gap-4 px-5 py-3 text-left hover:bg-[#F9FAFB]">
         <span className="w-[72px] shrink-0 font-semibold">{label}</span>
         <span className="min-w-0 flex-1 truncate text-sm text-muted">
           {timeFmt.format(new Date(e.at))} · {detail}

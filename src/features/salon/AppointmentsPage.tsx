@@ -11,6 +11,7 @@ import { kosovoDateISO, kosovoParts, kosovoTime, kosovoToIso, serverNow } from '
 import { formatEUR } from '@/lib/money'
 import { fetchPosProducts } from '@/features/pos/api'
 import { addDays } from '@/features/reports/api'
+import { SqDateFormat } from '@/lib/sqDate'
 import {
   fetchAppointments,
   fetchStaff,
@@ -28,7 +29,7 @@ import {
 const START_H = 8
 const END_H = 21
 const PX_PER_MIN = 1 // 60 px per hour
-const dayFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: 'Europe/Belgrade', weekday: 'long', day: 'numeric', month: 'long' })
+const dayFmt = new SqDateFormat({ timeZone: 'Europe/Belgrade', weekday: 'long', day: 'numeric', month: 'long' })
 
 function title(date: string): string {
   const s = dayFmt.format(new Date(kosovoToIso(date, '12:00')))
@@ -86,7 +87,7 @@ export function AppointmentsPage() {
           <ChevronLeft className="h-5 w-5" />
         </Button>
         <div className="min-w-[180px]">
-          <h1 className="text-[22px] font-bold leading-tight md:text-[26px]">{title(date)}</h1>
+          <h1 className="text-[22px] font-semibold tracking-[-0.015em] leading-tight md:text-[26px]">{title(date)}</h1>
           <div className="text-sm text-muted">
             {active.length} termine · {staff.length} {staff.length === 1 ? 'punëtor' : 'punëtorë'}
           </div>
@@ -233,7 +234,7 @@ function DayGrid({
                     onOpen(a)
                   }}
                   className={cn('absolute inset-x-1.5 overflow-hidden rounded-lg border px-2 py-1 text-left text-xs', faded && 'opacity-50')}
-                  style={{ top: Math.max(top, 0), height: h, borderColor: `${color}55`, background: a.status === 'paid' ? '#F2F5F2' : `${color}14` }}
+                  style={{ top: Math.max(top, 0), height: h, borderColor: `${color}55`, background: a.status === 'paid' ? '#F3F4F6' : `${color}14` }}
                 >
                   <div className={cn('truncate font-semibold', faded && 'line-through')} style={{ color }}>
                     {kosovoTime(a.starts_at)} {a.customer_name}

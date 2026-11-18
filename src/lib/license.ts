@@ -11,7 +11,7 @@ export interface LicenseInfo {
   max_devices: number
 }
 
-export const LICENSE_EXPIRED_MESSAGE = 'Abonimi i Kasa-s ka skaduar. Shitjet e reja ndalen derisa të paguhet abonimi (pronari e sheh te Llogaria).'
+export const LICENSE_EXPIRED_MESSAGE = 'Abonimi i KontoSef-it ka skaduar. Shitjet e reja ndalen derisa të paguhet abonimi (pronari e sheh te Llogaria).'
 
 let current: LicenseInfo | null = null
 

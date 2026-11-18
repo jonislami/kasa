@@ -6,7 +6,7 @@ import { AuthProvider } from '@/app/AuthProvider'
 import { App } from './App'
 import '@/index.css'
 
-// "Kasa Kontabilist" – the accountant's own program (web + Windows). Same database as Kasa,
+// "KontoSef Kontabilist" – the accountant's own program (web + Windows). Same database as KontoSef,
 // its own entry point (kontabilist.html), build (vite.kontabilist.config.ts) and installer.
 const queryClient = new QueryClient({
   defaultOptions: {

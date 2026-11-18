@@ -76,7 +76,7 @@ export function ApprovalDialog({
           {requester} kërkon: {request?.action.toLowerCase()}
         </p>
       </div>
-      <div className="mt-4 rounded-xl bg-[#F6F8F6] px-4 py-3 text-sm">
+      <div className="mt-4 rounded-xl bg-[#F7F8FA] px-4 py-3 text-sm">
         {request?.details.map((d) => (
           <div key={d.label} className="flex justify-between gap-3 py-1">
             <span className="text-muted">{d.label}</span>
@@ -323,9 +323,9 @@ export function CashDialog({
             </button>
           ))}
         </div>
-        <div className={cn('flex items-center justify-between rounded-ctl px-4 py-3', change < 0 ? 'bg-warn-100 text-warn-700' : 'bg-[#FFF4EC]')}>
+        <div className={cn('flex items-center justify-between rounded-ctl px-4 py-3', change < 0 ? 'bg-warn-100 text-warn-700' : 'bg-[#FEF6F5]')}>
           <span>{change < 0 ? 'Mungojnë' : 'Kusuri'}</span>
-          <span className="text-[22px] font-bold tabular-nums text-warn-700">{formatEUR(Math.abs(change))}</span>
+          <span className="text-[22px] font-semibold tracking-[-0.015em] tabular-nums text-warn-700">{formatEUR(Math.abs(change))}</span>
         </div>
         <Button size="lg" disabled={change < 0} loading={busy} onClick={() => onPay(tendered)}>
           Paguaj {formatEUR(total)}
@@ -396,7 +396,7 @@ export function CameraScanner({ active, onCode, className }: { active: boolean; 
 
   if (!active) return null
   return (
-    <div className={cn('relative overflow-hidden rounded-[20px] bg-[#1B2A22]', className)}>
+    <div className={cn('relative overflow-hidden rounded-card bg-brand-950', className)}>
       {error ? (
         <p className="px-6 py-10 text-center text-sm text-white/80">{error}</p>
       ) : (

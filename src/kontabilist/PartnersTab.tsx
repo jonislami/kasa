@@ -51,7 +51,7 @@ export function PartnersTab({ clientId, clientName, from, to }: { clientId: stri
     <Card className="overflow-hidden">
       <div className="flex flex-col gap-3 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h2 className="text-[17px] font-semibold">Klientët dhe furnitorët</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Klientët dhe furnitorët</h2>
           <p className="text-sm text-muted">
             Na detyrohen {formatEUR(sum.r)} · I detyrohemi {formatEUR(sum.p)}
             {sum.o > 0 && <span className="text-warn-700"> · me vonesë {formatEUR(sum.o)}</span>}
@@ -78,7 +78,7 @@ export function PartnersTab({ clientId, clientName, from, to }: { clientId: stri
         <EmptyState icon={<Users className="h-6 w-6" />} title={partners.data.length ? 'Asnjë partner me këtë kërkim' : 'Asnjë partner ende'} text="Shto blerësit dhe furnitorët e këtij biznesi; zgjidhen te faturat dhe ruhen me historikun e tyre." />
       ) : (
         <Table>
-          <thead className="bg-[#F8FAF8]">
+          <thead className="bg-[#F9FAFB]">
             <tr>
               <Th className="pl-5">Partneri</Th>
               <Th className="hidden md:table-cell">NUI / TVSH</Th>
@@ -307,7 +307,7 @@ function StatementDialog({ partner, clientName, from, to, onClose }: { partner: 
         createPortal(
           <div className="print-root print-a4 hidden bg-white p-2 text-[12px] text-black">
             <div className="mb-1 text-[11px]">{clientName}</div>
-            <h1 className="text-[18px] font-bold">Kartela e partnerit – {partner?.name}</h1>
+            <h1 className="text-[18px] font-semibold tracking-[-0.015em]">Kartela e partnerit – {partner?.name}</h1>
             <div className="mb-3">
               {formatDay(range.from)} – {formatDay(range.to)}
               {partner?.nui && ` · NUI ${partner.nui}`}

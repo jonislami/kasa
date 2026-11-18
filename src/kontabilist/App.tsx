@@ -48,9 +48,9 @@ function RequireAccountant({ children }: { children: (me: AccMe) => ReactNode })
   const m = me.data!
   // A client company's account (0024): its own portal instead of the office program.
   if (!m.accountant && (m.portal_clients ?? 0) > 0) return <Navigate to="/portal" replace />
-  if (m.has_business) return <Blocked title="Kjo është llogari biznesi" text="Ky program është për kontabilistët. Bizneset hyjnë në aplikacionin Kasa." />
-  if (!m.accountant) return <Blocked title="Llogaria nuk është kontabilist" text="Llogarinë e kontabilistit e krijon administratori i Kasa-s." />
-  if (!m.accountant.active) return <Blocked title="Llogaria është çaktivizuar" text="Kontakto administratorin e Kasa-s." />
+  if (m.has_business) return <Blocked title="Kjo është llogari biznesi" text="Ky program është për kontabilistët. Bizneset hyjnë në aplikacionin KontoSef." />
+  if (!m.accountant) return <Blocked title="Llogaria nuk është kontabilist" text="Llogarinë e kontabilistit e krijon administratori i KontoSef-it." />
+  if (!m.accountant.active) return <Blocked title="Llogaria është çaktivizuar" text="Kontakto administratorin e KontoSef-it." />
   return <>{children(m)}</>
 }
 
@@ -69,7 +69,7 @@ function Lazy({ children }: { children: ReactNode }) {
   return <Suspense fallback={<FullScreenLoader />}>{children}</Suspense>
 }
 
-/** Layout of the program: dark sidebar on desktop, tab bar on phones (same as Kasa). */
+/** Layout of the program: dark sidebar on desktop, tab bar on phones (same as KontoSef). */
 export function AccShell({ me, extra = [], children }: { me: AccMe; extra?: NavItem[]; children: ReactNode }) {
   const nav: NavItem[] = [{ to: '/', label: 'Klientët', icon: Building2, end: true }, ...extra]
   return (
@@ -78,8 +78,8 @@ export function AccShell({ me, extra = [], children }: { me: AccMe; extra?: NavI
         <div className="flex items-center gap-3">
           <LogoMark size={36} />
           <div className="min-w-0">
-            <div className="truncate text-[16px] font-bold leading-tight">{me.accountant?.office_name || 'Kasa'}</div>
-            <div className="text-xs font-semibold text-brand-400">Kontabilist</div>
+            <div className="truncate text-[14px] font-semibold leading-tight tracking-[-0.015em] text-ink">{me.accountant?.office_name || "KontoSef.app"}</div>
+            <div className="text-[12px] text-muted">Kontabilist</div>
           </div>
         </div>
       }

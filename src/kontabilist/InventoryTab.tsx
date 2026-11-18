@@ -47,14 +47,14 @@ const STATUS: Record<StockStatus, { label: string; tone: 'success' | 'amber' | '
   negative: { label: 'Negativ', tone: 'warn' },
 }
 
-/** Inventari: for clients that keep stock without the Kasa till. */
+/** Inventari: for clients that keep stock without the KontoSef till. */
 export function InventoryTab({ client, kasaLinked }: { client: Client; kasaLinked: boolean }) {
   const [view, setView] = useState<View>('artikujt')
   return (
     <div className="flex flex-col gap-4 md:gap-5">
       {kasaLinked && (
         <p className="rounded-ctl bg-amber-100 px-4 py-3 text-sm text-amber-700">
-          Ky klient përdor arkën Kasa: stoku i vërtetë del te “Stoku” (nga arka). Inventarin këtu përdore vetëm për depo që nuk janë në Kasa.
+          Ky klient përdor arkën KontoSef: stoku i vërtetë del te “Stoku” (nga arka). Inventarin këtu përdore vetëm për depo që nuk janë në KontoSef.
         </p>
       )}
       <div className="flex flex-wrap gap-2">
@@ -123,15 +123,15 @@ function ItemsView({ client }: { client: Client }) {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Card className="p-4">
           <div className="text-sm text-muted">Artikuj aktivë</div>
-          <div className="mt-1 text-[20px] font-bold tabular-nums">{all.filter((i) => i.active).length}</div>
+          <div className="mt-1 text-[20px] font-semibold tracking-[-0.015em] tabular-nums">{all.filter((i) => i.active).length}</div>
         </Card>
         <Card className="p-4">
           <div className="text-sm text-muted">Vlera e stokut (kosto mesatare)</div>
-          <div className="mt-1 text-[20px] font-bold tabular-nums">{formatEUR(value)}</div>
+          <div className="mt-1 text-[20px] font-semibold tracking-[-0.015em] tabular-nums">{formatEUR(value)}</div>
         </Card>
         <Card className="p-4">
           <div className="text-sm text-muted">Stok i ulët</div>
-          <div className={cn('mt-1 text-[20px] font-bold tabular-nums', low > 0 && 'text-amber-700')}>{low}</div>
+          <div className={cn('mt-1 text-[20px] font-semibold tracking-[-0.015em] tabular-nums', low > 0 && 'text-amber-700')}>{low}</div>
         </Card>
         <Card className="p-4">
           <div className="flex items-center justify-between text-sm text-muted">
@@ -140,7 +140,7 @@ function ItemsView({ client }: { client: Client }) {
               Menaxho
             </button>
           </div>
-          <div className="mt-1 text-[20px] font-bold tabular-nums">{whs.data?.filter((w) => w.active).length ?? '…'}</div>
+          <div className="mt-1 text-[20px] font-semibold tracking-[-0.015em] tabular-nums">{whs.data?.filter((w) => w.active).length ?? '…'}</div>
         </Card>
       </div>
       <Card className="overflow-hidden">
@@ -208,7 +208,7 @@ function ItemsView({ client }: { client: Client }) {
                   </div>
                 </button>
                 <div className="text-right">
-                  <div className={cn('text-[17px] font-bold tabular-nums', stockOf(i) < 0 && 'text-warn-700')}>
+                  <div className={cn('text-[17px] font-semibold tracking-[-0.015em] tabular-nums', stockOf(i) < 0 && 'text-warn-700')}>
                     {qtyFmt(stockOf(i))} <span className="text-sm font-normal text-muted">{i.unit}</span>
                   </div>
                   <div className="text-xs text-muted tabular-nums">{formatEUR(stockOf(i) * i.avg_cost)}</div>
@@ -703,7 +703,7 @@ function DocStockDialog({ client, doc, onClose }: { client: Client; doc: StockDo
             </div>
           ))}
           {posted.length > 0 && (
-            <div className="rounded-card bg-[#F4F6F3] p-3 text-sm">
+            <div className="rounded-card bg-[#F7F8FA] p-3 text-sm">
               <div className="mb-1 font-semibold">Tashmë në stok</div>
               {posted.map((l) => (
                 <div key={l.id} className="flex justify-between gap-2 text-muted">
@@ -754,7 +754,7 @@ function TransferView({ client }: { client: Client }) {
   const stockIn = (itemId: string, whId: string) => (items.data ?? []).find((i) => i.id === itemId)?.by_wh[whId] ?? 0
   return (
     <Card className="p-5">
-      <h2 className="text-[17px] font-semibold">Transfer mes depove</h2>
+      <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Transfer mes depove</h2>
       <div className="mt-3 grid gap-3 sm:grid-cols-4">
         <Select label="Nga" value={f.from} onChange={(e) => setF({ ...f, from: e.target.value })} options={active.map((w) => ({ value: w.id, label: w.name }))} />
         <Select label="Te" value={f.to} onChange={(e) => setF({ ...f, to: e.target.value })} options={active.map((w) => ({ value: w.id, label: w.name }))} />
@@ -815,7 +815,7 @@ function StocktakeView({ client }: { client: Client }) {
   return (
     <>
       <Card className="p-5">
-        <h2 className="text-[17px] font-semibold">Inventarizim i ri</h2>
+        <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Inventarizim i ri</h2>
         <p className="text-sm text-muted">Merr gjendjen e programit për çdo artikull aktiv; ti shkruan sasinë e numëruar. Diferencat regjistrohen si korrigjime kur e poston.</p>
         <div className="mt-3 flex flex-wrap items-end gap-3">
           {(whs.data?.length ?? 0) > 1 && <Select label="Depoja" value={wh} onChange={(e) => setWh(e.target.value)} options={[{ value: '', label: 'Depoja kryesore' }, ...(whs.data ?? []).filter((w) => w.active).map((w) => ({ value: w.id, label: w.name }))]} />}
@@ -914,7 +914,7 @@ function StocktakeDialog({ id, client, onClose }: { id: string | null; client: C
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Kërko ose skano barkodin…" className="mb-3 h-10 w-full rounded-ctl border border-field px-3 focus:border-brand-600 focus:outline-none" />
           <div className="max-h-[55vh] overflow-auto rounded-card border border-line">
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-[#F6F9F7] text-left text-muted">
+              <thead className="sticky top-0 bg-[#F6F8FB] text-left text-muted">
                 <tr>
                   <th className="px-3 py-2 font-medium">Artikulli</th>
                   <th className="px-2 py-2 text-right font-medium">Në program</th>

@@ -118,7 +118,7 @@ export function InventoryTab({ products, categories, people }: { products: Produ
 
       {!draft ? (
         <Card className="p-5">
-          <h2 className="text-[17px] font-semibold">Inventarizim i ri</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Inventarizim i ri</h2>
           <p className="mt-1 text-sm text-muted">
             Numëro mallin në raft dhe shkruaj sasinë. Dallimet regjistrohen si lëvizje "Inventarizim". Puna ruhet në këtë pajisje derisa ta konfirmosh.
           </p>
@@ -145,7 +145,7 @@ export function InventoryTab({ products, categories, people }: { products: Produ
         <Card className="overflow-hidden">
           <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-5">
             <div>
-              <h2 className="text-[17px] font-semibold">Inventarizimi: {draft.title}</h2>
+              <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Inventarizimi: {draft.title}</h2>
               <p className="text-sm text-muted">
                 {filled.length} nga {lines.length} të numëruara · {diffs.length} dallime
               </p>
@@ -168,7 +168,7 @@ export function InventoryTab({ products, categories, people }: { products: Produ
             <p className="px-5 py-10 text-center text-muted">Skano produktet një nga një; çdo skanim shton 1.</p>
           ) : (
             <Table>
-              <thead className="bg-[#F8FAF8]">
+              <thead className="bg-[#F9FAFB]">
                 <tr>
                   <Th className="pl-5">Produkti</Th>
                   <Th className="text-right">Në sistem</Th>
@@ -241,12 +241,12 @@ export function InventoryTab({ products, categories, people }: { products: Produ
       )}
 
       <Card className="overflow-hidden">
-        <h2 className="px-5 pt-5 text-[17px] font-semibold">Inventarizimet e mëparshme</h2>
+        <h2 className="px-5 pt-5 text-[16px] font-semibold tracking-[-0.01em]">Inventarizimet e mëparshme</h2>
         {(counts.data ?? []).length === 0 ? (
           <EmptyState title="Ende pa inventarizime" />
         ) : (
           <Table className="mt-3">
-            <thead className="bg-[#F8FAF8]">
+            <thead className="bg-[#F9FAFB]">
               <tr>
                 <Th className="pl-5">Nr.</Th>
                 <Th>Data</Th>
@@ -258,7 +258,7 @@ export function InventoryTab({ products, categories, people }: { products: Produ
             </thead>
             <tbody>
               {(counts.data ?? []).map((c) => (
-                <tr key={c.id} onClick={() => setOpenCount(c)} className="cursor-pointer hover:bg-[#F8FAF8]">
+                <tr key={c.id} onClick={() => setOpenCount(c)} className="cursor-pointer hover:bg-[#F9FAFB]">
                   <Td className="pl-5 font-semibold">#{c.count_no}</Td>
                   <Td className="text-muted">{formatDateTime(c.created_at)}</Td>
                   <Td>{c.title ?? '—'}</Td>

@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { unitLabel } from '@/lib/units'
 import { fetchCategories, fetchProducts } from '@/features/products/api'
 import { addDays, today } from '@/features/reports/api'
+import { formatSq } from '@/lib/sqDate'
 
 async function fetchPaged<T>(build: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>, max = 50000): Promise<T[]> {
   const out: T[] = []
@@ -60,7 +61,7 @@ export function BackupSection() {
           sheet: 'Faturat',
           data: [
             ['Nr.', 'Lloji', 'Data', 'Ora', 'Totali', 'Pa TVSH', 'TVSH', 'Pagesa', 'Kesh', 'Kartelë', 'Offline'].map(b),
-            ...sales.map((x) => [n(x.invoice_no), s(x.kind), s(x.sale_date), s(new Date(String(x.created_at)).toLocaleTimeString('sq-AL')), n(x.total), n(x.net_total), n(x.vat_total), s(x.payment_method), n(x.cash_amount), n(x.card_amount), s(x.offline ? 'po' : '')]),
+            ...sales.map((x) => [n(x.invoice_no), s(x.kind), s(x.sale_date), s(formatSq(String(x.created_at), { hour: '2-digit', minute: '2-digit', second: '2-digit' })), n(x.total), n(x.net_total), n(x.vat_total), s(x.payment_method), n(x.cash_amount), n(x.card_amount), s(x.offline ? 'po' : '')]),
           ],
         },
         {
@@ -93,7 +94,7 @@ export function BackupSection() {
 
   return (
     <Card className="p-5">
-      <h2 className="text-[17px] font-semibold">Kopje rezervë (Backup)</h2>
+      <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Kopje rezervë (Backup)</h2>
       <p className="mt-1 text-sm text-muted">
         Të dhënat ruhen në server automatikisht. Këtu shkarkon një kopje në Excel: produktet me çmimet, furnitorët, faturat dhe rreshtat e 12 muajve të fundit, lëvizjet e stokut.
       </p>

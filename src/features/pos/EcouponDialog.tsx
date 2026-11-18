@@ -29,7 +29,7 @@ export function EcouponButton({ saleId, disabled }: { saleId: string; disabled?:
   return (
     <>
       <Button variant="secondary" size="lg" disabled={disabled} onClick={() => setOpen(true)} title="Dërgo kuponin fiskal me email (me pëlqimin e blerësit)">
-        <Mail className="h-4 w-4" /> e-kupon
+        <Mail className="h-4 w-4 shrink-0" /> <span className="whitespace-nowrap">e-kupon</span>
       </Button>
       <EcouponDialog saleId={open ? saleId : null} onClose={() => setOpen(false)} />
     </>

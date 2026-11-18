@@ -129,7 +129,7 @@ export function LotsTab({ products, lots, loading }: { products: Product[]; lots
       ) : (
         <ul className="mt-4 divide-y divide-line border-t border-line">
           {rows.map(({ l, p, st }) => (
-            <li key={l.id} className={cn('flex flex-wrap items-center gap-3 px-5 py-3', st === 'expired' && 'bg-[#FFF7F2]')}>
+            <li key={l.id} className={cn('flex flex-wrap items-center gap-3 px-5 py-3', st === 'expired' && 'bg-[#FEF8F7]')}>
               <div className="min-w-0 flex-1">
                 <div className="truncate font-semibold">{p!.name}</div>
                 <div className="text-sm text-muted">
@@ -245,8 +245,8 @@ export function ExpiryCard({ lots, onOpen }: { lots: Lot[]; onOpen: () => void }
     )
   }
   return (
-    <button type="button" onClick={onOpen} className={cn('rounded-card border p-5 text-left', expired ? 'border-[#F3C9AE] bg-[#FFF4EC]' : 'border-amber-700/20 bg-amber-100')}>
-      <div className={cn('flex items-center gap-2 text-[17px] font-semibold', expired ? 'text-warn-700' : 'text-amber-700')}>
+    <button type="button" onClick={onOpen} className={cn('rounded-card border p-5 text-left', expired ? 'border-[#F3C4BE] bg-[#FEF6F5]' : 'border-amber-700/20 bg-amber-100')}>
+      <div className={cn('flex items-center gap-2 text-[16px] font-semibold tracking-[-0.01em]', expired ? 'text-warn-700' : 'text-amber-700')}>
         <CalendarClock className="h-5 w-5" /> Afatet e skadimit
       </div>
       <ul className="mt-2 text-[15px]">

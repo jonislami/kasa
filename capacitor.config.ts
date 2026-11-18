@@ -4,9 +4,9 @@ import type { CapacitorConfig } from '@capacitor/cli'
 // Bluetooth printing through @capacitor-community/bluetooth-le.
 const config: CapacitorConfig = {
   appId: 'app.kasa.pos',
-  appName: 'Kasa',
+  appName: 'KontoSef',
   webDir: 'dist',
-  backgroundColor: '#10241B',
+  backgroundColor: '#0F1B2D',
   android: {
     allowMixedContent: false,
   },

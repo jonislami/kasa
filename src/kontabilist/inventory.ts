@@ -1,4 +1,4 @@
-// Inventory for clients without the Kasa till (0026): items, warehouses, moves, stock from invoices, transfers, stocktaking.
+// Inventory for clients without the KontoSef till (0026): items, warehouses, moves, stock from invoices, transfers, stocktaking.
 import { supabase } from '@/lib/supabase'
 import { AccountingNotMigrated } from '@/features/accounting/api'
 import type { VatCode } from '@/lib/vat'

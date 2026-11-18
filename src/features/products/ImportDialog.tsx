@@ -139,7 +139,7 @@ export function ImportDialog({
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
-              className="flex flex-1 items-center gap-3 rounded-xl border-2 border-dashed border-field px-4 py-5 text-left hover:border-brand-600 hover:bg-[#F0F7F3]"
+              className="flex flex-1 items-center gap-3 rounded-xl border-2 border-dashed border-field px-4 py-5 text-left hover:border-brand-600 hover:bg-[#F2F6FC]"
             >
               <Upload className="h-6 w-6 shrink-0 text-brand-600" />
               <div className="min-w-0">
@@ -179,7 +179,7 @@ export function ImportDialog({
                 )}
               </div>
               {parsed.errors.length > 0 && (
-                <ul className="max-h-36 overflow-y-auto rounded-ctl border border-[#F3C9AE] bg-[#FFF8F3] px-4 py-2 text-sm text-warn-700">
+                <ul className="max-h-36 overflow-y-auto rounded-ctl border border-[#F3C4BE] bg-[#FEF8F7] px-4 py-2 text-sm text-warn-700">
                   {parsed.errors.slice(0, 100).map((e, i) => (
                     <li key={i} className="py-0.5">
                       Rreshti {e.line}: {e.message}
@@ -190,7 +190,7 @@ export function ImportDialog({
               {parsed.rows.length > 0 && (
                 <div className="overflow-x-auto rounded-ctl border border-line">
                   <table className="w-full text-sm">
-                    <thead className="bg-[#F8FAF8] text-left text-muted">
+                    <thead className="bg-[#F9FAFB] text-left text-muted">
                       <tr>
                         <th className="px-3 py-2 font-semibold">Emri</th>
                         <th className="px-3 py-2 font-semibold">Barkodi</th>

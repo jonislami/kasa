@@ -91,7 +91,7 @@ export function ScanTab({ client }: { client: Client }) {
           ))}
         </div>
         <div
-          className="flex flex-col items-center gap-3 rounded-card border-2 border-dashed border-field bg-[#F8FAF8] px-4 py-8 text-center"
+          className="flex flex-col items-center gap-3 rounded-card border-2 border-dashed border-field bg-[#F9FAFB] px-4 py-8 text-center"
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => {
             e.preventDefault()
@@ -102,7 +102,7 @@ export function ScanTab({ client }: { client: Client }) {
             <Sparkles className="h-6 w-6" />
           </div>
           <div>
-            <div className="text-[17px] font-semibold">{kindInfo.button}</div>
+            <div className="text-[16px] font-semibold tracking-[-0.01em]">{kindInfo.button}</div>
             <p className="mt-1 max-w-[560px] text-sm text-muted">
               {kindInfo.hint} Foto nga telefoni, skaner ose PDF – edhe disa njëherësh. AI lexon {kind === 'sale' ? 'blerësin' : 'furnitorin'}, NUI-në / numrin fiskal, numrin, datën, artikujt me sasi dhe çmime, bazën dhe TVSH-në sipas normave, totalin dhe kategorinë e ATK-së; ti i kontrollon pranë origjinalit dhe i konfirmon.
             </p>
@@ -139,7 +139,7 @@ export function ScanTab({ client }: { client: Client }) {
 
       <Card className="overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
-          <h2 className="text-[17px] font-semibold">Dokumentet e skanuara</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Dokumentet e skanuara</h2>
           <div className="flex flex-wrap gap-2">
             <select value={kindFilter} onChange={(e) => setKindFilter(e.target.value as ScanKind | 'all')} className="h-9 rounded-full border border-line bg-white px-3 text-sm font-semibold text-muted">
               <option value="all">Të gjitha llojet</option>
@@ -432,7 +432,7 @@ function ScanReview({ client, scan, onClose, onDone, onReread }: { client: Clien
       footer={
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="text-[15px]">
-            Totali <span className="text-[22px] font-bold tabular-nums">{formatEUR(f.doc_type === 'credit_note' ? -total : total)}</span>
+            Totali <span className="text-[22px] font-semibold tracking-[-0.015em] tabular-nums">{formatEUR(f.doc_type === 'credit_note' ? -total : total)}</span>
             {off && <span className="ml-2 text-sm text-warn-700">në faturë: {formatEUR(x.total)}</span>}
           </div>
           <div className="flex gap-2">
@@ -469,7 +469,7 @@ function ScanReview({ client, scan, onClose, onDone, onReread }: { client: Clien
               )}
             </div>
           </div>
-          <div className="flex h-[60vh] items-center justify-center overflow-auto rounded-card border border-line bg-[#F1F4F2] lg:h-[70vh]">
+          <div className="flex h-[60vh] items-center justify-center overflow-auto rounded-card border border-line bg-[#F2F4F7] lg:h-[70vh]">
             {url === null ? (
               <Loader2 className="h-6 w-6 animate-spin text-muted" />
             ) : url === '' ? (
@@ -616,7 +616,7 @@ function ScanReview({ client, scan, onClose, onDone, onReread }: { client: Clien
             <details className="rounded-card border border-line">
               <summary className="cursor-pointer px-4 py-3 text-sm font-semibold">Artikujt e lexuar ({x.lines.length})</summary>
               <table className="w-full text-sm">
-                <thead className="bg-[#F6F9F7] text-left text-muted">
+                <thead className="bg-[#F6F8FB] text-left text-muted">
                   <tr>
                     <th className="px-4 py-2 font-medium">Artikulli</th>
                     <th className="px-2 py-2 text-right font-medium">Sasia</th>

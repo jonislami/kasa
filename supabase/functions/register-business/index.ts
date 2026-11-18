@@ -29,7 +29,7 @@ async function sendEmail(to: string[], subject: string, text: string, html: stri
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: `Kasa <${from}>`, to, subject, text, html }),
+      body: JSON.stringify({ from: `KontoSef <${from}>`, to, subject, text, html }),
     })
   } catch {
     /* the registration does not depend on the e-mail */
@@ -38,8 +38,8 @@ async function sendEmail(to: string[], subject: string, text: string, html: stri
 
 const box = (title: string, body: string) => `<!doctype html><html><body style="margin:0;background:#F4F6F3;font-family:Inter,Segoe UI,Arial,sans-serif;color:#14201A">
 <table width="100%" cellpadding="0" cellspacing="0" style="padding:24px 12px"><tr><td align="center">
-<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border:1px solid #E2E7E3;border-radius:14px;overflow:hidden">
-<tr><td style="background:#10241B;color:#fff;padding:18px 24px;font-size:17px;font-weight:700">Kasa</td></tr>
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border:1px solid #E6E8EC;border-radius:14px;overflow:hidden">
+<tr><td style="background:#0F1B2D;color:#fff;padding:18px 24px;font-size:17px;font-weight:700">KontoSef.app</td></tr>
 <tr><td style="padding:24px"><h1 style="margin:0 0 14px;font-size:20px">${esc(title)}</h1>${body}</td></tr></table></td></tr></table></body></html>`
 
 Deno.serve(async (req) => {
@@ -148,9 +148,9 @@ Deno.serve(async (req) => {
   const appUrl = (Deno.env.get('KASA_APP_URL') ?? req.headers.get('origin') ?? 'https://kasa-two-psi.vercel.app').replace(/\/$/, '')
   await sendEmail(
     [email],
-    'Regjistrimi në Kasa u pranua',
+    'Regjistrimi në KontoSef u pranua',
     `Përshëndetje ${ownerName},\n\nRegjistrimi i ${businessName} u pranua dhe është në shqyrtim. Pas aprovimit, te llogaria juaj ju dalin shkarkimi dhe çelësat e arkave. Statusin e ndiqni duke hyrë në ${appUrl}/login.`,
-    box('Regjistrimi u pranua', `<p>Përshëndetje ${esc(ownerName)},</p><p>regjistrimi i <b>${esc(businessName)}</b> (${esc(TYPE_LABELS[type])}) u pranua dhe është në shqyrtim. Pasi të aprovohet, te llogaria juaj ju dalin shkarkimi i Kasa-s dhe çelësi për çdo arkë.</p><p><a href="${esc(appUrl)}/login" style="color:#0E6B4E;font-weight:600">Shiko statusin</a></p>`),
+    box('Regjistrimi u pranua', `<p>Përshëndetje ${esc(ownerName)},</p><p>regjistrimi i <b>${esc(businessName)}</b> (${esc(TYPE_LABELS[type])}) u pranua dhe është në shqyrtim. Pasi të aprovohet, te llogaria juaj ju dalin shkarkimi i KontoSef-it dhe çelësi për çdo arkë.</p><p><a href="${esc(appUrl)}/login" style="color:#0E6B4E;font-weight:600">Shiko statusin</a></p>`),
   )
   const { data: admins } = await admin.from('platform_admins').select('user_id')
   const adminEmails: string[] = []
@@ -162,7 +162,7 @@ Deno.serve(async (req) => {
     adminEmails,
     `Regjistrim i ri: ${businessName}`,
     `${businessName} (${TYPE_LABELS[type]}), NUI ${nui}, ${city}. Pronari: ${ownerName}, ${phone}, ${email}.`,
-    box('Regjistrim i ri në Kasa', `<p><b>${esc(businessName)}</b> – ${esc(TYPE_LABELS[type])}<br>NUI ${esc(nui)} · ${esc(city)}<br>${esc(ownerName)} · ${esc(phone)} · ${esc(email)}</p><p><a href="${esc(appUrl)}/platforma" style="color:#0E6B4E;font-weight:600">Shqyrtoje te paneli</a></p>`),
+    box('Regjistrim i ri në KontoSef', `<p><b>${esc(businessName)}</b> – ${esc(TYPE_LABELS[type])}<br>NUI ${esc(nui)} · ${esc(city)}<br>${esc(ownerName)} · ${esc(phone)} · ${esc(email)}</p><p><a href="${esc(appUrl)}/platforma" style="color:#0E6B4E;font-weight:600">Shqyrtoje te paneli</a></p>`),
   )
 
   return json({ ok: true, business_id: biz.id })

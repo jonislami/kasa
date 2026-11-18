@@ -92,7 +92,7 @@ export function MovementsTab({ products, people }: { products: Product[]; people
         <EmptyState icon={<History className="h-6 w-6" />} title="Asnjë lëvizje në këtë periudhë" />
       ) : (
         <Table>
-          <thead className="bg-[#F8FAF8]">
+          <thead className="bg-[#F9FAFB]">
             <tr>
               <Th className="pl-5">Koha</Th>
               <Th>Produkti</Th>

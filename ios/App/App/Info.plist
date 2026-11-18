@@ -7,11 +7,11 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>Kasa përdor Bluetooth-in për të printuar faturat në printerin termik.</string>
+	<string>KontoSef përdor Bluetooth-in për të printuar faturat në printerin termik.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Kasa përdor kamerën për të skanuar barkodet e produkteve.</string>
+	<string>KontoSef përdor kamerën për të skanuar barkodet e produkteve.</string>
 	<key>CFBundleDisplayName</key>
-        <string>Kasa</string>
+        <string>KontoSef</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

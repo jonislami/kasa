@@ -33,38 +33,38 @@ export function LoginPage() {
   return (
     <div className="flex min-h-dvh flex-col md:flex-row">
       <SafeAreaStrip />
-      <section className="flex flex-col bg-brand-900 px-6 pb-8 pt-[calc(env(safe-area-inset-top)+24px)] text-white md:w-[46.5%] md:px-12 md:py-12">
+      <section className="flex flex-col bg-brand-900 px-6 pb-8 pt-[calc(env(safe-area-inset-top)+24px)] text-white md:w-[44%] md:max-w-[620px] md:px-12 md:py-11">
         <div className="flex items-center gap-3">
-          <LogoMark size={44} />
+          <LogoMark size={34} />
           <div>
-            <div className="text-xl font-bold leading-tight">Kasa</div>
-            <div className="text-sm font-semibold text-brand-400">Kontabilist</div>
+            <div className="text-[17px] font-semibold leading-tight tracking-[-0.02em]">KontoSef<span className="font-medium text-white/50">.app</span></div>
+            <div className="text-[13px] text-brand-400">Kontabilist</div>
           </div>
         </div>
         <div className="mt-8 md:my-auto">
-          <h1 className="text-[28px] font-bold leading-[1.1] tracking-tight md:text-[44px]">Librat e të gjithë klientëve në një vend.</h1>
-          <p className="mt-4 hidden max-w-md text-[17px] leading-relaxed text-white/70 md:block">
-            Libri i shitjeve dhe i blerjeve, TVSH-ja, fitimi dhe eksporti për çdo klient – edhe për bizneset që nuk përdorin Kasa.
+          <h1 className="text-[24px] font-semibold leading-[1.15] tracking-[-0.025em] md:text-[38px]">Librat e të gjithë klientëve në një vend.</h1>
+          <p className="mt-4 hidden max-w-md text-[16px] leading-relaxed text-white/60 md:block">
+            Libri i shitjeve dhe i blerjeve, TVSH-ja, fitimi dhe eksporti për çdo klient – edhe për bizneset që nuk përdorin KontoSef.
           </p>
         </div>
-        <ul className="mt-auto hidden flex-wrap gap-x-6 gap-y-2 text-sm text-white/70 md:flex">
-          {['Klientë pa kufi', 'Lidhje me arkën Kasa', 'Eksport në Excel'].map((t) => (
+        <ul className="mt-auto hidden flex-col gap-2.5 border-t border-white/10 pt-6 text-[14px] text-white/65 md:flex">
+          {['Klientë pa kufi', 'Lidhje me arkën KontoSef', 'Eksport në Excel'].map((t) => (
             <li key={t} className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-brand-400" /> {t}
+              <Check className="h-4 w-4 text-brand-400" strokeWidth={2.2} /> {t}
             </li>
           ))}
         </ul>
       </section>
 
-      <section className="flex flex-1 items-start justify-center bg-bg px-6 py-8 md:items-center md:py-12">
-        <div className="w-full max-w-[420px]">
-          <h2 className="text-[28px] font-bold tracking-tight">Mirë se erdhe</h2>
+      <section className="flex flex-1 items-start justify-center bg-white px-6 py-8 md:items-center md:py-12">
+        <div className="w-full max-w-[400px]">
+          <h2 className="text-[24px] font-semibold tracking-[-0.025em]">Mirë se erdhe</h2>
           <p className="mt-1 text-muted">Hyr me llogarinë e kontabilistit</p>
           <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-5" noValidate>
             <Input label="Email" type="email" autoComplete="username" inputMode="email" placeholder="zyra@shembull.com" value={email} onChange={(e) => setEmail(e.target.value)} />
             <Input label="Fjalëkalimi" type="password" autoComplete="current-password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
-            <label className="flex cursor-pointer items-center gap-3 text-[15px]">
-              <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="h-5 w-5 rounded accent-brand-600" />
+            <label className="flex cursor-pointer items-center gap-2.5 text-[14px] text-[#344054]">
+              <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="h-4 w-4 rounded accent-brand-600" />
               Më mbaj të kyçur në këtë pajisje
             </label>
             {error && <p className="rounded-ctl bg-warn-100 px-4 py-3 text-sm text-warn-700">{error}</p>}

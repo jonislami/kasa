@@ -103,7 +103,7 @@ export function ClientPage({ me }: { me: AccMe }) {
   const client = books.data?.client
   const linked = Boolean(books.data?.kasa && client?.kasa_business_id)
 
-  // A client linked with Kasa: open that business so its documents can be read (RLS).
+  // A client linked with KontoSef: open that business so its documents can be read (RLS).
   const kasaId = linked ? client!.kasa_business_id! : null
   const kasaOpen = Boolean(kasaId && ctx?.business?.id === kasaId && ctx.profile?.role === 'accountant')
   useEffect(() => {
@@ -153,7 +153,7 @@ export function ClientPage({ me }: { me: AccMe }) {
       const sheets: Sheet[] = [salesDailySheet(s), docsSheet(s, 'sale', sales), docsSheet(s, 'purchase', purchases), vatSheet(s), profitSheet(s)]
       if (kasaOpen && books.data?.kasa) {
         const [kasaPurchases, stock] = await Promise.all([fetchPurchases(kasaId!, range.from, range.to), fetchStockList(kasaId!)])
-        sheets.splice(3, 0, { ...purchasesSheet(books.data.kasa, kasaPurchases), name: 'Hyrjet e mallit (Kasa)' })
+        sheets.splice(3, 0, { ...purchasesSheet(books.data.kasa, kasaPurchases), name: 'Hyrjet e mallit (KontoSef)' })
         sheets.push(stockSheet(books.data.kasa, stock))
       }
       await downloadWorkbook(`${client.name.replace(/[^\p{L}\p{N}]+/gu, '-').toLowerCase()}-${range.from}-${range.to}.xlsx`, sheets)
@@ -213,7 +213,7 @@ export function ClientPage({ me }: { me: AccMe }) {
                   <StatCard label="Baza (pa TVSH)" value={formatEUR(s.sales.net)} />
                   <StatCard label="TVSH e mbledhur" value={formatEUR(s.sales.vat)} />
                   {books.data?.kasa ? (
-                    <StatCard label="Nga arka Kasa" value={formatEUR(books.data.kasa.sales.gross)} sub={`${books.data.kasa.sales.docs} kuponë`} />
+                    <StatCard label="Nga arka KontoSef" value={formatEUR(books.data.kasa.sales.gross)} sub={`${books.data.kasa.sales.docs} kuponë`} />
                   ) : (
                     <StatCard label="Pa arkëtuar (sot)" value={formatEUR(books.data?.receivable ?? 0)} tone={(books.data?.receivable ?? 0) > 0 ? 'warn' : 'default'} sub="nga të gjitha periudhat" />
                   )}
@@ -221,7 +221,7 @@ export function ClientPage({ me }: { me: AccMe }) {
                 <DocumentsTab client={client} kind="sale" from={range.from} to={range.to} onChanged={refresh} />
                 {kasaOpen && books.data?.kasa && (
                   <>
-                    <h2 className="mt-2 text-[19px] font-semibold">Nga arka Kasa · {books.data.kasa.business.name}</h2>
+                    <h2 className="mt-2 text-[19px] font-semibold">Nga arka KontoSef · {books.data.kasa.business.name}</h2>
                     <SalesTab s={books.data.kasa} />
                   </>
                 )}
@@ -238,7 +238,7 @@ export function ClientPage({ me }: { me: AccMe }) {
                 <DocumentsTab client={client} kind="purchase" from={range.from} to={range.to} onChanged={refresh} />
                 {kasaOpen && books.data?.kasa && (
                   <>
-                    <h2 className="mt-2 text-[19px] font-semibold">Hyrjet e mallit në Kasa · {books.data.kasa.business.name}</h2>
+                    <h2 className="mt-2 text-[19px] font-semibold">Hyrjet e mallit në KontoSef · {books.data.kasa.business.name}</h2>
                     <PurchasesTab s={books.data.kasa} />
                   </>
                 )}
@@ -268,7 +268,7 @@ export function ClientPage({ me }: { me: AccMe }) {
             {tab.key === 'tatimet' && <TaxesTab client={client} onGo={(t) => navigate(`/klient/${id}/${t}`)} />}
             {tab.key === 'fitimi' && <ProfitTab s={s} />}
             {tab.key === 'arka' && linked && <CashTab s={s} />}
-            {tab.key === 'stoku' && linked && (kasaOpen && books.data?.kasa ? <StockTab s={books.data.kasa} /> : <p className="py-10 text-center text-muted">Duke hapur të dhënat e Kasa-s…</p>)}
+            {tab.key === 'stoku' && linked && (kasaOpen && books.data?.kasa ? <StockTab s={books.data.kasa} /> : <p className="py-10 text-center text-muted">Duke hapur të dhënat e KontoSef-it…</p>)}
             {tab.key === 'klienti' && <ClientTab client={client} kasaName={books.data?.kasa?.business.name ?? null} onChanged={refresh}  admin={(me.accountant?.role ?? 'admin') === 'admin'} />}
           </div>
         </BooksScopeProvider>
@@ -319,7 +319,7 @@ function docsSheet(s: { business: { name: string; nui: string | null }; from: st
 }
 
 // ---------------------------------------------------------------------------
-// Client data, Kasa link, archive / delete
+// Client data, KontoSef link, archive / delete
 // ---------------------------------------------------------------------------
 function ClientTab({ client, kasaName, onChanged, admin }: { client: Client; kasaName: string | null; onChanged: () => void; admin: boolean }) {
   const navigate = useNavigate()
@@ -362,7 +362,7 @@ function ClientTab({ client, kasaName, onChanged, admin }: { client: Client; kas
     <div className="grid gap-4 md:gap-5 lg:grid-cols-2 lg:items-start">
       <Card className="p-5">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-[17px] font-semibold">Të dhënat e klientit</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Të dhënat e klientit</h2>
           <Button size="sm" variant="secondary" onClick={() => setEditing(true)}>
             <Pencil className="h-4 w-4" /> Ndrysho
           </Button>
@@ -392,24 +392,24 @@ function ClientTab({ client, kasaName, onChanged, admin }: { client: Client; kas
               <Link2 className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-[17px] font-semibold">Lidhja me arkën Kasa</h2>
-              <p className="text-sm text-muted">Nëse klienti përdor Kasa, shitjet, hyrjet e mallit, arka dhe stoku dalin vetë.</p>
+              <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Lidhja me arkën KontoSef</h2>
+              <p className="text-sm text-muted">Nëse klienti përdor KontoSef, shitjet, hyrjet e mallit, arka dhe stoku dalin vetë.</p>
             </div>
           </div>
           {client.link_status === 'approved' ? (
             <div className="mt-4 flex flex-col gap-3">
               <p className="rounded-ctl bg-brand-100 px-4 py-3 text-sm text-brand-600">
-                E lidhur me <strong>{kasaName ?? 'biznesin në Kasa'}</strong>
+                E lidhur me <strong>{kasaName ?? 'biznesin në KontoSef'}</strong>
                 {client.link_responded_at && ` · miratuar më ${formatKosovoDateTime(client.link_responded_at)}`}. Vetëm lexim.
               </p>
               <Button variant="danger" className="self-start" loading={unlink.isPending} onClick={() => unlink.mutate()}>
-                <Unlink className="h-4 w-4" /> Shkëpute nga Kasa
+                <Unlink className="h-4 w-4" /> Shkëpute nga KontoSef
               </Button>
             </div>
           ) : client.link_status === 'pending' ? (
             <div className="mt-4 flex flex-col gap-3">
               <p className="rounded-ctl bg-amber-100 px-4 py-3 text-sm text-amber-700">
-                Kërkesa u dërgua{client.link_requested_at && ` më ${formatKosovoDateTime(client.link_requested_at)}`}. Pronari e miraton te Kasa → Cilësimet → Kontabilisti.
+                Kërkesa u dërgua{client.link_requested_at && ` më ${formatKosovoDateTime(client.link_requested_at)}`}. Pronari e miraton te KontoSef → Cilësimet → Kontabilisti.
               </p>
               <Button variant="secondary" className="self-start" loading={unlink.isPending} onClick={() => unlink.mutate()}>
                 Anulo kërkesën
@@ -427,7 +427,7 @@ function ClientTab({ client, kasaName, onChanged, admin }: { client: Client; kas
               {client.link_status === 'revoked' && <p className="rounded-ctl bg-warn-100 px-4 py-3 text-sm text-warn-700">Pronari e hoqi qasjen. Mund të kërkosh përsëri.</p>}
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                 <div className="flex-1">
-                  <Input label="NUI e biznesit në Kasa" inputMode="numeric" maxLength={9} value={nui} onChange={(e) => setNui(e.target.value.replace(/\D/g, ''))} error={link.error ? (link.error as Error).message : null} />
+                  <Input label="NUI e biznesit në KontoSef" inputMode="numeric" maxLength={9} value={nui} onChange={(e) => setNui(e.target.value.replace(/\D/g, ''))} error={link.error ? (link.error as Error).message : null} />
                 </div>
                 <Button type="submit" className="h-[46px]" loading={link.isPending}>
                   Kërko qasje
@@ -438,7 +438,7 @@ function ClientTab({ client, kasaName, onChanged, admin }: { client: Client; kas
         </Card>
 
         <Card className="p-5">
-          <h2 className="text-[17px] font-semibold">Klienti</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Klienti</h2>
           <p className="mt-1 text-sm text-muted">
             {client.active ? 'Arkivo klientin kur nuk punon më me të – të dhënat ruhen dhe mund ta rikthesh.' : 'Klienti është i arkivuar dhe nuk del te lista kryesore.'}
           </p>
@@ -481,7 +481,7 @@ function ClientTab({ client, kasaName, onChanged, admin }: { client: Client; kas
         }
       >
         <p className="text-[15px]">
-          Fshihen klienti dhe <strong>të gjitha faturat që ke regjistruar</strong> për të. Kjo nuk kthehet. Të dhënat në arkën Kasa të biznesit nuk preken. Nëse vetëm nuk punon më me
+          Fshihen klienti dhe <strong>të gjitha faturat që ke regjistruar</strong> për të. Kjo nuk kthehet. Të dhënat në arkën KontoSef të biznesit nuk preken. Nëse vetëm nuk punon më me
           të, përdor "Arkivo".
         </p>
         <Button variant="secondary" className="mt-3" loading={backup.isPending} onClick={() => backup.mutate()}>

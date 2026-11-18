@@ -221,7 +221,7 @@ export function BankImportDialog({ accountId, accountName, open, onClose, onDone
             <p className="text-xs text-muted">Zgjidh ose "Shuma" me shenjë (+ hyrje, − dalje), ose "Hyrje" dhe "Dalje" në kolona të veçanta.</p>
             <div className="max-h-[320px] overflow-auto rounded-card border border-line">
               <table className="w-full text-sm">
-                <thead className="sticky top-0 bg-[#F8FAF8] text-left text-muted">
+                <thead className="sticky top-0 bg-[#F9FAFB] text-left text-muted">
                   <tr>
                     <th className="px-3 py-2">Data</th>
                     <th>Përshkrimi</th>

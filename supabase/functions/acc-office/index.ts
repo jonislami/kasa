@@ -1,10 +1,10 @@
-// Edge Function: acc-office (Kasa Kontabilist, phase K7)
+// Edge Function: acc-office (KontoSef Kontabilist, phase K7)
 // Team of an accounting office. Only an office admin (the owner or a member with role admin) may call it.
 //   { action: 'create_member', full_name, email, password, role: 'admin'|'accountant'|'assistant', phone?, all_clients?, clients?: uuid[] }
 //   { action: 'set_password', user_id, password }      – for a member of the same office (not the owner)
 //   { action: 'create_portal_user', client_id, full_name, email, password?, send_invite? }   – admin or accountant (client portal, K7)
 //       send_invite: e-mail (Resend) with a link where the client sets the password; then no password is needed here
-//       an existing account with this e-mail (e.g. the owner who uses Kasa) is linked and keeps its password
+//       an existing account with this e-mail (e.g. the owner who uses KontoSef) is linked and keeps its password
 //   { action: 'set_portal_password', portal_id, password }  – only for accounts created for the portal
 // Roles, access to clients and (de)activation are changed with the RPC acc_office_save_member (caller's JWT).
 import { createClient } from 'npm:@supabase/supabase-js@2'
@@ -35,16 +35,16 @@ async function sendInvite(to: string, officeName: string | null, officeEmail: st
   if (!key || !from) return 'Email-et nuk janë konfiguruar (RESEND_API_KEY / EMAIL_FROM në Supabase)'
   const office = officeName ?? 'Zyra e kontabilitetit'
   const text = linked
-    ? `${office} ju hapi portalin e kompanisë ${clientName}. Hyni me email-in dhe fjalëkalimin që përdorni në Kasa.`
+    ? `${office} ju hapi portalin e kompanisë ${clientName}. Hyni me email-in dhe fjalëkalimin që përdorni në KontoSef.`
     : `${office} ju hapi portalin e kompanisë ${clientName}: faturat, deklaratat, dërgimi i dokumenteve dhe mesazhet me kontabilistin. Klikoni lidhjen dhe vendosni fjalëkalimin tuaj.`
   const html = `<!doctype html><html><body style="margin:0;background:#F4F6F3;font-family:Inter,Segoe UI,Arial,sans-serif;color:#14201A">
 <table width="100%" cellpadding="0" cellspacing="0" style="padding:24px 12px"><tr><td align="center">
-<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border:1px solid #E2E7E3;border-radius:14px;overflow:hidden">
-<tr><td style="background:#10241B;color:#fff;padding:18px 24px;font-size:17px;font-weight:700">${esc(office)}</td></tr>
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border:1px solid #E6E8EC;border-radius:14px;overflow:hidden">
+<tr><td style="background:#0F1B2D;color:#fff;padding:18px 24px;font-size:17px;font-weight:700">${esc(office)}</td></tr>
 <tr><td style="padding:24px"><h1 style="margin:0 0 14px;font-size:20px">Portali i kompanisë suaj</h1><p style="margin:0 0 12px">${esc(text)}</p>
 <p style="margin:20px 0 0"><a href="${esc(link)}" style="display:inline-block;background:#0E6B4E;color:#fff;text-decoration:none;font-weight:600;padding:12px 20px;border-radius:10px">${linked ? 'Hap portalin' : 'Vendos fjalëkalimin'}</a></p>
-${linked ? '' : '<p style="margin:16px 0 0;font-size:13px;color:#56645C">Lidhja vlen një herë dhe skadon pas pak orësh. Nëse skadon, kërkojini zyrës një ftesë të re.</p>'}
-</td></tr><tr><td style="padding:16px 24px;border-top:1px solid #E2E7E3;font-size:12px;color:#56645C">Dërguar nga programi Kasa Kontabilist.</td></tr></table></td></tr></table></body></html>`
+${linked ? '' : '<p style="margin:16px 0 0;font-size:13px;color:#5F6B7A">Lidhja vlen një herë dhe skadon pas pak orësh. Nëse skadon, kërkojini zyrës një ftesë të re.</p>'}
+</td></tr><tr><td style="padding:16px 24px;border-top:1px solid #E6E8EC;font-size:12px;color:#5F6B7A">Dërguar nga programi KontoSef Kontabilist.</td></tr></table></td></tr></table></body></html>`
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
@@ -233,12 +233,12 @@ Deno.serve(async (req) => {
     if (!validPassword(body.password)) return fail('Fjalëkalimi duhet të ketë 8–72 shenja')
     const { data: pu } = await admin.from('acc_portal_users').select('id, user_id, client_id, full_name').eq('id', portalId).eq('office_id', officeId).maybeSingle()
     if (!pu || !(await clientOf(pu.client_id))) return fail('Përdoruesi nuk u gjet', 404)
-    // Only accounts made for the portal: never the password of a Kasa owner or of an accountant.
+    // Only accounts made for the portal: never the password of a KontoSef owner or of an accountant.
     const [{ data: prof }, { data: acc }] = await Promise.all([
       admin.from('profiles').select('id').eq('id', pu.user_id).maybeSingle(),
       admin.from('accountants').select('user_id').eq('user_id', pu.user_id).maybeSingle(),
     ])
-    if (prof || acc) return fail('Kjo llogari përdoret edhe në Kasa; fjalëkalimin e ndryshon vetë pronari')
+    if (prof || acc) return fail('Kjo llogari përdoret edhe në KontoSef; fjalëkalimin e ndryshon vetë pronari')
     const { error } = await admin.auth.admin.updateUserById(pu.user_id, { password: body.password as string })
     if (error) return fail('Fjalëkalimi nuk u ndryshua: ' + error.message, 500)
     await admin.from('acc_activity').insert({ office_id: officeId, client_id: pu.client_id, user_id: callerId, entity: 'acc_portal_users', entity_id: pu.id, action: 'update', label: `Portali: fjalëkalim i ri për ${pu.full_name}`.slice(0, 200) })

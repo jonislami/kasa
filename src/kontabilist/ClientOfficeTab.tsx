@@ -12,6 +12,7 @@ import { deleteNote, fetchClientContract, fetchNotes, NOTE_KINDS, saveNote, type
 import { createPortalUser, fetchOfficeMessages, fetchPortalUsers, sendOfficeMessage, setPortalPassword, setPortalUserActive, type PortalUser } from './portal/api'
 import { MessageThread } from './portal/MessageThread'
 import { notifyQuietly, sendNotify } from './notify'
+import { SqDateFormat } from '@/lib/sqDate'
 
 /** Zyra (per client): service contract and what the client owes the office, tasks, document requests, communication. */
 export function ClientOfficeTab({ client, me }: { client: Client; me: AccMe }) {
@@ -25,7 +26,7 @@ export function ClientOfficeTab({ client, me }: { client: Client; me: AccMe }) {
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="p-5">
-          <h2 className="mb-3 text-[17px] font-semibold">Mesazhet me klientin (portali)</h2>
+          <h2 className="mb-3 text-[16px] font-semibold tracking-[-0.01em]">Mesazhet me klientin (portali)</h2>
           <MessageThread
             queryKey={['acc-messages', client.id]}
             load={() => fetchOfficeMessages(client.id)}
@@ -53,7 +54,7 @@ function ContractCard({ client }: { client: Client }) {
     <Card className="p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-[17px] font-semibold">Kontrata e shërbimit</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Kontrata e shërbimit</h2>
           {data.error ? (
             <p className="text-sm text-warn-700">{(data.error as Error).message}</p>
           ) : c ? (
@@ -69,7 +70,7 @@ function ContractCard({ client }: { client: Client }) {
           {data.data && data.data.open > 0 && (
             <div className="text-right">
               <div className="text-sm text-muted">I detyrohet zyrës</div>
-              <div className="text-[18px] font-bold tabular-nums text-warn-700">{formatEUR(data.data.open)}</div>
+              <div className="text-[18px] font-semibold tracking-[-0.015em] tabular-nums text-warn-700">{formatEUR(data.data.open)}</div>
             </div>
           )}
           <Button size="sm" variant={c ? 'secondary' : 'primary'} onClick={() => setEdit(true)}>
@@ -109,7 +110,7 @@ function NotesCard({ client }: { client: Client }) {
   const del = useMutation({ mutationFn: deleteNote, onSuccess: refresh })
   return (
     <Card className="p-5">
-      <h2 className="text-[17px] font-semibold">Komunikimi me klientin</h2>
+      <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Komunikimi me klientin</h2>
       <div className="mt-3 flex flex-col gap-2 sm:flex-row">
         <div className="sm:w-[170px]">
           <Select value={kind} onChange={(e) => setKind(e.target.value as NoteKind)} options={(Object.keys(NOTE_KINDS) as NoteKind[]).map((k) => ({ value: k, label: NOTE_KINDS[k] }))} />
@@ -166,7 +167,7 @@ function PortalUsersCard({ client, canManage }: { client: Client; canManage: boo
     <Card className="p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-[17px] font-semibold">Portali i klientit</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Portali i klientit</h2>
           <p className="text-sm text-muted">Klienti hyn te {portalUrl} dhe sheh faturat, deklaratat, dërgon dokumente dhe mesazhe.</p>
         </div>
         {canManage && (
@@ -182,7 +183,7 @@ function PortalUsersCard({ client, canManage }: { client: Client; canManage: boo
               <div className="font-semibold">{u.full_name}</div>
               <div className="truncate text-xs text-muted">
                 {u.email}
-                {u.kasa_owner && ' · llogari Kasa'}
+                {u.kasa_owner && ' · llogari KontoSef'}
                 {u.last_seen_at ? ` · parë së fundi ${formatKosovoDateTime(u.last_seen_at)}` : ' · nuk ka hyrë ende'}
               </div>
             </div>
@@ -250,7 +251,7 @@ function AddPortalUserDialog({ open, client, onClose, onSaved }: { open: boolean
       {linked != null ? (
         <p className="text-[15px]">
           {linked
-            ? 'Ky email kishte tashmë llogari (p.sh. në Kasa): klienti hyn në portal me fjalëkalimin e vet.'
+            ? 'Ky email kishte tashmë llogari (p.sh. në KontoSef): klienti hyn në portal me fjalëkalimin e vet.'
             : 'U krijua llogaria. Jepja klientit email-in dhe fjalëkalimin; mund ta ndryshojë vetë pas hyrjes.'}{' '}
           Adresa: <b>{window.location.origin}/login</b>
           {result?.invited && <span className="mt-2 block font-semibold text-brand-600">Ftesa u dërgua me email te {f.email}.</span>}
@@ -271,7 +272,7 @@ function AddPortalUserDialog({ open, client, onClose, onSaved }: { open: boolean
             value={f.password}
             onChange={(e) => setF({ ...f, password: e.target.value })}
           />
-          <p className="text-xs text-muted">Nëse email-i ka tashmë llogari (pronari që përdor Kasa), lidhet ajo dhe fjalëkalimi nuk ndryshohet.</p>
+          <p className="text-xs text-muted">Nëse email-i ka tashmë llogari (pronari që përdor KontoSef), lidhet ajo dhe fjalëkalimi nuk ndryshohet.</p>
         </div>
       )}
       {save.error && <p className="mt-3 text-sm text-warn-700">{(save.error as Error).message}</p>}
@@ -325,10 +326,10 @@ function ReportEmailCard({ client }: { client: Client }) {
     <Card className="p-5">
       <div className="flex flex-wrap items-end gap-3">
         <div className="min-w-[220px] flex-1">
-          <h2 className="text-[17px] font-semibold">Raporti mujor me email</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Raporti mujor me email</h2>
           <p className="text-sm text-muted">Shitjet, blerjet, TVSH, pagat, borxhet dhe dokumentet që mungojnë – te email-i i kompanisë dhe përdoruesit e portalit.</p>
         </div>
-        <Select value={month} onChange={(e) => setMonth(e.target.value)} options={months.map((m) => ({ value: m, label: new Intl.DateTimeFormat('sq-AL', { month: 'long', year: 'numeric' }).format(new Date(m + 'T12:00:00')) }))} />
+        <Select value={month} onChange={(e) => setMonth(e.target.value)} options={months.map((m) => ({ value: m, label: new SqDateFormat({ month: 'long', year: 'numeric' }).format(new Date(m + 'T12:00:00')) }))} />
         <Button loading={send.isPending} onClick={() => (setMsg(null), send.mutate())}>
           <Mail className="h-4 w-4" /> Dërgo
         </Button>

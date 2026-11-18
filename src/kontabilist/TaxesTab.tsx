@@ -35,7 +35,7 @@ export function TaxesTab({ client, onGo }: { client: Client; onGo: (tab: string)
             <ChevronLeft className="h-4 w-4" />
           </button>
           <span className="px-3 font-semibold tabular-nums">{year}</span>
-          <button type="button" aria-label="Viti tjetër" className="flex h-10 w-10 items-center justify-center hover:bg-bg disabled:text-[#B8C2BC]" disabled={year >= Number(today.slice(0, 4))} onClick={() => setYear(year + 1)}>
+          <button type="button" aria-label="Viti tjetër" className="flex h-10 w-10 items-center justify-center hover:bg-bg disabled:text-[#B5BCC7]" disabled={year >= Number(today.slice(0, 4))} onClick={() => setYear(year + 1)}>
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
@@ -60,7 +60,7 @@ export function TaxesTab({ client, onGo }: { client: Client; onGo: (tab: string)
       <Card className="overflow-hidden">
         <div className="flex items-center gap-3 border-b border-line px-5 py-4">
           <CalendarClock className="h-5 w-5 text-brand-600" />
-          <h2 className="text-[17px] font-semibold">Afatet tatimore</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Afatet tatimore</h2>
         </div>
         {!cal.data ? (
           <p className="py-6 text-center text-muted">Duke ngarkuar…</p>
@@ -78,7 +78,7 @@ export function TaxesTab({ client, onGo }: { client: Client; onGo: (tab: string)
       <div className="grid gap-4 md:gap-5 xl:grid-cols-2">
         {/* income tax by quarter */}
         <Card className="p-5">
-          <h2 className="text-[17px] font-semibold">Tatimi në {d?.regime === 'corporate' ? 'fitim' : 'të ardhura'} – tremujorët {year}</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Tatimi në {d?.regime === 'corporate' ? 'fitim' : 'të ardhura'} – tremujorët {year}</h2>
           <p className="text-sm text-muted">{d ? REGIME_LABELS[d.regime] : ''}. Vlerësim nga faturat e regjistruara; pagesa bëhet deri më 15 të muajit pas tremujorit.</p>
           <table className="mt-3 w-full text-sm">
             <thead className="text-left text-muted">
@@ -128,7 +128,7 @@ export function TaxesTab({ client, onGo }: { client: Client; onGo: (tab: string)
 
         {/* rent tax */}
         <Card className="p-5">
-          <h2 className="text-[17px] font-semibold">Tatimi në qira (9%)</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Tatimi në qira (9%)</h2>
           <p className="text-sm text-muted">Mbahet nga qiraja që i paguhet pronarit (person fizik) dhe deklarohet deri më 15 të muajit pasues. Bazohet te faturat me kategorinë "Qiraja".</p>
           {!d?.rent.length ? (
             <p className="mt-3 text-sm text-muted">Asnjë qira e regjistruar në {year}.</p>
@@ -171,7 +171,7 @@ export function TaxesTab({ client, onGo }: { client: Client; onGo: (tab: string)
 
       {/* history */}
       <Card className="p-5">
-        <h2 className="text-[17px] font-semibold">Historiku i deklaratave</h2>
+        <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Historiku i deklaratave</h2>
         {!d?.filings.length ? (
           <p className="mt-2 text-sm text-muted">Deklaratat që shënon (qiraja, tremujorët, vjetore, pagat) dalin këtu. Deklaratat e TVSH-së janë te "Formulari i TVSH-së".</p>
         ) : (
@@ -212,8 +212,8 @@ export function DeadlineRow({ d, today, onOpen, showClient }: { d: Deadline; tod
   const period = d.kind === 'income_annual' ? d.period.slice(0, 4) : d.kind === 'income_q' ? `TM${Math.floor(Number(d.period.slice(5, 7)) / 3) + 1} ${d.period.slice(0, 4)}` : monthName(d.period)
   return (
     <li>
-      <button type="button" onClick={onOpen} className="flex w-full flex-wrap items-center gap-3 px-5 py-3 text-left hover:bg-[#F6F9F7]">
-        <span className={cn('h-2.5 w-2.5 shrink-0 rounded-full', done ? 'bg-brand-400' : left < 0 ? 'bg-[#DC2626]' : left <= 5 ? 'bg-[#F59E0B]' : 'bg-[#94A3B8]')} />
+      <button type="button" onClick={onOpen} className="flex w-full flex-wrap items-center gap-3 px-5 py-3 text-left hover:bg-[#F6F8FB]">
+        <span className={cn('h-2.5 w-2.5 shrink-0 rounded-full', done ? 'bg-[#12B76A]' : left < 0 ? 'bg-[#DC2626]' : left <= 5 ? 'bg-[#F59E0B]' : 'bg-[#94A3B8]')} />
         <span className="min-w-0 flex-1">
           <span className="block font-semibold">
             {showClient && <span className="text-muted">{d.client} · </span>}

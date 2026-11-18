@@ -83,7 +83,7 @@ export function VariantsPage() {
       </Link>
       <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[26px] font-bold leading-tight md:text-[30px]">{model.name}</h1>
+          <h1 className="text-[26px] font-semibold tracking-[-0.015em] leading-tight md:text-[30px]">{model.name}</h1>
           <p className="text-muted">
             {[catName, formatEUR(model.sale_price), `TVSH ${Math.round(VAT_RATES[model.vat_code] * 100)}%`, `${variants.length} variante`, `${total} copë në stok`].filter(Boolean).join(' · ')}
           </p>
@@ -101,13 +101,13 @@ export function VariantsPage() {
       <div className="mt-5 flex flex-col gap-5 xl:flex-row xl:items-start">
         <Card className="min-w-0 flex-1 overflow-x-auto p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-[17px] font-semibold">Stoku sipas madhësisë × ngjyrës</h2>
+            <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Stoku sipas madhësisë × ngjyrës</h2>
             <div className="flex items-center gap-4 text-xs text-muted">
               <span className="flex items-center gap-1.5">
                 <span className="h-3.5 w-3.5 rounded-full border border-[#F5D98B] bg-amber-100" /> 1 copë
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="h-3.5 w-3.5 rounded-full border border-[#F3C9AE] bg-warn-100" /> Mungon
+                <span className="h-3.5 w-3.5 rounded-full border border-[#F3C4BE] bg-warn-100" /> Mungon
               </span>
             </div>
           </div>
@@ -152,11 +152,11 @@ export function VariantsPage() {
                               onClick={() => setSelected(v.id)}
                               className={cn(
                                 'flex h-[72px] w-full flex-col items-center justify-center rounded-xl border',
-                                st <= 0 ? 'border-[#F3C9AE] bg-warn-100' : st === 1 ? 'border-[#F5D98B] bg-amber-100' : 'border-line bg-white',
+                                st <= 0 ? 'border-[#F3C4BE] bg-warn-100' : st === 1 ? 'border-[#F5D98B] bg-amber-100' : 'border-line bg-white',
                                 selected === v.id && 'ring-2 ring-brand-600 ring-offset-1',
                               )}
                             >
-                              <span className={cn('text-[22px] font-bold tabular-nums', st <= 0 && 'text-warn-700')}>{st}</span>
+                              <span className={cn('text-[22px] font-semibold tracking-[-0.015em] tabular-nums', st <= 0 && 'text-warn-700')}>{st}</span>
                               <span className="font-mono text-[10px] text-muted">…{(v.barcode ?? '').slice(-4)}</span>
                             </button>
                           </td>
@@ -236,9 +236,9 @@ function LabelsPanel({
 
   return (
     <Card className="p-5 xl:sticky xl:top-6 xl:w-[340px] xl:shrink-0">
-      <h2 className="text-[17px] font-semibold">Printo etiketa</h2>
+      <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Printo etiketa</h2>
       {preview?.barcode ? (
-        <div className="mt-4 flex justify-center rounded-card bg-[#E9EDEA] p-4">
+        <div className="mt-4 flex justify-center rounded-card bg-[#E8EBEF] p-4">
           <div className="rounded border border-line shadow-sm">
             <Label d={toLabel(preview)} size={size} />
           </div>

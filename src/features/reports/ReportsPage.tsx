@@ -10,7 +10,7 @@ import { cn } from '@/lib/cn'
 import { formatEUR, formatInvoiceNo } from '@/lib/money'
 import { formatQty, unitLabel } from '@/lib/units'
 import { VAT_LABELS, VAT_RATES, type VatCode } from '@/lib/vat'
-import { fetchPeople } from '@/features/stock/api'
+import { fetchPeople, peopleMap } from '@/features/stock/api'
 import {
   dayLabel,
   fetchInvoices,
@@ -27,8 +27,9 @@ import {
 } from './api'
 import { BarChart, BarLabels, Delta } from './charts'
 import { InvoiceDialog } from './InvoiceDialog'
+import { SqDateFormat } from '@/lib/sqDate'
 
-const dtFmt = new Intl.DateTimeFormat('sq-AL', { timeZone: KOSOVO_TZ, day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+const dtFmt = new SqDateFormat({ timeZone: KOSOVO_TZ, day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 const PERIOD_LABEL: Record<PeriodKey, string> = { today: 'nga dje', yesterday: 'nga pardje', '7': 'nga java e kaluar', month: 'nga periudha e kaluar', custom: 'nga periudha e kaluar' }
 
 export function ReportsPage() {
@@ -73,7 +74,7 @@ export function ReportsPage() {
           { value: s.invoice_no, type: Number },
           str(s.kind === 'sale' ? 'Shitje' : s.kind === 'void' ? 'Anulim' : 'Kthim'),
           str(dtFmt.format(new Date(s.created_at))),
-          str(people.data?.get(s.worker_id) ?? ''),
+          str(peopleMap(people.data).get(s.worker_id) ?? ''),
           str(PAY_LABEL[s.payment_method]),
           num(s.total),
         ]),
@@ -139,7 +140,7 @@ export function ReportsPage() {
             ) : loadState(report) === 'loading' ? (
         <p className="py-16 text-center text-muted">Duke ngarkuar…</p>
       ) : r ? (
-        <ReportBody r={r} invoices={invoices.data ?? []} people={people.data ?? new Map()} />
+        <ReportBody r={r} invoices={invoices.data ?? []} people={peopleMap(people.data)} />
       ) : (
         <p className="px-8 py-10 text-warn-700">{(report.error as Error)?.message}</p>
       )}
@@ -189,7 +190,7 @@ function ReportBody({ r, invoices, people }: { r: ReportSummary; invoices: Invoi
     <div className="flex flex-col gap-4 px-4 pb-8 md:gap-5 md:px-8 md:py-5">
       <div className="grid gap-4 md:gap-5 lg:grid-cols-2">
         <Card className="p-5">
-          <h2 className="text-[17px] font-semibold">{single ? 'Shitjet sipas orës' : 'Shitjet ditore'}</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">{single ? 'Shitjet sipas orës' : 'Shitjet ditore'}</h2>
           <div className="mt-6">
             <BarChart bars={bars} />
             <BarLabels bars={bars} />
@@ -197,7 +198,7 @@ function ReportBody({ r, invoices, people }: { r: ReportSummary; invoices: Invoi
         </Card>
 
         <Card className="overflow-hidden">
-          <h2 className="px-5 pt-5 text-[17px] font-semibold">Më të shiturat</h2>
+          <h2 className="px-5 pt-5 text-[16px] font-semibold tracking-[-0.01em]">Më të shiturat</h2>
           {r.top.length === 0 ? (
             <EmptyState title="Ende pa shitje" />
           ) : (
@@ -227,7 +228,7 @@ function ReportBody({ r, invoices, people }: { r: ReportSummary; invoices: Invoi
 
       <div className="grid gap-4 md:gap-5 lg:grid-cols-2">
         <Card className="overflow-hidden">
-          <h2 className="px-5 pt-5 text-[17px] font-semibold">TVSH sipas normës</h2>
+          <h2 className="px-5 pt-5 text-[16px] font-semibold tracking-[-0.01em]">TVSH sipas normës</h2>
           <Table className="mt-3">
             <thead>
               <tr>
@@ -241,7 +242,7 @@ function ReportBody({ r, invoices, people }: { r: ReportSummary; invoices: Invoi
               {vatRows.map((v) => (
                 <tr key={v.code}>
                   <Td className="pl-5">
-                    <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-md bg-[#EEF1EE] text-xs font-bold">{v.code}</span>
+                    <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-md bg-[#EFF1F4] text-xs font-bold">{v.code}</span>
                     {v.code === 'A' ? 'E liruar' : `${Math.round(VAT_RATES[v.code] * 100)}%`}
                   </Td>
                   <Td className="text-right">{formatEUR(v.gross)}</Td>
@@ -260,7 +261,7 @@ function ReportBody({ r, invoices, people }: { r: ReportSummary; invoices: Invoi
         </Card>
 
         <Card className="overflow-hidden">
-          <h2 className="px-5 pt-5 text-[17px] font-semibold">Sipas arkëtarit</h2>
+          <h2 className="px-5 pt-5 text-[16px] font-semibold tracking-[-0.01em]">Sipas arkëtarit</h2>
           {r.workers.length === 0 ? (
             <EmptyState title="Ende pa shitje" />
           ) : (
@@ -313,7 +314,7 @@ function ReportBody({ r, invoices, people }: { r: ReportSummary; invoices: Invoi
 
       <Card className="overflow-hidden">
         <div className="flex flex-col gap-3 px-5 py-4 md:flex-row md:items-center md:justify-between">
-          <h2 className="text-[17px] font-semibold">Faturat</h2>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Faturat</h2>
           <div className="relative md:w-[340px]">
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
             <input
@@ -328,7 +329,7 @@ function ReportBody({ r, invoices, people }: { r: ReportSummary; invoices: Invoi
           <EmptyState title="Asnjë faturë" />
         ) : (
           <Table>
-            <thead className="bg-[#F8FAF8]">
+            <thead className="bg-[#F9FAFB]">
               <tr>
                 <Th className="pl-5">Nr.</Th>
                 <Th>Data / ora</Th>

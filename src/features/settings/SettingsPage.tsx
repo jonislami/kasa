@@ -52,7 +52,7 @@ export function SettingsPage() {
           )}
           {isSefApp && <LanguageCard />}
           <PrinterSection />
-          <p className="mt-6 text-center text-sm text-muted">Kasa v{device.appVersion}</p>
+          <p className="mt-6 text-center text-sm text-muted">KontoSef v{device.appVersion}</p>
         </div>
       </>
     )
@@ -76,7 +76,7 @@ export function SettingsPage() {
               {s.label}
             </button>
           ))}
-          <p className="mt-4 px-4 text-xs text-muted">Kasa v{device.appVersion}</p>
+          <p className="mt-4 px-4 text-xs text-muted">KontoSef v{device.appVersion}</p>
         </nav>
         <div className="lg:hidden">
           <Select aria-label="Seksioni" value={section} onChange={(e) => go(e.target.value as Section)} options={SECTIONS} />
@@ -116,7 +116,7 @@ function VatSection() {
   return (
     <Card className="overflow-hidden">
       <div className="px-5 pt-5">
-        <h2 className="text-[17px] font-semibold">TVSH & Taksat</h2>
+        <h2 className="text-[16px] font-semibold tracking-[-0.01em]">TVSH & Taksat</h2>
         <p className="mt-1 text-sm text-muted">
           Shkronjat sipas ATK-së. Çmimet e shitjes janë me TVSH të përfshirë; TVSH llogaritet një herë për normë mbi shumën e asaj norme. Norma caktohet te çdo produkt.
         </p>
@@ -126,7 +126,7 @@ function VatSection() {
           {rows.map(([code, rate, text]) => (
             <tr key={code} className="border-t border-line">
               <td className="w-14 px-5 py-3">
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-[#EEF1EE] font-bold">{code}</span>
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-[#EFF1F4] font-bold">{code}</span>
               </td>
               <td className="w-24 py-3 font-semibold">{rate}</td>
               <td className="py-3 pr-5 text-muted">{text}</td>
@@ -173,7 +173,7 @@ function PinCard() {
             <KeyRound className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-[17px] font-semibold">PIN-i im</h2>
+            <h2 className="text-[16px] font-semibold tracking-[-0.01em]">PIN-i im</h2>
             <p className="text-sm text-muted">Me të miraton anulimet dhe kthimet që kërkojnë punëtorët.</p>
           </div>
         </div>
@@ -203,7 +203,7 @@ function LanguageCard() {
   return (
     <Card className="mb-5 flex flex-wrap items-center justify-between gap-3 p-5">
       <div>
-        <div className="text-[17px] font-semibold">Gjuha / Jezik</div>
+        <div className="text-[16px] font-semibold tracking-[-0.01em]">Gjuha / Jezik</div>
         <div className="text-sm text-muted">Arka dhe kuponi fiskal · Kasa i fiskalni kupon</div>
       </div>
       <div className="flex gap-2">

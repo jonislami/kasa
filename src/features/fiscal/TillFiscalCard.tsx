@@ -40,7 +40,7 @@ export async function tillFiscalState(registerId: string): Promise<TillFiscalSta
   const missing: string[] = []
   if (!ctx.nui || !ctx.fiscal_number || !ctx.branch_id) missing.push('njësia fiskale (NUI, numri i fiskalizimit, numri i njësisë) te Fiskalizimi në web')
   if (!r?.pos_id) missing.push('POS ID-ja e kësaj arke te Fiskalizimi në web')
-  if (!ctx.application_id) missing.push('kodi i SEF-it nga ATK (Application ID) – e vendos administratori i Kasa-s')
+  if (!ctx.application_id) missing.push('kodi i SEF-it nga ATK (Application ID) – e vendos administratori i KontoSef-it')
   return { ctx, here, missing, elsewhere }
 }
 
@@ -85,7 +85,7 @@ export function TillFiscalCard() {
     <Card className="p-5">
       <div className="flex flex-wrap items-center gap-2">
         <ShieldCheck className="h-5 w-5 text-brand-600" />
-        <h2 className="flex-1 text-[17px] font-semibold">Fiskalizimi i kësaj arke{r ? ` · ${r.name}` : ''}</h2>
+        <h2 className="flex-1 text-[16px] font-semibold tracking-[-0.01em]">Fiskalizimi i kësaj arke{r ? ` · ${r.name}` : ''}</h2>
         {s.here ? <Badge tone="success">E regjistruar në ATK</Badge> : <Badge>Pa regjistruar</Badge>}
         {s.here && r?.env === 'test' && <Badge tone="info">Test</Badge>}
       </div>
@@ -114,7 +114,7 @@ export function TillFiscalCard() {
           <p className="text-[15px]">
             Arka është gati për ATK. Regjistrimi krijon çelësin e arkës <b>në këtë pajisje</b> (nuk kopjohet dot) dhe merr certifikatën nga ATK.
           </p>
-          {step && <p className="rounded-ctl bg-[#F2F5F2] px-4 py-2.5 text-sm">{step}</p>}
+          {step && <p className="rounded-ctl bg-[#F3F4F6] px-4 py-2.5 text-sm">{step}</p>}
           {run.error && <p className="rounded-ctl bg-warn-100 px-4 py-2.5 text-sm text-warn-700">{explainAtkError((run.error as Error).message)}</p>}
           <div>
             <Button loading={run.isPending} onClick={() => run.mutate()}>

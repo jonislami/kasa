@@ -75,7 +75,7 @@ export function EntriesTab({
         <EmptyState icon={<FileText className="h-6 w-6" />} title={entries.length === 0 ? 'Ende pa hyrje malli' : 'Asgjë nuk përputhet'} />
       ) : (
         <Table>
-          <thead className="bg-[#F8FAF8]">
+          <thead className="bg-[#F9FAFB]">
             <tr>
               <Th className="pl-5">Nr.</Th>
               <Th>Data</Th>
@@ -88,7 +88,7 @@ export function EntriesTab({
           </thead>
           <tbody>
             {list.map((e) => (
-              <tr key={e.id} onClick={() => setOpen(e)} className="cursor-pointer hover:bg-[#F8FAF8]">
+              <tr key={e.id} onClick={() => setOpen(e)} className="cursor-pointer hover:bg-[#F9FAFB]">
                 <Td className="pl-5 font-semibold">{e.status === 'draft' ? <Badge tone="amber">Draft</Badge> : `H-${String(e.entry_no).padStart(4, '0')}`}</Td>
                 <Td>{formatDate(e.entry_date)}</Td>
                 <Td>

@@ -79,7 +79,7 @@ export function MfaGate({ mode, factorId, onDone }: { mode: 'verify' | 'enroll';
         <div className="mb-5 flex items-center gap-3">
           <LogoMark size={40} />
           <div>
-            <div className="text-[18px] font-bold">Hyrja me dy faktorë</div>
+            <div className="text-[18px] font-semibold tracking-[-0.015em]">Hyrja me dy faktorë</div>
             <div className="text-sm text-muted">{mode === 'verify' ? 'Shkruaj kodin nga aplikacioni i autentikimit' : 'Zyra e kërkon për çdo anëtar'}</div>
           </div>
           <ShieldCheck className="ml-auto h-6 w-6 text-brand-600" />

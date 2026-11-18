@@ -166,5 +166,5 @@ export async function readBackupFile(file: File): Promise<{ created_at: string |
   }
   if (j.format === 'kasa-kontabilist-backup') return { created_at: (j.created_at as string) ?? null, clients: [j] }
   if (j.format === 'kasa-kontabilist-office-backup' && Array.isArray(j.clients)) return { created_at: (j.created_at as string) ?? null, clients: j.clients as Record<string, unknown>[] }
-  throw new Error('Ky skedar nuk është backup i Kasa Kontabilist')
+  throw new Error('Ky skedar nuk është backup i KontoSef Kontabilist')
 }

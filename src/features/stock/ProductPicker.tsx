@@ -104,7 +104,7 @@ export function ProductPicker({
             </button>
           )}
           {open && results.length > 0 && (
-            <ul className="absolute inset-x-0 top-[56px] z-20 max-h-[320px] overflow-y-auto rounded-xl border border-line bg-white py-1 shadow-xl">
+            <ul className="absolute inset-x-0 top-[56px] z-20 max-h-[320px] overflow-y-auto rounded-xl border border-line bg-white py-1 shadow-pop">
               {results.map((p, i) => (
                 <li key={p.id}>
                   <button
