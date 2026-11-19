@@ -28,6 +28,7 @@ import {
 } from './api'
 import { ImportDialog } from './ImportDialog'
 import { ProductForm } from './ProductForm'
+import { hasVat } from '@/lib/vat'
 
 const PAGE_SIZE = 25
 type StockFilter = 'all' | 'low' | 'out' | 'archived'
@@ -43,6 +44,7 @@ function StockBadge({ p }: { p: Product }) {
 
 export function ProductsPage() {
   const { business } = useBusiness()
+  const vat = hasVat(business)
   const info = businessType(business.type)
   const showStock = hasModule(business.type, 'stock')
   const showBarcode = hasModule(business.type, 'barcode')
@@ -151,6 +153,7 @@ export function ProductsPage() {
       key={editing.mode === 'edit' ? editing.product.id : 'new'}
       product={editing.mode === 'edit' ? editing.product : null}
       businessType={business.type}
+      vatRegistered={vat}
       categories={cats}
       defaultCategoryId={categoryId !== 'all' && categoryId !== 'none' ? categoryId : null}
       saving={save.isPending || toggleActive.isPending}
@@ -269,7 +272,7 @@ export function ProductsPage() {
                     { value: 'archived', label: 'Të arkivuara' },
                   ]}
                 />
-                <Select
+                {vat && <Select
                   aria-label="TVSH"
                   value={vatFilter}
                   onChange={(e) => {
@@ -284,7 +287,7 @@ export function ProductsPage() {
                     { value: 'C', label: 'C – 0%' },
                     { value: 'A', label: 'A – e liruar' },
                   ]}
-                />
+                />}
               </div>
             </div>
 
@@ -322,7 +325,7 @@ export function ProductsPage() {
                         <Th className="text-right">Ç. blerjes</Th>
                         <Th className="text-right">Ç. shitjes</Th>
                         <Th className="text-right">Marzha</Th>
-                        <Th>TVSH</Th>
+                        {vat && <Th>TVSH</Th>}
                         {showStock && <Th className="text-right">Stoku</Th>}
                       </tr>
                     </thead>
@@ -349,7 +352,7 @@ export function ProductsPage() {
                             <Td className="text-right text-muted">{p.purchase_price ? formatEUR(p.purchase_price) : '—'}</Td>
                             <Td className="text-right font-semibold">{formatEUR(p.sale_price)}</Td>
                             <Td className={cn('text-right', m != null && m < 0 && 'text-warn-700')}>{m == null ? '—' : `${(m * 100).toFixed(1)}%`}</Td>
-                            <Td>{p.vat_code}</Td>
+                            {vat && <Td>{p.vat_code}</Td>}
                             {showStock && <Td className="text-right">{p.kind === 'service' ? '—' : <StockBadge p={p} />}</Td>}
                           </tr>
                         )

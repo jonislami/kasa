@@ -96,7 +96,7 @@ export function Receipt({
         <Row key={k} l={k} r={`${v}€`} />
       ))}
       <div className="border-b border-dashed border-black">
-        <Row l={x.L.net} r={`${x.main.net}€`} />
+        {x.hasVat && <Row l={x.L.net} r={`${x.main.net}€`} />}
       </div>
 
       {x.returned && (

@@ -4,13 +4,15 @@ import { Button, Dialog, Input, Select } from '@/components/ui'
 import { businessType, hasModule, type BusinessType } from '@/lib/business'
 import { UNIT_OPTIONS, type UnitCode } from '@/lib/units'
 import { VAT_LABELS, type VatCode } from '@/lib/vat'
+import { categoryOptions, DEFAULT_CATEGORY } from '@/lib/atk/catalog'
 import { saveProduct } from '@/features/products/api'
 
 const VAT_OPTIONS = (Object.keys(VAT_LABELS) as VatCode[]).map((value) => ({ value, label: VAT_LABELS[value] }))
 
 /**
- * The till's "+": the owner / manager adds a product (salon: a service) without leaving the sale.
- * Only what selling needs; everything else (category, purchase price, stock) stays in the web app.
+ * The till's "+": the owner / manager adds a product (salon: a service) without leaving the sale: name, price, VAT
+ * (only for a business in VAT), every unit of the ATK list, the category and the ATK category. Purchase price and
+ * stock stay in the web app.
  */
 export function QuickProductDialog({
   open,
@@ -18,9 +20,14 @@ export function QuickProductDialog({
   barcode: initialBarcode,
   onClose,
   onSaved,
+  vatRegistered = true,
+  categories = [],
 }: {
   open: boolean
   type: BusinessType
+  /** false: the business is not in VAT – no VAT field, the product sells as A */
+  vatRegistered?: boolean
+  categories?: { id: string; name: string }[]
   /** A scanned code that was not found, put into the form. */
   barcode?: string | null
   onClose: () => void
@@ -28,13 +35,15 @@ export function QuickProductDialog({
 }) {
   const info = businessType(type)
   const withBarcode = hasModule(type, 'barcode')
-  const withUnit = hasModule(type, 'weight')
   const service = !hasModule(type, 'stock')
+  const withUnit = !service
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
   const [vat, setVat] = useState<VatCode>('E')
   const [barcode, setBarcode] = useState('')
   const [unit, setUnit] = useState<UnitCode>('cope')
+  const [category, setCategory] = useState('')
+  const [atk, setAtk] = useState(DEFAULT_CATEGORY[type] ?? 'TT')
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -43,9 +52,11 @@ export function QuickProductDialog({
     setPrice('')
     setVat('E')
     setUnit('cope')
+    setCategory('')
+    setAtk(DEFAULT_CATEGORY[type] ?? 'TT')
     setBarcode(initialBarcode ?? '')
     setError(null)
-  }, [open, initialBarcode])
+  }, [open, initialBarcode, type])
 
   const save = useMutation({
     mutationFn: () =>
@@ -55,7 +66,9 @@ export function QuickProductDialog({
         barcode: withBarcode && barcode.trim() ? barcode.trim() : null,
         unit: withUnit ? unit : 'cope',
         sale_price: Number(price.replace(',', '.')),
-        vat_code: vat,
+        vat_code: vatRegistered ? vat : 'A',
+        category_id: category || null,
+        atk_type: atk,
         show_in_pos: true,
       }),
     onSuccess: (id) => onSaved(id),
@@ -90,9 +103,9 @@ export function QuickProductDialog({
     >
       <form id="quick-product" onSubmit={submit} className="grid gap-3">
         <Input label="Emri" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
-        <div className="grid grid-cols-2 gap-3">
-          <Input label="Çmimi me TVSH (€)" inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0.00" />
-          <Select label="TVSH" value={vat} onChange={(e) => setVat(e.target.value as VatCode)} options={VAT_OPTIONS} />
+        <div className={vatRegistered ? 'grid grid-cols-2 gap-3' : 'grid gap-3'}>
+          <Input label={vatRegistered ? 'Çmimi me TVSH (€)' : 'Çmimi (€)'} inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0.00" />
+          {vatRegistered && <Select label="TVSH" value={vat} onChange={(e) => setVat(e.target.value as VatCode)} options={VAT_OPTIONS} />}
         </div>
         {(withBarcode || withUnit) && (
           <div className="grid grid-cols-2 gap-3">
@@ -100,6 +113,10 @@ export function QuickProductDialog({
             {withUnit && <Select label="Njësia" value={unit} onChange={(e) => setUnit(e.target.value as UnitCode)} options={UNIT_OPTIONS} />}
           </div>
         )}
+        <div className="grid grid-cols-2 gap-3">
+          <Select label="Kategoria" value={category} onChange={(e) => setCategory(e.target.value)} options={[{ value: '', label: 'Pa kategori' }, ...categories.map((c) => ({ value: c.id, label: c.name }))]} />
+          <Select label="Kategoria ATK" value={atk} onChange={(e) => setAtk(e.target.value)} options={categoryOptions()} />
+        </div>
         {error && <p className="rounded-ctl bg-warn-100 px-4 py-3 text-sm text-warn-700">{error}</p>}
       </form>
     </Dialog>

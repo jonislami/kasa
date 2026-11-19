@@ -1,6 +1,7 @@
 import { round2 } from '@/lib/money'
 import { VAT_RATES, type VatCode } from '@/lib/vat'
 import type { UnitCode } from '@/lib/units'
+import { roundQty as roundUnitQty } from '@/lib/units'
 
 /** What the till needs from a product (no purchase price). */
 export interface PosProduct {
@@ -44,7 +45,7 @@ export interface Cart {
 export const emptyCart = (): Cart => ({ lines: [], invoiceDiscount: 0 })
 
 export function roundQty(q: number, unit: string): number {
-  return unit === 'kg' ? Math.round(q * 1000) / 1000 : Math.round(q)
+  return roundUnitQty(q, unit)
 }
 
 export function addToCart(cart: Cart, product: PosProduct, quantity = 1, staffId?: string | null): Cart {

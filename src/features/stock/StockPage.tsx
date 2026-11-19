@@ -32,6 +32,7 @@ import { LotsTab, ExpiryCard } from './LotsTab'
 import { useBusiness } from '@/app/AuthProvider'
 import { hasModule } from '@/lib/business'
 import { fetchLots } from '@/lib/lots'
+import { roundQty, unitDecimals } from '@/lib/units'
 
 type Tab = 'hyrje' | 'afatet' | 'historiku' | 'levizjet' | 'inventarizimi' | 'furnitoret'
 
@@ -59,7 +60,7 @@ function loadDraft(): EntryDraft {
 /** Suggested quantity for a low product: back up to twice the minimum. */
 function suggestedQty(p: Product): number {
   const q = Math.max(p.min_stock * 2 - p.stock, 1)
-  return p.unit === 'kg' ? Math.round(q * 1000) / 1000 : Math.ceil(q)
+  return unitDecimals(p.unit) > 0 ? roundQty(q, p.unit) : Math.ceil(q)
 }
 
 export function StockPage() {

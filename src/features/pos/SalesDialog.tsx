@@ -88,7 +88,8 @@ export function SalesDialog({
       })
       if (!r.ok) {
         setError(APPROVAL_MESSAGES[r.error])
-        if (!manager) setVoidStep('approve')
+        // the server always asks for the PIN of an owner / manager (0042)
+        setVoidStep('approve')
         return
       }
       setVoidStep(null)
@@ -102,7 +103,7 @@ export function SalesDialog({
       void qc.invalidateQueries({ queryKey: ['products'] })
     } catch (e) {
       setError((e as Error).message)
-      setVoidStep(manager ? 'reason' : null)
+      setVoidStep(null)
     } finally {
       setBusy(false)
     }
@@ -144,8 +145,8 @@ export function SalesDialog({
                   <Button variant="secondary" onClick={() => setVoidStep(null)}>
                     Mos e anulo
                   </Button>
-                  <Button variant="danger" loading={busy} onClick={() => (manager ? void doVoid() : setVoidStep('approve'))}>
-                    {manager ? 'Anulo faturën' : 'Kërko miratimin'}
+                  <Button variant="danger" loading={busy} onClick={() => setVoidStep('approve')}>
+                    Kërko miratimin (PIN)
                   </Button>
                 </div>
               </div>

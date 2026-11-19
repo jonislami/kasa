@@ -4,12 +4,13 @@ import { CheckCircle2, Plus, X } from 'lucide-react'
 import { Badge, Button, Card, Input, Select } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import { formatEUR } from '@/lib/money'
-import { formatQty, UNITS, type UnitCode } from '@/lib/units'
+import { formatQty } from '@/lib/units'
 import { vatBreakdown, VAT_RATES, type VatCode } from '@/lib/vat'
 import { stockLevel, type Product } from '@/features/products/api'
 import { confirmEntry, deleteEntryDraft, lineTotal, saveEntryDraft, todayISO, type EntryInput, type EntryPayment, type Supplier } from './api'
 import { ProductPicker } from './ProductPicker'
 import { SupplierDialog } from './SuppliersTab'
+import { unitStep } from '@/lib/units'
 
 export interface DraftLine {
   product_id: string
@@ -221,7 +222,7 @@ export function EntryEditor({
     if (level === 'low') return <Badge tone="amber">{text}</Badge>
     return <span className="text-muted">{text}</span>
   }
-  const step = (unit: string) => (UNITS[unit as UnitCode]?.decimals ? '0.001' : '1')
+  const step = (unit: string) => unitStep(unit)
 
   return (
     <Card className="overflow-hidden">

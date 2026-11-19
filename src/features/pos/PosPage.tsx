@@ -10,6 +10,7 @@ import { formatEUR, round2 } from '@/lib/money'
 import { formatQty, unitLabel } from '@/lib/units'
 import { useMediaQuery } from '@/lib/useMediaQuery'
 import { fetchCategories } from '@/features/products/api'
+import { hasVat, saleVatCode } from '@/lib/vat'
 import { createSale, fetchPosProducts, fetchRegisters, NetworkError, PAYMENT_KIND_LABELS, type CreateSaleInput, type PaymentKind, type PaymentMethod, type Sale } from './api'
 import { addToCart, computeTotals, emptyCart, setLineDiscount, setLineStaff, setQuantity, type Cart, type CartLine, type PosProduct } from './cart'
 import { fetchAppointment, fetchStaff, initials, staffColor, type Appointment } from '@/features/salon/api'
@@ -29,6 +30,7 @@ import { fetchFiscalContext } from '@/lib/fiscal'
 import { t as tr, useLang } from '@/lib/i18n'
 import { fiscalizeSale } from './fiscal'
 import { formatSq } from '@/lib/sqDate'
+import { roundQty, unitDecimals } from '@/lib/units'
 
 const parseNum = (s: string) => {
   const n = Number(s.trim().replace(',', '.'))
@@ -57,17 +59,20 @@ export function PosPage() {
   const searchRef = useRef<HTMLInputElement>(null)
 
   // ---------- catalog (online, with a local copy for offline) ----------
+  // a business outside VAT sells everything as A (0%), as the server does (0042)
+  const vat = hasVat(business)
   const catalog = useQuery({
-    queryKey: ['pos-products'],
+    queryKey: ['pos-products', vat],
     networkMode: 'always', // has its own local copy when offline
     queryFn: async () => {
       try {
         const [products, categories] = await Promise.all([fetchPosProducts(), fetchCategories()])
         void saveCatalog(business.id, products, categories)
-        return { products, categories, offline: false }
+        return { products: products.map((p) => ({ ...p, vat_code: saleVatCode(p.vat_code, vat) })), categories, offline: false }
       } catch (e) {
         const local = await loadCatalog(business.id)
-        if (local && e instanceof NetworkError) return { products: local.products, categories: local.categories, offline: true }
+        if (local && e instanceof NetworkError)
+          return { products: local.products.map((p) => ({ ...p, vat_code: saleVatCode(p.vat_code, vat) })), categories: local.categories, offline: true }
         throw e
       }
     },
@@ -184,7 +189,7 @@ export function PosPage() {
       }
       setCart((c) => addToCart(c, p, qty, salon ? staffId : null))
       setError(lotWarning(p, qty))
-      if (p.unit === 'kg' && qty === 1) {
+      if (unitDecimals(p.unit) > 0 && qty === 1) {
         // weight: open the line so the weight can be typed
         setEditLine({ key: p.id, product: p, quantity: (cart.lines.find((l) => l.key === p.id)?.quantity ?? 0) + 1, discount: 0 })
       }
@@ -545,18 +550,18 @@ export function PosPage() {
               <button
                 type="button"
                 aria-label="Më pak"
-                onClick={() => setCart((c) => setQuantity(c, l.key, l.product.unit === 'kg' ? round2(l.quantity - 0.1) : l.quantity - 1))}
+                onClick={() => setCart((c) => setQuantity(c, l.key, unitDecimals(l.product.unit) > 0 ? roundQty(l.quantity - 0.1, l.product.unit) : l.quantity - 1))}
                 className="flex h-11 w-11 items-center justify-center rounded-xl border border-field md:h-9 md:w-9 md:rounded-lg"
               >
                 <Minus className="h-4 w-4" />
               </button>
               <button type="button" onClick={() => setEditLine(l)} className="min-w-[44px] text-center text-lg font-semibold tabular-nums md:min-w-[36px] md:text-base">
-                {l.product.unit === 'kg' ? l.quantity.toFixed(3).replace(/\.?0+$/, '') : l.quantity}
+                {unitDecimals(l.product.unit) > 0 ? l.quantity.toFixed(unitDecimals(l.product.unit)).replace(/\.?0+$/, '') : l.quantity}
               </button>
               <button
                 type="button"
                 aria-label="Më shumë"
-                onClick={() => setCart((c) => setQuantity(c, l.key, l.product.unit === 'kg' ? round2(l.quantity + 0.1) : l.quantity + 1))}
+                onClick={() => setCart((c) => setQuantity(c, l.key, unitDecimals(l.product.unit) > 0 ? roundQty(l.quantity + 0.1, l.product.unit) : l.quantity + 1))}
                 className="flex h-11 w-11 items-center justify-center rounded-xl border border-field md:h-9 md:w-9 md:rounded-lg"
               >
                 <Plus className="h-4 w-4" />
@@ -697,6 +702,8 @@ export function PosPage() {
       <QuickProductDialog
         open={Boolean(quickAdd)}
         type={business.type}
+        vatRegistered={vat}
+        categories={catalog.data?.categories ?? []}
         barcode={quickAdd?.barcode ?? null}
         onClose={() => setQuickAdd(null)}
         onSaved={async (id) => {
@@ -914,10 +921,12 @@ export function PosPage() {
                 <span className="tabular-nums">−{formatEUR(totals.discountTotal)}</span>
               </div>
             )}
-            <div className="flex justify-between py-0.5 text-muted">
-              <span>{tr('Pa TVSH', lang)}</span>
-              <span className="tabular-nums">{formatEUR(totals.netTotal)}</span>
-            </div>
+            {vat && (
+              <div className="flex justify-between py-0.5 text-muted">
+                <span>{tr('Pa TVSH', lang)}</span>
+                <span className="tabular-nums">{formatEUR(totals.netTotal)}</span>
+              </div>
+            )}
             {totals.vat
               .filter((v) => v.rate > 0)
               .map((v) => (

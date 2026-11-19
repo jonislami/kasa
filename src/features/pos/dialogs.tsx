@@ -7,6 +7,7 @@ import { formatEUR, round2 } from '@/lib/money'
 import { unitLabel } from '@/lib/units'
 import { fetchApprovers } from './api'
 import type { CartLine } from './cart'
+import { unitDecimals } from '@/lib/units'
 
 const parseNum = (s: string) => {
   const n = Number(s.trim().replace(',', '.'))
@@ -161,7 +162,7 @@ export function LineDialog({
   }, [line])
 
   if (!line) return null
-  const kg = line.product.unit === 'kg'
+  const kg = unitDecimals(line.product.unit) > 0
   const qty = parseNum(q)
   const gross = qty && !Number.isNaN(qty) ? round2(qty * line.product.sale_price) : 0
   const dv = parseNum(d)
@@ -183,7 +184,7 @@ export function LineDialog({
           save()
         }}
       >
-        <Input ref={ref} label={kg ? 'Pesha (kg)' : 'Sasia'} inputMode="decimal" value={q} onChange={(e) => setQ(e.target.value)} />
+        <Input ref={ref} label={line.product.unit === 'kg' ? 'Pesha (kg)' : kg ? `Sasia (${unitLabel(line.product.unit)})` : 'Sasia'} inputMode="decimal" value={q} onChange={(e) => setQ(e.target.value)} />
         <div className="flex flex-col gap-1.5">
           <span className="text-sm font-medium">Zbritje për këtë rresht</span>
           <div className="flex gap-2">

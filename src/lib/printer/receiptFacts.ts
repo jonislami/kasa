@@ -7,9 +7,10 @@
 import type { Business } from '@/app/AuthProvider'
 import type { Sale, SaleRef } from '@/features/pos/api'
 import { getLang, t, type Lang } from '../i18n'
+import { unitDecimals } from '@/lib/units'
 
 export const n2 = (v: number) => new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false }).format(v)
-export const qty = (v: number, unit: string) => new Intl.NumberFormat('en-US', { maximumFractionDigits: unit === 'kg' ? 3 : 0, useGrouping: false }).format(v)
+export const qty = (v: number, unit: string) => new Intl.NumberFormat('en-US', { maximumFractionDigits: unitDecimals(unit), useGrouping: false }).format(v)
 /** Unit price as on the ATK sample: 2 decimals, up to 4 when the price has them (2.5012). */
 const price = (v: number) => new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4, useGrouping: false }).format(v)
 const pad = (v: number, n: number) => String(Math.max(0, Math.trunc(v))).padStart(n, '0')
@@ -92,6 +93,8 @@ export interface ReceiptLabels {
 
 export interface ReceiptFacts {
   L: ReceiptLabels
+  /** false for a business outside VAT: no VAT rows and no "total without VAT" */
+  hasVat: boolean
   /** [label, value] under TATIMPAGUESI. */
   header: [string, string][]
   /** KUPON FISKAL / KUPON FISKAL I ANULUAR / KUPON FISKAL KTHIMI / KUPON JO-FISKAL … */
@@ -275,6 +278,7 @@ export function receiptFacts(sale: Sale, business: Business, copy?: boolean, lan
   }
   return {
     L,
+    hasVat: Boolean(business.vat_number?.trim()),
     header,
     title: titleText,
     marks,

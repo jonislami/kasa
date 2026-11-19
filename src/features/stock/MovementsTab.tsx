@@ -17,6 +17,7 @@ import {
   type MovementKind,
 } from './api'
 import { ProductPicker } from './ProductPicker'
+import { unitStep } from '@/lib/units'
 
 type Period = 'today' | '7' | '30' | 'all'
 
@@ -238,7 +239,7 @@ export function AdjustDialog({ open, products, initial, onClose }: { open: boole
           inputMode="decimal"
           type="number"
           min="0"
-          step={product?.unit === 'kg' ? '0.001' : '1'}
+          step={unitStep(product?.unit)}
           value={qty}
           onChange={(e) => setQty(e.target.value)}
         />
