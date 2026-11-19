@@ -6,7 +6,7 @@ import { ChefHat, ClipboardList, LogOut, Menu, MoreHorizontal, Printer, RefreshC
 import { useAuth } from '@/app/AuthProvider'
 import { Button, Dialog, Input } from '@/components/ui'
 import { hasModule, type BusinessType } from '@/lib/business'
-import { KOSOVO_TZ } from '@/lib/clock'
+import { checkClock, KOSOVO_TZ, serverDate } from '@/lib/clock'
 import { cn } from '@/lib/cn'
 import { formatEUR } from '@/lib/money'
 import { endShift, fetchWork } from '@/features/reports/api'
@@ -70,7 +70,7 @@ export function WorkerShell({
       // offline the queries would wait for the network: say so at once
       if (!navigator.onLine) throw new Error('offline')
       refresh()
-      await Promise.race([qc.invalidateQueries(), new Promise((_, no) => setTimeout(() => no(new Error('slow')), 15_000))])
+      await Promise.race([Promise.all([qc.invalidateQueries(), checkClock()]), new Promise((_, no) => setTimeout(() => no(new Error('slow')), 15_000))])
       setSynced({ ok: true, text: tr('U sinkronizua', lang) })
     } catch {
       setSynced({ ok: false, text: tr('Sinkronizimi dështoi – kontrollo internetin', lang) })
@@ -84,9 +84,9 @@ export function WorkerShell({
   const [menu, setMenu] = useState(false)
   const [closing, setClosing] = useState(false)
   const wallet = useWallet()
-  const [now, setNow] = useState(() => new Date())
+  const [now, setNow] = useState(() => serverDate())
   useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 30_000)
+    const t = setInterval(() => setNow(serverDate()), 10_000)
     return () => clearInterval(t)
   }, [])
   useEffect(() => setMenu(false), [location.pathname])

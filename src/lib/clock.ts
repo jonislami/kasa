@@ -10,6 +10,10 @@ import { supabase } from '@/lib/supabase'
  *
  * The device clock is only compared with it: more than 1 minute apart → warning (ATK requires a
  * correct date/time on fiscal coupons). Phase 9 adds the time returned by the ATK server.
+ *
+ * Phones: performance.now() stops while the phone sleeps (screen off, app in the background), so after waking the
+ * app clock would lag by the time asleep. When the app comes back to the screen, the time asleep (from the device
+ * clock, while hidden) is added and the server is asked again at once.
  */
 export const MAX_DRIFT_MS = 60_000
 const STORE_KEY = 'kasa.clockOffset'
@@ -20,6 +24,27 @@ interface Anchor {
 }
 
 let anchor: Anchor | null = null
+
+// device clock and monotonic timer when the app went to the background
+let hiddenAt: { wall: number; perf: number } | null = null
+
+/** Back on screen after a sleep: add the time the monotonic timer missed, then ask the server. */
+function onVisibility() {
+  if (typeof document === 'undefined') return
+  if (document.visibilityState === 'hidden') {
+    hiddenAt = { wall: Date.now(), perf: performance.now() }
+    return
+  }
+  if (hiddenAt && anchor) {
+    const missed = Date.now() - hiddenAt.wall - (performance.now() - hiddenAt.perf)
+    // more than 2 s: the timer stood still while the phone slept (a device-clock change while hidden is corrected by
+    // the server check right below)
+    if (missed > 2000 && missed < 30 * 24 * 3600_000) anchor = { server: anchor.server + missed, perf: anchor.perf }
+  }
+  hiddenAt = null
+  void checkClock()
+}
+if (typeof document !== 'undefined') document.addEventListener('visibilitychange', onVisibility)
 
 // After a reload without internet: last known offset (server − device) as a fallback.
 let savedOffset: number | null = (() => {
