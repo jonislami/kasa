@@ -1,8 +1,8 @@
 import { LicenseBanner } from '@/app/LicenseBanner'
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { useMutation, useQuery } from '@tanstack/react-query'
-import { ChefHat, ClipboardList, LogOut, Menu, MoreHorizontal, Printer, Square, X } from 'lucide-react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ChefHat, ClipboardList, LogOut, Menu, MoreHorizontal, Printer, RefreshCw, Square, X } from 'lucide-react'
 import { useAuth } from '@/app/AuthProvider'
 import { Button, Dialog, Input } from '@/components/ui'
 import { hasModule, type BusinessType } from '@/lib/business'
@@ -57,7 +57,28 @@ export function WorkerShell({
   children: ReactNode
 }) {
   const lang = useLang()
-  const { signOut } = useAuth()
+  const { signOut, refresh } = useAuth()
+  const qc = useQueryClient()
+  // "Sinkronizo": what changed elsewhere (a table, a product or a price added on the web or another till) comes now
+  const [syncing, setSyncing] = useState(false)
+  const [synced, setSynced] = useState<{ ok: boolean; text: string } | null>(null)
+  const sync = async () => {
+    if (syncing) return
+    setSyncing(true)
+    setSynced(null)
+    try {
+      // offline the queries would wait for the network: say so at once
+      if (!navigator.onLine) throw new Error('offline')
+      refresh()
+      await Promise.race([qc.invalidateQueries(), new Promise((_, no) => setTimeout(() => no(new Error('slow')), 15_000))])
+      setSynced({ ok: true, text: tr('U sinkronizua', lang) })
+    } catch {
+      setSynced({ ok: false, text: tr('Sinkronizimi dështoi – kontrollo internetin', lang) })
+    } finally {
+      setSyncing(false)
+      setTimeout(() => setSynced(null), 2500)
+    }
+  }
   const navigate = useNavigate()
   const location = useLocation()
   const [menu, setMenu] = useState(false)
@@ -99,6 +120,10 @@ export function WorkerShell({
           <button type="button" onClick={() => setMenu(true)} className={cn(railBtn, 'text-white/55 hover:bg-white/[0.07] hover:text-white')}>
             <MoreHorizontal className="h-[22px] w-[22px]" strokeWidth={1.9} />
             {tr('Më shumë', lang)}
+          </button>
+          <button type="button" onClick={() => void sync()} disabled={syncing} className={cn(railBtn, 'text-white/55 hover:bg-white/[0.07] hover:text-white')}>
+            <RefreshCw className={cn('h-[22px] w-[22px]', syncing && 'animate-spin')} strokeWidth={1.9} />
+            {tr('Sinkronizo', lang)}
           </button>
         </nav>
 
@@ -142,11 +167,33 @@ export function WorkerShell({
             )}
             <div className="flex-1" />
             <span className="hidden text-[15px] font-medium tabular-nums text-muted md:block">{clockFmt.format(now)}</span>
+            <button
+              type="button"
+              aria-label={tr('Sinkronizo', lang)}
+              title={tr('Sinkronizo', lang)}
+              onClick={() => void sync()}
+              disabled={syncing}
+              className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 md:hidden"
+            >
+              <RefreshCw className={cn('h-5 w-5', syncing && 'animate-spin')} />
+            </button>
             <button type="button" aria-label="Menuja" onClick={() => setMenu(true)} className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 md:hidden">
               <Menu className="h-5 w-5" />
             </button>
           </div>
         </header>
+
+        {synced && (
+          <div
+            role="status"
+            className={cn(
+              'fixed left-1/2 top-[calc(env(safe-area-inset-top)+64px)] z-50 -translate-x-1/2 rounded-ctl px-4 py-2.5 text-sm font-medium shadow-pop md:top-6',
+              synced.ok ? 'bg-brand-900 text-white' : 'bg-warn-100 text-warn-700',
+            )}
+          >
+            {synced.text}
+          </div>
+        )}
 
         <main className="min-w-0 pb-safe">
           <LicenseBanner />
