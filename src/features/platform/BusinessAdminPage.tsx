@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ApplicationReview } from './ApplicationReview'
+import { BusinessTypeDialog } from './BusinessTypeDialog'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, ChevronLeft, Copy, KeyRound, MonitorSmartphone, ShieldCheck } from 'lucide-react'
@@ -38,6 +39,8 @@ export function BusinessAdminPage() {
     void qc.invalidateQueries({ queryKey: ['platform-businesses'] })
   }
   const [decision, setDecision] = useState<Decision | null>(null)
+  const [typeOpen, setTypeOpen] = useState(false)
+  const [typeMsg, setTypeMsg] = useState<string | null>(null)
   const approve = useMutation({ mutationFn: () => decide(id, 'approve'), onSuccess: refresh })
   const d = data.data
   const b = d?.business
@@ -91,12 +94,27 @@ export function BusinessAdminPage() {
             <div className="flex flex-wrap items-center gap-2">
               <Badge tone={statusTone(b.status)}>{STATUS_LABELS[b.status]}</Badge>
               <Badge tone={b.active ? 'success' : 'neutral'}>{b.active ? 'Qasja e hapur' : 'Pa qasje'}</Badge>
+              <button type="button" onClick={() => setTypeOpen(true)} className="text-sm font-semibold text-brand-600 hover:underline">
+                Ndrysho llojin
+              </button>
               <span className="text-sm text-muted">
                 {businessType(b.type).label} · {b.applied_at ? `regjistruar ${formatKosovoDateTime(b.applied_at)}` : `krijuar ${day(b.created_at)}`}
                 {d.owner_last_sign_in && ` · pronari hyri së fundi ${formatKosovoDateTime(d.owner_last_sign_in)}`}
               </span>
             </div>
             {approve.error && <p className="rounded-ctl bg-warn-100 px-4 py-3 text-sm text-warn-700">{(approve.error as Error).message}</p>}
+            {typeMsg && <p className="rounded-ctl bg-brand-100 px-4 py-3 text-sm text-brand-600">{typeMsg}</p>}
+            <BusinessTypeDialog
+              open={typeOpen}
+              businessId={b.id}
+              current={b.type}
+              onClose={() => setTypeOpen(false)}
+              onDone={(m) => {
+                setTypeOpen(false)
+                setTypeMsg(m)
+                refresh()
+              }}
+            />
             {(b.status === 'pending' || b.status === 'needs_info') && (
               <p className="rounded-ctl bg-brand-100 px-4 py-3 text-sm text-brand-600">
                 “Aprovo” e hap biznesin menjëherë: krijohen arkat që ka kërkuar klienti dhe pronari i merr vetë çelësat te llogaria e tij.

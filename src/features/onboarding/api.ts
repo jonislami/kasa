@@ -157,6 +157,7 @@ export const EVENT_LABELS: Record<string, string> = {
   device_activated: 'Pajisja u aktivizua me çelës',
   register_added: 'U shtua një arkë',
   unit_approved: 'Njësia u aprovua',
+  type_changed: 'Lloji i biznesit u ndryshua',
   unit_rejected: 'Njësia u refuzua',
   unit_pending: 'Njësia u kthye në shqyrtim',
 }
