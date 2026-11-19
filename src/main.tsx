@@ -8,6 +8,7 @@ import { device } from '@/lib/device'
 import { AuthProvider } from '@/app/AuthProvider'
 import { AppRoutes } from '@/app/routes'
 import { DeviceChooserDialog, UpdatePrompt } from '@/app/AppStatus'
+import { startScreenTranslation } from '@/lib/i18nDom'
 import './index.css'
 
 const queryClient = new QueryClient({
@@ -17,6 +18,9 @@ const queryClient = new QueryClient({
     mutations: { networkMode: 'always' },
   },
 })
+
+// Serbian on screen for the SEF program (the language is chosen on the device, Printeri → Gjuha / Jezik)
+startScreenTranslation()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

@@ -22,6 +22,12 @@ export function setLang(l: Lang) {
   listeners.forEach((f) => f())
 }
 
+/** Called when the language of this device changes. */
+export function onLangChange(f: () => void): () => void {
+  listeners.add(f)
+  return () => listeners.delete(f)
+}
+
 export function useLang(): Lang {
   return useSyncExternalStore(
     (f) => {
