@@ -142,6 +142,13 @@ if ($Action -eq 'clear') {
 $p = Get-CimInstance Win32_Printer -Filter ("Name='" + $Printer.Replace("'", "''").Replace('\', '\\') + "'")
 if (-not $p) { [Console]::Error.Write('NOPRINTER'); exit 2 }
 if ($p.WorkOffline) { [Console]::Error.Write('OFFLINE'); exit 3 }
+# what the driver reports (DetectedErrorState): 4 no paper, 7 door open, 8 jammed, 9 offline
+switch ([int]$p.DetectedErrorState) {
+  4 { [Console]::Error.Write('NOPAPER'); exit 5 }
+  7 { [Console]::Error.Write('DOOROPEN'); exit 5 }
+  8 { [Console]::Error.Write('JAMMED'); exit 5 }
+  9 { [Console]::Error.Write('OFFLINE'); exit 3 }
+}
 Add-Type -TypeDefinition @'
 using System;
 using System.Runtime.InteropServices;
@@ -155,21 +162,37 @@ public static class KasaRaw {
   [DllImport("winspool.drv", SetLastError = true)] static extern bool StartPagePrinter(IntPtr h);
   [DllImport("winspool.drv", SetLastError = true)] static extern bool EndPagePrinter(IntPtr h);
   [DllImport("winspool.drv", SetLastError = true)] static extern bool WritePrinter(IntPtr h, byte[] b, int n, out int w);
-  public static void Send(string printer, byte[] data) {
+  public static int Send(string printer, byte[] data) {
     IntPtr h;
     if (!OpenPrinter(printer, out h, IntPtr.Zero)) throw new Exception("OpenPrinter " + Marshal.GetLastWin32Error());
     try {
-      if (StartDocPrinter(h, 1, new DOCINFO { pDocName = "Kasa", pDataType = "RAW" }) == 0) throw new Exception("StartDoc " + Marshal.GetLastWin32Error());
+      int job = StartDocPrinter(h, 1, new DOCINFO { pDocName = "Kasa", pDataType = "RAW" });
+      if (job == 0) throw new Exception("StartDoc " + Marshal.GetLastWin32Error());
       StartPagePrinter(h);
       int w;
       if (!WritePrinter(h, data, data.Length, out w) || w != data.Length) throw new Exception("WritePrinter " + Marshal.GetLastWin32Error());
       EndPagePrinter(h);
       EndDocPrinter(h);
+      return job;
     } finally { ClosePrinter(h); }
   }
 }
 '@
-[KasaRaw]::Send($Printer, [IO.File]::ReadAllBytes($File))
+$job = [KasaRaw]::Send($Printer, [IO.File]::ReadAllBytes($File))
+# A receipt printer prints in a second or two. A job still waiting with an error (no paper, printer off, door open)
+# is removed: left in the queue it would print later, out of place, when the printer comes back.
+for ($i = 0; $i -lt 16; $i++) {
+  Start-Sleep -Milliseconds 500
+  $j = Get-PrintJob -PrinterName $Printer -ID $job -ErrorAction SilentlyContinue
+  if (-not $j) { exit 0 }
+  $st = [string]$j.JobStatus
+  if ($st -match 'Error|PaperOut|Offline|UserIntervention|Blocked') {
+    Remove-PrintJob -InputObject $j -ErrorAction SilentlyContinue
+    [Console]::Error.Write('STUCK:' + $st); exit 4
+  }
+}
+# still in the queue after 8 s without an error: left alone (a long receipt on a slow printer)
+exit 0
 `
 
 function runRawPs(args: string[]): Promise<{ ok: boolean; error?: string }> {
@@ -187,11 +210,20 @@ function runRawPs(args: string[]): Promise<{ ok: boolean; error?: string }> {
         const s = String(stderr || err.message)
         resolve({
           ok: false,
-          error: s.includes('OFFLINE')
-            ? 'Printeri nuk është i lidhur (kontrollo kabllon USB dhe që është i ndezur).'
-            : s.includes('NOPRINTER')
-              ? 'Printeri nuk u gjet në Windows.'
-              : 'Printimi dështoi: ' + s.trim().split('\n')[0].slice(0, 200),
+          // "kind:" in front tells the page what happened (lib/printer/errors.ts)
+          error: s.includes('NOPAPER')
+            ? 'paper:Printeri ka mbetur pa letër. Vendos një rrotull të re.'
+            : s.includes('DOOROPEN')
+              ? 'paper:Kapaku i printerit është i hapur.'
+              : s.includes('JAMMED')
+                ? 'paper:Letra ka ngecur në printer.'
+                : s.includes('STUCK')
+                  ? 'stuck:Printeri nuk e printoi kuponin (i fikur, pa letër ose kapaku i hapur). Kuponi u hoq nga radha.'
+                  : s.includes('OFFLINE')
+                    ? 'offline:Printeri nuk është i lidhur. Kontrollo kabllon USB dhe që është i ndezur.'
+                    : s.includes('NOPRINTER')
+                      ? 'offline:Printeri nuk u gjet në Windows.'
+                      : 'failed:Printimi dështoi: ' + s.trim().split('\n')[0].slice(0, 200),
         })
       },
     )
@@ -231,8 +263,8 @@ ipcMain.handle('kasa:print-tcp', async (e, host: unknown, port: unknown, data: u
     const socket = tcp.createConnection({ host, port })
     socket.setTimeout(6000)
     socket.on('connect', () => socket.end(Buffer.from(data), () => done({ ok: true })))
-    socket.on('timeout', () => done({ ok: false, error: `Printeri ${host}:${port} nuk përgjigjet` }))
-    socket.on('error', (err) => done({ ok: false, error: `Printeri ${host}:${port} nuk u gjet (${(err as NodeJS.ErrnoException).code ?? err.message})` }))
+    socket.on('timeout', () => done({ ok: false, error: `offline:Printeri ${host}:${port} nuk përgjigjet` }))
+    socket.on('error', (err) => done({ ok: false, error: `offline:Printeri ${host}:${port} nuk u gjet (${(err as NodeJS.ErrnoException).code ?? err.message})` }))
   })
 })
 ipcMain.handle('kasa:print-clear', async (e, deviceName: unknown) => {

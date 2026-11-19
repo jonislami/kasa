@@ -35,6 +35,7 @@ import {
   type OrderItem,
 } from './api'
 import { ticketStationsHere } from './KitchenPage'
+import { usePrintProblem } from '@/features/pos/PrintProblem'
 
 const parseNum = (s: string) => {
   const n = Number(s.trim().replace(',', '.'))
@@ -43,6 +44,7 @@ const parseNum = (s: string) => {
 
 /** One table's bill: add from the menu, send to kitchen/bar, pay all or part, move table. */
 export function OrderPage() {
+  const [printProblem, showPrintProblem] = usePrintProblem()
   const { tableId = 'merr' } = useParams()
   const [params, setParams] = useSearchParams()
   const navigate = useNavigate()
@@ -331,6 +333,7 @@ export function OrderPage() {
 
   return (
     <div className="px-4 pb-28 pt-4 md:px-8 md:pb-8 md:pt-6">
+      {printProblem}
       <Link to="/tavolinat" className="inline-flex items-center gap-1 text-sm font-semibold text-brand-600">
         <ChevronLeft className="h-4 w-4" /> Tavolinat
       </Link>
@@ -377,13 +380,18 @@ export function OrderPage() {
             void qc.invalidateQueries({ queryKey: ['open-orders'] })
             void qc.invalidateQueries({ queryKey: ['today-sales'] })
             if (receiptSettings.data?.settings.auto_print) {
+              const settings = receiptSettings.data
+              const viaDialog = () => {
+                setPrintSale(sale)
+                setTimeout(() => void printPage(), 50)
+              }
+              const attempt = async () => {
+                if ((await printReceipt(sale, business, settings, { openDrawer: true })) === 'browser') viaDialog()
+              }
               try {
-                if ((await printReceipt(sale, business, receiptSettings.data, { openDrawer: true })) === 'browser') {
-                  setPrintSale(sale)
-                  setTimeout(() => void printPage(), 50)
-                }
-              } catch {
-                /* the receipt dialog has a print button */
+                await attempt()
+              } catch (e) {
+                showPrintProblem(e, attempt, viaDialog)
               }
             }
             const o = await fetchOrder(order.id)
@@ -446,15 +454,23 @@ export function OrderPage() {
                 variant="secondary"
                 size="lg"
                 onClick={async () => {
-                  if (receiptSettings.data) {
-                    try {
-                      if ((await printReceipt(receipt, business, receiptSettings.data)) === 'printer') return
-                    } catch {
-                      /* browser */
-                    }
+                  const viaDialog = () => {
+                    setPrintSale(receipt)
+                    setTimeout(() => void printPage(), 50)
                   }
-                  setPrintSale(receipt)
-                  setTimeout(() => void printPage(), 50)
+                  if (receiptSettings.data) {
+                    const settings = receiptSettings.data
+                    const attempt = async () => {
+                      if ((await printReceipt(receipt, business, settings)) === 'browser') viaDialog()
+                    }
+                    try {
+                      await attempt()
+                    } catch (e) {
+                      showPrintProblem(e, attempt, viaDialog)
+                    }
+                    return
+                  }
+                  viaDialog()
                 }}
               >
                 Printo

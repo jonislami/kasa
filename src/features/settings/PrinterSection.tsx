@@ -6,7 +6,7 @@ import { Badge, Button, Card, Input, Select, Toggle } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import { device, isSefApp } from '@/lib/device'
 import { devicePaper, setDevicePaper, withDevicePaper, type DevicePaper } from '@/lib/printer/devicePaper'
-import { lastPrinterName, printerReady, testPageBytes } from '@/lib/printer'
+import { forgetPrinter, lastPrinterName, printerReady, testPageBytes } from '@/lib/printer'
 import { hasModule, isManagerRole } from '@/lib/business'
 import type { Sale } from '@/features/pos/api'
 import { Receipt } from '@/features/pos/Receipt'
@@ -336,7 +336,12 @@ function BluetoothCard({ settings }: { settings: ReceiptSettings }) {
                 >
                   <Printer className="h-4 w-4" /> Printo provë
                 </Button>
-                <Button variant="ghost" disabled={busy} onClick={() => run(() => device.printer.disconnect())}>
+                <Button variant="ghost" disabled={busy} onClick={() => run(async () => {
+                  await device.printer.disconnect()
+                  // forgotten: a receipt without a printer is no longer reported as "the printer does not answer"
+                  forgetPrinter()
+                  setName(null)
+                })}>
                   Shkëput
                 </Button>
               </>
