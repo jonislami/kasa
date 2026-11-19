@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Bluetooth, Printer, Usb } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
 import { Badge, Button, Card, Input, Select, Toggle } from '@/components/ui'
+import { cn } from '@/lib/cn'
 import { device, isSefApp } from '@/lib/device'
 import { devicePaper, setDevicePaper, withDevicePaper, type DevicePaper } from '@/lib/printer/devicePaper'
 import { lastPrinterName, printerReady, testPageBytes } from '@/lib/printer'
@@ -198,6 +199,9 @@ function BluetoothCard({ settings }: { settings: ReceiptSettings }) {
   const [name, setName] = useState<string | null>(lastPrinterName())
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  // Android: printers paired over classic Bluetooth (most 58/80 mm printers), picked from a list
+  const [paired, setPaired] = useState<{ id: string; name: string; printer: boolean }[] | null>(null)
+  const classic = Boolean(device.printer.paired && device.printer.connectTo)
 
   useEffect(() => {
     if (!connected && name !== null) void printerReady().then(setConnected)
@@ -239,11 +243,60 @@ function BluetoothCard({ settings }: { settings: ReceiptSettings }) {
         </div>
       ) : (
         <div className="mt-4 rounded-card border border-dashed border-field p-4">
-          <p className="text-[15px] text-muted">Ndize printerin dhe Bluetooth-in e pajisjes, pastaj shtyp butonin për ta kërkuar.</p>
+          <p className="text-[15px] text-muted">
+            {classic
+              ? 'Çifto printerin një herë te Bluetooth-i i telefonit (PIN zakonisht 0000 ose 1234), pastaj zgjidhe këtu.'
+              : 'Ndize printerin dhe Bluetooth-in e pajisjes, pastaj shtyp butonin për ta kërkuar.'}
+          </p>
+          {classic && paired && (
+            <ul className="mt-3 divide-y divide-line rounded-card border border-line bg-white">
+              {paired.map((p) => (
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() =>
+                      run(async () => {
+                        setName(await device.printer.connectTo!(p.id))
+                        setPaired(null)
+                        setMsg({ ok: true, text: 'Printeri u lidh' })
+                      })
+                    }
+                    className="flex min-h-[48px] w-full items-center gap-3 px-4 text-left hover:bg-bg disabled:opacity-60"
+                  >
+                    <Printer className={cn('h-5 w-5 shrink-0', p.printer ? 'text-bt-600' : 'text-muted')} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium">{p.name}</span>
+                      <span className="block text-xs text-muted">{p.printer ? 'Printer' : 'Pajisje tjetër'} · {p.id}</span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+              {paired.length === 0 && <li className="px-4 py-3 text-sm text-muted">Asnjë printer i çiftuar. Çiftoje te Bluetooth-i i telefonit.</li>}
+            </ul>
+          )}
           <div className="mt-3 flex flex-wrap gap-2.5">
+            {classic && (
+              <Button
+                variant="bluetooth"
+                loading={busy && !paired}
+                onClick={() =>
+                  run(async () => {
+                    setPaired(await device.printer.paired!())
+                  })
+                }
+              >
+                <Bluetooth className="h-4 w-4" /> {connected ? 'Zgjidh një printer tjetër' : 'Zgjidh printerin'}
+              </Button>
+            )}
+            {classic && (
+              <Button variant="secondary" disabled={busy} onClick={() => run(() => device.printer.openBluetoothSettings!())}>
+                Çifto printer të ri
+              </Button>
+            )}
             <Button
-              variant="bluetooth"
-              loading={busy}
+              variant={classic ? 'ghost' : 'bluetooth'}
+              loading={busy && !classic}
               onClick={() =>
                 run(async () => {
                   setName(await device.printer.connect())
@@ -251,7 +304,7 @@ function BluetoothCard({ settings }: { settings: ReceiptSettings }) {
                 })
               }
             >
-              <Bluetooth className="h-4 w-4" /> {connected ? 'Lidh një printer tjetër' : 'Lidh printerin me Bluetooth'}
+              <Bluetooth className="h-4 w-4" /> {classic ? 'Printer BLE' : connected ? 'Lidh një printer tjetër' : 'Lidh printerin me Bluetooth'}
             </Button>
             {support.usbSerial && device.printer.connectSerial && (
               <Button

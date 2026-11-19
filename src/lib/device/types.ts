@@ -39,6 +39,15 @@ export interface PrinterTransport {
   connect(): Promise<string>
   /** USB / serial thermal printer (Web Serial – Chrome/Edge on a computer, Windows app). */
   connectSerial?(): Promise<string>
+  /**
+   * Printers already paired with the phone over classic Bluetooth (SPP – most 58/80 mm printers), Android app only.
+   * `printer` is a hint from the device class; the list is shown with the likely printers first.
+   */
+  paired?(): Promise<{ id: string; name: string; printer: boolean }[]>
+  /** Connects to one of `paired()`. Returns the device name. */
+  connectTo?(id: string): Promise<string>
+  /** Opens the phone's Bluetooth settings to pair a new printer. */
+  openBluetoothSettings?(): Promise<void>
   /** Reconnects to the last used printer without the picker, if possible. */
   reconnect(): Promise<string | null>
   isConnected(): boolean
