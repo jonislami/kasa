@@ -9,6 +9,7 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         // Local plugins must be registered before the bridge starts.
         registerPlugin(AtkKeyPlugin.class);
+        registerPlugin(KasaPrinterPlugin.class);
         super.onCreate(savedInstanceState);
     }
 }

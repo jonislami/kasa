@@ -31,6 +31,7 @@ import { t as tr, useLang } from '@/lib/i18n'
 import { fiscalizeSale } from './fiscal'
 import { formatSq } from '@/lib/sqDate'
 import { roundQty, unitDecimals } from '@/lib/units'
+import { usePrintProblem } from './PrintProblem'
 
 const parseNum = (s: string) => {
   const n = Number(s.trim().replace(',', '.'))
@@ -414,19 +415,28 @@ export function PosPage() {
     return () => window.removeEventListener('keydown', onKey)
   })
 
-  // Bluetooth/USB printer when connected, otherwise the browser's print dialog (80mm).
+  // This device's printer; the print dialog only when the device has no printer. A printer that does not answer
+  // opens the notice (try again / print with the dialog / go on) instead of the dialog.
+  const [printProblem, showPrintProblem] = usePrintProblem()
   async function print(sale: Sale, copy = false, afterPayment = false) {
     const settings = receiptSettings.data
-    if (settings) {
-      try {
-        const how = await printReceipt(sale, business, settings, { copy, openDrawer: afterPayment })
-        if (how === 'printer') return
-      } catch (e) {
-        setError(`Printeri: ${(e as Error).message}. Po printoj nga shfletuesi.`)
-      }
+    const viaDialog = () => {
+      setPrintSale({ sale, copy })
+      setTimeout(() => void printPage(), 50)
     }
-    setPrintSale({ sale, copy })
-    setTimeout(() => void printPage(), 50)
+    if (settings) {
+      const attempt = async () => {
+        const how = await printReceipt(sale, business, settings, { copy, openDrawer: afterPayment })
+        if (how === 'browser') viaDialog()
+      }
+      try {
+        await attempt()
+      } catch (e) {
+        showPrintProblem(e, attempt, viaDialog)
+      }
+      return
+    }
+    viaDialog()
   }
 
   const change = (() => {
@@ -699,6 +709,7 @@ export function PosPage() {
   const sharedDialogs = (
     <>
       <BookEntryDialog open={bookOpen} onClose={() => setBookOpen(false)} onSet={(b) => { setBookEntry(b); setBookOpen(false) }} />
+      {printProblem}
       <QuickProductDialog
         open={Boolean(quickAdd)}
         type={business.type}

@@ -3,9 +3,9 @@ import type { AppUpdates, DeviceAdapter, KeyStore, PrinterTransport } from './ty
 import { getDeviceId, keys as webKeys, storage } from './web'
 
 /**
- * Android / iPhone app (Capacitor). The page runs in the system WebView; Bluetooth printing goes
- * through the native BLE plugin (@capacitor-community/bluetooth-le), which also works on iPhone
- * where Safari has no Web Bluetooth. The sealed store uses the WebView's WebCrypto + IndexedDB
+ * Android / iPhone app (Capacitor). The page runs in the system WebView. Bluetooth printing: classic Bluetooth
+ * (SPP) through the local plugin KasaPrinterPlugin.java on Android – what most 58/80 mm thermal printers speak – and
+ * Bluetooth Low Energy through @capacitor-community/bluetooth-le (also on iPhone, where Safari has no Web Bluetooth). The sealed store uses the WebView's WebCrypto + IndexedDB
  * (app-private storage). The ATK key lives in the Android Keystore (AtkKeyPlugin.java); where the
  * native plugin is missing (iPhone for now) it stays a non-extractable WebCrypto key.
  */
@@ -18,7 +18,36 @@ interface AtkKeyNative {
   deleteKey(o: { alias: string }): Promise<void>
 }
 const AtkKey = registerPlugin<AtkKeyNative>('AtkKey')
-const b64 = (bytes: Uint8Array) => btoa(String.fromCharCode(...bytes))
+// in pieces: String.fromCharCode(...bytes) runs out of stack on a long receipt with a logo
+const b64 = (bytes: Uint8Array) => {
+  let s = ''
+  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000))
+  return btoa(s)
+}
+
+interface KasaPrinterNative {
+  paired(): Promise<{ devices: { id: string; name: string; printer: boolean }[] }>
+  connect(o: { id: string }): Promise<{ name: string }>
+  write(o: { data: string }): Promise<void>
+  disconnect(): Promise<void>
+  status(): Promise<{ connected: boolean; id: string | null; name: string | null }>
+  openSettings(): Promise<void>
+  sendTcp(o: { host: string; port: number; data: string }): Promise<void>
+}
+const KasaPrinter = registerPlugin<KasaPrinterNative>('KasaPrinter')
+const hasSpp = Capacitor.getPlatform() === 'android' && Capacitor.isPluginAvailable('KasaPrinter')
+const SPP_KEY = 'kasa.printer.spp'
+let spp: { id: string; name: string } | null = null
+
+async function openSpp(id: string): Promise<string> {
+  if (current) await disconnectBle()
+  const { name } = await KasaPrinter.connect({ id })
+  spp = { id, name }
+  localStorage.setItem(SPP_KEY, id)
+  localStorage.setItem('kasa.printer.name', name)
+  localStorage.removeItem('kasa.printer.ble')
+  return name
+}
 
 const nativeKeys: KeyStore = {
   ensureKey: async (alias) => (await AtkKey.ensureKey({ alias })).publicKey,
@@ -47,7 +76,18 @@ async function lib(): Promise<Ble> {
 
 let current: { deviceId: string; service: string; characteristic: string; noResponse: boolean; name: string } | null = null
 
+async function disconnectBle() {
+  if (!current) return
+  const { BleClient } = await lib()
+  await BleClient.disconnect(current.deviceId).catch(() => undefined)
+  current = null
+}
+
 async function openWritable(deviceId: string, name: string) {
+  if (spp) {
+    await KasaPrinter.disconnect().catch(() => undefined)
+    spp = null
+  }
   const { BleClient } = await lib()
   await BleClient.connect(deviceId, () => {
     current = null
@@ -58,6 +98,7 @@ async function openWritable(deviceId: string, name: string) {
         current = { deviceId, service: s.uuid, characteristic: c.uuid, noResponse: !c.properties.write, name }
         localStorage.setItem('kasa.printer.name', name)
         localStorage.setItem('kasa.printer.ble', deviceId)
+        localStorage.removeItem(SPP_KEY)
         return name
       }
     }
@@ -75,7 +116,31 @@ const printer: PrinterTransport = {
     const d = await BleClient.requestDevice({ optionalServices: PRINTER_SERVICES })
     return openWritable(d.deviceId, d.name || 'Printer')
   },
+  ...(hasSpp
+    ? {
+        async paired() {
+          const { devices } = await KasaPrinter.paired()
+          return [...devices].sort((a, b) => Number(b.printer) - Number(a.printer) || a.name.localeCompare(b.name))
+        },
+        connectTo: openSpp,
+        openBluetoothSettings: () => KasaPrinter.openSettings(),
+      }
+    : {}),
   async reconnect() {
+    const sppId = hasSpp ? localStorage.getItem(SPP_KEY) : null
+    if (sppId) {
+      try {
+        const st = await KasaPrinter.status()
+        if (st.connected && st.id === sppId) {
+          spp = { id: sppId, name: st.name ?? 'Printer' }
+          return spp.name
+        }
+        return await openSpp(sppId)
+      } catch {
+        spp = null
+        return null
+      }
+    }
     const id = localStorage.getItem('kasa.printer.ble')
     if (!id) return null
     try {
@@ -85,9 +150,18 @@ const printer: PrinterTransport = {
     }
   },
   isConnected() {
-    return current !== null
+    return current !== null || spp !== null
   },
   async write(bytes, chunkSize = 180) {
+    if (spp) {
+      try {
+        await KasaPrinter.write({ data: b64(bytes) })
+      } catch (e) {
+        spp = null // the plugin closed the socket; the next print reconnects
+        throw e
+      }
+      return
+    }
     if (!current) throw new Error('Printeri nuk është i lidhur')
     const { BleClient } = await lib()
     for (let i = 0; i < bytes.length; i += chunkSize) {
@@ -98,10 +172,12 @@ const printer: PrinterTransport = {
     }
   },
   async disconnect() {
-    if (!current) return
-    const { BleClient } = await lib()
-    await BleClient.disconnect(current.deviceId).catch(() => undefined)
-    current = null
+    if (spp) {
+      await KasaPrinter.disconnect().catch(() => undefined)
+      spp = null
+      localStorage.removeItem(SPP_KEY)
+    }
+    await disconnectBle()
   },
 }
 
@@ -162,6 +238,7 @@ export const capacitorDevice: DeviceAdapter = {
   keys: Capacitor.isPluginAvailable('AtkKey') ? nativeKeys : webKeys,
   storage,
   printer,
+  networkPrint: hasSpp ? { send: (host, port, data) => KasaPrinter.sendTcp({ host, port, data: b64(data) }) } : undefined,
   // iPhone gets its updates from the App Store
   appUpdates: Capacitor.getPlatform() === 'android' ? apkUpdates : undefined,
 }

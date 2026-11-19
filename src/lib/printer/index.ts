@@ -4,9 +4,12 @@ import type { Sale } from '@/features/pos/api'
 import type { ReceiptSettings } from '@/features/settings/api'
 import { receiptBytes, testPageBytes } from './receipt'
 import { ticketBytes } from './ticket'
+import { sendToTarget, stationTarget } from './stations'
 import type { Ticket } from '@/features/restaurant/api'
+import { PrinterError, toPrinterError } from './errors'
 
 export { receiptBytes, testPageBytes }
+export { PrinterError, toPrinterError, PRINTER_ERROR_HINTS, PRINTER_ERROR_TITLES, type PrinterErrorKind } from './errors'
 
 /** Connected, or reconnected silently to the last printer (no picker). */
 export async function printerReady(): Promise<boolean> {
@@ -19,8 +22,46 @@ export async function printerReady(): Promise<boolean> {
 }
 
 /**
- * Prints a receipt on the Bluetooth/USB printer when one is connected; otherwise returns 'browser'
- * so the caller prints the on-screen receipt with window.print() (80mm).
+ * Bytes to this device's receipt printer: the Bluetooth / USB one when it answers, else the Windows printer in raw
+ * mode. 'browser' only when this device has no printer set up (the caller then prints the on-screen receipt).
+ * A printer that is set up but does not answer throws a PrinterError – the till says so instead of opening the
+ * print dialog by itself.
+ */
+async function toReceiptPrinter(chunks: Uint8Array[], chunkSize: number): Promise<'printer' | 'browser'> {
+  if (await printerReady()) {
+    try {
+      for (const c of chunks) await device.printer.write(c, chunkSize)
+    } catch (e) {
+      throw toPrinterError(e)
+    }
+    return 'printer'
+  }
+  const raw = await rawWindowsPrinter()
+  if (raw) {
+    try {
+      await device.systemPrint!.printRaw!(raw, concat(chunks))
+    } catch (e) {
+      throw toPrinterError(e)
+    }
+    return 'printer'
+  }
+  const remembered = lastPrinterName()
+  if (remembered) throw new PrinterError('offline', `Printeri “${remembered}” nuk përgjigjet.`)
+  return 'browser'
+}
+
+/** Forgets the Bluetooth / USB printer of this device (Printeri → Shkëput), so a missing printer is not an error. */
+export function forgetPrinter() {
+  try {
+    for (const k of ['kasa.printer.name', 'kasa.printer.kind', 'kasa.printer.ble', 'kasa.printer.spp']) localStorage.removeItem(k)
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+/**
+ * Prints a receipt on this device's printer; 'browser' when it has none, so the caller prints the on-screen receipt
+ * with window.print(). Throws a PrinterError when the printer does not answer.
  */
 export async function printReceipt(
   sale: Sale,
@@ -31,15 +72,7 @@ export async function printReceipt(
   const copies = opts.copy ? 1 : Math.min(Math.max(settings.settings.copies ?? 1, 1), 3)
   const drawer = Boolean(opts.openDrawer && settings.settings.open_drawer && sale.cash_amount > 0)
   const bytes = (i: number) => receiptBytes(sale, business, settings, { copy: opts.copy || i > 0, drawer: drawer && i === 0 })
-  if (await printerReady()) {
-    for (let i = 0; i < copies; i++) await device.printer.write(bytes(i), settings.printer_chunk)
-    return 'printer'
-  }
-  const raw = await rawWindowsPrinter()
-  if (!raw) return 'browser'
-  const parts = Array.from({ length: copies }, (_, i) => bytes(i))
-  await device.systemPrint!.printRaw!(raw, concat(parts))
-  return 'printer'
+  return toReceiptPrinter(Array.from({ length: copies }, (_, i) => bytes(i)), settings.printer_chunk)
 }
 
 function concat(parts: Uint8Array[]): Uint8Array {
@@ -52,16 +85,23 @@ function concat(parts: Uint8Array[]): Uint8Array {
   return out
 }
 
-/** Kitchen/bar ticket on this device's printer; 'browser' when none is connected. */
+/**
+ * Kitchen/bar ticket: on the station's own printer when this device has one (Windows printer or network printer,
+ * Printeri → Kuzhina / Bari), else on this device's receipt printer; 'browser' when none is connected.
+ */
 export async function printTicket(ticket: Ticket, settings: ReceiptSettings, reprint = false): Promise<'printer' | 'browser'> {
-  if (await printerReady()) {
-    await device.printer.write(ticketBytes(ticket, settings, reprint), settings.printer_chunk)
+  const target = stationTarget(ticket.station)
+  if (target && (target.kind === 'windows' || target.kind === 'network')) {
+    // the station printer's own paper; characters per line follow it
+    const s = target.paper ? { ...settings, paper_width: target.paper, settings: { ...settings.settings, line_chars: null } } : settings
+    try {
+      await sendToTarget(target, ticketBytes(ticket, s, reprint))
+    } catch (e) {
+      throw toPrinterError(e)
+    }
     return 'printer'
   }
-  const raw = await rawWindowsPrinter()
-  if (!raw) return 'browser'
-  await device.systemPrint!.printRaw!(raw, ticketBytes(ticket, settings, reprint))
-  return 'printer'
+  return toReceiptPrinter([ticketBytes(ticket, settings, reprint)], settings.printer_chunk)
 }
 
 export function lastPrinterName(): string | null {
@@ -144,7 +184,11 @@ export async function clearPrinterQueue(name?: string | null): Promise<void> {
 export async function printWindowsTest(businessName: string, s: ReceiptSettings, name?: string | null) {
   const n = name ?? (await receiptPrinterName())
   if (!n || !device.systemPrint?.printRaw) throw new Error('Zgjidh printerin')
-  await device.systemPrint.printRaw(n, testPageBytes(businessName, s))
+  try {
+    await device.systemPrint.printRaw(n, testPageBytes(businessName, s))
+  } catch (e) {
+    throw toPrinterError(e)
+  }
 }
 
 /**

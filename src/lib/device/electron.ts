@@ -26,6 +26,7 @@ interface Bridge {
   printSilent?(deviceName?: string): Promise<{ ok: boolean; error?: string }>
   printRaw?(deviceName: string, data: Uint8Array): Promise<{ ok: boolean; error?: string }>
   clearPrintQueue?(deviceName: string): Promise<{ ok: boolean; error?: string }>
+  printTcp?(host: string, port: number, data: Uint8Array): Promise<{ ok: boolean; error?: string }>
 }
 
 const bridge = (window as unknown as { kasaElectron: Bridge }).kasaElectron
@@ -96,6 +97,14 @@ export const electronDevice: DeviceAdapter = {
               },
             }
           : {}),
+      }
+    : undefined,
+  networkPrint: bridge?.printTcp
+    ? {
+        send: async (host, port, data) => {
+          const r = await bridge.printTcp!(host, port, data)
+          if (!r.ok) throw new Error(r.error || 'Printimi dështoi')
+        },
       }
     : undefined,
   appUpdates: { subscribe: (cb) => bridge.onUpdate(cb), install: () => bridge.installUpdate() },

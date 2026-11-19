@@ -11,7 +11,7 @@ export function ticketBytes(t: Ticket, s: Pick<ReceiptSettings, 'paper_width' | 
   const w = charsPerLine(s.paper_width, (s as { settings?: ReceiptSettings['settings'] }).settings?.line_chars)
   const p = new EscPos(w, s.printer_charset)
   p.align('center').bold(true).line(STATION_LABELS[t.station].toUpperCase() + (reprint ? ' - KOPJE' : ''))
-  p.size(2).line(t.table_name ? `Tavolina ${t.table_name}` : `Porosia #${t.order_no}`).size(1).bold(false)
+  p.size(2).wrap(t.table_name ? `Tavolina ${t.table_name}` : `Porosia #${t.order_no}`).size(1).bold(false)
   p.line(`#${t.order_no} - ${formatKosovoDateTime(t.created_at)}`)
   if (t.waiter_name) p.line(t.waiter_name)
   p.align('left').rule('=')

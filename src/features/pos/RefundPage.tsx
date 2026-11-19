@@ -17,6 +17,7 @@ import { formatKosovoDateTime as formatDateTime } from '@/lib/clock'
 import { printPage, printReceipt } from '@/lib/printer'
 import { fetchReceiptSettings } from '@/features/settings/api'
 import { roundQty, unitDecimals } from '@/lib/units'
+import { usePrintProblem } from './PrintProblem'
 
 const REASONS = ['Produkt i dëmtuar', 'Afati ka skaduar', 'Gabim në arkë', 'Klienti ndërroi mendje', 'Tjetër']
 
@@ -34,6 +35,7 @@ function refundLineTotal(i: SaleItem, qty: number): number {
 
 export function RefundPage() {
   const { business, profile } = useBusiness()
+  const [printProblem, showPrintProblem] = usePrintProblem()
   // The till's register on this device (the return coupon is issued by it).
   const registerId = localStorage.getItem(`kasa.register.${business.id}`)
   const navigate = useNavigate()
@@ -149,6 +151,7 @@ export function RefundPage() {
 
   return (
     <div className="px-4 pb-8 pt-5 md:px-8 md:pt-8">
+      {printProblem}
       <Link to="/arka" className="inline-flex items-center gap-1 text-sm font-semibold text-brand-600">
         <ChevronLeft className="h-4 w-4" /> Kthehu te arka
       </Link>
@@ -367,15 +370,23 @@ export function RefundPage() {
                 variant="secondary"
                 size="lg"
                 onClick={async () => {
-                  if (receiptSettings.data && done) {
-                    try {
-                      if ((await printReceipt(done, business, receiptSettings.data)) === 'printer') return
-                    } catch {
-                      /* fall back to the browser */
-                    }
+                  const viaDialog = () => {
+                    setPrinting(true)
+                    setTimeout(() => void printPage(), 50)
                   }
-                  setPrinting(true)
-                  setTimeout(() => void printPage(), 50)
+                  if (receiptSettings.data && done) {
+                    const settings = receiptSettings.data
+                    const attempt = async () => {
+                      if ((await printReceipt(done, business, settings)) === 'browser') viaDialog()
+                    }
+                    try {
+                      await attempt()
+                    } catch (e) {
+                      showPrintProblem(e, attempt, viaDialog)
+                    }
+                    return
+                  }
+                  viaDialog()
                 }}
               >
                 Printo
