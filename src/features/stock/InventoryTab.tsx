@@ -9,6 +9,7 @@ import { formatQty } from '@/lib/units'
 import type { Category, Product } from '@/features/products/api'
 import { confirmInventory, fetchInventoryCounts, fetchInventoryItems, formatDateTime, type InventoryCount } from './api'
 import { ProductPicker } from './ProductPicker'
+import { unitStep } from '@/lib/units'
 
 /** An inventory in progress is kept on this device until it is confirmed. */
 interface CountDraft {
@@ -195,7 +196,7 @@ export function InventoryTab({ products, categories, people }: { products: Produ
                           inputMode="decimal"
                           type="number"
                           min="0"
-                          step={p.unit === 'kg' ? '0.001' : '1'}
+                          step={unitStep(p.unit)}
                           value={draft.counted[p.id] ?? ''}
                           onChange={(e) => setDraft((d) => ({ ...d, counted: { ...d.counted, [p.id]: e.target.value } }))}
                           className="h-11 w-[96px] rounded-ctl border border-field px-3 text-right tabular-nums focus:border-brand-600 focus:outline-none"

@@ -9,6 +9,7 @@ import { formatEUR, round2 } from '@/lib/money'
 import { unitLabel } from '@/lib/units'
 import { fetchCategories, fetchProducts } from '@/features/products/api'
 import { ProductPicker } from '@/features/stock/ProductPicker'
+import { unitDecimals } from '@/lib/units'
 import {
   fetchCategoryStations,
   fetchModifiers,
@@ -156,7 +157,7 @@ export function MenuItemPage() {
           <div className="mt-3">
             <ProductPicker
               products={ingredients}
-              onPick={(p) => setLines((ls) => (ls.some((l) => l.ingredient_id === p.id) ? ls : [...ls, { ingredient_id: p.id, quantity: p.unit === 'kg' ? '0.1' : '1' }]))}
+              onPick={(p) => setLines((ls) => (ls.some((l) => l.ingredient_id === p.id) ? ls : [...ls, { ingredient_id: p.id, quantity: unitDecimals(p.unit) > 0 ? '0.1' : '1' }]))}
             />
           </div>
           {lines.length > 0 && (

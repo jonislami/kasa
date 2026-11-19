@@ -84,7 +84,7 @@ export function receiptBytes(sale: Sale, business: Business, s: ReceiptSettings,
   if (!x.returned && sale.kind === 'sale' && sale.tendered != null && sale.tendered !== sale.cash_amount) p.pair(x.L.paid, n2(sale.tendered))
   if (!x.returned && sale.change_amount > 0) p.pair(x.L.change, n2(sale.change_amount))
   for (const [k, v] of x.main.vat) p.pair(k, `${v} EUR`)
-  p.pair(x.L.net, `${x.main.net} EUR`)
+  if (x.hasVat) p.pair(x.L.net, `${x.main.net} EUR`)
   p.rule('-')
 
   // Return: what is returned and what remains

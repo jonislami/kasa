@@ -29,3 +29,9 @@ export function vatBreakdown(lines: { code: VatCode; gross: number }[]): VatLine
     return { code, gross, net, vat: round2(gross - net) }
   })
 }
+
+/** A business is in VAT when it has a VAT number (the same rule as the books and the server, 0042). */
+export const hasVat = (b: { vat_number?: string | null } | null | undefined): boolean => Boolean(b?.vat_number?.trim())
+
+/** The rate a sale uses: a business outside VAT sells everything as A (outside VAT, 0%), whatever the product says. */
+export const saleVatCode = (code: VatCode, vat: boolean): VatCode => (vat ? code : 'A')

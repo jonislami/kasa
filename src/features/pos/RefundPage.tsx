@@ -5,7 +5,7 @@ import { Check, ChevronLeft, Minus, Plus } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
 import { fiscalizeSale } from './fiscal'
 import { Button, Card, Dialog, Input, Select } from '@/components/ui'
-import { hasModule, isManagerRole } from '@/lib/business'
+import { hasModule } from '@/lib/business'
 import { cn } from '@/lib/cn'
 import { formatEUR, formatInvoiceNo, round2 } from '@/lib/money'
 import { unitLabel } from '@/lib/units'
@@ -16,6 +16,7 @@ import { PrintArea, Receipt } from './Receipt'
 import { formatKosovoDateTime as formatDateTime } from '@/lib/clock'
 import { printPage, printReceipt } from '@/lib/printer'
 import { fetchReceiptSettings } from '@/features/settings/api'
+import { roundQty, unitDecimals } from '@/lib/units'
 
 const REASONS = ['Produkt i dëmtuar', 'Afati ka skaduar', 'Gabim në arkë', 'Klienti ndërroi mendje', 'Tjetër']
 
@@ -33,7 +34,6 @@ function refundLineTotal(i: SaleItem, qty: number): number {
 
 export function RefundPage() {
   const { business, profile } = useBusiness()
-  const manager = isManagerRole(profile.role)
   // The till's register on this device (the return coupon is issued by it).
   const registerId = localStorage.getItem(`kasa.register.${business.id}`)
   const navigate = useNavigate()
@@ -103,7 +103,7 @@ export function RefundPage() {
 
   const setItemQty = (i: SaleItem, q: number) => {
     const max = left(i)
-    const v = Math.max(0, Math.min(max, i.unit === 'kg' ? round2(q) : Math.round(q)))
+    const v = Math.max(0, Math.min(max, roundQty(q, i.unit)))
     setQty((prev) => ({ ...prev, [i.id]: v }))
   }
 
@@ -126,7 +126,8 @@ export function RefundPage() {
       })
       if (!r.ok) {
         setError(APPROVAL_MESSAGES[r.error])
-        if (!manager) setApprove(true)
+        // the server always asks for the PIN of an owner / manager (0042)
+        setApprove(true)
         return
       }
       setApprove(false)
@@ -224,7 +225,7 @@ export function RefundPage() {
                           <button type="button" disabled={q <= 0} onClick={() => setItemQty(i, q - 1)} className="flex h-9 w-9 items-center justify-center rounded-lg border border-field disabled:opacity-40">
                             <Minus className="h-4 w-4" />
                           </button>
-                          {i.unit === 'kg' ? (
+                          {unitDecimals(i.unit) > 0 ? (
                             <input
                               value={q || ''}
                               onChange={(e) => setItemQty(i, Number(e.target.value.replace(',', '.')) || 0)}
@@ -314,7 +315,7 @@ export function RefundPage() {
               className="mt-4"
               disabled={chosen.length === 0}
               loading={busy && !approve}
-              onClick={() => (manager ? void submit() : setApprove(true))}
+              onClick={() => setApprove(true)}
             >
               {exchange ? `Konfirmo ndërrimin · ${formatEUR(summary.total)}` : `Konfirmo kthimin · ${formatEUR(summary.total)}`}
             </Button>

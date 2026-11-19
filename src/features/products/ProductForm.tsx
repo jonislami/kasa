@@ -66,8 +66,11 @@ export function ProductForm({
   onSave,
   onCancel,
   onToggleActive,
+  vatRegistered = true,
 }: {
   product: Product | null
+  /** false: the business is not in VAT – the VAT rate is hidden and sales use A (0042) */
+  vatRegistered?: boolean
   businessType: BusinessType
   categories: Category[]
   defaultCategoryId: string | null
@@ -250,7 +253,7 @@ export function ProductForm({
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <Select label="TVSH" value={d.vat} onChange={(e) => set('vat', e.target.value as VatCode)} options={VAT_OPTIONS} />
+        {vatRegistered && <Select label="TVSH" value={d.vat} onChange={(e) => set('vat', e.target.value as VatCode)} options={VAT_OPTIONS} />}
         <Select label="Kategoria ATK" value={d.atk} onChange={(e) => set('atk', e.target.value)} options={categoryOptions()} />
         {isService ? (
           <Input label="Kohëzgjatja (min)" inputMode="numeric" value={d.duration} onChange={(e) => set('duration', e.target.value)} placeholder="p.sh. 30" />
