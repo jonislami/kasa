@@ -32,6 +32,7 @@ interface KasaPrinterNative {
   disconnect(): Promise<void>
   status(): Promise<{ connected: boolean; id: string | null; name: string | null }>
   openSettings(): Promise<void>
+  sendTcp(o: { host: string; port: number; data: string }): Promise<void>
 }
 const KasaPrinter = registerPlugin<KasaPrinterNative>('KasaPrinter')
 const hasSpp = Capacitor.getPlatform() === 'android' && Capacitor.isPluginAvailable('KasaPrinter')
@@ -237,6 +238,7 @@ export const capacitorDevice: DeviceAdapter = {
   keys: Capacitor.isPluginAvailable('AtkKey') ? nativeKeys : webKeys,
   storage,
   printer,
+  networkPrint: hasSpp ? { send: (host, port, data) => KasaPrinter.sendTcp({ host, port, data: b64(data) }) } : undefined,
   // iPhone gets its updates from the App Store
   appUpdates: Capacitor.getPlatform() === 'android' ? apkUpdates : undefined,
 }

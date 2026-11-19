@@ -27,6 +27,7 @@ import {
   orderTotal,
   saleLinesFor,
   sendOrder,
+  setTicket,
   setOrderItem,
   STATION_LABELS,
   type MenuItem,
@@ -140,17 +141,24 @@ export function OrderPage() {
       const r = await sendOrder(order.id)
       const here = ticketStationsHere()
       let printed = 0
+      const failed: string[] = []
       if (receiptSettings.data) {
         for (const t of r.tickets.filter((t) => here.includes(t.station))) {
           try {
-            if ((await printTicket(t, receiptSettings.data)) === 'printer') printed++
-          } catch {
-            /* the kitchen screen still shows it */
+            if ((await printTicket(t, receiptSettings.data)) === 'printer') {
+              printed++
+              // the kitchen screen that prints by itself must not print it again
+              void setTicket(t.id, { printed: true }).catch(() => undefined)
+            }
+          } catch (e) {
+            failed.push(`${STATION_LABELS[t.station]}: ${(e as Error).message}`)
           }
         }
       }
       const where = [...new Set(r.tickets.map((t) => STATION_LABELS[t.station]))].join(' dhe ')
       const msg = where ? `U dërgua në ${where.toLowerCase()}${printed ? ' · u printua' : ''}` : 'U shënua si e dërguar'
+      // the order is saved and shows on the kitchen screen; the waiter sees that the paper did not come out
+      if (failed.length) setError(`Porosia u dërgua, por nuk u printua – ${failed.join(' · ')}`)
       // The waiter goes straight back to the tables; the owner/manager stays on the bill.
       if (waiter) {
         navigate('/tavolinat', { state: { notice: `${order.table_name ? order.table_name + ': ' : ''}porosia u konfirmua · ${msg.toLowerCase()}` } })

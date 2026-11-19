@@ -7,6 +7,7 @@ import { Button, Card, EmptyState, Tabs, Toggle } from '@/components/ui'
 import { serverNow } from '@/lib/clock'
 import { cn } from '@/lib/cn'
 import { printTicket } from '@/lib/printer'
+import { STATIONS, stationTarget } from '@/lib/printer/stations'
 import { fetchReceiptSettings } from '@/features/settings/api'
 import { fetchTickets, setTicket, STATION_LABELS, type Station, type Ticket } from './api'
 
@@ -29,9 +30,14 @@ function write(key: string, v: string | null) {
   }
 }
 
-/** Stations whose tickets this device prints itself when a waiter sends from here. */
+/**
+ * Stations whose tickets this device prints itself when a waiter sends from here: every station given a printer in
+ * Printeri → Kuzhina / Bari (not "Nuk printohet këtu"), and the station of the kitchen screen that prints by itself.
+ */
 export function ticketStationsHere(): Station[] {
-  return read(AUTO_KEY) === 'on' ? [(read(STATION_KEY) as Station) || 'kitchen'] : []
+  const out = new Set<Station>(STATIONS.filter((s) => stationTarget(s) && stationTarget(s)!.kind !== 'off'))
+  if (read(AUTO_KEY) === 'on') out.add((read(STATION_KEY) as Station) || 'kitchen')
+  return [...out]
 }
 
 function age(iso: string) {

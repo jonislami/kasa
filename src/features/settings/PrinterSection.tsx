@@ -7,12 +7,13 @@ import { cn } from '@/lib/cn'
 import { device, isSefApp } from '@/lib/device'
 import { devicePaper, setDevicePaper, withDevicePaper, type DevicePaper } from '@/lib/printer/devicePaper'
 import { lastPrinterName, printerReady, testPageBytes } from '@/lib/printer'
-import { isManagerRole } from '@/lib/business'
+import { hasModule, isManagerRole } from '@/lib/business'
 import type { Sale } from '@/features/pos/api'
 import { Receipt } from '@/features/pos/Receipt'
 import { clearPrinterQueue, effectiveMode, printWindowsTest, setWindowsPrinter, setWindowsPrintMode, windowsPrinter, windowsPrintMode, THERMAL_RE, type WinPrintMode } from '@/lib/printer'
 import { charsPerLine, LINE_CHARS, PAPER_WIDTHS, type PaperWidth } from '@/lib/printer/escpos'
 import { DEFAULT_RECEIPT, fetchBusinessReceiptSettings, saveReceiptSettings, type ReceiptSettings } from './api'
+import { StationPrintersCard } from './StationPrinters'
 
 /** Bluetooth connection on this device (everyone) + receipt settings for the business (managers). */
 export function PrinterSection() {
@@ -56,6 +57,7 @@ export function PrinterSection() {
         {isSefApp && <DevicePaperCard value={paper} business={form} onChange={pickPaper} />}
         {device.systemPrint && <WindowsPrinterCard settings={local} />}
         <BluetoothCard settings={local} />
+        {hasModule(business.type, 'kitchen') && <StationPrintersCard settings={local} />}
 
         {manager && (
           <Card className="p-5">

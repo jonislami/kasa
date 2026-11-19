@@ -34,4 +34,5 @@ contextBridge.exposeInMainWorld('kasaElectron', {
   // ESC/POS bytes straight to a Windows printer (RAW, without its driver), and emptying a printer's queue
   printRaw: (deviceName: string, data: Uint8Array) => ipcRenderer.invoke('kasa:print-raw', deviceName, data) as Promise<{ ok: boolean; error?: string }>,
   clearPrintQueue: (deviceName: string) => ipcRenderer.invoke('kasa:print-clear', deviceName) as Promise<{ ok: boolean; error?: string }>,
+  printTcp: (host: string, port: number, data: Uint8Array) => ipcRenderer.invoke('kasa:print-tcp', host, port, data) as Promise<{ ok: boolean; error?: string }>,
 })

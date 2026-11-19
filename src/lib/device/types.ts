@@ -82,9 +82,15 @@ export interface SystemPrint {
   clearQueue?(deviceName: string): Promise<void>
 }
 
+/** A printer on the local network (Ethernet / Wi-Fi), ESC/POS to its port – usually 9100. Windows and Android apps. */
+export interface NetworkPrint {
+  send(host: string, port: number, data: Uint8Array): Promise<void>
+}
+
 export interface DeviceAdapter {
   platform: DevicePlatform
   systemPrint?: SystemPrint
+  networkPrint?: NetworkPrint
   deviceChooser?: DeviceChooser
   appUpdates?: AppUpdates
   /** Stable ID for this installation (links the device to a register and ATK POS ID). */

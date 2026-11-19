@@ -46,6 +46,7 @@ import java.util.concurrent.Executors;
 public class KasaPrinterPlugin extends Plugin {
     private static final UUID SPP = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     private final ExecutorService io = Executors.newSingleThreadExecutor();
+    private final ExecutorService net = Executors.newSingleThreadExecutor();
     private BluetoothSocket socket;
     private OutputStream out;
     private String connectedAddress;
@@ -237,6 +238,31 @@ public class KasaPrinterPlugin extends Plugin {
         call.resolve(r);
     }
 
+    /** A network printer (Ethernet / Wi-Fi): ESC/POS to host:port (usually 9100), on its own thread. */
+    @PluginMethod
+    public void sendTcp(PluginCall call) {
+        String host = call.getString("host");
+        Integer port = call.getInt("port");
+        String data = call.getString("data");
+        if (host == null || host.isEmpty() || port == null || port < 1 || port > 65535 || data == null) {
+            call.reject("Adresa e printerit nuk është e saktë");
+            return;
+        }
+        byte[] bytes = Base64.decode(data, Base64.DEFAULT);
+        net.execute(() -> {
+            try (java.net.Socket s = new java.net.Socket()) {
+                s.connect(new java.net.InetSocketAddress(host, port), 6000);
+                s.setSoTimeout(6000);
+                OutputStream o = s.getOutputStream();
+                o.write(bytes);
+                o.flush();
+                call.resolve();
+            } catch (Exception e) {
+                call.reject("Printeri " + host + ":" + port + " nuk përgjigjet", "NETWORK_FAILED");
+            }
+        });
+    }
+
     /** Opens the phone's Bluetooth settings, where a new printer is paired (PIN usually 0000 or 1234). */
     @PluginMethod
     public void openSettings(PluginCall call) {
@@ -265,5 +291,6 @@ public class KasaPrinterPlugin extends Plugin {
     protected void handleOnDestroy() {
         io.execute(this::closeQuietly);
         io.shutdown();
+        net.shutdown();
     }
 }

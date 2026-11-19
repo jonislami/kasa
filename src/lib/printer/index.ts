@@ -4,6 +4,7 @@ import type { Sale } from '@/features/pos/api'
 import type { ReceiptSettings } from '@/features/settings/api'
 import { receiptBytes, testPageBytes } from './receipt'
 import { ticketBytes } from './ticket'
+import { sendToTarget, stationTarget } from './stations'
 import type { Ticket } from '@/features/restaurant/api'
 
 export { receiptBytes, testPageBytes }
@@ -52,8 +53,18 @@ function concat(parts: Uint8Array[]): Uint8Array {
   return out
 }
 
-/** Kitchen/bar ticket on this device's printer; 'browser' when none is connected. */
+/**
+ * Kitchen/bar ticket: on the station's own printer when this device has one (Windows printer or network printer,
+ * Printeri → Kuzhina / Bari), else on this device's receipt printer; 'browser' when none is connected.
+ */
 export async function printTicket(ticket: Ticket, settings: ReceiptSettings, reprint = false): Promise<'printer' | 'browser'> {
+  const target = stationTarget(ticket.station)
+  if (target && (target.kind === 'windows' || target.kind === 'network')) {
+    // the station printer's own paper; characters per line follow it
+    const s = target.paper ? { ...settings, paper_width: target.paper, settings: { ...settings.settings, line_chars: null } } : settings
+    await sendToTarget(target, ticketBytes(ticket, s, reprint))
+    return 'printer'
+  }
   if (await printerReady()) {
     await device.printer.write(ticketBytes(ticket, settings, reprint), settings.printer_chunk)
     return 'printer'

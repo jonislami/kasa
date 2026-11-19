@@ -9,6 +9,7 @@ import { pathToFileURL } from 'node:url'
 import fs from 'node:fs'
 import crypto from 'node:crypto'
 import { execFile } from 'node:child_process'
+import tcp from 'node:net'
 
 // The same main process runs two programs: Kasa (the till) and Kasa Kontabilist (the accountant's
 // program). electron-builder.kontabilist.yml writes "kasaApp": "kontabilist" into package.json;
@@ -210,6 +211,29 @@ ipcMain.handle('kasa:print-raw', async (e, deviceName: unknown, data: unknown) =
   } finally {
     fs.rmSync(file, { force: true })
   }
+})
+// Network receipt / kitchen printers (Ethernet or Wi-Fi): ESC/POS straight to the printer's port (9100 by default).
+const HOST_RE = /^(?:\d{1,3}(?:\.\d{1,3}){3}|[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*)$/i
+ipcMain.handle('kasa:print-tcp', async (e, host: unknown, port: unknown, data: unknown) => {
+  if (!trustedSender(e)) throw new Error('Kërkesë e palejuar')
+  if (typeof host !== 'string' || !HOST_RE.test(host) || typeof port !== 'number' || !Number.isInteger(port) || port < 1 || port > 65535) {
+    return { ok: false, error: 'Adresa e printerit nuk është e saktë' }
+  }
+  if (!(data instanceof Uint8Array) || data.length === 0 || data.length > 2_000_000) return { ok: false, error: 'Kërkesë e pavlefshme' }
+  return new Promise<{ ok: boolean; error?: string }>((resolve) => {
+    let settled = false
+    const done = (r: { ok: boolean; error?: string }) => {
+      if (settled) return
+      settled = true
+      socket.destroy()
+      resolve(r)
+    }
+    const socket = tcp.createConnection({ host, port })
+    socket.setTimeout(6000)
+    socket.on('connect', () => socket.end(Buffer.from(data), () => done({ ok: true })))
+    socket.on('timeout', () => done({ ok: false, error: `Printeri ${host}:${port} nuk përgjigjet` }))
+    socket.on('error', (err) => done({ ok: false, error: `Printeri ${host}:${port} nuk u gjet (${(err as NodeJS.ErrnoException).code ?? err.message})` }))
+  })
 })
 ipcMain.handle('kasa:print-clear', async (e, deviceName: unknown) => {
   if (!trustedSender(e)) throw new Error('Kërkesë e palejuar')
