@@ -649,10 +649,14 @@ export const SR_UI: Record<string, string> = {
   'Skadon sot': 'Ističe danas',
   'A – e liruar': 'A – oslobođeno',
   'e liruar': 'oslobođeno',
+  'Lidhja me ATK aktive': 'Veza sa ATK aktivna',
+  'ATK refuzoi një kupon': 'ATK je odbio jedan kupon',
+  'Arka nuk është regjistruar në ATK': 'Kasa nije registrovana u ATK',
 }
 
 /** Texts with values: "{}" stands for a value (number, name, amount, date) kept as it is. */
 export const SR_UI_PATTERNS: [string, string][] = [
+  ['{} kuponë fiskalë në pritje për ATK', '{} fiskalnih kupona čeka slanje u ATK'],
   ['{} madhësi', '{} veličina'],
   ['{} ngjyra', '{} boja'],
   ['Kujdes: "{}" – në stok ka mbetur vetëm seri e skaduar', 'Pažnja: "{}" – na zalihama je ostala samo istekla serija'],

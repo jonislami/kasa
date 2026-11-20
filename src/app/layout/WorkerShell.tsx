@@ -6,13 +6,13 @@ import { ChefHat, ClipboardList, LogOut, Menu, MoreHorizontal, Printer, RefreshC
 import { useAuth } from '@/app/AuthProvider'
 import { Button, Dialog, Input } from '@/components/ui'
 import { hasModule, type BusinessType } from '@/lib/business'
-import { checkClock, KOSOVO_TZ, serverDate } from '@/lib/clock'
+import { checkClock } from '@/lib/clock'
+import { AtkBadge } from '@/features/fiscal/AtkBadge'
 import { cn } from '@/lib/cn'
 import { formatEUR } from '@/lib/money'
 import { endShift, fetchWork } from '@/features/reports/api'
 import { t as tr, useLang } from '@/lib/i18n'
 import type { NavItem } from '@/app/nav'
-import { SqDateFormat } from '@/lib/sqDate'
 
 /** Cash the worker holds now: change at the start of the shift + cash taken today. */
 export function useWallet(): number | null {
@@ -32,8 +32,6 @@ const initials = (name: string) =>
 
 /** €26 instead of €26.00 in the narrow rail. */
 const compactEUR = (v: number) => (Number.isInteger(Math.round(v * 100) / 100) ? `€${Math.round(v)}` : formatEUR(v))
-
-const clockFmt = new SqDateFormat({ timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })
 
 /**
  * The worker's screen – no sidebar menu of the business, only the work:
@@ -84,11 +82,6 @@ export function WorkerShell({
   const [menu, setMenu] = useState(false)
   const [closing, setClosing] = useState(false)
   const wallet = useWallet()
-  const [now, setNow] = useState(() => serverDate())
-  useEffect(() => {
-    const t = setInterval(() => setNow(serverDate()), 10_000)
-    return () => clearInterval(t)
-  }, [])
   useEffect(() => setMenu(false), [location.pathname])
 
   const doSignOut = async () => {
@@ -166,7 +159,13 @@ export function WorkerShell({
               </nav>
             )}
             <div className="flex-1" />
-            <span className="hidden text-[15px] font-medium tabular-nums text-muted md:block">{clockFmt.format(now)}</span>
+            {/* ATK asks for a sign of the connection with SIATK here, not a clock */}
+            <span className="md:hidden">
+              <AtkBadge dark />
+            </span>
+            <span className="hidden md:block">
+              <AtkBadge />
+            </span>
             <button
               type="button"
               aria-label={tr('Sinkronizo', lang)}
