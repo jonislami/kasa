@@ -110,7 +110,9 @@ export function receiptBytes(sale: Sale, business: Business, s: ReceiptSettings,
 
   if (f) {
     // ATK: QR = citizen coupon + signature, then the fiscal logo (coat of arms + RKS / MF, 19 x 9.5 mm)
-    p.qr(f.qr, s.paper_width < 70 ? 5 : 6).raw(0x0a)
+    // ATK (Kërkesat specifike): QR 20 x 20 mm. The coupon's QR is 53 modules (173 characters, level M); 3 dots per
+    // module on a 203 dpi head (8 dots/mm) = 159 dots ≈ 20 mm, on 58, 80 and 100 mm paper alike.
+    p.feed(1).qr(f.qr, 3).raw(0x0a)
     if (f.status === 'failed') p.wrap(`${x.L.rejected}: ${f.error ?? ''}`)
     p.image(RKS_MARK.width / 8, RKS_MARK.height, markBytes()).raw(0x0a)
   } else {
