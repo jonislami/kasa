@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
 import { KOSOVO_TZ } from '@/lib/clock'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -17,7 +18,9 @@ import { EcouponButton } from './EcouponDialog'
 import { Receipt } from './Receipt'
 import { formatSq } from '@/lib/sqDate'
 
-const VOID_REASONS = ['Gabim në arkë', 'Klienti ndërroi mendje', 'Pagesa nuk u krye', 'Tjetër']
+// quick texts for the reason; the reason itself must be written (ATK: the cancel coupon says why)
+const VOID_REASONS = ['Gabim në arkë', 'Klienti ndërroi mendje', 'Pagesa nuk u krye']
+const MIN_REASON = 3
 const KIND_LABEL = { sale: null, void: 'Anulim', refund: 'Kthim' } as const
 const PAY_LABEL = { cash: 'Kesh', card: 'Kartelë', mixed: 'Kesh + Kartelë' } as const
 
@@ -39,6 +42,7 @@ export function SalesDialog({
   onRefund: (invoiceNo: number) => void
 }) {
   const { business, profile } = useBusiness()
+  const navigate = useNavigate()
   const qc = useQueryClient()
   const manager = isManagerRole(profile.role)
   const today = localDate()
@@ -46,8 +50,7 @@ export function SalesDialog({
   const [selected, setSelected] = useState<Sale | null>(null)
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [voidStep, setVoidStep] = useState<'reason' | 'approve' | null>(null)
-  const [reason, setReason] = useState(VOID_REASONS[0])
-  const [note, setNote] = useState('')
+  const [reason, setReason] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -75,12 +78,15 @@ export function SalesDialog({
     setBusy(true)
     setError(null)
     try {
-      const fullReason = reason === 'Tjetër' && note.trim() ? note.trim() : reason
+      const fullReason = reason.trim()
+      if (fullReason.length < MIN_REASON) {
+        setVoidStep('reason')
+        return setError('Shkruaj arsyen e anulimit')
+      }
       const r = await voidSale({
         client_id: crypto.randomUUID(),
         sale_id: selected.id,
         reason: fullReason,
-        note: note.trim() || undefined,
         restock: true,
         approver_id: approverId,
         pin,
@@ -139,13 +145,20 @@ export function SalesDialog({
                     </button>
                   ))}
                 </div>
-                <Input label="Shënim (opsional)" value={note} onChange={(e) => setNote(e.target.value)} />
+                <Input
+                  label="Arsyeja e anulimit (e detyrueshme)"
+                  value={reason}
+                  autoFocus
+                  maxLength={200}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="Shkruaj pse anulohet kuponi"
+                />
                 <p className="text-sm text-muted">Lëshohet një kupon anulimi me shuma negative dhe malli kthehet në stok.</p>
                 <div className="grid grid-cols-2 gap-2">
                   <Button variant="secondary" onClick={() => setVoidStep(null)}>
                     Mos e anulo
                   </Button>
-                  <Button variant="danger" loading={busy} onClick={() => setVoidStep('approve')}>
+                  <Button variant="danger" loading={busy} disabled={reason.trim().length < MIN_REASON} onClick={() => setVoidStep('approve')}>
                     Kërko miratimin (PIN)
                   </Button>
                 </div>
@@ -170,8 +183,7 @@ export function SalesDialog({
                   variant="danger"
                   disabled={selected.kind !== 'sale' || selected.voided || selected.has_refunds}
                   onClick={() => {
-                    setReason(VOID_REASONS[0])
-                    setNote('')
+                    setReason('')
                     setError(null)
                     setVoidStep('reason')
                   }}
@@ -227,7 +239,19 @@ export function SalesDialog({
             ) : (
               <>
                 <div className="flex justify-between text-sm text-muted">
-                  <span>{rows.filter((r) => r.kind === 'sale').length} shitje</span>
+                  <span>
+                    {rows.filter((r) => r.kind === 'sale').length} shitje ·{' '}
+                    <button
+                      type="button"
+                      className="font-semibold text-brand-600"
+                      onClick={() => {
+                        close()
+                        navigate('/kuponet')
+                      }}
+                    >
+                      Të gjithë kuponët →
+                    </button>
+                  </span>
                   <span>
                     Gjithsej <strong className="text-ink">{formatEUR(totalToday)}</strong>
                   </span>
