@@ -129,7 +129,8 @@ export function Receipt({
 
       {f ? (
         <>
-          <QrImage text={f.qr} className={cn('mx-auto my-2', narrow ? 'w-[36mm]' : 'w-[40mm]')} />
+          {/* ATK (Kërkesat specifike): the QR code itself 20 x 20 mm on every paper; the white paper around is its margin */}
+          <QrImage text={f.qr} className="mx-auto my-[3mm] w-[20mm]" />
           {f.status === 'failed' && <div className="text-center text-[7pt]">{x.L.rejected}: {f.error}</div>}
           <FiscalLogo />
         </>
@@ -164,7 +165,7 @@ export function QrImage({ text, className }: { text: string; className?: string 
   const [svg, setSvg] = useState<string | null>(null)
   useEffect(() => {
     let alive = true
-    QRCode.toString(text, { type: 'svg', errorCorrectionLevel: 'M', margin: 1 }).then((s) => alive && setSvg(s), () => alive && setSvg(null))
+    QRCode.toString(text, { type: 'svg', errorCorrectionLevel: 'M', margin: 0 }).then((s) => alive && setSvg(s), () => alive && setSvg(null))
     return () => {
       alive = false
     }
