@@ -16,3 +16,8 @@ verify_jwt = false
 # Checks the caller's token itself (auth.getUser) and the business; forwards signed data to ATK (no CORS there).
 [functions.fiscal-relay]
 verify_jwt = false
+
+# Runs with the caller's own token: PostgREST checks it (RLS, sale_json), so an invalid token finds no sale.
+# The gateway's legacy-secret check would refuse the new (ES256) user tokens.
+[functions.send-ecoupon]
+verify_jwt = false
