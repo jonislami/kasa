@@ -321,7 +321,7 @@ export function PosPage() {
           const offlineNo = await nextOfflineNo()
           const queued = { ...input, offline: true, offline_no: offlineNo }
           await enqueueSale(queued)
-          const local = localReceipt(queued, cart, totals, profile.full_name, registerName)
+          const local = localReceipt(queued, cart, totals, profile.full_name, registerName, profile.worker_no ?? null)
           const fiscal = await fiscalizeSale(local, { key: input.client_id, registerId, operator: profile.full_name, saved: false, issuedAt: bookEntry?.at }).catch(() => null)
           finish({ ...local, fiscal })
         } else setError((e as Error).message)
@@ -1153,6 +1153,7 @@ function localReceipt(
   totals: ReturnType<typeof computeTotals>,
   workerName: string,
   registerName: string | null,
+  workerNo: number | null = null,
 ): Sale {
   const t = input.payment.tendered
   const card = input.payment.method === 'card' ? totals.total : input.payment.method === 'mixed' ? (input.payment.card_amount ?? 0) : 0
@@ -1188,6 +1189,7 @@ function localReceipt(
     fiscal_status: 'non_fiscal',
     worker_id: '',
     worker_name: workerName,
+    worker_no: workerNo,
     register_name: registerName,
     voided: false,
     has_refunds: false,

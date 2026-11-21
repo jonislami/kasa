@@ -30,6 +30,8 @@ export default {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         mono: ['"IBM Plex Mono"', 'ui-monospace', 'monospace'],
+        // the receipt on screen / browser print / PDF, as the SEF coupons ATK has seen
+        receipt: ['Lato', 'Arial', 'sans-serif'],
       },
       borderRadius: {
         card: '12px',

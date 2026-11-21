@@ -59,6 +59,8 @@ export interface Sale {
   fiscal_status: string
   worker_id: string
   worker_name: string | null
+  /** 0044: the worker's number in the business, printed as ID 001 (UA 01/2026 neni 7 pika 2.5). */
+  worker_no?: number | null
   register_name: string | null
   items: SaleItem[]
   voided: boolean
