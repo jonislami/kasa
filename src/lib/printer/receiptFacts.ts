@@ -95,6 +95,8 @@ export interface ReceiptFacts {
   L: ReceiptLabels
   /** false for a business outside VAT: no VAT rows and no "total without VAT" */
   hasVat: boolean
+  /** "EMRI I PUNËTORIT: Alton Islami (ID 001)" – name and identification number of the operator (neni 7, 2.5). */
+  workerLine: string | null
   /** [label, value] under TATIMPAGUESI. */
   header: [string, string][]
   /** KUPON FISKAL / KUPON FISKAL I ANULUAR / KUPON FISKAL KTHIMI / KUPON JO-FISKAL … */
@@ -279,6 +281,7 @@ export function receiptFacts(sale: Sale, business: Business, copy?: boolean, lan
   return {
     L,
     hasVat: Boolean(business.vat_number?.trim()),
+    workerLine: sale.worker_name ? `${L.worker}: ${sale.worker_name}${sale.worker_no ? ` (ID ${pad(sale.worker_no, 3)})` : ''}` : null,
     header,
     title: titleText,
     marks,

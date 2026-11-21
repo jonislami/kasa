@@ -43,6 +43,7 @@ type Sale = Record<string, unknown> & {
   vat_lines: { code: string; rate: number; vat: number }[]
   items: Item[]
   worker_name: string | null
+  worker_no?: number | null
   reason: string | null
   ref_invoice_no: number | null
 }
@@ -97,12 +98,12 @@ function html(s: Sale, b: Record<string, unknown>, f: Record<string, unknown>, f
     .join('')
   const sefNo = `${f.branch_id}-${b.nui}-${f.pos_id}`
   return `<!doctype html><html><body style="margin:0;background:#f4f6f3;padding:16px">
-<div style="max-width:380px;margin:0 auto;background:#fff;padding:16px;font-family:'Courier New',monospace;font-size:13px;color:#000;line-height:1.35">
+<div style="max-width:380px;margin:0 auto;background:#fff;padding:16px;font-family:Lato,Arial,Helvetica,sans-serif;font-size:13px;color:#000;line-height:1.35">
   <div style="text-align:center">
     <div>TATIMPAGUESI: ${esc(b.name)}</div>${header}
   </div>
   <div style="overflow:hidden;white-space:nowrap;margin:6px 0">################################################</div>
-  ${s.worker_name ? `<div style="text-align:right;font-size:12px">EMRI I PUNËTORIT: ${esc(s.worker_name)}</div>` : ''}
+  ${s.worker_name ? `<div style="text-align:right;font-size:12px">EMRI I PUNËTORIT: ${esc(s.worker_name)}${s.worker_no ? ` (ID ${String(s.worker_no).padStart(3, '0')})` : ''}</div>` : ''}
   <div style="text-align:center;font-weight:bold;font-size:16px;margin-top:4px">${title}</div>
   ${f.env === 'test' ? '<div style="text-align:center;font-weight:bold">TEST – PA VLERË FISKALE</div>' : ''}
   ${s.kind !== 'sale' && s.ref_invoice_no ? `<div style="text-align:center">KUPON FISKAL NR. ${s.ref_invoice_no}</div>` : ''}

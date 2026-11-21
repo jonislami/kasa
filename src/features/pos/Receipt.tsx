@@ -31,7 +31,10 @@ export function Receipt({
   const x = receiptFacts(sale, business, copy)
   const footer = settings ? settings.receipt_footer : 'Faleminderit për blerjen!'
   const narrow = width < 70
-  const big = narrow ? 'text-[14px]' : 'text-[17px]'
+  // As the SEF coupons ATK has seen (e.g. the PDF of another certified SEF): Lato, 8 pt text, 10.5 pt title, 7 pt
+  // worker line, on the printable width of the roll (80 mm paper → 72 mm, 58 → 48, 100 → 90).
+  const printable = narrow ? 48 : width > 90 ? 90 : 72
+  const big = narrow ? 'text-[9.5pt]' : 'text-[10.5pt]'
 
   const lines = (ls: ReceiptLine[]) => (
     <div className="grid grid-cols-[1fr_auto_auto] gap-x-2">
@@ -55,12 +58,12 @@ export function Receipt({
   )
 
   return (
-    <div className={cn('mx-auto bg-white font-mono leading-snug text-black', narrow ? 'px-1 text-[11px]' : width > 100 ? 'px-4 text-[14px]' : 'px-3 text-[12.5px]')} style={{ width: `${width}mm` }}>
+    <div className={cn('mx-auto bg-white px-[3mm] font-receipt leading-[1.3] text-black', narrow ? 'text-[7pt]' : 'text-[8pt]')} style={{ width: `${printable}mm` }}>
       {/* the page of the print (driver / dialog) follows the paper roll */}
       <style>{`@media print { @page { size: ${width}mm auto; margin: 0 } }`}</style>
       <div className="flex flex-col items-center pt-4 text-center">
         {settings?.receipt_header && <div className={cn('font-bold', big)}>{settings.receipt_header}</div>}
-        <div>{x.L.taxpayer}: {business.name}</div>
+        <div className="font-bold">{x.L.taxpayer}: {business.name}</div>
         {x.header.map(([k, v]) => (
           <div key={k} className={k === x.header.find(([h]) => h.includes('NUI') || h.includes('JIB'))?.[0] || k.includes('TVSH') || k.includes('PDV') ? 'font-semibold' : undefined}>
             {k}: {v}
@@ -68,7 +71,7 @@ export function Receipt({
         ))}
       </div>
       <Rule hash />
-      {sale.worker_name && <div className="text-right text-[0.9em]">{x.L.worker}: {sale.worker_name}</div>}
+      {x.workerLine && <div className="text-right text-[7pt]">{x.workerLine}</div>}
       <div className={cn('mt-1 text-center font-bold', big)}>{x.title}</div>
       {x.marks.map((m) => (
         <div key={m} className="text-center font-semibold">
@@ -85,7 +88,7 @@ export function Receipt({
           <Row l={<i>{x.main.subtotal.label}</i>} r={<i>{x.main.subtotal.discount}</i>} />
         </>
       )}
-      <div className={cn('mt-1 flex items-baseline justify-between border-t border-black pt-1 font-bold', big)}>
+      <div className="mt-1 flex items-baseline justify-between border-t border-black pt-1 font-bold">
         <span>{x.L.total}</span>
         <span className="tabular-nums">{x.main.total}€</span>
       </div>
@@ -108,7 +111,7 @@ export function Receipt({
           <div className="border-t border-black">
             <Row l={x.L.returnedTotal} r={`${x.returned.total}€`} />
           </div>
-          <div className={cn('flex items-baseline justify-between border-t border-black pt-1 font-bold', big)}>
+          <div className="flex items-baseline justify-between border-t border-black pt-1 font-bold">
             <span>{x.L.remaining}</span>
             <span className="tabular-nums">{x.returned.remaining}€</span>
           </div>
@@ -127,16 +130,16 @@ export function Receipt({
       {f ? (
         <>
           <QrImage text={f.qr} className={cn('mx-auto my-2', narrow ? 'w-[36mm]' : 'w-[40mm]')} />
-          {f.status === 'failed' && <div className="text-center text-[11px]">{x.L.rejected}: {f.error}</div>}
+          {f.status === 'failed' && <div className="text-center text-[7pt]">{x.L.rejected}: {f.error}</div>}
           <FiscalLogo />
         </>
       ) : (
-        <div className="mt-3 text-center text-[11px]">{x.L.notFiscal}</div>
+        <div className="mt-3 text-center text-[7pt]">{x.L.notFiscal}</div>
       )}
 
       <div className="mt-2 pb-1 text-center">
         {footer && <div className="uppercase">{footer}</div>}
-        <div className="text-[10px]">{x.L.poweredBy}</div>
+        <div className="text-[7pt]">{x.L.poweredBy}</div>
       </div>
       <div className="pb-5" />
     </div>
@@ -172,8 +175,8 @@ export function QrImage({ text, className }: { text: string; className?: string 
 
 function Row({ l, r }: { l: React.ReactNode; r: React.ReactNode }) {
   return (
-    <div className="flex justify-between gap-3">
-      <span className="min-w-0">{l}</span>
+    <div className="flex justify-between gap-2">
+      <span className="min-w-0 whitespace-nowrap">{l}</span>
       <span className="shrink-0 text-right tabular-nums">{r}</span>
     </div>
   )

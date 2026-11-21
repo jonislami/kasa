@@ -121,7 +121,7 @@ ATK kërkon që SEF të instalohet në pajisje, ta mbajë çelësin privat të s
 | amber-700 / amber-100 | #854D0E / #FEF3C7 | stok i ulët, paralajmërime |
 | bt-600 | #1D4ED8 | butonat e Bluetooth |
 
-- Shkronja: Inter (400/500/600/700); fatura: IBM Plex Mono. Shifrat: `tabular-nums`.
+- Shkronja: Inter (400/500/600/700); fatura (ekran, printim nga dritarja, PDF): Lato 8 pt në 72 mm (si kuponët SEF që i njeh ATK). Shifrat: `tabular-nums`.
 - Radius: kartat 14px, butonat/input 10–12px. Lartësia minimale e butonave 44px. Ikonat: lucide-react (stroke 2).
 
 ### Telefoni (mësime nga versioni i parë)

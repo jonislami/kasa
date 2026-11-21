@@ -388,6 +388,7 @@ const SAMPLE: Sale = {
   fiscal_status: 'non_fiscal',
   worker_id: '',
   worker_name: 'Arkëtari 1',
+  worker_no: 1,
   register_name: 'Arka 1',
   items: [
     { id: '1', position: 1, product_id: null, name: 'Qumësht i freskët 1L', unit: 'cope', quantity: 2, unit_price: 0.95, line_discount: 0, invoice_discount: 0, total: 1.9, vat_code: 'D', refunded: 0 },

@@ -53,7 +53,7 @@ export function receiptBytes(sale: Sale, business: Business, s: ReceiptSettings,
   p.align('left').rule('#')
 
   // Worker, title, the original coupon of a cancel / return
-  if (sale.worker_name) p.align('right').wrap(`${x.L.worker}: ${sale.worker_name}`)
+  if (x.workerLine) p.align('right').wrap(x.workerLine)
   p.align('center').bold(true).size(w >= 42 ? 2 : 1).wrap(x.title).size(1).bold(false)
   for (const m of x.marks) p.line(m)
   if (x.refLine) p.wrap(x.refLine)

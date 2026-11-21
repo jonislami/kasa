@@ -15,6 +15,8 @@ export interface Profile {
   email: string | null
   active: boolean
   login_kind?: 'email' | 'pin'
+  /** 0044: number of the worker in the business (ID on the fiscal coupon). */
+  worker_no?: number | null
   /** SEF app: the role in the database when the panel shows the worker's screens (owner/manager signed in with PIN). */
   actual_role?: Role
 }
