@@ -20,6 +20,7 @@ const ApplicationsPage = lazy(() => import('@/features/platform/ApplicationsPage
 const BusinessAdminPage = lazy(() => import('@/features/platform/BusinessAdminPage').then((m) => ({ default: m.BusinessAdminPage })))
 const PlatformPage = lazy(() => import('@/features/platform/PlatformPage').then((m) => ({ default: m.PlatformPage })))
 const PosPage = lazy(() => import('@/features/pos/PosPage').then((m) => ({ default: m.PosPage })))
+const CouponsPage = lazy(() => import('@/features/pos/CouponsPage').then((m) => ({ default: m.CouponsPage })))
 const RefundPage = lazy(() => import('@/features/pos/RefundPage').then((m) => ({ default: m.RefundPage })))
 const SettingsPage = lazy(() => import('@/features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })))
 const ReportsPage = lazy(() => import('@/features/reports/ReportsPage').then((m) => ({ default: m.ReportsPage })))
@@ -156,6 +157,18 @@ export function AppRoutes() {
               <RequireStaff>
                 <Lazy>
                   <PosPage />
+                </Lazy>
+              </RequireStaff>
+            </SefOnly>
+          }
+        />
+        <Route
+          path="kuponet"
+          element={
+            <SefOnly>
+              <RequireStaff>
+                <Lazy>
+                  <CouponsPage />
                 </Lazy>
               </RequireStaff>
             </SefOnly>

@@ -2,7 +2,7 @@ import { LicenseBanner } from '@/app/LicenseBanner'
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChefHat, ClipboardList, LogOut, Menu, MoreHorizontal, Printer, RefreshCw, Square, X } from 'lucide-react'
+import { ChefHat, ClipboardList, LogOut, Menu, MoreHorizontal, Printer, ReceiptText, RefreshCw, Square, X } from 'lucide-react'
 import { useAuth } from '@/app/AuthProvider'
 import { Button, Dialog, Input } from '@/components/ui'
 import { hasModule, type BusinessType } from '@/lib/business'
@@ -90,6 +90,7 @@ export function WorkerShell({
   }
   const extra = [
     { to: '/puna', label: 'Puna ime sot', icon: ClipboardList },
+    { to: '/kuponet', label: 'Kuponët e lëshuar', icon: ReceiptText },
     ...(hasModule(type, 'kitchen') ? [{ to: '/kuzhina', label: 'Ekrani i kuzhinës / barit', icon: ChefHat }] : []),
     { to: '/cilesimet', label: 'Printeri', icon: Printer },
   ]
