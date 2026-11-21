@@ -181,10 +181,17 @@ async function bumpSeq(registerId: string, atLeast: number): Promise<number> {
   return v
 }
 
-async function nextSeq(registerId: string, serverSeq: number): Promise<number> {
-  const seq = (await bumpSeq(registerId, serverSeq)) + 1
-  await device.storage.set(SEQ_KEY(registerId), seq)
-  return seq
+// One number at a time: two sales signed at the same moment (a double press of "Paguaj") must never read the
+// same counter – ATK refuses a CouponId it already has.
+let seqLock: Promise<unknown> = Promise.resolve()
+function nextSeq(registerId: string, serverSeq: number): Promise<number> {
+  const run = seqLock.then(async () => {
+    const seq = (await bumpSeq(registerId, serverSeq)) + 1
+    await device.storage.set(SEQ_KEY(registerId), seq)
+    return seq
+  })
+  seqLock = run.catch(() => undefined)
+  return run
 }
 
 // ---------------------------------------------------------------------------
@@ -203,6 +210,8 @@ export interface FiscalizeInput {
   referenceNo?: string | null
   /** Time written on a coupon of the separate coupon book (UA neni 45); default: now (server time). */
   issuedAt?: string | null
+  /** Signed without a connection (default: the sale is not on the server yet). */
+  offline?: boolean
 }
 
 /** Signs the coupon; sends it now when possible. Returns null when this register does not fiscalize. */
@@ -244,7 +253,7 @@ export async function fiscalize(input: FiscalizeInput): Promise<FiscalReceipt | 
     details: signed.details,
     signature: signed.signature,
     qr,
-    offline: !input.saleId,
+    offline: input.offline ?? !input.saleId,
     status: 'pending',
     error: null,
     attempts: 0,
@@ -307,6 +316,16 @@ async function queuedCoupons(): Promise<QueuedCoupon[]> {
   const keys = await device.storage.keys(Q_PREFIX)
   const list = (await Promise.all(keys.map((k) => device.storage.get<QueuedCoupon>(k)))).filter(Boolean) as QueuedCoupon[]
   return list.sort((a, b) => a.coupon_seq - b.coupon_seq)
+}
+
+/**
+ * Coupons the server refused because another coupon already has their number (two sales signed at the same moment
+ * before the counter was safe). They never reached ATK; the till signs them again with a new number.
+ */
+export async function duplicateCoupons(): Promise<{ key: string; sale_id: string; register_id: string; issued_at: string; offline: boolean }[]> {
+  return (await queuedCoupons())
+    .filter((q) => q.status === 'failed' && q.sale_id && /përdorur tashmë/i.test(q.error ?? ''))
+    .map((q) => ({ key: q.key, sale_id: q.sale_id!, register_id: q.register_id, issued_at: q.issued_at, offline: q.offline }))
 }
 
 /** Coupons on this device not yet confirmed by ATK (for the export on ATK's request – ndryshimi 2026). */

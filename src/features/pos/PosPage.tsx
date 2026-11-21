@@ -146,6 +146,7 @@ export function PosPage() {
   const [tendered, setTendered] = useState('')
   const [cardPart, setCardPart] = useState('')
   const [busy, setBusy] = useState(false)
+  const payingRef = useRef(false)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [editLine, setEditLine] = useState<CartLine | null>(null)
@@ -282,7 +283,9 @@ export function PosPage() {
   // ---------- payment ----------
   const pay = useCallback(
     async (m: PaymentMethod, tenderedAmount?: number, cardAmount?: number) => {
-      if (cart.lines.length === 0 || busy) return
+      // a ref, not the state: a double press (click + F12) comes before React shows "busy"
+      if (cart.lines.length === 0 || busy || payingRef.current) return
+      payingRef.current = true
       setError(null)
       const input: CreateSaleInput = {
         client_id: crypto.randomUUID(),
@@ -323,6 +326,7 @@ export function PosPage() {
           finish({ ...local, fiscal })
         } else setError((e as Error).message)
       } finally {
+        payingRef.current = false
         setBusy(false)
       }
     },
