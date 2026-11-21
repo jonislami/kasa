@@ -86,6 +86,8 @@ export function PosPage() {
   // ATK (UA neni 45): coupons written by hand from the separate coupon book while the device was down
   const [bookEntry, setBookEntry] = useState<BookEntry | null>(null)
   const [bookOpen, setBookOpen] = useState(false)
+  // the book was opened from the payment window: go back to it afterwards
+  const [bookFromPay, setBookFromPay] = useState(false)
   const products = useMemo(() => catalog.data?.products ?? [], [catalog.data])
   const categories = catalog.data?.categories ?? []
 
@@ -362,8 +364,10 @@ export function PosPage() {
     const t = parseNum(tendered)
     const c = parseNum(cardPart)
     if (method === 'cash') {
-      if (t != null && (Number.isNaN(t) || t < due)) return setError('Shuma e paguar është më e vogël se totali')
-      return void pay('cash', round2((t ?? due) + credit))
+      if (!cart.lines.length) return
+      // the payment window: what the client gave, the change, card or the separate coupon book
+      if (t != null && Number.isNaN(t)) return setError('Shuma e paguar nuk është e saktë')
+      return setCashOpen(true)
     }
     if (method === 'card') return payCard()
     if (c == null || Number.isNaN(c) || c <= 0 || c >= due) return setError('Shkruaj sa paguhet me kartelë (më pak se totali)')
@@ -408,6 +412,7 @@ export function PosPage() {
         searchRef.current?.select()
       } else if (e.key === 'F12') {
         e.preventDefault()
+        if (cashOpen || bookOpen) return // the payment window closes the sale with Enter
         if (wide) payDesktop()
         else if (cart.lines.length) setCashOpen(true)
       } else if (e.key === 'F4') {
@@ -712,7 +717,20 @@ export function PosPage() {
 
   const sharedDialogs = (
     <>
-      <BookEntryDialog open={bookOpen} onClose={() => setBookOpen(false)} onSet={(b) => { setBookEntry(b); setBookOpen(false) }} />
+      <BookEntryDialog
+        open={bookOpen}
+        onClose={() => {
+          setBookOpen(false)
+          if (bookFromPay) setCashOpen(true)
+          setBookFromPay(false)
+        }}
+        onSet={(b) => {
+          setBookEntry(b)
+          setBookOpen(false)
+          if (bookFromPay) setCashOpen(true)
+          setBookFromPay(false)
+        }}
+      />
       {printProblem}
       <QuickProductDialog
         open={Boolean(quickAdd)}
@@ -767,7 +785,25 @@ export function PosPage() {
           setNotice(`${v.name} u shtua`)
         }}
       />
-      <CashDialog open={cashOpen} total={due} busy={busy} onClose={() => setCashOpen(false)} onPay={(t) => void pay('cash', round2(t + credit))} />
+      <CashDialog
+        open={cashOpen}
+        total={due}
+        busy={busy}
+        initial={wide ? tendered : ''}
+        bookActive={Boolean(bookEntry)}
+        onClose={() => setCashOpen(false)}
+        onPay={(t) => void pay('cash', round2(t + credit))}
+        onCard={payCard}
+        onBook={
+          canAddProduct
+            ? () => {
+                setCashOpen(false)
+                setBookFromPay(true)
+                setBookOpen(true)
+              }
+            : undefined
+        }
+      />
       <Dialog open={Boolean(receipt)} onClose={() => setReceipt(null)} width="md:max-w-[440px]">
         {receipt && (
           <div className="flex flex-col gap-4">
@@ -1132,14 +1168,9 @@ export function PosPage() {
           </span>
           <span className="text-[34px] font-semibold tracking-[-0.015em] leading-none tabular-nums">{formatEUR(totals.total)}</span>
         </div>
-        <div className="grid grid-cols-[1fr_1.6fr] gap-2.5">
-          <Button variant="secondary" size="lg" disabled={!cart.lines.length} loading={busy && !cashOpen} onClick={payCard}>
-            {tr('Kartelë', lang)}
-          </Button>
-          <Button size="lg" disabled={!cart.lines.length} onClick={() => setCashOpen(true)}>
-            {tr('Paguaj kesh', lang)}
-          </Button>
-        </div>
+        <Button size="lg" className="w-full" disabled={!cart.lines.length} loading={busy && !cashOpen} onClick={() => setCashOpen(true)}>
+          {tr('Paguaj', lang)} {formatEUR(due)}
+        </Button>
       </div>
       {sharedDialogs}
     </div>
