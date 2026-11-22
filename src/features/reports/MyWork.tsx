@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { NOT_READY } from '@/lib/friendlyError'
 import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
 import { KOSOVO_TZ } from '@/lib/clock'
 import { useQuery } from '@tanstack/react-query'
@@ -18,7 +19,7 @@ export function MyWork({ showCommission }: { showCommission: boolean }) {
   if (work.error instanceof ReportsNotMigrated) {
     return (
       <Card>
-        <EmptyState title="Puna e sotme shfaqet këtu" text="Aktivizohet kur administratori të ekzekutojë migrimin 0004_reports.sql." />
+        <EmptyState title="Puna e sotme shfaqet këtu" text={NOT_READY} />
       </Card>
     )
   }
@@ -54,7 +55,7 @@ export function MyWork({ showCommission }: { showCommission: boolean }) {
             ) : loadState(work) === 'loading' ? (
           <p className="py-10 text-center text-muted">Duke ngarkuar…</p>
         ) : docs.length === 0 ? (
-          <EmptyState title="Ende pa shitje sot" />
+          <EmptyState title="Ende pa shitje sot" text="Shitjet e tua shfaqen këtu pas pagesës së parë." />
         ) : (
           <ul className="mt-2 divide-y divide-line">
             {docs.slice(0, 50).map((e) => (

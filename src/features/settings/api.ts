@@ -1,3 +1,4 @@
+import { friendlyError, NOT_READY } from '@/lib/friendlyError'
 import { supabase } from '@/lib/supabase'
 import { withDevicePaper } from '@/lib/printer/devicePaper'
 import type { Role } from '@/lib/business'
@@ -7,13 +8,13 @@ const NOT_MIGRATED = new Set(['42P01', 'PGRST205', 'PGRST202', '42883', '42703']
 
 export class SettingsNotMigrated extends Error {
   constructor() {
-    super('Kjo pjesë aktivizohet pasi të ekzekutohet migrimi 0005_users_devices.sql në Supabase.')
+    super(NOT_READY)
   }
 }
 
 function fail(error: { code?: string; message: string }): never {
   if (error.code && NOT_MIGRATED.has(error.code)) throw new SettingsNotMigrated()
-  throw new Error(error.message)
+  throw friendlyError(error)
 }
 
 // ---------------------------------------------------------------------------
@@ -117,7 +118,7 @@ export async function saveReceiptSettings(businessId: string, s: ReceiptSettings
     .from('business_settings')
     .update({ ...s, updated_at: new Date().toISOString() })
     .eq('business_id', businessId)
-  if (error?.code === '23514' && /paper_width/.test(error.message)) throw new Error('Kjo gjerësi letre kërkon migrimin supabase/migrations/0038_paper_widths_58_80_100.sql në Supabase.')
+  if (error?.code === '23514' && /paper_width/.test(error.message)) throw new Error(NOT_READY)
   if (error) fail(error)
   void supabase.rpc('log_action', { p_action: 'settings_change', p_entity: 'business_settings', p_entity_id: businessId, p_details: { section: 'printer' } })
 }

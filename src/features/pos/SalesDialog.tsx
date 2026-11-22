@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
 import { KOSOVO_TZ } from '@/lib/clock'
@@ -33,6 +33,8 @@ export function SalesDialog({
   registerId,
   onPrint,
   onRefund,
+  sale,
+  onPdf,
 }: {
   open: boolean
   onClose: () => void
@@ -40,14 +42,21 @@ export function SalesDialog({
   registerId: string | null
   onPrint: (s: Sale) => void
   onRefund: (invoiceNo: number) => void
+  /** "Kuponët": open straight on this coupon (no list of today). */
+  sale?: Sale | null
+  /** Save the coupon as PDF. */
+  onPdf?: (s: Sale) => void
 }) {
   const { business, profile } = useBusiness()
   const navigate = useNavigate()
   const qc = useQueryClient()
   const manager = isManagerRole(profile.role)
   const today = localDate()
-  const list = useQuery({ queryKey: ['today-sales', today], queryFn: () => fetchTodaySales(today), enabled: open })
+  const list = useQuery({ queryKey: ['today-sales', today], queryFn: () => fetchTodaySales(today), enabled: open && !sale })
   const [selected, setSelected] = useState<Sale | null>(null)
+  useEffect(() => {
+    if (open && sale) setSelected(sale)
+  }, [open, sale])
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [voidStep, setVoidStep] = useState<'reason' | 'approve' | null>(null)
   const [reason, setReason] = useState('')
@@ -105,6 +114,7 @@ export function SalesDialog({
       })
       setSelected({ ...r.sale, fiscal })
       void qc.invalidateQueries({ queryKey: ['today-sales'] })
+      void qc.invalidateQueries({ queryKey: ['coupons'] })
       void qc.invalidateQueries({ queryKey: ['pos-products'] })
       void qc.invalidateQueries({ queryKey: ['products'] })
     } catch (e) {
@@ -123,10 +133,10 @@ export function SalesDialog({
       <Dialog open={open && voidStep !== 'approve'} onClose={close} title={selected ? undefined : 'Faturat e sotme'} subtitle={selected ? undefined : manager ? 'Të gjitha arkat' : 'Vetëm faturat e tua'} width="md:max-w-[560px]">
         {selected ? (
           <div className="flex flex-col gap-4">
-            <button type="button" onClick={() => setSelected(null)} className="flex items-center gap-1 self-start text-sm font-semibold text-brand-600">
+            <button type="button" onClick={() => (sale ? close() : setSelected(null))} className="flex items-center gap-1 self-start text-[15px] font-semibold text-brand-600">
               <ChevronLeft className="h-4 w-4" /> Lista
             </button>
-            <div className="max-h-[50dvh] overflow-y-auto rounded-xl border border-line py-2">
+            <div className="max-h-[calc(50dvh/var(--zoom,1))] overflow-y-auto rounded-xl border border-line py-2">
               <Receipt sale={selected} business={business} />
             </div>
             {error && <p className="rounded-ctl bg-warn-100 px-4 py-2.5 text-sm text-warn-700">{error}</p>}
@@ -164,10 +174,15 @@ export function SalesDialog({
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div className={cn('grid grid-cols-2 gap-2', onPdf ? 'sm:grid-cols-5' : 'sm:grid-cols-4')}>
                 <Button variant="secondary" onClick={() => onPrint(selected)}>
                   Printo kopje
                 </Button>
+                {onPdf && (
+                  <Button variant="secondary" onClick={() => onPdf(selected)} title="Hapet dritarja e printimit: zgjidh “Ruaj si PDF”">
+                    PDF
+                  </Button>
+                )}
                 <EcouponButton saleId={selected.id} disabled={selected.offline} />
                 <Button
                   variant="secondary"
@@ -208,7 +223,7 @@ export function SalesDialog({
                     <li key={q.input.client_id} className="flex items-center justify-between gap-2 rounded-lg bg-white px-3 py-2 text-sm">
                       <div className="min-w-0">
                         <div className="font-semibold">{q.input.offline_no ?? 'Offline'}</div>
-                        <div className="truncate text-xs text-muted">
+                        <div className="truncate text-sm text-muted">
                           {time(q.queued_at)} · {q.input.items.length} artikuj{q.last_error ? ` · ${q.last_error}` : ''}
                         </div>
                       </div>
@@ -266,7 +281,7 @@ export function SalesDialog({
                             {KIND_LABEL[r.kind] && <Badge tone="warn">{KIND_LABEL[r.kind]}</Badge>}
                             {r.offline && <Badge tone="amber">Offline</Badge>}
                           </div>
-                          <div className="text-xs text-muted">
+                          <div className="text-sm text-muted">
                             {time(r.created_at)} · {r.payment_kind ? PAYMENT_KIND_LABELS[r.payment_kind] : PAY_LABEL[r.payment_method]} · {new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 }).format(r.items_count)} artikuj
                           </div>
                         </div>

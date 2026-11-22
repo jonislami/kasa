@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { NOT_READY } from '@/lib/friendlyError'
 import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, Package, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
@@ -140,7 +141,7 @@ export function ProductsPage() {
             <EmptyState
               icon={<Package className="h-6 w-6" />}
               title="Katalogu nuk është aktivizuar ende"
-              text="Administratori duhet të ekzekutojë migrimin supabase/migrations/0001_catalog.sql në Supabase."
+              text={NOT_READY}
             />
           </Card>
         </div>
@@ -408,7 +409,7 @@ export function ProductsPage() {
         {/* Form (desktop side panel) */}
         {editing && wide && (
           <div className="w-[340px] shrink-0">
-            <Card className="sticky top-6 max-h-[calc(100dvh-48px)] overflow-y-auto p-5">{form}</Card>
+            <Card className="sticky top-6 max-h-[calc(100dvh/var(--zoom,1)-48px)] overflow-y-auto p-5">{form}</Card>
           </div>
         )}
       </div>

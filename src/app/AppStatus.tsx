@@ -70,7 +70,7 @@ export function DeviceChooserDialog() {
       <div className="w-full max-w-[440px] rounded-[20px] bg-white p-5 shadow-pop">
         <div className="text-lg font-semibold">{list.kind === 'bluetooth' ? 'Zgjidh printerin Bluetooth' : 'Zgjidh printerin USB'}</div>
         <p className="mt-1 text-sm text-muted">{list.devices.length ? 'Pajisjet që u gjetën:' : 'Duke kërkuar… ndize printerin dhe afroje.'}</p>
-        <ul className="mt-3 max-h-[50vh] divide-y divide-line overflow-y-auto rounded-card border border-line">
+        <ul className="mt-3 max-h-[calc(50vh/var(--zoom,1))] divide-y divide-line overflow-y-auto rounded-card border border-line">
           {list.devices.map((d) => (
             <li key={d.id}>
               <button type="button" onClick={() => pick(d.id)} className="w-full px-4 py-3 text-left font-medium hover:bg-brand-100">

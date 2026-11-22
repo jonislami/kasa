@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { BookOpen, CreditCard, Delete, ShieldCheck } from 'lucide-react'
+import { BookOpen, Delete, ShieldCheck } from 'lucide-react'
 import { Button, Dialog, Input, Select, Tabs } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import { formatEUR, round2 } from '@/lib/money'
 import { unitLabel } from '@/lib/units'
-import { fetchApprovers } from './api'
+import { fetchApprovers, PAYMENT_KIND_LABELS, type PaymentKind } from './api'
 import type { CartLine } from './cart'
 import { unitDecimals } from '@/lib/units'
 
@@ -292,93 +292,177 @@ export function DiscountDialog({
 // ---------------------------------------------------------------------------
 // Cash payment (phone) – amount given, quick notes, change
 // ---------------------------------------------------------------------------
+type PayTab = 'cash' | 'card' | 'mixed'
+type CardKind = PaymentKind | 'card'
+const CARD_KINDS: [CardKind, string][] = [['card', 'Kartelë'], ...(Object.entries(PAYMENT_KIND_LABELS) as [PaymentKind, string][])]
+
 /**
- * "Pagesa me kesh" – opens after PAGUAJ: what the client gave (typed or a note: Saktë, 5 €, 10 € …), the change,
- * then MBYLL SHITJEN (cash), KARTELË (all by card) or BLLOKU TATIMOR (a coupon written by hand while the device was
- * down, owner / manager only). Enter closes the sale.
+ * "Pagesa" – the only place where the payment is chosen (opens after PAGUAJ / F12):
+ *  Kesh            what the client gave (typed or Saktë / 5 / 10 / 20 / 50 / 100 €) and the change
+ *  Kartelë         card, bank transfer, voucher or cheque for the whole amount
+ *  Të kombinuara   part by card (or transfer …), the rest in cash with its change
+ * then MBYLL SHITJEN (Enter). BLLOKU TATIMOR (owner / manager) enters a coupon of the separate book.
  */
 export function CashDialog({
   open,
   total,
   busy,
-  initial,
   bookActive,
-  onPay,
+  onCash,
   onCard,
+  onMixed,
   onBook,
   onClose,
 }: {
   open: boolean
   total: number
   busy: boolean
-  /** Amount already typed in the side panel. */
-  initial?: string
   /** A coupon of the separate book is being entered. */
   bookActive?: boolean
-  onPay: (tendered: number) => void
-  onCard: () => void
+  onCash: (tendered: number) => void
+  onCard: (kind: CardKind) => void
+  onMixed: (cardAmount: number, tendered: number, kind: CardKind) => void
   onBook?: () => void
   onClose: () => void
 }) {
+  const [tab, setTab] = useState<PayTab>('cash')
+  const [kind, setKind] = useState<CardKind>('card')
   const [v, setV] = useState('')
   const [exact, setExact] = useState(false)
+  const [cardPart, setCardPart] = useState('')
   useEffect(() => {
     if (open) {
-      setV(initial ?? '')
+      setTab('cash')
+      setKind('card')
+      setV('')
       setExact(false)
+      setCardPart('')
     }
-  }, [open, initial])
+  }, [open])
+
+  const c = parseNum(cardPart)
+  const cardOk = tab !== 'mixed' || (c != null && !Number.isNaN(c) && c > 0 && c < total)
+  const cashDue = tab === 'mixed' ? round2(total - (cardOk && c ? c : 0)) : total
   const n = parseNum(v)
-  const tendered = n == null || Number.isNaN(n) ? total : n
-  const change = round2(tendered - total)
-  const short = change < 0
+  const tendered = n == null || Number.isNaN(n) ? cashDue : n
+  const change = round2(tendered - cashDue)
+  const short = tab !== 'card' && change < 0
+  const ready = !busy && !short && cardOk
+  const close = () => {
+    if (!ready) return
+    if (tab === 'cash') onCash(tendered)
+    else if (tab === 'card') onCard(kind)
+    else onMixed(c!, tendered, kind)
+  }
   const pick = (x: number | 'exact') => {
     setExact(x === 'exact')
     setV(x === 'exact' ? '' : String(x))
   }
-  const close = () => !short && !busy && onPay(tendered)
-  const chip = 'h-10 rounded-ctl border text-[14px] font-semibold tabular-nums disabled:opacity-40'
+  const chip = 'h-11 rounded-ctl border text-[15px] font-semibold tabular-nums disabled:opacity-40'
+  const on = 'border-brand-600 bg-brand-100 text-brand-700'
+  const kindLabel = kind === 'card' ? 'kartelë' : PAYMENT_KIND_LABELS[kind].toLowerCase()
+
+  const cashBlock = (
+    <>
+      <Input
+        label={tab === 'mixed' ? 'Marrë kesh nga klienti' : 'Marrë nga klienti'}
+        inputMode="decimal"
+        autoFocus={tab === 'cash'}
+        value={v}
+        onChange={(e) => {
+          setExact(false)
+          setV(e.target.value)
+        }}
+        onKeyDown={(e) => e.key === 'Enter' && close()}
+        placeholder={formatEUR(cashDue)}
+      />
+      <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-6">
+        <button type="button" onClick={() => pick('exact')} className={cn(chip, exact ? on : 'border-field hover:bg-bg')}>
+          Saktë
+        </button>
+        {[5, 10, 20, 50, 100].map((x) => (
+          <button key={x} type="button" disabled={x < cashDue} onClick={() => pick(x)} className={cn(chip, n === x && !exact ? on : 'border-field hover:bg-bg')}>
+            {x} €
+          </button>
+        ))}
+      </div>
+      <div className={cn('flex items-center justify-between rounded-ctl border px-4 py-3', short ? 'border-[#F3C4BE] bg-warn-100 text-warn-700' : 'border-line bg-[#F8FAFC]')}>
+        <span className="text-[15px] font-medium">{short ? 'Mungojnë' : 'Kusuri'}</span>
+        <span className={cn('text-[26px] font-semibold tracking-[-0.015em] tabular-nums', short ? 'text-warn-700' : 'text-brand-700')}>{formatEUR(Math.abs(change))}</span>
+      </div>
+    </>
+  )
+
+  const kinds = (
+    <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Mënyra e pagesës pa kesh">
+      {CARD_KINDS.map(([k, label]) => (
+        <button key={k} type="button" role="radio" aria-checked={kind === k} onClick={() => setKind(k)} className={cn('h-11 rounded-full border px-4 text-[15px] font-semibold', kind === k ? on : 'border-field bg-white text-ink')}>
+          {label}
+        </button>
+      ))}
+    </div>
+  )
+
   return (
-    <Dialog open={open} onClose={() => !busy && onClose()} title="Pagesa me kesh" width="md:max-w-[460px]">
+    <Dialog open={open} onClose={() => !busy && onClose()} title="Pagesa" width="md:max-w-[500px]">
       <div className="flex flex-col gap-3">
         <div className="flex items-baseline justify-between">
-          <span className="text-muted">Totali</span>
-          <span className="text-[22px] font-semibold tracking-[-0.015em] tabular-nums">{formatEUR(total)}</span>
+          <span className="text-[15px] text-muted">Totali</span>
+          <span className="text-[28px] font-semibold tracking-[-0.015em] tabular-nums">{formatEUR(total)}</span>
         </div>
-        <Input
-          label="Marrë nga klienti"
-          inputMode="decimal"
-          autoFocus
-          value={v}
-          onChange={(e) => {
-            setExact(false)
-            setV(e.target.value)
-          }}
-          onKeyDown={(e) => e.key === 'Enter' && close()}
-          placeholder={formatEUR(total)}
-        />
-        <div className="grid grid-cols-6 gap-1.5">
-          <button type="button" onClick={() => pick('exact')} className={cn(chip, exact ? 'border-brand-600 bg-brand-100 text-brand-600' : 'border-field hover:bg-bg')}>
-            Saktë
-          </button>
-          {[5, 10, 20, 50, 100].map((x) => (
-            <button key={x} type="button" disabled={x < total} onClick={() => pick(x)} className={cn(chip, n === x && !exact ? 'border-brand-600 bg-brand-100 text-brand-600' : 'border-field hover:bg-bg')}>
-              {x} €
+        <div className="grid grid-cols-3 gap-2" role="tablist" aria-label="Mënyra e pagesës">
+          {(
+            [
+              ['cash', 'Kesh'],
+              ['card', 'Kartelë'],
+              ['mixed', 'Të kombinuara'],
+            ] as const
+          ).map(([t, label]) => (
+            <button
+              key={t}
+              type="button"
+              role="tab"
+              aria-selected={tab === t}
+              onClick={() => setTab(t)}
+              className={cn('h-12 rounded-ctl border text-[15px] font-semibold', tab === t ? 'border-2 border-brand-600 bg-brand-100 text-brand-700' : 'border-field bg-white text-ink hover:bg-bg')}
+            >
+              {label}
             </button>
           ))}
         </div>
-        <div className={cn('flex items-center justify-between rounded-ctl border px-4 py-3', short ? 'border-[#F3C4BE] bg-warn-100 text-warn-700' : 'border-line bg-[#F8FAFC]')}>
-          <span>{short ? 'Mungojnë' : 'Kusuri'}</span>
-          <span className={cn('text-[24px] font-semibold tracking-[-0.015em] tabular-nums', short ? 'text-warn-700' : 'text-bt-600')}>{formatEUR(Math.abs(change))}</span>
-        </div>
-        <div className="grid grid-cols-[1fr_1.1fr_1.6fr] gap-2">
+
+        {tab === 'cash' && cashBlock}
+        {tab === 'card' && (
+          <>
+            {kinds}
+            <p className="text-[15px] text-muted">E gjithë shuma paguhet me {kindLabel}.</p>
+          </>
+        )}
+        {tab === 'mixed' && (
+          <>
+            {kinds}
+            <Input
+              label={`Paguhet me ${kindLabel} (€)`}
+              inputMode="decimal"
+              autoFocus
+              value={cardPart}
+              onChange={(e) => setCardPart(e.target.value)}
+              placeholder="0.00"
+              error={cardPart.trim() && !cardOk ? 'Më pak se totali' : undefined}
+            />
+            <div className="flex items-baseline justify-between text-[15px]">
+              <span className="text-muted">Mbetet kesh</span>
+              <span className="font-semibold tabular-nums">{formatEUR(cashDue)}</span>
+            </div>
+            {cashBlock}
+          </>
+        )}
+
+        <div className="grid grid-cols-[1fr_2fr] gap-2">
           <Button variant="secondary" size="lg" disabled={busy} onClick={onClose}>
             Anulo
           </Button>
-          <Button variant="secondary" size="lg" disabled={busy} onClick={onCard}>
-            <CreditCard className="h-4 w-4" /> KARTELË
-          </Button>
-          <Button size="lg" className="disabled:opacity-50" disabled={short} loading={busy} onClick={close}>
+          <Button size="lg" className="disabled:opacity-50" disabled={!ready} loading={busy} onClick={close}>
             MBYLL SHITJEN
           </Button>
         </div>

@@ -40,19 +40,22 @@ export function navFor(type: BusinessType, role: Role): { main: NavItem[]; botto
     return { main: workerScreens(type), bottom: [] }
   }
 
-  const main: NavItem[] = [{ to: '/', label: 'Paneli', icon: LayoutGrid, group: 'Përmbledhje' }]
+  const main: NavItem[] = [{ to: '/', label: 'Paneli', icon: LayoutGrid, group: 'Sot' }]
   // Selling happens only in the installed SEF app; the web app manages the business and shows how it goes.
-  if (hasModule(type, 'tables')) main.push({ to: '/tavolinat', label: isSefApp ? 'Tavolinat' : 'Plani i tavolinave', short: 'Tavolinat', icon: Armchair, group: 'Puna e ditës' })
-  if (hasModule(type, 'appointments')) main.push({ to: '/terminet', label: 'Terminet', icon: CalendarDays, group: 'Puna e ditës' })
-  if (isSefApp) main.push({ to: '/arka', label: 'Arka / Shitja', short: 'Arka', icon: ShoppingCart, group: 'Puna e ditës' })
-  main.push({ to: '/produktet', label: info.terms.catalog, icon: Package, group: 'Menaxhimi' })
-  if (hasModule(type, 'stock')) main.push({ to: '/stoku', label: 'Stoku & Hyrjet', short: 'Stoku', icon: Truck, group: 'Menaxhimi' })
-  main.push({ to: '/raportet', label: 'Raportet', icon: BarChart3, group: 'Analiza dhe kontrolli' })
-  main.push({ to: '/puna', label: 'Puna e punëtorëve', short: 'Puna', icon: Users, group: 'Menaxhimi' })
-  main.push({ to: '/regjistri', label: 'Regjistri', icon: ScrollText, group: 'Analiza dhe kontrolli' })
-  main.push({ to: '/fiskalizimi', label: 'Fiskalizimi', icon: ShieldCheck, group: 'Analiza dhe kontrolli' })
-  const bottom: NavItem[] = [{ to: '/cilesimet', label: 'Cilësimet', icon: Settings }]
-  if (role === 'admin') bottom.unshift({ to: '/llogaria', label: 'Llogaria dhe abonimi', short: 'Llogaria', icon: BadgeCheck })
+  if (hasModule(type, 'tables')) main.push({ to: '/tavolinat', label: isSefApp ? 'Tavolinat' : 'Plani i tavolinave', short: 'Tavolinat', icon: Armchair, group: 'Sot' })
+  if (hasModule(type, 'appointments')) main.push({ to: '/terminet', label: 'Terminet', icon: CalendarDays, group: 'Sot' })
+  if (isSefApp) main.push({ to: '/arka', label: 'Arka / Shitja', short: 'Arka', icon: ShoppingCart, group: 'Sot' })
+  main.push({ to: '/produktet', label: info.terms.catalog, icon: Package, group: 'Produktet & Stoku' })
+  if (hasModule(type, 'stock')) main.push({ to: '/stoku', label: 'Stoku & Hyrjet', short: 'Stoku', icon: Truck, group: 'Produktet & Stoku' })
+  // four parts: Sot · Produktet & Stoku · Raportet · (at the bottom) ATK, account and settings
+  main.push({ to: '/raportet', label: 'Raportet', icon: BarChart3, group: 'Raportet' })
+  main.push({ to: '/puna', label: 'Puna e punëtorëve', short: 'Puna', icon: Users, group: 'Raportet' })
+  main.push({ to: '/regjistri', label: 'Regjistri i veprimeve', short: 'Regjistri', icon: ScrollText, group: 'Raportet' })
+  const bottom: NavItem[] = [
+    { to: '/fiskalizimi', label: 'Fiskalizimi (ATK)', short: 'ATK', icon: ShieldCheck },
+    { to: '/cilesimet', label: 'Cilësimet', icon: Settings },
+  ]
+  if (role === 'admin') bottom.splice(1, 0, { to: '/llogaria', label: 'Llogaria dhe abonimi', short: 'Llogaria', icon: BadgeCheck })
   return { main, bottom }
 }
 

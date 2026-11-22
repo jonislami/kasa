@@ -78,3 +78,14 @@
     height: env(safe-area-inset-top);
   }
 }
+
+/* Keyboard: a clear ring on whatever has the focus (mouse clicks do not show it) */
+:where(a, button, [role='button'], [role='tab'], [role='radio'], summary, [tabindex]):focus-visible {
+  outline: 3px solid #1f4fa8;
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+:where(input, select, textarea):focus-visible {
+  outline: 2px solid #1f4fa8;
+  outline-offset: 1px;
+}

@@ -1,3 +1,4 @@
+import { friendlyError, NOT_READY } from '@/lib/friendlyError'
 import { supabase } from '@/lib/supabase'
 import { kosovoDateISO } from '@/lib/clock'
 import type { BusinessType } from '@/lib/business'
@@ -6,7 +7,7 @@ import type { VatCode } from '@/lib/vat'
 /** Thrown when migration 0012 has not been run yet – pages show a clear message. */
 export class AccountingNotMigrated extends Error {
   constructor() {
-    super('Kontabiliteti aktivizohet pasi të ekzekutohen migrimet 0012_accountant.sql dhe 0013_accountant_app.sql në Supabase.')
+    super(NOT_READY)
   }
 }
 
@@ -14,7 +15,7 @@ const NOT_MIGRATED = new Set(['42P01', 'PGRST205', 'PGRST202', '42883', '42703']
 
 function fail(error: { code?: string; message: string }): never {
   if (error.code && NOT_MIGRATED.has(error.code)) throw new AccountingNotMigrated()
-  throw new Error(error.message)
+  throw friendlyError(error)
 }
 
 const n = (v: unknown) => (v == null ? 0 : Number(v))
@@ -539,7 +540,7 @@ export async function addAccountantByEmail(email: string): Promise<{ full_name: 
   const { data, error } = await supabase.rpc('add_accountant_by_email', { p_email: email.trim() })
   if (error) {
     if (error.code === 'PGRST202' || error.code === '42883') {
-      throw new Error('Kjo mundësi kërkon migrimin supabase/migrations/0014_owner_adds_accountant.sql në Supabase.')
+      throw new Error(NOT_READY)
     }
     fail(error)
   }

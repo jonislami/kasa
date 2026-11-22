@@ -1,3 +1,4 @@
+import { friendlyError, NOT_READY } from '@/lib/friendlyError'
 import { supabase } from '@/lib/supabase'
 import { kosovoDateISO, KOSOVO_TZ } from '@/lib/clock'
 import type { Role } from '@/lib/business'
@@ -7,7 +8,7 @@ import { SqDateFormat } from '@/lib/sqDate'
 /** Thrown when migration 0004 has not been run yet – pages show a clear message. */
 export class ReportsNotMigrated extends Error {
   constructor() {
-    super('Raportet nuk janë aktivizuar ende në databazë (migrimi 0004_reports.sql).')
+    super(NOT_READY)
   }
 }
 
@@ -15,7 +16,7 @@ const NOT_MIGRATED = new Set(['42P01', 'PGRST205', 'PGRST202', '42883'])
 
 function fail(error: { code?: string; message: string }): never {
   if (error.code && NOT_MIGRATED.has(error.code)) throw new ReportsNotMigrated()
-  throw new Error(error.message)
+  throw friendlyError(error)
 }
 
 const n = (v: unknown) => (v == null ? 0 : Number(v))

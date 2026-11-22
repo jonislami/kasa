@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { BookOpen, Camera, ClipboardList, Minus, PauseCircle, Plus, ScanLine, Search, Trash2, WifiOff, X } from 'lucide-react'
+import { BookOpen, Camera, ClipboardList, Minus, PauseCircle, Plus, ScanLine, Search, Trash2, WifiOff, X, type LucideIcon } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
 import { Button, Dialog, Select } from '@/components/ui'
 import { hasModule, isManagerRole } from '@/lib/business'
@@ -11,13 +11,12 @@ import { formatQty, unitLabel } from '@/lib/units'
 import { useMediaQuery } from '@/lib/useMediaQuery'
 import { fetchCategories } from '@/features/products/api'
 import { hasVat, saleVatCode } from '@/lib/vat'
-import { createSale, fetchPosProducts, fetchRegisters, NetworkError, PAYMENT_KIND_LABELS, type CreateSaleInput, type PaymentKind, type PaymentMethod, type Sale } from './api'
+import { createSale, fetchPosProducts, fetchRegisters, NetworkError, type CreateSaleInput, type PaymentKind, type PaymentMethod, type Sale } from './api'
 import { addToCart, computeTotals, emptyCart, setLineDiscount, setLineStaff, setQuantity, type Cart, type CartLine, type PosProduct } from './cart'
 import { fetchAppointment, fetchStaff, initials, staffColor, type Appointment } from '@/features/salon/api'
 import { CameraScanner, CashDialog, DiscountDialog, LineDialog } from './dialogs'
 import { enqueueSale, loadCatalog, loadHeld, nextOfflineNo, saveCatalog, saveHeld, useOfflineQueue, type HeldCart } from './offline'
 import { PrintArea, Receipt } from './Receipt'
-import { SalesDialog } from './SalesDialog'
 import { QuickProductDialog } from './QuickProductDialog'
 import { BookEntryDialog, type BookEntry } from './BookEntryDialog'
 import { EcouponButton } from './EcouponDialog'
@@ -33,10 +32,6 @@ import { formatSq } from '@/lib/sqDate'
 import { roundQty, unitDecimals } from '@/lib/units'
 import { usePrintProblem } from './PrintProblem'
 
-const parseNum = (s: string) => {
-  const n = Number(s.trim().replace(',', '.'))
-  return s.trim() === '' ? null : Number.isFinite(n) ? n : NaN
-}
 
 function stockClass(p: PosProduct) {
   if (p.kind === 'service' || p.min_stock <= 0) return 'text-muted'
@@ -143,10 +138,6 @@ export function PosPage() {
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState<string>('all')
   const lang = useLang()
-  const [method, setMethod] = useState<PaymentMethod>('cash')
-  const [cardKind, setCardKind] = useState<PaymentKind | 'card'>('card')
-  const [tendered, setTendered] = useState('')
-  const [cardPart, setCardPart] = useState('')
   const [busy, setBusy] = useState(false)
   const payingRef = useRef(false)
   const [error, setError] = useState<string | null>(null)
@@ -156,7 +147,6 @@ export function PosPage() {
   const [cashOpen, setCashOpen] = useState(false)
   const [camera, setCamera] = useState(false)
   const [receipt, setReceipt] = useState<Sale | null>(null)
-  const [salesOpen, setSalesOpen] = useState(false)
   const [heldOpen, setHeldOpen] = useState(false)
   const [held, setHeld] = useState<HeldCart[]>(() => loadHeld(business.id))
   const [printSale, setPrintSale] = useState<{ sale: Sale; copy: boolean } | null>(null)
@@ -284,7 +274,7 @@ export function PosPage() {
 
   // ---------- payment ----------
   const pay = useCallback(
-    async (m: PaymentMethod, tenderedAmount?: number, cardAmount?: number) => {
+    async (m: PaymentMethod, tenderedAmount?: number, cardAmount?: number, cardKind: PaymentKind | 'card' = 'card') => {
       // a ref, not the state: a double press (click + F12) comes before React shows "busy"
       if (cart.lines.length === 0 || busy || payingRef.current) return
       payingRef.current = true
@@ -333,7 +323,7 @@ export function PosPage() {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [cart, totals, registerId, busy, registerName, profile.full_name, appointment, bookEntry, cardKind],
+    [cart, totals, registerId, busy, registerName, profile.full_name, appointment, bookEntry],
   )
 
   const finish = (sale: Sale) => {
@@ -346,34 +336,19 @@ export function PosPage() {
     }
     if (receiptSettings.data?.settings.auto_print) void print(sale, false, true)
     setCart(emptyCart())
-    setTendered('')
-    setCardPart('')
-    setMethod('cash')
-    setCardKind('card')
     setCashOpen(false)
   }
 
-  const payCard = () => {
+  const payCard = (kind: PaymentKind | 'card' = 'card') => {
     // With exchange credit the card pays only the rest; the credit is the cash part.
-    if (credit <= 0) return void pay('card')
+    if (credit <= 0) return void pay('card', undefined, undefined, kind)
     if (due <= 0) return void pay('cash', credit)
-    void pay('mixed', credit, due)
+    void pay('mixed', credit, due, kind)
   }
 
-  const payDesktop = () => {
-    const t = parseNum(tendered)
-    const c = parseNum(cardPart)
-    if (method === 'cash') {
-      if (!cart.lines.length) return
-      // the payment window: what the client gave, the change, card or the separate coupon book
-      if (t != null && Number.isNaN(t)) return setError('Shuma e paguar nuk është e saktë')
-      return setCashOpen(true)
-    }
-    if (method === 'card') return payCard()
-    if (c == null || Number.isNaN(c) || c <= 0 || c >= due) return setError('Shkruaj sa paguhet me kartelë (më pak se totali)')
-    const cash = round2(due - c)
-    if (t != null && (Number.isNaN(t) || t < cash)) return setError('Keshi i paguar është më i vogël se pjesa me kesh')
-    void pay('mixed', round2((t ?? cash) + credit), c)
+  // PAGUAJ / F12: the payment is chosen only in the payment window
+  const openPayment = () => {
+    if (cart.lines.length) setCashOpen(true)
   }
 
   // ---------- held invoices ----------
@@ -413,8 +388,7 @@ export function PosPage() {
       } else if (e.key === 'F12') {
         e.preventDefault()
         if (cashOpen || bookOpen) return // the payment window closes the sale with Enter
-        if (wide) payDesktop()
-        else if (cart.lines.length) setCashOpen(true)
+        openPayment()
       } else if (e.key === 'F4') {
         e.preventDefault()
         holdCart()
@@ -448,18 +422,12 @@ export function PosPage() {
     viaDialog()
   }
 
-  const change = (() => {
-    const t = parseNum(tendered)
-    if (t == null || Number.isNaN(t)) return null
-    const cashDue = method === 'mixed' ? round2(due - (parseNum(cardPart) || 0)) : due
-    return round2(t - cashDue)
-  })()
 
   const exchangeBanner = exchange && (
     <div className="flex items-center justify-between gap-2 rounded-ctl bg-brand-100 px-3 py-2 text-sm">
       <span>
         Ndërrim{exchange.from && ` nga fatura #${String(exchange.from).padStart(5, '0')}`} · kredi <strong className="tabular-nums">−{formatEUR(credit)}</strong>
-        <span className="block text-xs text-muted">
+        <span className="block text-sm text-muted">
           {totals.total >= credit ? `Klienti paguan edhe ${formatEUR(due)}` : `Klientit i kthehen ${formatEUR(round2(credit - totals.total))}`}
         </span>
       </span>
@@ -474,7 +442,7 @@ export function PosPage() {
     const st = sum?.next ? expiryStatus(sum.next) : null
     if (!p.substance && !sum) return null
     return (
-      <span className="mt-0.5 block truncate text-xs text-muted">
+      <span className="mt-0.5 block truncate text-sm text-muted">
         {p.substance}
         {p.substance && sum?.next && ' · '}
         {sum?.next && (
@@ -538,15 +506,15 @@ export function PosPage() {
           <li key={l.key} className="flex items-center gap-3 px-5 py-3">
             <div className="min-w-0 flex-1">
             <button type="button" onClick={() => setEditLine(l)} className="w-full min-w-0 text-left">
-              <div className="truncate text-[15px] font-semibold md:text-sm">{l.product.name}</div>
-              <div className="text-sm text-muted md:text-xs">
+              <div className="truncate text-[15px] font-semibold">{l.product.name}</div>
+              <div className="text-sm text-muted">
                 {formatEUR(l.product.sale_price)} / {unitLabel(l.product.unit)}
                 {l.discount > 0 && <span className="text-warn-700"> · −{formatEUR(l.discount)}</span>}
                 <span className="font-semibold text-ink lg:hidden"> · {formatEUR(t?.total ?? 0)}</span>
               </div>
             </button>
               {salon && staff.length > 0 && (
-                <span className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-line py-0.5 pl-1 pr-2 text-xs font-semibold">
+                <span className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-line py-0.5 pl-1 pr-2 text-sm font-semibold">
                   <span className="flex h-5 w-5 items-center justify-center rounded-full text-[10px] text-white" style={{ background: staffColor(l.staffId ?? '', staff) }}>
                     {initials(staff.find((x) => x.id === l.staffId)?.full_name ?? '?')}
                   </span>
@@ -594,56 +562,22 @@ export function PosPage() {
   )
 
   const toolbar = (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 overflow-x-auto">
       {canAddProduct && (
-        <button
-          type="button"
-          onClick={() => setQuickAdd({ barcode: null })}
-          title={business.type === 'salon' ? 'Shto shërbimin' : 'Shto produktin'}
-          aria-label={business.type === 'salon' ? 'Shto shërbimin' : 'Shto produktin'}
-          className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600 text-white hover:bg-[#1A4390]"
-        >
-          <Plus className="h-6 w-6" />
-        </button>
+        <ToolButton icon={Plus} label={tr('Shto', lang)} primary title={business.type === 'salon' ? 'Shto shërbimin' : 'Shto produktin'} onClick={() => setQuickAdd({ barcode: null })} />
       )}
-      {canAddProduct && (
-        <button
-          type="button"
-          onClick={() => setBookOpen(true)}
-          title="Kupon nga blloku i veçantë (pajisja ishte e prishur)"
-          aria-label="Kupon nga blloku i veçantë"
-          className={cn('flex h-11 w-11 items-center justify-center rounded-xl border hover:bg-bg', bookEntry ? 'border-amber-700 bg-amber-100 text-amber-700' : 'border-line bg-white')}
-        >
-          <BookOpen className="h-5 w-5" />
-        </button>
-      )}
+      {canAddProduct && <ToolButton icon={BookOpen} label={tr('Blloku', lang)} title="Kupon nga blloku i veçantë (pajisja ishte e prishur)" active={Boolean(bookEntry)} onClick={() => setBookOpen(true)} />}
+      <ToolButton icon={PauseCircle} label={tr('Në pritje', lang)} title="Kuponët e ruajtur në pritje (F4 e ruan)" badge={held.length || undefined} onClick={() => setHeldOpen(true)} />
+      <ToolButton icon={ClipboardList} label={tr('Kuponët', lang)} title="Kuponët e lëshuar: sot dhe më herët, anulimi, kthimi, printimi" badge={queue.pending.length || undefined} badgeTone="warn" onClick={() => navigate('/kuponet')} />
       {(registers.data?.length ?? 0) > 1 && (
         <Select
           aria-label="Arka"
           value={registerId ?? ''}
           onChange={(e) => setRegisterId(e.target.value)}
-          className="h-10 w-auto"
+          className="h-[56px] w-auto"
           options={(registers.data ?? []).map((r) => ({ value: r.id, label: r.name }))}
         />
       )}
-      <button
-        type="button"
-        onClick={() => setHeldOpen(true)}
-        title="Faturat në pritje"
-        className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-line bg-white hover:bg-bg"
-      >
-        <PauseCircle className="h-5 w-5" />
-        {held.length > 0 && <span className="absolute -right-1 -top-1 rounded-full bg-amber-700 px-1.5 text-[11px] font-bold text-white">{held.length}</span>}
-      </button>
-      <button
-        type="button"
-        onClick={() => setSalesOpen(true)}
-        title="Faturat e sotme"
-        className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-line bg-white hover:bg-bg"
-      >
-        <ClipboardList className="h-5 w-5" />
-        {queue.pending.length > 0 && <span className="absolute -right-1 -top-1 rounded-full bg-warn-700 px-1.5 text-[11px] font-bold text-white">{queue.pending.length}</span>}
-      </button>
     </div>
   )
 
@@ -669,7 +603,7 @@ export function PosPage() {
           <X className="h-4 w-4" />
         </button>
       ) : (
-        wide && <span className="absolute right-4 top-1/2 -translate-y-1/2 rounded-md border border-field px-1.5 text-xs text-muted">F2</span>
+        wide && <span className="absolute right-4 top-1/2 -translate-y-1/2 rounded-md border border-field px-1.5 text-sm text-muted">F2</span>
       )}
     </div>
   )
@@ -789,11 +723,11 @@ export function PosPage() {
         open={cashOpen}
         total={due}
         busy={busy}
-        initial={wide ? tendered : ''}
         bookActive={Boolean(bookEntry)}
         onClose={() => setCashOpen(false)}
-        onPay={(t) => void pay('cash', round2(t + credit))}
-        onCard={payCard}
+        onCash={(t) => void pay('cash', round2(t + credit))}
+        onCard={(k) => payCard(k)}
+        onMixed={(c, t, k) => void pay('mixed', round2(t + credit), c, k)}
         onBook={
           canAddProduct
             ? () => {
@@ -815,7 +749,7 @@ export function PosPage() {
                 </div>
               )}
             </div>
-            <div className="max-h-[50dvh] overflow-y-auto rounded-xl border border-line bg-white py-2">
+            <div className="max-h-[calc(50dvh/var(--zoom,1))] overflow-y-auto rounded-xl border border-line bg-white py-2">
               <Receipt sale={receipt} business={business} settings={receiptSettings.data} />
             </div>
             {receipt.fiscal && !receipt.offline && receipt.id && <EcouponButton saleId={receipt.id} />}
@@ -839,7 +773,7 @@ export function PosPage() {
               <li key={h.id} className="flex items-center gap-2">
                 <button type="button" onClick={() => restoreHeld(h)} className="min-w-0 flex-1 rounded-xl border border-line px-4 py-3 text-left hover:bg-bg">
                   <div className="truncate font-semibold">{h.label}</div>
-                  <div className="text-xs text-muted">{formatSq(h.saved_at, { timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })}</div>
+                  <div className="text-sm text-muted">{formatSq(h.saved_at, { timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })}</div>
                 </button>
                 <button
                   type="button"
@@ -858,14 +792,6 @@ export function PosPage() {
           </ul>
         )}
       </Dialog>
-      <SalesDialog
-        open={salesOpen}
-        onClose={() => setSalesOpen(false)}
-        pending={queue.pending}
-        registerId={registerId}
-        onPrint={(s) => void print(s, true)}
-        onRefund={(nr) => navigate(`/arka/kthim?nr=${nr}`)}
-      />
       <PrintArea sale={printSale?.sale ?? null} copy={printSale?.copy} business={business} settings={receiptSettings.data} />
     </>
   )
@@ -873,7 +799,7 @@ export function PosPage() {
   // ================= DESKTOP =================
   if (wide) {
     return (
-      <div className="flex h-[calc(100dvh-44px-69px)] gap-5 p-6 pt-3">
+      <div className="flex h-[calc(100dvh/var(--zoom,1)-44px-69px)] gap-5 p-6 pt-3">
         <div className="flex min-w-0 flex-1 flex-col gap-4">
           <div className="flex items-center gap-3">
             {searchBox}
@@ -911,17 +837,17 @@ export function PosPage() {
                     onClick={() => add(p)}
                     className="flex min-h-[116px] flex-col rounded-card border border-line bg-white p-4 text-left transition-colors hover:border-brand-600 active:bg-brand-100"
                   >
-                    <div className="text-xs text-muted">{categories.find((c) => c.id === p.category_id)?.name ?? ' '}</div>
+                    <div className="text-sm text-muted">{categories.find((c) => c.id === p.category_id)?.name ?? ' '}</div>
                     <div className="mt-0.5 line-clamp-2 text-[15px] font-semibold leading-tight">{p.name}</div>
                     {lotsOn && lotLine(p)}
                     <div className="mt-auto flex items-end justify-between pt-3">
                       <span className="text-lg font-bold tabular-nums">{formatEUR(p.sale_price)}</span>
                       {p.has_variants ? (
-                        <span className="text-xs text-muted">{variantSummary(p)}</span>
+                        <span className="text-sm text-muted">{variantSummary(p)}</span>
                       ) : (
-                        showStock && p.kind === 'product' && <span className={cn('text-xs', stockClass(p))}>{formatQty(p.stock, p.unit)}</span>
+                        showStock && p.kind === 'product' && <span className={cn('text-sm', stockClass(p))}>{formatQty(p.stock, p.unit)}</span>
                       )}
-                      {p.kind === 'service' && p.duration_min && <span className="text-xs text-muted">{p.duration_min} min</span>}
+                      {p.kind === 'service' && p.duration_min && <span className="text-sm text-muted">{p.duration_min} min</span>}
                     </div>
                   </button>
                 ))}
@@ -935,7 +861,7 @@ export function PosPage() {
         <div className="flex w-[400px] shrink-0 flex-col overflow-hidden rounded-card border border-line bg-white">
           <div className="flex items-start justify-between border-b border-line px-5 py-4">
             <div>
-              <div className="text-xl font-semibold">{tr('Faturë e re', lang)}</div>
+              <div className="text-xl font-semibold">{tr('Kupon i ri', lang)}</div>
               <div className="text-sm text-muted">
                 {cart.lines.length} {cart.lines.length === 1 ? 'produkt' : 'produkte'} · {new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 }).format(totals.itemsCount)} artikuj
                 {registerName && ` · ${registerName}`}
@@ -992,70 +918,8 @@ export function PosPage() {
             </div>
           </div>
           <div className="flex flex-col gap-3 border-t border-line p-5">
-            <div className="grid grid-cols-3 gap-2">
-              {(
-                [
-                  ['cash', tr('Kesh', lang)],
-                  ['card', tr('Kartelë', lang)],
-                  ['mixed', tr('Të kombinuara', lang)],
-                ] as const
-              ).map(([m, label]) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => setMethod(m)}
-                  className={cn(
-                    'h-11 rounded-xl border text-sm font-semibold',
-                    method === m ? 'border-2 border-brand-600 bg-[#F2F6FC] text-brand-900' : 'border-field bg-white',
-                  )}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            {method !== 'cash' && (
-              <div className="flex flex-wrap gap-1.5">
-                {([['card', 'Kartelë'], ...Object.entries(PAYMENT_KIND_LABELS)] as [PaymentKind | 'card', string][]).map(([k, label0]) => [k, tr(label0, lang)] as const).map(([k, label]) => (
-                  <button
-                    key={k}
-                    type="button"
-                    onClick={() => setCardKind(k)}
-                    className={cn('h-9 rounded-full border px-3 text-sm font-semibold', cardKind === k ? 'border-brand-600 bg-brand-100 text-brand-600' : 'border-line bg-white text-muted')}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            )}
-            {method === 'mixed' && (
-              <div className="flex flex-col gap-1">
-                <span className="text-xs text-muted">Me {cardKind === 'card' ? 'kartelë' : PAYMENT_KIND_LABELS[cardKind].toLowerCase()}</span>
-                <input value={cardPart} onChange={(e) => setCardPart(e.target.value)} inputMode="decimal" placeholder="€0.00" className="h-11 rounded-ctl border border-field px-3 tabular-nums" />
-              </div>
-            )}
-            {method !== 'card' && (
-              <div className="flex gap-2">
-                <div className="flex flex-1 flex-col gap-1">
-                  <span className="text-xs text-muted">Paguar{method === 'mixed' ? ' kesh' : ''}</span>
-                  <input
-                    value={tendered}
-                    onChange={(e) => setTendered(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && payDesktop()}
-                    inputMode="decimal"
-                    placeholder={formatEUR(method === 'mixed' ? Math.max(0, round2(due - (parseNum(cardPart) || 0))) : due)}
-                    className="h-11 rounded-ctl border border-field px-3 tabular-nums"
-                  />
-                </div>
-                <div className="flex w-[110px] flex-col gap-1">
-                  <span className="text-right text-xs text-muted">Kusuri</span>
-                  <div className={cn('flex h-11 items-center justify-end rounded-ctl px-3 text-lg font-semibold tabular-nums', change == null ? 'bg-[#F2F4F7] text-muted' : change < 0 ? 'bg-warn-100 text-warn-700' : 'bg-ok-100 text-ok-700')}>
-                    {change == null ? '—' : formatEUR(change)}
-                  </div>
-                </div>
-              </div>
-            )}
-            <Button size="lg" className="h-[58px] text-[18px]" disabled={!cart.lines.length} loading={busy} onClick={payDesktop}>
-              {tr('Paguaj', lang)} {formatEUR(due)} <span className="rounded-md border border-white/40 px-1.5 text-xs font-medium">F12</span>
+            <Button size="lg" className="h-[58px] text-[18px]" disabled={!cart.lines.length} loading={busy} onClick={openPayment}>
+              {tr('Paguaj', lang)} {formatEUR(due)} <span className="rounded-md border border-white/40 px-1.5 text-sm font-medium">F12</span>
             </Button>
             <div className="grid grid-cols-3 gap-2">
               <Button variant="secondary" disabled={!cart.lines.length} onClick={() => setDiscountOpen(true)}>
@@ -1077,18 +941,16 @@ export function PosPage() {
 
   // ================= PHONE / TABLET =================
   return (
-    <div className="flex min-h-[calc(100dvh-var(--chrome,116px)-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex-col">
+    <div className="flex min-h-[calc(100dvh/var(--zoom,1)-var(--chrome,116px)-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex-col">
       <div className="sticky top-[calc(var(--topbar,0px)+env(safe-area-inset-top))] z-20 border-b border-line bg-white px-4 pb-3 pt-4">
-        <div className="mb-3 flex items-start justify-between">
-          <div>
-            <h1 className="text-[26px] font-semibold tracking-[-0.015em] leading-tight">{tr('Faturë e re', lang)}</h1>
-            <div className="text-sm text-muted">
-              {registerName ?? 'Arka'} · {new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 }).format(totals.itemsCount)} artikuj
-            </div>
-            {bookBanner && <div className="mt-2">{bookBanner}</div>}
+        <div className="mb-3">
+          <h1 className="text-[26px] font-semibold tracking-[-0.015em] leading-tight">{tr('Kupon i ri', lang)}</h1>
+          <div className="text-[15px] text-muted">
+            {registerName ?? 'Arka'} · {new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 }).format(totals.itemsCount)} artikuj
           </div>
-          {toolbar}
+          {bookBanner && <div className="mt-2">{bookBanner}</div>}
         </div>
+        <div className="mb-3">{toolbar}</div>
         <div className="flex gap-2">
           {searchBox}
           <button
@@ -1101,7 +963,7 @@ export function PosPage() {
           </button>
         </div>
         {search.trim() && (
-          <ul className="absolute inset-x-4 top-full z-30 mt-1 max-h-[55dvh] overflow-y-auto rounded-xl border border-line bg-white shadow-pop">
+          <ul className="absolute inset-x-4 top-full z-30 mt-1 max-h-[calc(55dvh/var(--zoom,1))] overflow-y-auto rounded-xl border border-line bg-white shadow-pop">
             {results.slice(0, 40).map((p) => (
               <li key={p.id}>
                 <button
@@ -1116,9 +978,9 @@ export function PosPage() {
                     <span className="block truncate font-semibold">{p.name}</span>
                     {lotsOn && lotLine(p)}
                     {p.has_variants ? (
-                      <span className="text-xs text-muted">{variantSummary(p)}</span>
+                      <span className="text-sm text-muted">{variantSummary(p)}</span>
                     ) : (
-                      showStock && p.kind === 'product' && <span className={cn('text-xs', stockClass(p))}>{formatQty(p.stock, p.unit)}</span>
+                      showStock && p.kind === 'product' && <span className={cn('text-sm', stockClass(p))}>{formatQty(p.stock, p.unit)}</span>
                     )}
                   </span>
                   <span className="shrink-0 font-bold tabular-nums">{formatEUR(p.sale_price)}</span>
@@ -1244,3 +1106,40 @@ function localReceipt(
   }
 }
 
+
+/** A till button: the icon with its name under it (no icon-only buttons on the till). */
+function ToolButton({
+  icon: Icon,
+  label,
+  title,
+  onClick,
+  primary,
+  active,
+  badge,
+  badgeTone = 'amber',
+}: {
+  icon: LucideIcon
+  label: string
+  title?: string
+  onClick: () => void
+  primary?: boolean
+  active?: boolean
+  badge?: number
+  badgeTone?: 'amber' | 'warn'
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={title}
+      className={cn(
+        'relative flex h-[56px] min-w-[64px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl border px-2 text-[12px] font-semibold leading-none',
+        primary ? 'border-brand-600 bg-brand-600 text-white hover:bg-brand-700' : active ? 'border-amber-700 bg-amber-100 text-amber-700' : 'border-line bg-white text-ink hover:bg-bg',
+      )}
+    >
+      <Icon className="h-5 w-5" />
+      <span className="whitespace-nowrap">{label}</span>
+      {badge ? <span className={cn('absolute -right-1 -top-1 rounded-full px-1.5 text-[12px] font-bold text-white', badgeTone === 'warn' ? 'bg-warn-700' : 'bg-amber-700')}>{badge}</span> : null}
+    </button>
+  )
+}

@@ -1,15 +1,16 @@
+import { friendlyError, NOT_READY } from '@/lib/friendlyError'
 import { supabase } from '@/lib/supabase'
 import type { Role } from '@/lib/business'
 
 export class SalonNotMigrated extends Error {
   constructor() {
-    super('Terminet aktivizohen pasi të ekzekutohet migrimi 0008_salon.sql në Supabase.')
+    super(NOT_READY)
   }
 }
 const NOT_MIGRATED = new Set(['42P01', 'PGRST205', 'PGRST202', '42883', '42703'])
 function fail(error: { code?: string; message: string }): never {
   if (error.code && NOT_MIGRATED.has(error.code)) throw new SalonNotMigrated()
-  throw new Error(error.message)
+  throw friendlyError(error)
 }
 
 // ---------------------------------------------------------------------------

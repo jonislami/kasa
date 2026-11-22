@@ -266,7 +266,7 @@ export function OrderPage() {
   )
 
   const orderPane = (
-    <Card className="flex flex-col lg:sticky lg:top-6 lg:max-h-[calc(100dvh-110px)] lg:w-[400px]">
+    <Card className="flex flex-col lg:sticky lg:top-6 lg:max-h-[calc(100dvh/var(--zoom,1)-110px)] lg:w-[400px]">
       <div className="flex items-start justify-between gap-2 border-b border-line px-5 py-4">
         <div>
           <div className="text-xl font-semibold">{title}</div>
@@ -446,7 +446,7 @@ export function OrderPage() {
               <div className="mt-1 text-[28px] font-semibold tracking-[-0.015em] tabular-nums">{formatEUR(receipt.total)}</div>
               {receipt.change_amount > 0 && <div className="font-semibold text-ok-700">Kusuri {formatEUR(receipt.change_amount)}</div>}
             </div>
-            <div className="max-h-[45dvh] overflow-y-auto rounded-xl border border-line py-2">
+            <div className="max-h-[calc(45dvh/var(--zoom,1))] overflow-y-auto rounded-xl border border-line py-2">
               <Receipt sale={receipt} business={business} settings={receiptSettings.data} />
             </div>
             <div className="grid grid-cols-2 gap-2.5">
@@ -607,7 +607,7 @@ function PayDialog({ open, order, menu, registerId, onClose, onPaid }: { open: b
   return (
     <Dialog open={open} onClose={onClose} title={all ? 'Paguaj llogarinë' : 'Paguaj një pjesë'} subtitle="Hiq ose zvogëlo artikujt që paguhen më vonë (ndarja e llogarisë)." width="md:max-w-[560px]">
       <div className="flex flex-col gap-4">
-        <ul className="max-h-[38dvh] divide-y divide-line overflow-y-auto rounded-xl border border-line">
+        <ul className="max-h-[calc(38dvh/var(--zoom,1))] divide-y divide-line overflow-y-auto rounded-xl border border-line">
           {openLines.map((i) => {
             const q = qty[i.id] ?? 0
             const max = lineOpen(i)

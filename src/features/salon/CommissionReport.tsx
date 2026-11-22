@@ -68,7 +68,7 @@ export function CommissionReport() {
       {rows.isLoading ? (
         <p className="py-10 text-center text-muted">Duke ngarkuar…</p>
       ) : list.length === 0 ? (
-        <EmptyState title="Ende pa shërbime në këtë muaj" />
+        <EmptyState title="Ende pa shërbime në këtë muaj" text="Komisioni llogaritet vetë kur shërbimi shitet në arkë me punëtorin që e kreu." />
       ) : (
         <table className="w-full text-sm">
           <thead className="bg-[#F9FAFB]">

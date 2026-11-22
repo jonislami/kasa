@@ -1,3 +1,4 @@
+import { friendlyError, NOT_READY } from '@/lib/friendlyError'
 import { supabase } from '@/lib/supabase'
 import { kosovoDateISO, KOSOVO_TZ } from '@/lib/clock'
 import { round2 } from '@/lib/money'
@@ -7,7 +8,7 @@ import { SqDateFormat } from '@/lib/sqDate'
 /** Thrown when migration 0003 has not been run yet – the page shows a clear message. */
 export class StockNotMigrated extends Error {
   constructor() {
-    super('Stoku nuk është aktivizuar ende në databazë (migrimi 0003_stock.sql).')
+    super(NOT_READY)
   }
 }
 
@@ -15,7 +16,7 @@ const NOT_MIGRATED = new Set(['42P01', 'PGRST205', 'PGRST202', '42883', '42703']
 
 function fail(error: { code?: string; message: string }): never {
   if (error.code && NOT_MIGRATED.has(error.code)) throw new StockNotMigrated()
-  throw new Error(error.message)
+  throw friendlyError(error)
 }
 
 // ---------------------------------------------------------------------------

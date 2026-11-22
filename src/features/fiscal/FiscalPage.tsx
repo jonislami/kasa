@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { NOT_READY } from '@/lib/friendlyError'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle, CheckCircle2, KeyRound, Monitor, RefreshCw, ShieldCheck } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
@@ -52,7 +53,7 @@ export function FiscalPage() {
         <div className="px-4 md:px-8">
           <Card className="p-6">
             <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Fiskalizimi nuk është aktivizuar ende</h2>
-            <p className="mt-1 text-muted">Administratori duhet të ekzekutojë migrimin supabase/migrations/0015_fiscal.sql dhe të vendosë Edge Function "fiscal-relay".</p>
+            <p className="mt-1 text-muted">{NOT_READY}</p>
           </Card>
         </div>
       </>

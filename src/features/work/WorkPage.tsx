@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { NOT_READY } from '@/lib/friendlyError'
 import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
 import { KOSOVO_TZ } from '@/lib/clock'
 import { useQuery } from '@tanstack/react-query'
@@ -88,7 +89,7 @@ function ManagerWork({ workerTerm, commission }: { workerTerm: string; commissio
         <PageHeader title="Puna e punëtorëve" />
         <div className="px-4 py-5 md:px-8 md:py-0">
           <Card>
-            <EmptyState icon={<Users className="h-6 w-6" />} title="Puna e punëtorëve nuk është aktivizuar ende" text="Administratori duhet të ekzekutojë migrimin supabase/migrations/0004_reports.sql në Supabase." />
+            <EmptyState icon={<Users className="h-6 w-6" />} title="Puna e punëtorëve nuk është aktivizuar ende" text={NOT_READY} />
           </Card>
         </div>
       </>

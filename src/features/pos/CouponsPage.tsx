@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ChevronLeft, Download, Printer, Search } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { RefreshCw, Search } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
 import { Badge, Button, Dialog, Input, Select, Tabs } from '@/components/ui'
 import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
@@ -15,9 +16,11 @@ import { supabase } from '@/lib/supabase'
 import { addDays, formatRange, today } from '@/features/reports/api'
 import { fetchReceiptSettings } from '@/features/settings/api'
 import { getSale, PAYMENT_KIND_LABELS, type PaymentKind, type PaymentMethod, type Sale, type SaleKind } from './api'
-import { EcouponButton } from './EcouponDialog'
+import { tillRegisterId } from '@/features/fiscal/TillFiscalCard'
+import { discardQueued, syncQueue, useOfflineQueue } from './offline'
+import { SalesDialog } from './SalesDialog'
 import { usePrintProblem } from './PrintProblem'
-import { PrintArea, Receipt } from './Receipt'
+import { PrintArea } from './Receipt'
 
 // "Kuponët e lëshuar" (SEF app): every coupon kept in the database, not only today's – by period, number and worker,
 // with the coupon itself (items, quantity, price, VAT, total) to open, print again or save as PDF. Workers see only
@@ -89,6 +92,9 @@ export function CouponsPage() {
   const { business, profile } = useBusiness()
   const lang = useLang()
   const manager = isManagerRole(profile.actual_role ?? profile.role)
+  const navigate = useNavigate()
+  // coupons sold without internet that have not reached the server yet
+  const queue = useOfflineQueue()
   const [period, setPeriod] = useState<Period>('today')
   const [custom, setCustom] = useState({ from: today(), to: today() })
   const [customOpen, setCustomOpen] = useState(false)
@@ -236,6 +242,40 @@ export function CouponsPage() {
         )}
       </div>
 
+      {queue.pending.length > 0 && (
+        <div className="rounded-card border border-[#F5D98B] bg-amber-100/60 p-3">
+          <div className="flex items-center justify-between gap-2 pb-2">
+            <span className="text-[15px] font-semibold text-amber-700">Pa dërguar ende ({queue.pending.length})</span>
+            <Button size="sm" variant="secondary" onClick={() => void syncQueue()}>
+              <RefreshCw className="h-4 w-4" /> Provo tani
+            </Button>
+          </div>
+          <ul className="flex flex-col gap-1.5">
+            {queue.pending.map((q) => (
+              <li key={q.input.client_id} className="flex items-center justify-between gap-2 rounded-lg bg-white px-3 py-2 text-[15px]">
+                <div className="min-w-0">
+                  <div className="font-semibold">{q.input.offline_no ?? 'Offline'}</div>
+                  <div className="truncate text-sm text-muted">
+                    {when(q.queued_at)} · {q.input.items.length} artikuj{q.last_error ? ` · ${q.last_error}` : ''}
+                  </div>
+                </div>
+                {q.rejected ? (
+                  manager ? (
+                    <Button size="sm" variant="danger" onClick={() => void discardQueued(q.input.client_id)}>
+                      Hiqe
+                    </Button>
+                  ) : (
+                    <Badge tone="warn">U refuzua</Badge>
+                  )
+                ) : (
+                  <Badge tone="amber">Në pritje · prova {q.attempts}</Badge>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {openError && <p className="rounded-ctl bg-warn-100 px-4 py-2.5 text-sm text-warn-700">{openError}</p>}
 
       {loadState(list) === 'offline' ? (
@@ -270,7 +310,7 @@ export function CouponsPage() {
               ))}
             </ul>
           )}
-          {(list.data?.length ?? 0) >= MAX && <p className="border-t border-line px-4 py-2 text-xs text-muted">U shfaqën {MAX} kuponët më të fundit – zgjidh një periudhë më të shkurtër.</p>}
+          {(list.data?.length ?? 0) >= MAX && <p className="border-t border-line px-4 py-2 text-sm text-muted">U shfaqën {MAX} kuponët më të fundit – zgjidh një periudhë më të shkurtër.</p>}
         </div>
       )}
 
@@ -291,27 +331,16 @@ export function CouponsPage() {
         </div>
       </Dialog>
 
-      <Dialog open={Boolean(opened)} onClose={() => setOpened(null)} title={opened ? `Kuponi ${opened.invoice_no ? formatInvoiceNo(opened.invoice_no) : (opened.offline_no ?? '')}` : undefined} width="md:max-w-[520px]">
-        {opened && (
-          <div className="flex flex-col gap-4">
-            <button type="button" onClick={() => setOpened(null)} className="flex items-center gap-1 self-start text-sm font-semibold text-brand-600">
-              <ChevronLeft className="h-4 w-4" /> Lista
-            </button>
-            <div className="max-h-[55dvh] overflow-y-auto rounded-xl border border-line py-2">
-              <Receipt sale={opened} business={business} settings={settings.data} />
-            </div>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-              <Button variant="secondary" size="lg" onClick={() => void printAgain(opened)}>
-                <Printer className="h-4 w-4" /> Printo
-              </Button>
-              <Button variant="secondary" size="lg" onClick={() => savePdf(opened)} title="Hapet dritarja e printimit: zgjidh “Save as PDF / Ruaj si PDF”">
-                <Download className="h-4 w-4" /> Shkarko PDF
-              </Button>
-              <EcouponButton saleId={opened.id} disabled={opened.offline} />
-            </div>
-          </div>
-        )}
-      </Dialog>
+      <SalesDialog
+        open={Boolean(opened)}
+        sale={opened}
+        onClose={() => setOpened(null)}
+        pending={[]}
+        registerId={tillRegisterId(business.id)}
+        onPrint={(s) => void printAgain(s)}
+        onPdf={savePdf}
+        onRefund={(nr) => navigate(`/arka/kthim?nr=${nr}`)}
+      />
 
       {printProblem}
       <PrintArea sale={printSale} business={business} copy settings={settings.data} />
@@ -322,7 +351,7 @@ export function CouponsPage() {
 function Stat({ label, value, strong, tone }: { label: string; value: string; strong?: boolean; tone?: 'warn' }) {
   return (
     <div className={cn('rounded-card border px-4 py-3', strong ? 'border-brand-600 bg-brand-100/50' : 'border-line bg-white')}>
-      <div className="text-xs font-medium uppercase tracking-[0.04em] text-muted">{label}</div>
+      <div className="text-sm font-medium uppercase tracking-[0.04em] text-muted">{label}</div>
       <div className={cn('mt-1 text-[20px] font-semibold tracking-[-0.015em] tabular-nums', tone === 'warn' && 'text-warn-700')}>{value}</div>
     </div>
   )

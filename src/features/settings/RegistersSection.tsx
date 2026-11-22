@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { NOT_READY } from '@/lib/friendlyError'
 import { KOSOVO_TZ } from '@/lib/clock'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Monitor, Plus, Smartphone } from 'lucide-react'
@@ -65,7 +66,7 @@ export function RegistersSection() {
           <p className="text-sm text-muted">Një pajisje lidhet kur pronari ose menaxheri hyn në të me email. Në to punëtorët hyjnë me PIN.</p>
         </div>
         {devices.error instanceof SettingsNotMigrated ? (
-          <EmptyState title="Pajisjet aktivizohen pas migrimit 0005" />
+          <EmptyState title="Pajisjet shfaqen këtu së shpejti" text={NOT_READY} />
         ) : (devices.data ?? []).length === 0 ? (
           <EmptyState title="Ende asnjë pajisje" text="Kjo pajisje lidhet automatikisht pas hyrjes së parë me email." />
         ) : (

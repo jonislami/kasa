@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { NOT_READY } from '@/lib/friendlyError'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Calculator, UserPlus } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
@@ -52,7 +53,7 @@ export function AccountantSection() {
   if (list.error instanceof AccountingNotMigrated) {
     return (
       <Card>
-        <EmptyState icon={<Calculator className="h-6 w-6" />} title="Kontabilisti nuk është aktivizuar ende" text="Administratori duhet të ekzekutojë migrimin supabase/migrations/0013_accountant_app.sql në Supabase." />
+        <EmptyState icon={<Calculator className="h-6 w-6" />} title="Kontabilisti nuk është aktivizuar ende" text={NOT_READY} />
       </Card>
     )
   }
