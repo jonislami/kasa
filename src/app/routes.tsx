@@ -27,7 +27,6 @@ const ReportsPage = lazy(() => import('@/features/reports/ReportsPage').then((m)
 const FiscalPage = lazy(() => import('@/features/fiscal/FiscalPage').then((m) => ({ default: m.FiscalPage })))
 const AuditPage = lazy(() => import('@/features/reports/AuditPage').then((m) => ({ default: m.AuditPage })))
 const WorkPage = lazy(() => import('@/features/work/WorkPage').then((m) => ({ default: m.WorkPage })))
-const AppointmentsPage = lazy(() => import('@/features/salon/AppointmentsPage').then((m) => ({ default: m.AppointmentsPage })))
 const TablesPage = lazy(() => import('@/features/restaurant/TablesPage').then((m) => ({ default: m.TablesPage })))
 const OrderPage = lazy(() => import('@/features/restaurant/OrderPage').then((m) => ({ default: m.OrderPage })))
 const KitchenPage = lazy(() => import('@/features/restaurant/KitchenPage').then((m) => ({ default: m.KitchenPage })))
@@ -268,13 +267,8 @@ export function AppRoutes() {
         />
         <Route
           path="terminet"
-          element={
-            <RequireType type="salon">
-              <Lazy>
-                <AppointmentsPage />
-              </Lazy>
-            </RequireType>
-          }
+          // Terminet is no longer part of Shërbim: an old link goes to the start page
+          element={<Navigate to="/" replace />}
         />
         <Route
           path="tavolinat"
