@@ -154,7 +154,7 @@ export function PlatformPage() {
                     filter === t.code ? 'border-ink bg-ink text-white' : 'border-line bg-white text-ink hover:bg-bg',
                   )}
                 >
-                  {t.code === 'restaurant' ? 'Kafiterie / Restorant' : t.shortLabel}
+                  {t.shortLabel}
                   <span className={cn('text-xs', filter === t.code ? 'text-white/70' : 'text-muted')}>{counts[t.code] ?? 0}</span>
                 </button>
               ))}

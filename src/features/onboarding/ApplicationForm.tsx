@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { Check, Eye, FileText, Plus, RefreshCw, Search, Trash2, Upload } from 'lucide-react'
 import { Button, Input, Select } from '@/components/ui'
-import { BUSINESS_TYPE_LIST, type BusinessType } from '@/lib/business'
+import { REGISTRATION_TYPES, type BusinessType } from '@/lib/business'
 import { cn } from '@/lib/cn'
 import { COUNTRIES, KOSOVO_CITIES, LEGAL_FORMS, TAX_CATEGORIES, TAX_CENTERS, legalFormLabel, taxCategoryLabel, type LegalForm } from '@/lib/taxProfile'
 import { DOC_ACCEPT, docProblem, type Activity, type TaxInput, type UnitInput } from './applicationApi'
@@ -180,9 +180,9 @@ export function CompanyStep({
       </Section>
 
       {account && (
-        <Section title="Programi" hint="Moduli i KontoSef sipas punës kryesore. Nuk ndryshohet pas regjistrimit.">
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
-            {BUSINESS_TYPE_LIST.map((t) => (
+        <Section title="Veprimtaria e lokalit" hint="Sipas punës kryesore të lokalit. Nuk ndryshohet pas regjistrimit.">
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+            {REGISTRATION_TYPES.map((t) => (
               <button
                 key={t.code}
                 type="button"
