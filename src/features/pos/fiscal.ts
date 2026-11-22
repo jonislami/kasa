@@ -11,6 +11,7 @@ export function toFiscalSale(sale: Sale): FiscalSale {
     discount_total: sale.discount_total,
     cash_amount: sale.cash_amount,
     card_amount: sale.card_amount,
+    voucher_amount: sale.voucher_amount ?? 0,
     payment_kind: sale.payment_kind ?? null,
     vat_lines: sale.vat_lines,
     // the same item on one line, as on the printed coupon (ATK)

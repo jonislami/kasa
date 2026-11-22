@@ -294,13 +294,20 @@ export function DiscountDialog({
 // ---------------------------------------------------------------------------
 type PayTab = 'cash' | 'card' | 'mixed'
 type CardKind = PaymentKind | 'card'
+/** Të kombinuara: two of Kesh, Kartelë, Vauçer (no cheque or transfer here). */
+type Combo = 'card-cash' | 'voucher-cash' | 'card-voucher'
+const COMBOS: [Combo, string][] = [
+  ['card-cash', 'Kartelë + Kesh'],
+  ['voucher-cash', 'Vauçer + Kesh'],
+  ['card-voucher', 'Kartelë + Vauçer'],
+]
 const CARD_KINDS: [CardKind, string][] = [['card', 'Kartelë'], ...(Object.entries(PAYMENT_KIND_LABELS) as [PaymentKind, string][])]
 
 /**
  * "Pagesa" – the only place where the payment is chosen (opens after PAGUAJ / F12):
  *  Kesh            what the client gave (typed or Saktë / 5 / 10 / 20 / 50 / 100 €) and the change
  *  Kartelë         card, bank transfer, voucher or cheque for the whole amount
- *  Të kombinuara   part by card (or transfer …), the rest in cash with its change
+ *  Të kombinuara   Kartelë + Kesh, Vauçer + Kesh or Kartelë + Vauçer (the cash part with its change)
  * then MBYLL SHITJEN (Enter). BLLOKU TATIMOR (owner / manager) enters a coupon of the separate book.
  */
 export function CashDialog({
@@ -311,6 +318,7 @@ export function CashDialog({
   onCash,
   onCard,
   onMixed,
+  onCardVoucher,
   onBook,
   onClose,
 }: {
@@ -322,6 +330,8 @@ export function CashDialog({
   onCash: (tendered: number) => void
   onCard: (kind: CardKind) => void
   onMixed: (cardAmount: number, tendered: number, kind: CardKind) => void
+  /** Kartelë + Vauçer: the voucher part; the rest is paid by card. */
+  onCardVoucher: (voucherAmount: number) => void
   onBook?: () => void
   onClose: () => void
 }) {
@@ -330,10 +340,12 @@ export function CashDialog({
   const [v, setV] = useState('')
   const [exact, setExact] = useState(false)
   const [cardPart, setCardPart] = useState('')
+  const [combo, setCombo] = useState<Combo>('card-cash')
   useEffect(() => {
     if (open) {
       setTab('cash')
       setKind('card')
+      setCombo('card-cash')
       setV('')
       setExact(false)
       setCardPart('')
@@ -342,17 +354,19 @@ export function CashDialog({
 
   const c = parseNum(cardPart)
   const cardOk = tab !== 'mixed' || (c != null && !Number.isNaN(c) && c > 0 && c < total)
+  const withCash = tab === 'cash' || (tab === 'mixed' && combo !== 'card-voucher')
   const cashDue = tab === 'mixed' ? round2(total - (cardOk && c ? c : 0)) : total
   const n = parseNum(v)
   const tendered = n == null || Number.isNaN(n) ? cashDue : n
   const change = round2(tendered - cashDue)
-  const short = tab !== 'card' && change < 0
+  const short = withCash && change < 0
   const ready = !busy && !short && cardOk
   const close = () => {
     if (!ready) return
     if (tab === 'cash') onCash(tendered)
     else if (tab === 'card') onCard(kind)
-    else onMixed(c!, tendered, kind)
+    else if (combo === 'card-voucher') onCardVoucher(c!)
+    else onMixed(c!, tendered, combo === 'voucher-cash' ? 'voucher' : 'card')
   }
   const pick = (x: number | 'exact') => {
     setExact(x === 'exact')
@@ -440,21 +454,35 @@ export function CashDialog({
         )}
         {tab === 'mixed' && (
           <>
-            {kinds}
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Kombinimi i pagesës">
+              {COMBOS.map(([k, label]) => (
+                <button
+                  key={k}
+                  type="button"
+                  role="radio"
+                  aria-checked={combo === k}
+                  onClick={() => setCombo(k)}
+                  className={cn('h-11 rounded-ctl border px-3 text-[15px] font-semibold', combo === k ? on : 'border-field bg-white text-ink hover:bg-bg')}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
             <Input
-              label={`Paguhet me ${kindLabel} (€)`}
+              label={combo === 'card-cash' ? 'Paguhet me kartelë (€)' : 'Paguhet me vauçer (€)'}
               inputMode="decimal"
               autoFocus
               value={cardPart}
               onChange={(e) => setCardPart(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && combo === 'card-voucher' && close()}
               placeholder="0.00"
               error={cardPart.trim() && !cardOk ? 'Më pak se totali' : undefined}
             />
             <div className="flex items-baseline justify-between text-[15px]">
-              <span className="text-muted">Mbetet kesh</span>
+              <span className="text-muted">{combo === 'card-voucher' ? 'Mbetet me kartelë' : 'Mbetet kesh'}</span>
               <span className="font-semibold tabular-nums">{formatEUR(cashDue)}</span>
             </div>
-            {cashBlock}
+            {combo !== 'card-voucher' && cashBlock}
           </>
         )}
 

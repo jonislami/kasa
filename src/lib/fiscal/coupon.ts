@@ -29,6 +29,8 @@ export interface FiscalSale {
   discount_total: number
   cash_amount: number
   card_amount: number
+  /** The voucher part of card_amount (Kartelë + Vauçer, 0046). */
+  voucher_amount?: number
   payment_kind?: FiscalPaymentKind
   vat_lines: { code: VatCode; gross: number; net: number; vat: number }[]
   items: FiscalSaleItem[]
@@ -88,12 +90,16 @@ export function buildCoupons(sale: FiscalSale, h: FiscalHeader): { pos: PosCoupo
   const total = cents(sale.total)
 
   // Payments add up exactly to the total; cash takes the rounding difference.
-  const card = cents(sale.card_amount)
-  const cash = total - card > 0n ? total - card : 0n
+  const nonCash = cents(sale.card_amount) > total ? total : cents(sale.card_amount)
+  const cash = total - nonCash > 0n ? total - nonCash : 0n
+  // Kartelë + Vauçer: the voucher part of the non-cash amount is its own payment
+  const voucher = cents(sale.voucher_amount ?? 0) < nonCash ? cents(sale.voucher_amount ?? 0) : 0n
+  const card = nonCash - voucher
   const payments: Payment[] = [
     ...(cash > 0n ? [{ Type: PaymentType.Cash, Amount: cash }] : []),
     // the non-cash part: card, or voucher / cheque / bank transfer ("Other") – ATK PaymentType
-    ...(card > 0n ? [{ Type: sale.payment_kind === 'voucher' ? PaymentType.Voucher : sale.payment_kind === 'cheque' ? PaymentType.Cheque : sale.payment_kind === 'bank' ? PaymentType.Other : PaymentType.CreditCard, Amount: card > total ? total : card }] : []),
+    ...(card > 0n ? [{ Type: sale.payment_kind === 'voucher' ? PaymentType.Voucher : sale.payment_kind === 'cheque' ? PaymentType.Cheque : sale.payment_kind === 'bank' ? PaymentType.Other : PaymentType.CreditCard, Amount: card }] : []),
+    ...(voucher > 0n ? [{ Type: PaymentType.Voucher, Amount: voucher }] : []),
   ]
 
   const head = {

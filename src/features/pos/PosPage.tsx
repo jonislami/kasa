@@ -274,7 +274,7 @@ export function PosPage() {
 
   // ---------- payment ----------
   const pay = useCallback(
-    async (m: PaymentMethod, tenderedAmount?: number, cardAmount?: number, cardKind: PaymentKind | 'card' = 'card') => {
+    async (m: PaymentMethod, tenderedAmount?: number, cardAmount?: number, cardKind: PaymentKind | 'card' = 'card', voucherAmount?: number) => {
       // a ref, not the state: a double press (click + F12) comes before React shows "busy"
       if (cart.lines.length === 0 || busy || payingRef.current) return
       payingRef.current = true
@@ -291,7 +291,7 @@ export function PosPage() {
         })),
         appointment_id: appointment?.id,
         invoice_discount: totals.invoiceDiscount || undefined,
-        payment: { method: m, tendered: m === 'card' ? undefined : tenderedAmount, card_amount: m === 'mixed' ? cardAmount : undefined, kind: m !== 'cash' && cardKind !== 'card' ? cardKind : undefined },
+        payment: { method: m, tendered: m === 'card' ? undefined : tenderedAmount, card_amount: m === 'mixed' ? cardAmount : undefined, kind: m !== 'cash' && cardKind !== 'card' ? cardKind : undefined, ...(voucherAmount ? { voucher_amount: voucherAmount } : {}) },
         client_created_at: bookEntry ? bookEntry.at : serverDate().toISOString(),
         ...(bookEntry ? { note: `Blloku i veçantë i kuponëve – nr. ${bookEntry.serial}` } : {}),
       }
@@ -728,6 +728,11 @@ export function PosPage() {
         onCash={(t) => void pay('cash', round2(t + credit))}
         onCard={(k) => payCard(k)}
         onMixed={(c, t, k) => void pay('mixed', round2(t + credit), c, k)}
+        onCardVoucher={(v) => {
+          // an exchange credit is paid back in cash / card only
+          if (credit > 0) return setError('Ndërrimi me kredi paguhet me kesh ose kartelë')
+          void pay('card', undefined, undefined, 'card', v)
+        }}
         onBook={
           canAddProduct
             ? () => {
@@ -1073,6 +1078,7 @@ function localReceipt(
     payment_kind: input.payment.kind ?? null,
     cash_amount: cash,
     card_amount: card,
+    voucher_amount: input.payment.voucher_amount ?? 0,
     tendered: cash > 0 ? (t ?? cash) : null,
     change_amount: cash > 0 ? round2((t ?? cash) - cash) : 0,
     reason: null,

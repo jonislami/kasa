@@ -51,6 +51,8 @@ export interface Sale {
   payment_kind?: PaymentKind | null
   cash_amount: number
   card_amount: number
+  /** 0046: the voucher part of card_amount (Kartelë + Vauçer). */
+  voucher_amount?: number
   tendered: number | null
   change_amount: number
   reason: string | null
@@ -99,7 +101,7 @@ export interface CreateSaleInput {
   order_id?: string
   invoice_discount?: number
   /** kind: what the non-cash part is when it is not a card (0033). */
-  payment: { method: PaymentMethod; card_amount?: number; tendered?: number; kind?: PaymentKind }
+  payment: { method: PaymentMethod; card_amount?: number; tendered?: number; kind?: PaymentKind; voucher_amount?: number }
   offline?: boolean
   offline_no?: string
   client_created_at?: string
@@ -133,6 +135,7 @@ function toSale(raw: unknown): Sale {
     vat_total: n(s.vat_total),
     cash_amount: n(s.cash_amount),
     card_amount: n(s.card_amount),
+    voucher_amount: n(s.voucher_amount),
     tendered: s.tendered == null ? null : n(s.tendered),
     change_amount: n(s.change_amount),
     vat_lines: ((s.vat_lines as Sale['vat_lines']) ?? []).map((v) => ({
