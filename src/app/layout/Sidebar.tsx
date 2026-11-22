@@ -29,12 +29,12 @@ export function Sidebar({
     else sections.push({ group: item.group, items: [item] })
   }
   return (
-    <aside className="sticky top-0 hidden h-dvh w-[248px] shrink-0 flex-col border-r border-line bg-white md:flex">
+    <aside className="sticky top-0 hidden h-[calc(100dvh/var(--zoom,1))] w-[248px] shrink-0 flex-col border-r border-line bg-white md:flex">
       <div className="border-b border-line px-4 py-4">{brand}</div>
       <nav className="flex flex-1 flex-col gap-4 overflow-y-auto px-3 py-4">
         {sections.map((s, i) => (
           <div key={i} className="flex flex-col gap-0.5">
-            {s.group && <div className="px-2.5 pb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#98A2B3]">{s.group}</div>}
+            {s.group && <div className="px-2.5 pb-1 text-[12px] font-semibold uppercase tracking-[0.06em] text-muted">{s.group}</div>}
             {s.items.map((item) => (
               <SideLink key={item.to} item={item} />
             ))}
@@ -79,14 +79,14 @@ function SideLink({ item }: { item: NavItem }) {
       end={item.end ?? item.to === '/'}
       className={({ isActive }) =>
         cn(
-          'group flex min-h-[38px] items-center gap-2.5 rounded-ctl px-2.5 text-[14px] font-medium transition-colors',
+          'group flex min-h-[42px] items-center gap-2.5 rounded-ctl px-2.5 text-[15px] font-medium transition-colors',
           isActive ? 'bg-brand-100 text-brand-700' : 'text-[#344054] hover:bg-[#F5F6F8] hover:text-ink',
         )
       }
     >
       {({ isActive }) => (
         <>
-          <Icon className={cn('h-[17px] w-[17px]', isActive ? 'text-brand-600' : 'text-[#98A2B3] group-hover:text-muted')} strokeWidth={2} />
+          <Icon className={cn('h-[17px] w-[17px]', isActive ? 'text-brand-600' : 'text-muted group-hover:text-ink')} strokeWidth={2} />
           {item.label}
         </>
       )}

@@ -362,7 +362,7 @@ export function RefundPage() {
                 <span className={exchange ? 'text-brand-600' : 'text-warn-700'}>{formatEUR(Math.abs(done.total))}</span>
               </div>
             </div>
-            <div className="max-h-[50dvh] overflow-y-auto rounded-xl border border-line py-2">
+            <div className="max-h-[calc(50dvh/var(--zoom,1))] overflow-y-auto rounded-xl border border-line py-2">
               <Receipt sale={done} business={business} settings={receiptSettings.data} />
             </div>
             <div className="grid grid-cols-2 gap-2.5">

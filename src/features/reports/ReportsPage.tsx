@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { NOT_READY } from '@/lib/friendlyError'
 import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
 import { KOSOVO_TZ } from '@/lib/clock'
 import { useQuery } from '@tanstack/react-query'
@@ -91,7 +92,7 @@ export function ReportsPage() {
         <PageHeader title="Raportet" />
         <div className="px-4 py-5 md:px-8 md:py-0">
           <Card>
-            <EmptyState icon={<BarChart3 className="h-6 w-6" />} title="Raportet nuk janë aktivizuar ende" text="Administratori duhet të ekzekutojë migrimin supabase/migrations/0004_reports.sql në Supabase." />
+            <EmptyState icon={<BarChart3 className="h-6 w-6" />} title="Raportet nuk janë aktivizuar ende" text={NOT_READY} />
           </Card>
         </div>
       </>
@@ -200,7 +201,7 @@ function ReportBody({ r, invoices, people }: { r: ReportSummary; invoices: Invoi
         <Card className="overflow-hidden">
           <h2 className="px-5 pt-5 text-[16px] font-semibold tracking-[-0.01em]">Më të shiturat</h2>
           {r.top.length === 0 ? (
-            <EmptyState title="Ende pa shitje" />
+            <EmptyState title="Ende pa shitje" text="Zgjidh një periudhë tjetër lart, ose bëj shitjen e parë në arkë." />
           ) : (
             <Table className="mt-3">
               <thead>
@@ -263,7 +264,7 @@ function ReportBody({ r, invoices, people }: { r: ReportSummary; invoices: Invoi
         <Card className="overflow-hidden">
           <h2 className="px-5 pt-5 text-[16px] font-semibold tracking-[-0.01em]">Sipas arkëtarit</h2>
           {r.workers.length === 0 ? (
-            <EmptyState title="Ende pa shitje" />
+            <EmptyState title="Ende pa shitje" text="Zgjidh një periudhë tjetër lart, ose bëj shitjen e parë në arkë." />
           ) : (
             <Table className="mt-3">
               <thead>
@@ -326,7 +327,7 @@ function ReportBody({ r, invoices, people }: { r: ReportSummary; invoices: Invoi
           </div>
         </div>
         {list.length === 0 ? (
-          <EmptyState title="Asnjë faturë" />
+          <EmptyState title="Asnjë kupon në këtë periudhë" text="Zgjidh një periudhë tjetër ose pastro kërkimin." />
         ) : (
           <Table>
             <thead className="bg-[#F9FAFB]">

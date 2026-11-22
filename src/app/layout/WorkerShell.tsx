@@ -100,7 +100,7 @@ export function WorkerShell({
   return (
     <div className="min-h-dvh bg-bg md:flex" style={{ '--topbar': '56px', '--tabbar': '0px', '--chrome': '56px' } as CSSProperties}>
       {/* ---------- rail (md+) ---------- */}
-      <aside className="sticky top-0 hidden h-dvh w-[96px] shrink-0 flex-col items-center gap-3 border-r border-white/5 bg-brand-900 py-4 text-white md:flex print:hidden">
+      <aside className="sticky top-0 hidden h-[calc(100dvh/var(--zoom,1))] w-[96px] shrink-0 flex-col items-center gap-3 border-r border-white/5 bg-brand-900 py-4 text-white md:flex print:hidden">
         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 text-[16px] font-semibold tracking-[-0.015em] ring-1 ring-white/10" title={businessName}>
           {initials(businessName)}
         </div>

@@ -136,7 +136,7 @@ export function SalesDialog({
             <button type="button" onClick={() => (sale ? close() : setSelected(null))} className="flex items-center gap-1 self-start text-[15px] font-semibold text-brand-600">
               <ChevronLeft className="h-4 w-4" /> Lista
             </button>
-            <div className="max-h-[50dvh] overflow-y-auto rounded-xl border border-line py-2">
+            <div className="max-h-[calc(50dvh/var(--zoom,1))] overflow-y-auto rounded-xl border border-line py-2">
               <Receipt sale={selected} business={business} />
             </div>
             {error && <p className="rounded-ctl bg-warn-100 px-4 py-2.5 text-sm text-warn-700">{error}</p>}

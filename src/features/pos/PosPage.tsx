@@ -749,7 +749,7 @@ export function PosPage() {
                 </div>
               )}
             </div>
-            <div className="max-h-[50dvh] overflow-y-auto rounded-xl border border-line bg-white py-2">
+            <div className="max-h-[calc(50dvh/var(--zoom,1))] overflow-y-auto rounded-xl border border-line bg-white py-2">
               <Receipt sale={receipt} business={business} settings={receiptSettings.data} />
             </div>
             {receipt.fiscal && !receipt.offline && receipt.id && <EcouponButton saleId={receipt.id} />}
@@ -799,7 +799,7 @@ export function PosPage() {
   // ================= DESKTOP =================
   if (wide) {
     return (
-      <div className="flex h-[calc(100dvh-44px-69px)] gap-5 p-6 pt-3">
+      <div className="flex h-[calc(100dvh/var(--zoom,1)-44px-69px)] gap-5 p-6 pt-3">
         <div className="flex min-w-0 flex-1 flex-col gap-4">
           <div className="flex items-center gap-3">
             {searchBox}
@@ -941,7 +941,7 @@ export function PosPage() {
 
   // ================= PHONE / TABLET =================
   return (
-    <div className="flex min-h-[calc(100dvh-var(--chrome,116px)-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex-col">
+    <div className="flex min-h-[calc(100dvh/var(--zoom,1)-var(--chrome,116px)-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex-col">
       <div className="sticky top-[calc(var(--topbar,0px)+env(safe-area-inset-top))] z-20 border-b border-line bg-white px-4 pb-3 pt-4">
         <div className="mb-3">
           <h1 className="text-[26px] font-semibold tracking-[-0.015em] leading-tight">{tr('Kupon i ri', lang)}</h1>
@@ -963,7 +963,7 @@ export function PosPage() {
           </button>
         </div>
         {search.trim() && (
-          <ul className="absolute inset-x-4 top-full z-30 mt-1 max-h-[55dvh] overflow-y-auto rounded-xl border border-line bg-white shadow-pop">
+          <ul className="absolute inset-x-4 top-full z-30 mt-1 max-h-[calc(55dvh/var(--zoom,1))] overflow-y-auto rounded-xl border border-line bg-white shadow-pop">
             {results.slice(0, 40).map((p) => (
               <li key={p.id}>
                 <button

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { NOT_READY } from '@/lib/friendlyError'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Armchair, CheckCircle2, ChefHat, Plus, ShoppingBag, Trash2 } from 'lucide-react'
@@ -76,7 +77,7 @@ function FloorPlan() {
         <PageHeader title="Tavolinat" />
         <div className="px-4 py-5 md:px-8 md:py-0">
           <Card>
-            <EmptyState icon={<Armchair className="h-6 w-6" />} title="Tavolinat nuk janë aktivizuar ende" text="Administratori duhet të ekzekutojë migrimin supabase/migrations/0011_restaurant.sql në Supabase." />
+            <EmptyState icon={<Armchair className="h-6 w-6" />} title="Tavolinat nuk janë aktivizuar ende" text={NOT_READY} />
           </Card>
         </div>
       </>

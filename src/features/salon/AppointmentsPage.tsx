@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { NOT_READY } from '@/lib/friendlyError'
 import { isSefApp } from '@/lib/device'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -72,7 +73,7 @@ export function AppointmentsPage() {
     return (
       <div className="px-4 py-5 md:px-8 md:py-8">
         <Card>
-          <EmptyState icon={<CalendarDays className="h-6 w-6" />} title="Terminet nuk janë aktivizuar ende" text="Administratori duhet të ekzekutojë migrimin supabase/migrations/0008_salon.sql në Supabase." />
+          <EmptyState icon={<CalendarDays className="h-6 w-6" />} title="Terminet nuk janë aktivizuar ende" text={NOT_READY} />
         </Card>
       </div>
     )

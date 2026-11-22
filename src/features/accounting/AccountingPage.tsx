@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { NOT_READY } from '@/lib/friendlyError'
 import { NavLink, Navigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Calculator, CheckCircle2, ChevronLeft, ChevronRight, CircleAlert, Download } from 'lucide-react'
@@ -160,7 +161,7 @@ export function AccountingPage() {
         <PageHeader title="Kontabiliteti" />
         <div className="px-4 py-5 md:px-8 md:py-0">
           <Card>
-            <EmptyState icon={<Calculator className="h-6 w-6" />} title="Kontabiliteti nuk është aktivizuar ende" text="Administratori duhet të ekzekutojë migrimin supabase/migrations/0012_accountant.sql në Supabase." />
+            <EmptyState icon={<Calculator className="h-6 w-6" />} title="Kontabiliteti nuk është aktivizuar ende" text={NOT_READY} />
           </Card>
         </div>
       </>

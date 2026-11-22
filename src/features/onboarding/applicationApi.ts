@@ -1,3 +1,4 @@
+import { NOT_READY } from '@/lib/friendlyError'
 // The business application in four steps (0041): activities, units, documents, the tax profile.
 import { supabase } from '@/lib/supabase'
 import type { LegalForm } from '@/lib/taxProfile'
@@ -7,7 +8,7 @@ export class ApplicationNotMigrated extends Error {}
 
 function check(error: { code?: string; message: string } | null) {
   if (!error) return
-  if (NOT_MIGRATED.includes(error.code ?? '')) throw new ApplicationNotMigrated('Regjistrimi i ri kërkon migrimin 0041 në Supabase.')
+  if (NOT_MIGRATED.includes(error.code ?? '')) throw new ApplicationNotMigrated(NOT_READY)
   throw new Error(error.message)
 }
 

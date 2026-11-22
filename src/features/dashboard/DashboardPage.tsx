@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { NOT_READY } from '@/lib/friendlyError'
 import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -29,6 +30,7 @@ import { BarChart, BarLabels, Delta, RankBars } from '@/features/reports/charts'
 import { InvoiceDialog } from '@/features/reports/InvoiceDialog'
 import { MyWork } from '@/features/reports/MyWork'
 import { ShiftCard } from '@/features/reports/ShiftCard'
+import { FirstSteps } from './FirstSteps'
 import { ExpiryCard } from '@/features/stock/LotsTab'
 import { fetchLots } from '@/lib/lots'
 import { SqDateFormat } from '@/lib/sqDate'
@@ -83,6 +85,7 @@ export function DashboardPage() {
 }
 
 function ManagerDashboard({ itemsLabel, stockOn, lotsOn }: { itemsLabel: string; stockOn: boolean; lotsOn: boolean }) {
+  const { business, profile } = useBusiness()
   const t = todayISO()
   const [range, setRange] = useState<Range>('week')
   const [openSale, setOpenSale] = useState<string | null>(null)
@@ -156,9 +159,11 @@ function ManagerDashboard({ itemsLabel, stockOn, lotsOn }: { itemsLabel: string;
         }
       />
 
+      {profile.role === 'admin' && <FirstSteps businessId={business.id} />}
+
       {notMigrated && (
         <div className="mx-4 mb-4 rounded-card border border-[#F3C4BE] bg-warn-100 px-4 py-3 text-sm text-warn-700 md:mx-8">
-          Numrat e panelit aktivizohen kur administratori të ekzekutojë migrimin supabase/migrations/0004_reports.sql.
+          {NOT_READY}
         </div>
       )}
 
@@ -258,7 +263,7 @@ function ManagerDashboard({ itemsLabel, stockOn, lotsOn }: { itemsLabel: string;
             }
           />
           {(invoices.data ?? []).length === 0 ? (
-            <EmptyState icon={<ReceiptText />} title="Ende pa kuponë sot" />
+            <EmptyState icon={<ReceiptText />} title="Ende pa kuponë sot" text="Kuponët shfaqen këtu sapo arka të bëjë shitjen e parë." />
           ) : (
             <Table className="mt-4">
               <thead>
@@ -291,7 +296,7 @@ function ManagerDashboard({ itemsLabel, stockOn, lotsOn }: { itemsLabel: string;
           <h2 className="text-[15px] font-semibold tracking-[-0.01em]">Më të shiturat sot</h2>
           <div className="mt-4">
             {(report.data?.top ?? []).length === 0 ? (
-              <EmptyState icon={<BarChart3 />} title="Ende pa shitje sot" />
+              <EmptyState icon={<BarChart3 />} title="Ende pa shitje sot" text="Shitjet e ditës dhe më të shiturat dalin këtu gjatë ditës." />
             ) : (
               <RankBars rows={(report.data?.top ?? []).slice(0, 6).map((p) => ({ key: p.key, label: p.name, value: p.quantity, text: formatQty(p.quantity, p.unit) }))} />
             )}

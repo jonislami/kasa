@@ -1,3 +1,4 @@
+import { friendlyError, NOT_READY } from '@/lib/friendlyError'
 import { supabase } from '@/lib/supabase'
 import type { UnitCode } from '@/lib/units'
 import type { VatCode } from '@/lib/vat'
@@ -78,7 +79,7 @@ export interface ImportRow {
 /** Thrown when migration 0001 has not been run yet – the page shows a clear message. */
 export class CatalogNotMigrated extends Error {
   constructor() {
-    super('Katalogu nuk është aktivizuar ende në databazë (migrimi 0001_catalog.sql).')
+    super(NOT_READY)
   }
 }
 
@@ -87,7 +88,7 @@ const NOT_MIGRATED = new Set(['42P01', 'PGRST205', 'PGRST202', '42883'])
 
 function fail(error: { code?: string; message: string }): never {
   if (error.code && NOT_MIGRATED.has(error.code)) throw new CatalogNotMigrated()
-  throw new Error(error.message)
+  throw friendlyError(error)
 }
 
 const PRODUCT_COLS =

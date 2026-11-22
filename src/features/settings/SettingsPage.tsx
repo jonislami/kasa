@@ -1,3 +1,4 @@
+import { getTextSize, setTextSize, type TextSize } from '@/lib/textSize'
 import { useState } from 'react'
 import { isSefApp } from '@/lib/device'
 import { TillFiscalCard } from '@/features/fiscal/TillFiscalCard'
@@ -51,6 +52,7 @@ export function SettingsPage() {
             </div>
           )}
           {isSefApp && <LanguageCard />}
+          <TextSizeCard />
           <PrinterSection />
           <p className="mt-6 text-center text-sm text-muted">KontoSef v{device.appVersion}</p>
         </div>
@@ -83,7 +85,12 @@ export function SettingsPage() {
         </div>
         <div className="min-w-0 flex-1">
           <InstallCard className="mb-5" />
-          {section === 'biznesi' && <BusinessSection />}
+          {section === 'biznesi' && (
+            <>
+              <TextSizeCard />
+              <BusinessSection />
+            </>
+          )}
           {section === 'printeri' && <PrinterSection />}
           {section === 'perdoruesit' && (
             <div className="flex flex-col gap-5">
@@ -198,6 +205,42 @@ function PinCard() {
 }
 
 /** Language of this till (Albanian / Serbian, Latin letters) – screens of the till and the fiscal coupon. */
+/** Text size of this device (Normal / E madhe). */
+function TextSizeCard() {
+  const [size, setSize] = useState<TextSize>(getTextSize)
+  const choose = (s: TextSize) => {
+    setTextSize(s)
+    setSize(s)
+  }
+  return (
+    <Card className="mb-5 flex flex-wrap items-center justify-between gap-3 p-5">
+      <div>
+        <div className="text-[16px] font-semibold tracking-[-0.01em]">Madhësia e tekstit</div>
+        <div className="text-sm text-muted">Vetëm në këtë pajisje</div>
+      </div>
+      <div className="flex gap-2" role="radiogroup" aria-label="Madhësia e tekstit">
+        {(
+          [
+            ['normal', 'Normal'],
+            ['large', 'E madhe'],
+          ] as const
+        ).map(([v, label]) => (
+          <button
+            key={v}
+            type="button"
+            role="radio"
+            aria-checked={size === v}
+            onClick={() => choose(v)}
+            className={`h-11 rounded-full border px-5 text-[15px] font-semibold ${size === v ? 'border-brand-600 bg-brand-100 text-brand-600' : 'border-line bg-white text-muted'}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+    </Card>
+  )
+}
+
 function LanguageCard() {
   const lang = useLang()
   return (

@@ -1,3 +1,4 @@
+import { friendlyError } from '@/lib/friendlyError'
 import { assertCanSell } from '@/lib/license'
 import type { FiscalReceipt } from '@/lib/fiscal'
 import { supabase } from '@/lib/supabase'
@@ -180,7 +181,7 @@ async function rpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
   }
   if (res.error) {
     if (isNetworkError(res.error)) throw new NetworkError('Nuk ka lidhje me internetin')
-    throw new Error(res.error.message)
+    throw friendlyError(res.error)
   }
   return res.data as T
 }

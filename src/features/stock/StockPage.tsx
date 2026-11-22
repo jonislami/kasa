@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { NOT_READY } from '@/lib/friendlyError'
 import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
 import { useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -171,7 +172,7 @@ export function StockPage() {
             <EmptyState
               icon={<Truck className="h-6 w-6" />}
               title="Stoku nuk është aktivizuar ende"
-              text={`Administratori duhet të ekzekutojë migrimin supabase/migrations/${catalogMissing ? '0001_catalog.sql' : '0003_stock.sql'} në Supabase.`}
+              text={NOT_READY}
             />
           </Card>
         </div>

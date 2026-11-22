@@ -25,7 +25,7 @@ export function TabBar({ items, onSignOut }: { items: NavItem[]; onSignOut: () =
               type="button"
               onClick={() => setOpen(true)}
               className={cn(
-                'flex min-h-[58px] flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium tracking-[-0.005em]',
+                'flex min-h-[58px] flex-1 flex-col items-center justify-center gap-1 text-[12px] font-medium tracking-[-0.005em]',
                 restActive ? 'text-brand-600' : 'text-muted',
               )}
             >
@@ -88,7 +88,7 @@ function Tab({ item }: { item: NavItem }) {
       end={item.end ?? item.to === '/'}
       className={({ isActive }) =>
         cn(
-          'flex min-h-[58px] flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium tracking-[-0.005em]',
+          'flex min-h-[58px] flex-1 flex-col items-center justify-center gap-1 text-[12px] font-medium tracking-[-0.005em]',
           isActive ? 'text-brand-600' : 'text-muted',
         )
       }

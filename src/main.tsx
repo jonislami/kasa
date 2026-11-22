@@ -9,6 +9,7 @@ import { AuthProvider } from '@/app/AuthProvider'
 import { AppRoutes } from '@/app/routes'
 import { DeviceChooserDialog, UpdatePrompt } from '@/app/AppStatus'
 import { startScreenTranslation } from '@/lib/i18nDom'
+import { applyTextSize } from '@/lib/textSize'
 import '@fontsource/lato/400.css'
 import '@fontsource/lato/400-italic.css'
 import '@fontsource/lato/700.css'
@@ -23,6 +24,7 @@ const queryClient = new QueryClient({
 })
 
 // Serbian on screen for the SEF program (the language is chosen on the device, Printeri → Gjuha / Jezik)
+applyTextSize()
 startScreenTranslation()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

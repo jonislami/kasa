@@ -1,3 +1,4 @@
+import { friendlyMessage, NOT_READY } from '@/lib/friendlyError'
 import { useMemo, useState } from 'react'
 import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
 import { KOSOVO_TZ } from '@/lib/clock'
@@ -154,7 +155,7 @@ export function AuditPage() {
   const verify = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.rpc('audit_verify')
-      if (error) throw new Error(['PGRST202', '42883'].includes(error.code ?? '') ? 'Kjo kërkon migrimin 0034_audit_integrity.sql në Supabase.' : error.message)
+      if (error) throw new Error(['PGRST202', '42883'].includes(error.code ?? '') ? NOT_READY : friendlyMessage(error.message))
       return data as { ok: boolean; checked: number; broken: { id: number; action: string }[] }
     },
   })
@@ -231,7 +232,7 @@ export function AuditPage() {
           ) : loadState(audit) === 'error' ? (
             <EmptyState title="Regjistri nuk u ngarkua" text={(audit.error as Error).message} />
           ) : rows.length === 0 ? (
-            <EmptyState title="Asnjë veprim në këtë periudhë" />
+            <EmptyState title="Asnjë veprim në këtë periudhë" text="Zgjidh një periudhë më të gjatë ose hiq filtrat." />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-sm">

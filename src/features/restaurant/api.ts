@@ -1,3 +1,4 @@
+import { friendlyError, NOT_READY } from '@/lib/friendlyError'
 import { supabase } from '@/lib/supabase'
 import { round2 } from '@/lib/money'
 import type { UnitCode } from '@/lib/units'
@@ -6,7 +7,7 @@ import type { VatCode } from '@/lib/vat'
 /** Thrown when migration 0011 has not been run yet. */
 export class RestaurantNotMigrated extends Error {
   constructor() {
-    super('Tavolinat nuk janë aktivizuar ende në databazë (migrimi 0011_restaurant.sql).')
+    super(NOT_READY)
   }
 }
 
@@ -15,7 +16,7 @@ const NOT_MIGRATED = new Set(['42P01', 'PGRST205', 'PGRST202', '42883', '42703']
 function fail(error: { code?: string; message: string }): never {
   if (error.code && NOT_MIGRATED.has(error.code)) throw new RestaurantNotMigrated()
   if (/fetch|network|load failed/i.test(error.message)) throw new Error('Nuk ka lidhje me internetin – porositë kërkojnë internet')
-  throw new Error(error.message)
+  throw friendlyError(error)
 }
 
 async function rpc<T>(fn: string, p: unknown): Promise<T> {
