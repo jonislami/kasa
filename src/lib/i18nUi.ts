@@ -656,6 +656,14 @@ export const SR_UI: Record<string, string> = {
   Shërbim: 'Usluge',
   'Veprimtaria e lokalit': 'Delatnost objekta',
   'Lloji i artikullit': 'Vrsta artikla',
+  Blloku: 'Blok',
+  Kuponët: 'Kuponi',
+  'Kupon i ri': 'Novi kupon',
+  Pagesa: 'Plaćanje',
+  'Marrë kesh nga klienti': 'Primljeno u gotovini od kupca',
+  'Mbetet kesh': 'Ostaje u gotovini',
+  'Më pak se totali': 'Manje od ukupnog iznosa',
+  PDF: 'PDF',
   Artikull: 'Artikal',
   'Njësia matëse': 'Jedinica mere',
   'Arsyeja e anulimit (e detyrueshme)': 'Razlog storniranja (obavezno)',
@@ -688,6 +696,9 @@ export const SR_UI: Record<string, string> = {
 
 /** Texts with values: "{}" stands for a value (number, name, amount, date) kept as it is. */
 export const SR_UI_PATTERNS: [string, string][] = [
+  ['E gjithë shuma paguhet me {}.', 'Ceo iznos se plaća: {}.'],
+  ['Paguhet me {} (€)', 'Plaća se: {} (€)'],
+  ['Pa dërguar ende ({})', 'Još nije poslato ({})'],
   ['{} kuponë fiskalë në pritje për ATK', '{} fiskalnih kupona čeka slanje u ATK'],
   ['{} madhësi', '{} veličina'],
   ['{} ngjyra', '{} boja'],

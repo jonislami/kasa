@@ -95,7 +95,7 @@ export function WorkerShell({
     { to: '/cilesimet', label: 'Printeri', icon: Printer },
   ]
 
-  const railBtn = 'flex w-[72px] flex-col items-center justify-center gap-1.5 rounded-xl py-3 text-[11px] font-medium'
+  const railBtn = 'flex w-[72px] flex-col items-center justify-center gap-1.5 rounded-xl py-3 text-[12px] font-semibold'
 
   return (
     <div className="min-h-dvh bg-bg md:flex" style={{ '--topbar': '56px', '--tabbar': '0px', '--chrome': '56px' } as CSSProperties}>
@@ -106,16 +106,16 @@ export function WorkerShell({
         </div>
         <nav className="mt-3 flex flex-col gap-2">
           {tabs.map((t) => (
-            <NavLink key={t.to} to={t.to} className={({ isActive }) => cn(railBtn, 'min-h-[68px]', isActive ? 'bg-white text-brand-900' : 'text-white/65 hover:bg-white/[0.07] hover:text-white')}>
+            <NavLink key={t.to} to={t.to} className={({ isActive }) => cn(railBtn, 'min-h-[68px]', isActive ? 'bg-white text-brand-900' : 'text-white/80 hover:bg-white/[0.07] hover:text-white')}>
               <t.icon className="h-[22px] w-[22px]" strokeWidth={1.9} />
               <span className="leading-tight">{tr(t.short ?? t.label, lang)}</span>
             </NavLink>
           ))}
-          <button type="button" onClick={() => setMenu(true)} className={cn(railBtn, 'text-white/55 hover:bg-white/[0.07] hover:text-white')}>
+          <button type="button" onClick={() => setMenu(true)} className={cn(railBtn, 'text-white/80 hover:bg-white/[0.07] hover:text-white')}>
             <MoreHorizontal className="h-[22px] w-[22px]" strokeWidth={1.9} />
             {tr('Më shumë', lang)}
           </button>
-          <button type="button" onClick={() => void sync()} disabled={syncing} className={cn(railBtn, 'text-white/55 hover:bg-white/[0.07] hover:text-white')}>
+          <button type="button" onClick={() => void sync()} disabled={syncing} className={cn(railBtn, 'text-white/80 hover:bg-white/[0.07] hover:text-white')}>
             <RefreshCw className={cn('h-[22px] w-[22px]', syncing && 'animate-spin')} strokeWidth={1.9} />
             {tr('Sinkronizo', lang)}
           </button>
@@ -123,10 +123,10 @@ export function WorkerShell({
 
         <div className="mt-auto flex flex-col items-center gap-2">
           <div className="w-[72px] rounded-xl border border-white/10 bg-white/[0.04] px-1 py-2.5 text-center">
-            <div className="text-[10px] font-medium uppercase tracking-[0.06em] text-white/50">Kuleta</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.06em] text-white/75">Kuleta</div>
             <div className="mt-0.5 text-[15px] font-semibold tabular-nums text-white">{wallet === null ? '…' : compactEUR(wallet)}</div>
           </div>
-          <div className="max-w-[80px] truncate text-[11px] text-white/45">{userSub}</div>
+          <div className="max-w-[80px] truncate text-[12px] text-white/75">{userSub}</div>
           <button type="button" onClick={() => setClosing(true)} className={cn(railBtn, 'text-[#FCD34D] hover:bg-white/[0.07]')}>
             <Square className="h-5 w-5" strokeWidth={1.9} />
             {tr('Mbyll ditën', lang)}
@@ -148,7 +148,7 @@ export function WorkerShell({
                 <span className="md:hidden">{businessName}</span>
                 <span className="hidden md:inline">Mirë se erdhe, {userName}</span>
               </div>
-              <div className="truncate text-xs text-white/60 md:hidden">{userName}</div>
+              <div className="truncate text-sm text-white/80 md:hidden">{userName}</div>
             </div>
             {tabs.length > 1 && (
               <nav className="ml-1 flex gap-1 rounded-xl bg-white/10 p-1 md:hidden">
