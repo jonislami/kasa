@@ -105,7 +105,15 @@ Deno.serve(async (req) => {
   const loadRegister = async (id: unknown) => {
     if (!UUID_RE.test(String(id ?? ''))) return null
     const { data } = await admin.from('registers').select('*').eq('id', String(id)).eq('business_id', businessId).maybeSingle()
-    return data as null | { id: string; name: string; atk_pos_id: string | null; fiscal_status: string; fiscal_device_id: string | null; fiscal_env: Env | null; coupon_seq: number }
+    return data as null | { id: string; name: string; atk_pos_id: string | null; fiscal_status: string; fiscal_device_id: string | null; fiscal_env: Env | null; coupon_seq: number; unit_id: string | null }
+  }
+  // 0047: a register fiscalizes with the Branch ID of its unit; without a unit, with the business-wide one
+  const branchOf = async (reg: { unit_id: string | null }): Promise<number | null> => {
+    if (reg.unit_id) {
+      const { data } = await admin.from('business_units').select('fiscal_branch_id').eq('id', reg.unit_id).eq('business_id', businessId).maybeSingle()
+      if (data?.fiscal_branch_id) return Number(data.fiscal_branch_id)
+    }
+    return biz.fiscal_branch_id ? Number(biz.fiscal_branch_id) : null
   }
   const applicationId = async (env: Env) => {
     const { data } = await admin.from('fiscal_config').select('application_id_test, application_id_prod').eq('id', 1).maybeSingle()
@@ -117,7 +125,9 @@ Deno.serve(async (req) => {
     if (!manager) return fail('Vetëm pronari ose menaxheri e regjistron arkën', 403)
     const reg = await loadRegister(body.register_id)
     if (!reg) return fail('Arka nuk u gjet', 404)
-    if (!biz.nui || !biz.fiscal_number || !biz.fiscal_branch_id) return fail('Plotëso Hapin 1: NUI, numri i fiskalizimit dhe numri i njësisë')
+    const branch = await branchOf(reg)
+    if (!biz.nui || !biz.fiscal_number) return fail('Plotëso Hapin 1: NUI dhe numri i fiskalizimit')
+    if (!branch) return fail('Vendos numrin e njësisë (Branch ID) për njësinë e kësaj arke te Fiskalizimi')
     if (!reg.atk_pos_id) return fail('Vendos POS ID-në e kësaj arke (Hapi 2)')
     if (reg.fiscal_status === 'registered') return fail('Kjo arkë është regjistruar tashmë. Çregjistroje para se ta regjistrosh në një pajisje tjetër.')
     const env = biz.fiscal_env
@@ -128,12 +138,12 @@ Deno.serve(async (req) => {
       const r = await callAtk(env, `/ca/verify/${encodeURIComponent(biz.nui)}`, {
         fiscalization_no: biz.fiscal_number,
         pos_id: Number(reg.atk_pos_id),
-        branch_id: Number(biz.fiscal_branch_id),
+        branch_id: branch,
         application_id: Number(appId),
       })
       await log({ register_id: reg.id, env, action: 'verify', ok: r.ok, http_status: r.status, message: r.message })
       if (!r.ok) return fail('ATK: ' + r.message, 502)
-      return json({ business_name: String(r.data.business_name ?? ''), verification_code: String(r.data.verification_code ?? ''), nui: biz.nui, branch_id: biz.fiscal_branch_id, pos_id: reg.atk_pos_id, env })
+      return json({ business_name: String(r.data.business_name ?? ''), verification_code: String(r.data.verification_code ?? ''), nui: biz.nui, branch_id: branch, pos_id: reg.atk_pos_id, env })
     }
 
     const csr = String(body.csr ?? '')
@@ -143,7 +153,7 @@ Deno.serve(async (req) => {
     const r = await callAtk(env, '/ca/signcsr', {
       business_name: String(body.business_name ?? ''),
       business_id: Number(biz.nui),
-      branch_id: Number(biz.fiscal_branch_id),
+      branch_id: branch,
       verification_code: String(body.verification_code ?? ''),
       pos_id: Number(reg.atk_pos_id),
       application_id: Number(appId),
@@ -178,7 +188,8 @@ Deno.serve(async (req) => {
       if (reg.fiscal_device_id && String(body.device_id ?? '') !== reg.fiscal_device_id) return fail('Kjo pajisje nuk e mban çelësin e kësaj arke', 403)
       const seq = Number(body.coupon_seq)
       const couponId = Number(body.coupon_id)
-      const expected = Number(biz.fiscal_branch_id) * 1e12 + Number(reg.atk_pos_id) * 1e8 + seq
+      const branch = await branchOf(reg)
+      const expected = Number(branch) * 1e12 + Number(reg.atk_pos_id) * 1e8 + seq
       if (!Number.isSafeInteger(seq) || seq <= 0 || seq >= 1e8 || couponId !== expected) return fail('Numri i kuponit fiskal nuk përputhet me arkën')
       const type = Number(body.coupon_type)
       const expectedType = { sale: 1, void: 2, refund: 3 }[sale.kind as 'sale' | 'void' | 'refund']
@@ -191,7 +202,7 @@ Deno.serve(async (req) => {
       const { data: stored, error } = await admin.rpc('_fiscal_store', {
         p: {
           sale_id: saleId, business_id: businessId, register_id: reg.id, env: reg.fiscal_env, coupon_type: type,
-          coupon_id: couponId, coupon_seq: seq, branch_id: biz.fiscal_branch_id, pos_id: Number(reg.atk_pos_id),
+          coupon_id: couponId, coupon_seq: seq, branch_id: branch, pos_id: Number(reg.atk_pos_id),
           reference_no: body.reference_no ? Number(body.reference_no) : null, verification_no: verificationNo,
           issued_at: String(body.issued_at ?? new Date().toISOString()), details, signature, qr, offline: Boolean(body.offline),
         },

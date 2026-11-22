@@ -68,6 +68,8 @@ export interface Sale {
   /** 0044: the worker's number in the business, printed as ID 001 (UA 01/2026 neni 7 pika 2.5). */
   worker_no?: number | null
   register_name: string | null
+  /** 0047: the unit of the register (coupon header). */
+  unit?: { name: string | null; unit_no: string | null; address: string | null; city: string | null } | null
   items: SaleItem[]
   voided: boolean
   has_refunds: boolean

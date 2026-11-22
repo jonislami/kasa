@@ -41,6 +41,8 @@ export interface FiscalContext {
   location: string
   business_name: string
   unit_saved_at: string | null
+  /** 0047: the unit of the register (its Branch ID is branch_id above). */
+  unit?: { id: string; name: string; unit_no: string | null; address: string | null; city: string | null; branch_id: number | null } | null
   application_id: number | null
   register: FiscalRegister | null
 }
@@ -380,6 +382,37 @@ export function onFiscalQueueChange(l: () => void): () => void {
 // Owner screens
 // ---------------------------------------------------------------------------
 
+export interface FiscalUnit {
+  id: string
+  name: string
+  unit_no: string | null
+  address: string | null
+  city: string | null
+  branch_id: number | null
+  registers: number
+  registered: number
+}
+
+/** The units of the business with their Branch ID (0047); [] before the migration. */
+export async function fetchFiscalUnits(): Promise<FiscalUnit[]> {
+  const { data, error } = await supabase.rpc('fiscal_units')
+  if (error) {
+    if (['PGRST202', '42883'].includes(error.code ?? '')) return []
+    throw new Error(error.message)
+  }
+  return (data ?? []) as FiscalUnit[]
+}
+
+export async function setUnitBranch(unitId: string, branch: string): Promise<void> {
+  const { error } = await supabase.rpc('fiscal_set_unit_branch', { p_unit: unitId, p_branch: branch.trim() ? Number(branch) : null })
+  if (error) throw new Error(error.message)
+}
+
+export async function setRegisterUnit(registerId: string, unitId: string | null): Promise<void> {
+  const { error } = await supabase.rpc('fiscal_set_register_unit', { p_register: registerId, p_unit: unitId })
+  if (error) throw new Error(error.message)
+}
+
 export async function saveFiscalUnit(u: { nui: string; fiscal_number: string; branch_id: string; env: FiscalEnv }): Promise<void> {
   const { error } = await supabase.rpc('fiscal_save_unit', { p: u })
   if (error) throw new Error(error.message)
@@ -410,6 +443,10 @@ export interface FiscalRegisterRow {
   registered_at: string | null
   last_sent_at: string | null
   coupon_seq: number
+  /** 0047: the unit and the Branch ID the register fiscalizes with. */
+  unit_id?: string | null
+  unit_name?: string | null
+  branch_id?: number | null
   app_version: string | null
   last_seen_at: string | null
   sent: number

@@ -11,6 +11,9 @@ import { UnsentExport } from './UnsentExport'
 import {
   fetchFiscalContext,
   fetchFiscalRegisters,
+  fetchFiscalUnits,
+  setRegisterUnit,
+  setUnitBranch,
   fiscalQueueState,
   flushFiscal,
   hoursLeft,
@@ -22,6 +25,7 @@ import {
   type FiscalEnv,
   type FiscalQueueState,
   type FiscalRegisterRow,
+  type FiscalUnit,
 } from '@/lib/fiscal'
 
 const PLATFORM: Record<string, string> = { web: 'Shfletues', electron: 'Windows', capacitor: 'Android / iPhone' }
@@ -40,10 +44,12 @@ export function FiscalPage() {
   const qc = useQueryClient()
   const ctx = useQuery({ queryKey: ['fiscal-context'], queryFn: () => fetchFiscalContext(null) })
   const regs = useQuery({ queryKey: ['fiscal-registers'], queryFn: fetchFiscalRegisters, enabled: ctx.data !== null })
+  const units = useQuery({ queryKey: ['fiscal-units'], queryFn: fetchFiscalUnits, enabled: ctx.data !== null })
   const thisDevice = useQuery({ queryKey: ['this-device-id'], queryFn: () => device.getDeviceId(), staleTime: Infinity })
   const refresh = () => {
     void qc.invalidateQueries({ queryKey: ['fiscal-context'] })
     void qc.invalidateQueries({ queryKey: ['fiscal-registers'] })
+    void qc.invalidateQueries({ queryKey: ['fiscal-units'] })
   }
 
   if (ctx.data === null) {
@@ -61,8 +67,10 @@ export function FiscalPage() {
   }
 
   const c = ctx.data
-  const unitDone = Boolean(c?.nui && c?.fiscal_number && c?.branch_id)
   const rows = regs.data ?? []
+  const unitList = units.data ?? []
+  // Hapi 1 is done when NUI and EDI are there and every register has a Branch ID (its unit's or the business-wide one)
+  const unitDone = Boolean(c?.nui && c?.fiscal_number && (rows.length ? rows.every((r) => r.branch_id ?? c?.branch_id) : c?.branch_id || unitList.some((u) => u.branch_id)))
   const registered = rows.filter((r) => r.status === 'registered')
 
   return (
@@ -79,9 +87,11 @@ export function FiscalPage() {
 
         <Steps unitDone={unitDone} posDone={rows.some((r) => r.pos_id)} registered={registered.length > 0} />
 
-        {c && <UnitCard ctx={c} owner={owner} hasRegistered={registered.length > 0} onSaved={refresh} />}
+        {c && <UnitCard ctx={c} owner={owner} hasRegistered={registered.length > 0} hasUnits={unitList.length > 0} onSaved={refresh} />}
 
-        <RegistersCard rows={rows} loading={regs.isLoading} owner={owner} unitDone={unitDone} canRegister={Boolean(c?.application_id)} thisDevice={thisDevice.data ?? null} onChanged={refresh} />
+        {unitList.length > 0 && <UnitsCard units={unitList} owner={owner} onSaved={refresh} />}
+
+        <RegistersCard rows={rows} units={unitList} loading={regs.isLoading} owner={owner} unitDone={unitDone} canRegister={Boolean(c?.application_id)} thisDevice={thisDevice.data ?? null} onChanged={refresh} />
 
         <QueueCard />
       </div>
@@ -112,7 +122,7 @@ function Steps({ unitDone, posDone, registered }: { unitDone: boolean; posDone: 
   )
 }
 
-function UnitCard({ ctx, owner, hasRegistered, onSaved }: { ctx: NonNullable<Awaited<ReturnType<typeof fetchFiscalContext>>>; owner: boolean; hasRegistered: boolean; onSaved: () => void }) {
+function UnitCard({ ctx, owner, hasRegistered, hasUnits, onSaved }: { ctx: NonNullable<Awaited<ReturnType<typeof fetchFiscalContext>>>; owner: boolean; hasRegistered: boolean; hasUnits: boolean; onSaved: () => void }) {
   const [form, setForm] = useState({ nui: ctx.nui ?? '', fiscal_number: ctx.fiscal_number ?? '', branch_id: ctx.branch_id ? String(ctx.branch_id) : '', env: ctx.env })
   useEffect(() => setForm({ nui: ctx.nui ?? '', fiscal_number: ctx.fiscal_number ?? '', branch_id: ctx.branch_id ? String(ctx.branch_id) : '', env: ctx.env }), [ctx])
   const save = useMutation({ mutationFn: () => saveFiscalUnit(form), onSuccess: onSaved })
@@ -133,7 +143,14 @@ function UnitCard({ ctx, owner, hasRegistered, onSaved }: { ctx: NonNullable<Awa
       >
         <Input label="NUI" inputMode="numeric" maxLength={11} value={form.nui} disabled={!owner} onChange={(e) => setForm({ ...form, nui: e.target.value })} />
         <Input label="Numri i fiskalizimit (EDI)" value={form.fiscal_number} disabled={!owner} onChange={(e) => setForm({ ...form, fiscal_number: e.target.value })} />
-        <Input label="Nr. i njësisë (Branch ID)" inputMode="numeric" value={form.branch_id} disabled={!owner} onChange={(e) => setForm({ ...form, branch_id: e.target.value.replace(/\D/g, '') })} />
+        <Input
+          label={hasUnits ? 'Nr. i njësisë – për arkat pa njësi' : 'Nr. i njësisë (Branch ID)'}
+          inputMode="numeric"
+          value={form.branch_id}
+          disabled={!owner}
+          placeholder={hasUnits ? 'opsionale' : undefined}
+          onChange={(e) => setForm({ ...form, branch_id: e.target.value.replace(/\D/g, '') })}
+        />
         <Select
           label="Mjedisi"
           value={form.env}
@@ -156,8 +173,68 @@ function UnitCard({ ctx, owner, hasRegistered, onSaved }: { ctx: NonNullable<Awa
   )
 }
 
+/** Every unit (shop) of the business with its own Branch ID from ATK's portal (0047). */
+function UnitsCard({ units, owner, onSaved }: { units: FiscalUnit[]; owner: boolean; onSaved: () => void }) {
+  return (
+    <Card className="overflow-hidden">
+      <div className="px-5 pt-5">
+        <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Njësitë – numri i njësisë (Branch ID)</h2>
+        <p className="mt-1 max-w-3xl text-sm text-muted">
+          Çdo njësi (dyqan, lokal) ka numrin e vet nga portali i ATK-së. Arkat e njësisë e dërgojnë këtë numër në çdo kupon; kuponi shkruan emrin dhe adresën e njësisë.
+        </p>
+      </div>
+      <ul className="mt-4 divide-y divide-line border-t border-line">
+        {units.map((u) => (
+          <UnitRow key={u.id} unit={u} owner={owner} onSaved={onSaved} />
+        ))}
+      </ul>
+    </Card>
+  )
+}
+
+function UnitRow({ unit, owner, onSaved }: { unit: FiscalUnit; owner: boolean; onSaved: () => void }) {
+  const [v, setV] = useState(unit.branch_id ? String(unit.branch_id) : '')
+  useEffect(() => setV(unit.branch_id ? String(unit.branch_id) : ''), [unit.branch_id])
+  const save = useMutation({ mutationFn: () => setUnitBranch(unit.id, v), onSuccess: onSaved })
+  const dirty = v !== (unit.branch_id ? String(unit.branch_id) : '')
+  const locked = unit.registered > 0
+  return (
+    <li className="flex flex-col gap-3 px-5 py-4 md:flex-row md:items-end">
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-semibold">{unit.name}</span>
+          {unit.branch_id ? <Badge tone="success">Branch ID {unit.branch_id}</Badge> : <Badge tone="amber">Pa numër njësie</Badge>}
+        </div>
+        <div className="mt-0.5 text-sm text-muted">
+          {[unit.address, unit.city].filter(Boolean).join(', ') || '—'} · {unit.registers} {unit.registers === 1 ? 'arkë' : 'arka'}
+          {locked && ` · ${unit.registered} e regjistruar në ATK`}
+        </div>
+      </div>
+      {owner && (
+        <form
+          className="flex items-end gap-2"
+          onSubmit={(e) => {
+            e.preventDefault()
+            save.mutate()
+          }}
+        >
+          <div className="w-[200px]">
+            <Input label="Nr. i njësisë (Branch ID)" inputMode="numeric" value={v} disabled={locked} onChange={(e) => setV(e.target.value.replace(/\D/g, ''))} />
+          </div>
+          <Button type="submit" variant="secondary" loading={save.isPending} disabled={!dirty || locked}>
+            Ruaj
+          </Button>
+        </form>
+      )}
+      {locked && owner && <p className="text-sm text-muted md:hidden">Çregjistro arkat e njësisë për ta ndryshuar numrin.</p>}
+      {save.error && <p className="text-sm text-warn-700">{(save.error as Error).message}</p>}
+    </li>
+  )
+}
+
 function RegistersCard({
   rows,
+  units,
   loading,
   owner,
   unitDone,
@@ -166,6 +243,7 @@ function RegistersCard({
   onChanged,
 }: {
   rows: FiscalRegisterRow[]
+  units: FiscalUnit[]
   loading: boolean
   owner: boolean
   unitDone: boolean
@@ -200,6 +278,7 @@ function RegistersCard({
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-semibold">{r.name}</span>
                     <span className="text-sm text-muted">POS ID: {r.pos_id ?? '—'}</span>
+                    {(r.unit_name || units.length > 0) && <span className="text-sm text-muted">· {r.unit_name ?? 'pa njësi'} · Branch ID {r.branch_id ?? '—'}</span>}
                     {r.status === 'registered' ? <Badge tone="success">E regjistruar</Badge> : <Badge>Pa regjistruar</Badge>}
                     {r.status === 'registered' && r.env === 'test' && <Badge tone="info">Test</Badge>}
                     {here && <Badge tone="info">Kjo pajisje</Badge>}
@@ -227,6 +306,15 @@ function RegistersCard({
                 </div>
                 {owner && (
                   <div className="flex flex-wrap gap-2">
+                    {r.status !== 'registered' && units.length > 1 && (
+                      <Select
+                        aria-label={`Njësia e ${r.name}`}
+                        className="h-9 w-auto"
+                        value={r.unit_id ?? ''}
+                        onChange={(e) => void setRegisterUnit(r.id, e.target.value || null).then(onChanged, (err: Error) => alert(err.message))}
+                        options={[{ value: '', label: 'Pa njësi' }, ...units.map((u) => ({ value: u.id, label: u.name }))]}
+                      />
+                    )}
                     {r.status !== 'registered' && (
                       <Button size="sm" variant="secondary" onClick={() => setPosEdit(r)}>
                         POS ID

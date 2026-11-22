@@ -253,7 +253,7 @@ const body = [
   p('Bëhet një herë për çdo arkë, nga pronari:'),
   ...ol([
     'Në portalin e ATK-së: regjistrohet njësia e biznesit dhe merren numri EDI dhe Branch ID; për çdo arkë merret POS ID.',
-    'Paneli web → **Fiskalizimi**, Hapi 1: NUI, numri EDI, Branch ID dhe ambienti (Test / Prod).',
+    'Paneli web → **Fiskalizimi**, Hapi 1: NUI, numri EDI dhe ambienti (Test / Prod). Te **Njësitë** çdo njësi (dyqan, lokal) merr **Branch ID-në** e vet nga portali i ATK-së; arkat e njësisë e dërgojnë këtë numër në kupon dhe kuponi shkruan emrin dhe adresën e njësisë. Arka mund të kalohet në njësi tjetër derisa nuk është regjistruar në ATK.',
     'Hapi 2: POS ID-ja e çdo arke.',
     'Hapi 3: në arkë, pronari ose menaxheri (i hyrë me PIN) shtyp **"Regjistro arkën në ATK"**. Programi krijon çelësin privat në pajisje, merr kodin e verifikimit nga ATK dhe certifikatën.',
     'Nga ky moment çdo shitje fiskalizohet vetë. Shenja ATK bëhet e gjelbër.',
