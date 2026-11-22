@@ -336,13 +336,17 @@ export function CashDialog({
   onBook?: () => void
   onClose: () => void
 }) {
-  const [sel, setSel] = useState<Method[]>(['cash'])
+  const [tab, setTab] = useState<'cash' | 'card' | 'mixed'>('cash')
+  const [single, setSingle] = useState<Exclude<Method, 'cash'>>('card')
+  const [sel, setSel] = useState<Method[]>([])
   const [v, setV] = useState('')
   const [exact, setExact] = useState(false)
   const [part, setPart] = useState('')
   useEffect(() => {
     if (open) {
-      setSel(['cash'])
+      setTab('cash')
+      setSingle('card')
+      setSel([])
       setV('')
       setExact(false)
       setPart('')
@@ -353,8 +357,8 @@ export function CashDialog({
     setPart('')
     setSel((x) => (x.includes(m) ? x.filter((y) => y !== m) : x.length < 2 ? [...x, m] : x))
   }
-  // the two ticked in the order of the list
-  const ticked = METHODS.map(([m]) => m).filter((m) => sel.includes(m))
+  // Kesh: cash; Kartelë: the one chosen; Të kombinuara: the two ticked, in the order of the list
+  const ticked: Method[] = tab === 'cash' ? ['cash'] : tab === 'card' ? [single] : METHODS.map(([m]) => m).filter((m) => sel.includes(m))
   const two = ticked.length === 2
   const withCash = ticked.includes('cash')
   const nonCash = ticked.filter((m) => m !== 'cash')
@@ -369,7 +373,7 @@ export function CashDialog({
   const tendered = n == null || Number.isNaN(n) ? cashDue : n
   const change = round2(tendered - cashDue)
   const short = withCash && change < 0
-  const ready = !busy && ticked.length > 0 && !short && partOk
+  const ready = !busy && (tab === 'mixed' ? two : ticked.length > 0) && !short && partOk
   const kindOf = (m: Method): CardKind => (m === 'cash' ? 'card' : m === 'card' ? 'card' : m)
   const close = () => {
     if (!ready) return
@@ -393,31 +397,76 @@ export function CashDialog({
           <span className="text-[28px] font-semibold tracking-[-0.015em] tabular-nums">{formatEUR(total)}</span>
         </div>
 
-        <fieldset>
-          <legend className="mb-1.5 text-[15px] font-medium">Mënyra e pagesës (deri në 2)</legend>
-          <div className="grid grid-cols-2 gap-2">
-            {METHODS.map(([m, label]) => {
-              const checked = sel.includes(m)
-              const blocked = !checked && sel.length >= 2
-              return (
-                <label
-                  key={m}
-                  className={cn(
-                    'flex h-12 cursor-pointer items-center gap-3 rounded-ctl border px-3 text-[15px] font-semibold',
-                    checked ? 'border-2 border-brand-600 bg-brand-100 text-brand-700' : 'border-field bg-white text-ink hover:bg-bg',
-                    blocked && 'cursor-not-allowed opacity-50',
-                  )}
-                >
-                  <input type="checkbox" className="h-5 w-5 accent-brand-600" checked={checked} disabled={blocked} onChange={() => toggle(m)} />
-                  {label}
-                </label>
-              )
-            })}
-          </div>
-        </fieldset>
+        <div className="grid grid-cols-3 gap-2" role="tablist" aria-label="Mënyra e pagesës">
+          {(
+            [
+              ['cash', 'Kesh'],
+              ['card', 'Kartelë'],
+              ['mixed', 'Të kombinuara'],
+            ] as const
+          ).map(([t, label]) => (
+            <button
+              key={t}
+              type="button"
+              role="tab"
+              aria-selected={tab === t}
+              onClick={() => {
+                setTab(t)
+                setPart('')
+              }}
+              className={cn('h-12 rounded-ctl border text-[15px] font-semibold', tab === t ? 'border-2 border-brand-600 bg-brand-100 text-brand-700' : 'border-field bg-white text-ink hover:bg-bg')}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
 
-        {ticked.length === 0 && <p className="text-[15px] text-warn-700">Zgjidh si paguan klienti.</p>}
-        {ticked.length === 1 && ticked[0] !== 'cash' && <p className="text-[15px] text-muted">E gjithë shuma paguhet me {low(ticked[0])}.</p>}
+        {tab === 'card' && (
+          <>
+            <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Pagesa pa kesh">
+              {METHODS.filter(([m]) => m !== 'cash').map(([m, label]) => (
+                <button
+                  key={m}
+                  type="button"
+                  role="radio"
+                  aria-checked={single === m}
+                  onClick={() => setSingle(m as Exclude<Method, 'cash'>)}
+                  className={cn('h-11 rounded-full border px-4 text-[15px] font-semibold', single === m ? on : 'border-field bg-white text-ink')}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <p className="text-[15px] text-muted">E gjithë shuma paguhet me {low(single)}.</p>
+          </>
+        )}
+
+        {tab === 'mixed' && (
+          <fieldset>
+            <legend className="mb-1.5 text-[15px] font-medium">Zgjidh dy mënyra pagese</legend>
+            <div className="grid grid-cols-2 gap-2">
+              {METHODS.map(([m, label]) => {
+                const checked = sel.includes(m)
+                const blocked = !checked && sel.length >= 2
+                return (
+                  <label
+                    key={m}
+                    className={cn(
+                      'flex h-12 cursor-pointer items-center gap-3 rounded-ctl border px-3 text-[15px] font-semibold',
+                      checked ? 'border-2 border-brand-600 bg-brand-100 text-brand-700' : 'border-field bg-white text-ink hover:bg-bg',
+                      blocked && 'cursor-not-allowed opacity-50',
+                    )}
+                  >
+                    <input type="checkbox" className="h-5 w-5 accent-brand-600" checked={checked} disabled={blocked} onChange={() => toggle(m)} />
+                    {label}
+                  </label>
+                )
+              })}
+            </div>
+            {!two && <p className="mt-2 text-[15px] text-muted">Shëno me ✓ dy mënyrat si paguan klienti.</p>}
+          </fieldset>
+        )}
+
         {two && (
           <>
             <Input
@@ -436,7 +485,7 @@ export function CashDialog({
             </div>
           </>
         )}
-        {withCash && (
+        {withCash && (tab !== 'mixed' || two) && (
           <>
             <Input
               label={two ? 'Marrë kesh nga klienti' : 'Marrë nga klienti'}
