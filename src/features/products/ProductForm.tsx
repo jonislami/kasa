@@ -135,7 +135,7 @@ export function ProductForm({
       name: d.name.trim(),
       barcode: showBarcode ? d.barcode.trim() || null : null,
       category_id: d.category_id || null,
-      unit: isService ? 'cope' : d.unit,
+      unit: d.unit,
       sale_price: sale,
       purchase_price: purchase ?? 0,
       vat_code: d.vat,
@@ -237,14 +237,14 @@ export function ProductForm({
         <Input label="Substanca aktive" value={d.substance} onChange={(e) => set('substance', e.target.value)} placeholder="p.sh. Paracetamol" />
       )}
 
-      <div className={cn('grid gap-3', isService ? 'grid-cols-1' : 'grid-cols-2')}>
+      <div className="grid grid-cols-2 gap-3">
         <Select
           label="Kategoria"
           value={d.category_id}
           onChange={(e) => set('category_id', e.target.value)}
           options={[{ value: '', label: 'Pa kategori' }, ...categories.map((c) => ({ value: c.id, label: c.name }))]}
         />
-        {!isService && <Select label="Njësia" value={d.unit} onChange={(e) => set('unit', e.target.value as UnitCode)} options={UNIT_OPTIONS} />}
+        <Select label="Njësia matëse" value={d.unit} onChange={(e) => set('unit', e.target.value as UnitCode)} options={UNIT_OPTIONS} />
       </div>
 
       <div className="grid grid-cols-2 gap-3">

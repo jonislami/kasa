@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { Button, Dialog, Input, Select } from '@/components/ui'
+import { cn } from '@/lib/cn'
 import { businessType, hasModule, type BusinessType } from '@/lib/business'
 import { UNIT_OPTIONS, type UnitCode } from '@/lib/units'
 import { VAT_LABELS, type VatCode } from '@/lib/vat'
@@ -35,8 +36,8 @@ export function QuickProductDialog({
 }) {
   const info = businessType(type)
   const withBarcode = hasModule(type, 'barcode')
-  const service = !hasModule(type, 'stock')
-  const withUnit = !service
+  const [kind, setKind] = useState<'product' | 'service'>(hasModule(type, 'stock') ? 'product' : 'service')
+  const service = kind === 'service'
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
   const [vat, setVat] = useState<VatCode>('E')
@@ -52,6 +53,7 @@ export function QuickProductDialog({
     setPrice('')
     setVat('E')
     setUnit('cope')
+    setKind(hasModule(type, 'stock') ? 'product' : 'service')
     setCategory('')
     setAtk(DEFAULT_CATEGORY[type] ?? 'TT')
     setBarcode(initialBarcode ?? '')
@@ -61,10 +63,10 @@ export function QuickProductDialog({
   const save = useMutation({
     mutationFn: () =>
       saveProduct({
-        kind: service ? 'service' : 'product',
+        kind,
         name: name.trim(),
-        barcode: withBarcode && barcode.trim() ? barcode.trim() : null,
-        unit: withUnit ? unit : 'cope',
+        barcode: withBarcode && !service && barcode.trim() ? barcode.trim() : null,
+        unit,
         sale_price: Number(price.replace(',', '.')),
         vat_code: vatRegistered ? vat : 'A',
         category_id: category || null,
@@ -102,17 +104,40 @@ export function QuickProductDialog({
       }
     >
       <form id="quick-product" onSubmit={submit} className="grid gap-3">
+        <div className="grid gap-1.5">
+          <span className="text-sm font-medium">Lloji i artikullit</span>
+          <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Lloji i artikullit">
+            {(
+              [
+                ['product', 'Artikull'],
+                ['service', 'Shërbim'],
+              ] as const
+            ).map(([k, label]) => (
+              <button
+                key={k}
+                type="button"
+                role="radio"
+                aria-checked={kind === k}
+                onClick={() => setKind(k)}
+                className={cn(
+                  'h-11 rounded-ctl border text-[15px] font-semibold transition-colors',
+                  kind === k ? 'border-brand-600 bg-brand-600 text-white' : 'border-field bg-white text-ink hover:bg-bg',
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
         <Input label="Emri" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
         <div className={vatRegistered ? 'grid grid-cols-2 gap-3' : 'grid gap-3'}>
           <Input label={vatRegistered ? 'Çmimi me TVSH (€)' : 'Çmimi (€)'} inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0.00" />
           {vatRegistered && <Select label="TVSH" value={vat} onChange={(e) => setVat(e.target.value as VatCode)} options={VAT_OPTIONS} />}
         </div>
-        {(withBarcode || withUnit) && (
-          <div className="grid grid-cols-2 gap-3">
-            {withBarcode && <Input label="Barkodi (opsional)" inputMode="numeric" value={barcode} onChange={(e) => setBarcode(e.target.value)} />}
-            {withUnit && <Select label="Njësia" value={unit} onChange={(e) => setUnit(e.target.value as UnitCode)} options={UNIT_OPTIONS} />}
-          </div>
-        )}
+        <div className={withBarcode && !service ? 'grid grid-cols-2 gap-3' : 'grid gap-3'}>
+          {withBarcode && !service && <Input label="Barkodi (opsional)" inputMode="numeric" value={barcode} onChange={(e) => setBarcode(e.target.value)} />}
+          <Select label="Njësia matëse" value={unit} onChange={(e) => setUnit(e.target.value as UnitCode)} options={UNIT_OPTIONS} />
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <Select label="Kategoria" value={category} onChange={(e) => setCategory(e.target.value)} options={[{ value: '', label: 'Pa kategori' }, ...categories.map((c) => ({ value: c.id, label: c.name }))]} />
           <Select label="Kategoria ATK" value={atk} onChange={(e) => setAtk(e.target.value)} options={categoryOptions()} />

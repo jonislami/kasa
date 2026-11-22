@@ -77,9 +77,10 @@ export const BUSINESS_TYPES: Record<BusinessType, BusinessTypeInfo> = {
     code: 'salon',
     label: 'Shërbim',
     shortLabel: 'Shërbim',
-    description: 'Termine, punëtorë',
+    description: 'Shërbime, punëtorë me komision',
     icon: Scissors,
-    modules: ['appointments', 'commission'],
+    // no appointments (Terminet removed from Shërbim)
+    modules: ['commission'],
     terms: { catalog: 'Shërbimet', item: 'shërbim', items: 'shërbime', worker: 'Punëtor', newItem: 'Shërbim i ri', itemOf: 'shërbimit' },
   },
 }

@@ -9,7 +9,7 @@ const typeTexts: Record<string, string> = {
   restaurant: 'Kafiterie e restorante: tavolinat, porositë në kuzhinë e bar, ndarja e llogarisë.',
   pharmacy: 'Seria dhe afati i çdo bari, paralajmërime për skadimet, barnat me recetë.',
   boutique: 'Madhësi dhe ngjyra për çdo artikull, etiketa me barkod, ndërrime.',
-  salon: 'Terminet sipas punëtorit, pagesa në arkë dhe komisioni.',
+  salon: 'Shërbimet me njësinë e tyre, pagesa në arkë dhe komisioni i punëtorit.',
 }
 
 const features = [
