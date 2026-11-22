@@ -38,18 +38,19 @@ export interface BusinessTypeInfo {
 export const BUSINESS_TYPES: Record<BusinessType, BusinessTypeInfo> = {
   market: {
     code: 'market',
-    label: 'Market',
-    shortLabel: 'Market',
-    description: 'Barkod, stok, furnitorë',
+    label: 'Tregti me pakicë',
+    shortLabel: 'Tregti me pakicë',
+    description: 'Market, veshje & këpucë: barkod, stok, madhësi e ngjyra',
     icon: ShoppingBasket,
-    modules: ['barcode', 'weight', 'stock'],
+    // clothes and shoes sell here too (the separate "Butik" is no longer offered at registration): sizes × colours
+    modules: ['barcode', 'weight', 'stock', 'variants'],
     terms: { catalog: 'Produktet', item: 'produkt', items: 'produkte', worker: 'Arkëtar', newItem: 'Produkt i ri', itemOf: 'produktit' },
   },
   restaurant: {
     code: 'restaurant',
-    label: 'Kafiterie / Restorant',
-    shortLabel: 'Kafiterie',
-    description: 'Tavolina, kuzhinë',
+    label: 'Gastronomi',
+    shortLabel: 'Gastronomi',
+    description: 'Kafiterie, restorant: tavolina, kuzhinë',
     icon: Coffee,
     modules: ['tables', 'kitchen', 'recipes', 'stock'],
     terms: { catalog: 'Menuja', item: 'artikull', items: 'artikuj', worker: 'Kamarier', newItem: 'Artikull i ri', itemOf: 'artikullit' },
@@ -74,8 +75,8 @@ export const BUSINESS_TYPES: Record<BusinessType, BusinessTypeInfo> = {
   },
   salon: {
     code: 'salon',
-    label: 'Sallon / Shërbime',
-    shortLabel: 'Sallon',
+    label: 'Shërbim',
+    shortLabel: 'Shërbim',
     description: 'Termine, punëtorë',
     icon: Scissors,
     modules: ['appointments', 'commission'],
@@ -84,6 +85,12 @@ export const BUSINESS_TYPES: Record<BusinessType, BusinessTypeInfo> = {
 }
 
 export const BUSINESS_TYPE_LIST: BusinessTypeInfo[] = Object.values(BUSINESS_TYPES)
+
+/**
+ * "Veprimtaria e lokalit" offered when a business is registered: Tregti me pakicë, Gastronomi, Barnatore, Shërbim.
+ * Butik is part of Tregti me pakicë now; businesses already registered as Butik keep working as before.
+ */
+export const REGISTRATION_TYPES: BusinessTypeInfo[] = (['market', 'restaurant', 'pharmacy', 'salon'] as BusinessType[]).map((c) => BUSINESS_TYPES[c])
 
 export function businessType(code: BusinessType | null | undefined): BusinessTypeInfo {
   return BUSINESS_TYPES[code ?? 'market'] ?? BUSINESS_TYPES.market

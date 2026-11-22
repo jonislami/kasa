@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Button, Dialog, Input } from '@/components/ui'
-import { BUSINESS_TYPE_LIST, businessType, type BusinessType } from '@/lib/business'
+import { REGISTRATION_TYPES, businessType, type BusinessType } from '@/lib/business'
 import { cn } from '@/lib/cn'
 import { createBusiness, generatePassword, MIN_PASSWORD } from './api'
 import type { Credentials } from './CredentialsDialog'
@@ -91,8 +91,8 @@ export function NewBusinessDialog({
     >
       <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
         <div className="text-[15px] font-semibold">1. Lloji i biznesit</div>
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-5">
-          {BUSINESS_TYPE_LIST.map((t) => {
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+          {REGISTRATION_TYPES.map((t) => {
             const Icon = t.icon
             const sel = t.code === type
             return (
@@ -114,7 +114,7 @@ export function NewBusinessDialog({
                 >
                   <Icon className="h-5 w-5" />
                 </div>
-                <div className="mt-3 text-[15px] font-semibold leading-tight">{t.code === 'restaurant' ? 'Kafiterie / Restorant' : t.shortLabel}</div>
+                <div className="mt-3 text-[15px] font-semibold leading-tight">{t.shortLabel}</div>
                 <div className="mt-1 text-xs text-muted">{t.description}</div>
               </button>
             )

@@ -32,6 +32,8 @@ const FALLBACK_ACTIVITIES: Activity[] = ['Tregti me pakicë', 'Tregti me shumic�
 function loadDraft(): { d: ApplicationData; step: number; done: number } {
   try {
     const v = JSON.parse(sessionStorage.getItem(DRAFT) ?? 'null') as { d: ApplicationData; step: number; done: number } | null
+    // a draft from before: Butik is now part of Tregti me pakicë
+    if (v?.d?.company?.type === 'boutique') v.d.company.type = 'market'
     if (v?.d?.company && Array.isArray(v.d.units)) return { d: { ...EMPTY_APPLICATION, ...v.d, company: { ...EMPTY_APPLICATION.company, ...v.d.company }, tax: { ...EMPTY_APPLICATION.tax, ...v.d.tax } }, step: v.step || 1, done: v.done || 0 }
   } catch {
     /* a new form */

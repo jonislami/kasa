@@ -2,11 +2,11 @@ import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import { SafeAreaStrip } from '@/app/layout/AppLayout'
 import { Logo } from '@/components/Logo'
-import { BUSINESS_TYPE_LIST } from '@/lib/business'
+import { REGISTRATION_TYPES } from '@/lib/business'
 
 const typeTexts: Record<string, string> = {
-  market: 'Shitje me barkod, hyrje malli nga furnitorët, stok minimal dhe porosi.',
-  restaurant: 'Tavolinat, porositë në kuzhinë e bar, ndarja e llogarisë.',
+  market: 'Market, veshje e këpucë: barkod, madhësi e ngjyra, hyrje malli nga furnitorët, stok minimal dhe porosi.',
+  restaurant: 'Kafiterie e restorante: tavolinat, porositë në kuzhinë e bar, ndarja e llogarisë.',
   pharmacy: 'Seria dhe afati i çdo bari, paralajmërime për skadimet, barnat me recetë.',
   boutique: 'Madhësi dhe ngjyra për çdo artikull, etiketa me barkod, ndërrime.',
   salon: 'Terminet sipas punëtorit, pagesa në arkë dhe komisioni.',
@@ -230,8 +230,8 @@ export function LandingPage() {
             title="Një platformë, e përshtatur për llojin e biznesit"
             text="Kur hapet biznesi zgjidhet lloji, dhe KontoSef.app shfaq vetëm ekranet që të duhen."
           />
-          <div className="mt-10 grid border-t border-line sm:grid-cols-2 lg:grid-cols-5">
-            {BUSINESS_TYPE_LIST.map((t) => (
+          <div className="mt-10 grid border-t border-line sm:grid-cols-2 lg:grid-cols-4">
+            {REGISTRATION_TYPES.map((t) => (
               <div key={t.code} className="border-b border-line py-6 pr-6 lg:border-b-0">
                 <div className="text-[15px] font-semibold text-ink">{t.label}</div>
                 <p className="mt-2 text-[14px] leading-relaxed text-muted">{typeTexts[t.code]}</p>
