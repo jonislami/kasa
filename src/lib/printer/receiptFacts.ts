@@ -185,10 +185,14 @@ export function receiptFacts(sale: Sale, business: Business, copy?: boolean, lan
   const offline = sale.offline || Boolean(f?.offline)
   const unitNo = f?.sef_no ? f.sef_no.split('-')[0] : null
   const header: [string, string][] = []
-  header.push([t('EMRI I NJËSISË', lang), business.name])
+  // a business with several units (shops): the name and address of the register's unit (0047)
+  const unit = sale.unit ?? null
+  header.push([t('EMRI I NJËSISË', lang), unit?.name?.trim() || business.name])
   if (unitNo) header.push([t('NUMRI I NJËSISË', lang), unitNo])
-  if (business.address) header.push([t('ADRESA E NJËSISË', lang), business.address])
-  if (business.city) header.push([t('VENDI', lang), business.city])
+  const address = unit?.address?.trim() || business.address
+  const city = unit?.address?.trim() ? unit?.city?.trim() || business.city : business.city
+  if (address) header.push([t('ADRESA E NJËSISË', lang), address])
+  if (city) header.push([t('VENDI', lang), city])
   if (business.phone) header.push([t('TELEFONI', lang), business.phone])
   if (business.nui) header.push([t('NF-NUI', lang), business.nui])
   if (business.vat_number) header.push([t('NUMRI I TVSH-SË', lang), business.vat_number])

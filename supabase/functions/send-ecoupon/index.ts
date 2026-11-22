@@ -44,6 +44,7 @@ type Sale = Record<string, unknown> & {
   items: Item[]
   worker_name: string | null
   worker_no?: number | null
+  unit?: { name: string | null; unit_no: string | null; address: string | null; city: string | null } | null
   reason: string | null
   ref_invoice_no: number | null
 }
@@ -84,11 +85,13 @@ function html(s: Sale, b: Record<string, unknown>, f: Record<string, unknown>, f
     .join('')
   const payment = s.payment_kind && KIND[s.payment_kind] ? (s.payment_method === 'mixed' ? `KESH + ${KIND[s.payment_kind]}` : KIND[s.payment_kind]) : PAY[s.payment_method] ?? s.payment_method
   const vat = (s.vat_lines ?? []).filter((v) => (v.code === 'D' || v.code === 'E') && Math.abs(Number(v.vat)) > 0.004)
+  // a business with several units: the name and address of the register's unit (0047)
+  const u = s.unit ?? null
   const header = [
-    ['EMRI I NJËSISË', b.name],
+    ['EMRI I NJËSISË', u?.name || b.name],
     ['NUMRI I NJËSISË', f.branch_id],
-    ['ADRESA E NJËSISË', b.address],
-    ['VENDI', b.city],
+    ['ADRESA E NJËSISË', u?.address || b.address],
+    ['VENDI', u?.address ? u?.city || b.city : b.city],
     ['TELEFONI', b.phone],
     ['NF-NUI', b.nui],
     ['NUMRI I TVSH-SË', b.vat_number],
