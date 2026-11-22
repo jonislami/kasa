@@ -35,6 +35,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         ref={ref}
         id={inputId}
         className={cn(inputClass, mono && 'font-mono font-semibold tracking-wide', error && 'border-warn-700', className)}
+        aria-invalid={error ? true : undefined}
         {...rest}
       />
       {error ? (
