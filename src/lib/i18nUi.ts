@@ -657,6 +657,9 @@ export const SR_UI: Record<string, string> = {
   'Veprimtaria e lokalit': 'Delatnost objekta',
   'Lloji i artikullit': 'Vrsta artikla',
   Blloku: 'Blok',
+  'Pjesa e dytë duhet të jetë më e vogël se totali': 'Drugi deo mora biti manji od ukupnog iznosa',
+  'Zgjidh si paguan klienti.': 'Izaberi kako kupac plaća.',
+  'Mënyra e pagesës (deri në 2)': 'Način plaćanja (do 2)',
   'Kartelë + Kesh': 'Kartica + gotovina',
   'Vauçer + Kesh': 'Vaučer + gotovina',
   'Kartelë + Vauçer': 'Kartica + vaučer',
@@ -708,6 +711,7 @@ export const SR_UI: Record<string, string> = {
 
 /** Texts with values: "{}" stands for a value (number, name, amount, date) kept as it is. */
 export const SR_UI_PATTERNS: [string, string][] = [
+  ['Mbetet me {}', 'Ostaje: {}'],
   ['E gjithë shuma paguhet me {}.', 'Ceo iznos se plaća: {}.'],
   ['Paguhet me {} (€)', 'Plaća se: {} (€)'],
   ['Pa dërguar ende ({})', 'Još nije poslato ({})'],

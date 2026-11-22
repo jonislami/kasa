@@ -222,10 +222,11 @@ export function receiptFacts(sale: Sale, business: Business, copy?: boolean, lan
   const mixed = (cash: number, card: number) => `${t('KESH', lang)} ${n2(Math.abs(cash))} + ${t('KARTELË', lang)} ${n2(Math.abs(card))}`
   const KIND: Record<string, string> = { bank: 'TRANSFER BANKAR', voucher: 'VAUÇER', cheque: 'ÇEK' }
   const kindLabel = sale.payment_kind ? t(KIND[sale.payment_kind], lang) : null
-  const voucherPart = Math.abs(sale.voucher_amount ?? 0)
+  const secondPart = sale.split_kind ? Math.abs(sale.split_amount ?? 0) : 0
+  const nonCashLabel = (k: string | null | undefined) => t(k && k !== 'card' ? KIND[k] : 'KARTELË', lang)
   const ownPayment =
-    voucherPart > 0
-      ? `${t('KARTELË', lang)} ${n2(Math.abs(sale.card_amount) - voucherPart)} + ${t('VAUÇER', lang)} ${n2(voucherPart)}`
+    secondPart > 0
+      ? `${nonCashLabel(sale.payment_kind)} ${n2(Math.abs(sale.card_amount) - secondPart)} + ${nonCashLabel(sale.split_kind)} ${n2(secondPart)}`
       : sale.payment_method === 'mixed'
       ? kindLabel
         ? `${t('KESH', lang)} ${n2(Math.abs(sale.cash_amount))} + ${kindLabel} ${n2(Math.abs(sale.card_amount))}`

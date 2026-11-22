@@ -29,8 +29,9 @@ export interface FiscalSale {
   discount_total: number
   cash_amount: number
   card_amount: number
-  /** The voucher part of card_amount (Kartelë + Vauçer, 0046). */
-  voucher_amount?: number
+  /** Two non-cash parts (0046): the second one; card_amount holds both, payment_kind is the first (null = card). */
+  split_kind?: 'card' | 'bank' | 'voucher' | null
+  split_amount?: number
   payment_kind?: FiscalPaymentKind
   vat_lines: { code: VatCode; gross: number; net: number; vat: number }[]
   items: FiscalSaleItem[]
@@ -92,14 +93,16 @@ export function buildCoupons(sale: FiscalSale, h: FiscalHeader): { pos: PosCoupo
   // Payments add up exactly to the total; cash takes the rounding difference.
   const nonCash = cents(sale.card_amount) > total ? total : cents(sale.card_amount)
   const cash = total - nonCash > 0n ? total - nonCash : 0n
-  // Kartelë + Vauçer: the voucher part of the non-cash amount is its own payment
-  const voucher = cents(sale.voucher_amount ?? 0) < nonCash ? cents(sale.voucher_amount ?? 0) : 0n
-  const card = nonCash - voucher
+  // two non-cash parts (e.g. Kartelë + Vauçer): the second part is its own payment
+  const second = sale.split_kind && cents(sale.split_amount ?? 0) < nonCash ? cents(sale.split_amount ?? 0) : 0n
+  const first = nonCash - second
+  // ATK PaymentType of a non-cash part: card, voucher, cheque, bank transfer ("Other")
+  const typeOf = (k: string | null | undefined) =>
+    k === 'voucher' ? PaymentType.Voucher : k === 'cheque' ? PaymentType.Cheque : k === 'bank' ? PaymentType.Other : PaymentType.CreditCard
   const payments: Payment[] = [
     ...(cash > 0n ? [{ Type: PaymentType.Cash, Amount: cash }] : []),
-    // the non-cash part: card, or voucher / cheque / bank transfer ("Other") – ATK PaymentType
-    ...(card > 0n ? [{ Type: sale.payment_kind === 'voucher' ? PaymentType.Voucher : sale.payment_kind === 'cheque' ? PaymentType.Cheque : sale.payment_kind === 'bank' ? PaymentType.Other : PaymentType.CreditCard, Amount: card }] : []),
-    ...(voucher > 0n ? [{ Type: PaymentType.Voucher, Amount: voucher }] : []),
+    ...(first > 0n ? [{ Type: typeOf(sale.payment_kind), Amount: first }] : []),
+    ...(second > 0n ? [{ Type: typeOf(sale.split_kind), Amount: second }] : []),
   ]
 
   const head = {
