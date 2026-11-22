@@ -171,7 +171,7 @@ const body = [
   ...ol([
     'Artikulli shtohet me kërkim (emri ose kodi), me lexuesin e barkodit ose duke e prekur te lista. Për artikujt me peshë shkruhet sasia në kg (deri në 3 decimale).',
     'Sasia ndryshohet me + / − ose duke e shkruar. Zbritja jepet për artikull ose për gjithë kuponin.',
-    'Shtypet **PAGUAJ** (F12). Hapet dritarja **Pagesa** me tri skeda: **Kesh** (shuma e marrë nga klienti ose butonat Saktë · 5 · 10 · 20 · 50 · 100 €, programi tregon kusurin), **Kartelë** (kartelë, transfer bankar, vauçer ose çek për gjithë shumën) dhe **Të kombinuara** (një pjesë me kartelë/vauçer…, pjesa tjetër kesh me kusur).',
+    'Shtypet **PAGUAJ** (F12). Hapet dritarja **Pagesa**: me ✓ zgjidhet si paguan klienti – një ose dy nga **Kesh, Kartelë, Vauçer, Transfer bankar**. Me një mënyrë paguhet e gjithë shuma (për kesh: shuma e marrë ose butonat Saktë · 5 · 10 · 20 · 50 · 100 €, programi tregon kusurin). Me dy mënyra shkruhet shuma e njërës: me kesh – pjesa tjetër paguhet kesh me kusur (p.sh. Vauçer + Kesh); pa kesh – pjesa tjetër shkon te mënyra e parë (p.sh. Kartelë + Vauçer, Vauçer + Transfer).',
     'Shtypet **MBYLL SHITJEN** (ose Enter). Programi e nënshkruan kuponin në pajisje, e dërgon në ATK **para printimit**, pastaj printon kuponin fiskal me kodin QR.',
   ]),
   table([1800, W - 1800], [

@@ -10,6 +10,8 @@ export type SaleKind = 'sale' | 'void' | 'refund'
 export type PaymentMethod = 'cash' | 'card' | 'mixed'
 /** Non-cash payments other than a card (UA neni 7: llogari bankare, vauçer, çek). */
 export type PaymentKind = 'bank' | 'voucher' | 'cheque'
+/** The second non-cash part of a sale paid two ways without cash (0046). */
+export type SplitKind = 'card' | 'bank' | 'voucher'
 export const PAYMENT_KIND_LABELS: Record<PaymentKind, string> = { bank: 'Transfer bankar', voucher: 'Vauçer', cheque: 'Çek' }
 
 export interface SaleItem {
@@ -51,6 +53,9 @@ export interface Sale {
   payment_kind?: PaymentKind | null
   cash_amount: number
   card_amount: number
+  /** 0046: two non-cash parts – the second one (card_amount holds both; payment_kind is the first, null = card). */
+  split_kind?: SplitKind | null
+  split_amount?: number
   tendered: number | null
   change_amount: number
   reason: string | null
@@ -99,7 +104,7 @@ export interface CreateSaleInput {
   order_id?: string
   invoice_discount?: number
   /** kind: what the non-cash part is when it is not a card (0033). */
-  payment: { method: PaymentMethod; card_amount?: number; tendered?: number; kind?: PaymentKind }
+  payment: { method: PaymentMethod; card_amount?: number; tendered?: number; kind?: PaymentKind; split?: { kind: SplitKind; amount: number } }
   offline?: boolean
   offline_no?: string
   client_created_at?: string
@@ -133,6 +138,7 @@ function toSale(raw: unknown): Sale {
     vat_total: n(s.vat_total),
     cash_amount: n(s.cash_amount),
     card_amount: n(s.card_amount),
+    split_amount: n(s.split_amount),
     tendered: s.tendered == null ? null : n(s.tendered),
     change_amount: n(s.change_amount),
     vat_lines: ((s.vat_lines as Sale['vat_lines']) ?? []).map((v) => ({

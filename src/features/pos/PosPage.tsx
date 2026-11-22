@@ -11,7 +11,7 @@ import { formatQty, unitLabel } from '@/lib/units'
 import { useMediaQuery } from '@/lib/useMediaQuery'
 import { fetchCategories } from '@/features/products/api'
 import { hasVat, saleVatCode } from '@/lib/vat'
-import { createSale, fetchPosProducts, fetchRegisters, NetworkError, type CreateSaleInput, type PaymentKind, type PaymentMethod, type Sale } from './api'
+import { createSale, fetchPosProducts, fetchRegisters, NetworkError, type CreateSaleInput, type PaymentKind, type PaymentMethod, type Sale, type SplitKind } from './api'
 import { addToCart, computeTotals, emptyCart, setLineDiscount, setLineStaff, setQuantity, type Cart, type CartLine, type PosProduct } from './cart'
 import { fetchAppointment, fetchStaff, initials, staffColor, type Appointment } from '@/features/salon/api'
 import { CameraScanner, CashDialog, DiscountDialog, LineDialog } from './dialogs'
@@ -274,7 +274,7 @@ export function PosPage() {
 
   // ---------- payment ----------
   const pay = useCallback(
-    async (m: PaymentMethod, tenderedAmount?: number, cardAmount?: number, cardKind: PaymentKind | 'card' = 'card') => {
+    async (m: PaymentMethod, tenderedAmount?: number, cardAmount?: number, cardKind: PaymentKind | 'card' = 'card', split?: { kind: SplitKind; amount: number }) => {
       // a ref, not the state: a double press (click + F12) comes before React shows "busy"
       if (cart.lines.length === 0 || busy || payingRef.current) return
       payingRef.current = true
@@ -291,7 +291,7 @@ export function PosPage() {
         })),
         appointment_id: appointment?.id,
         invoice_discount: totals.invoiceDiscount || undefined,
-        payment: { method: m, tendered: m === 'card' ? undefined : tenderedAmount, card_amount: m === 'mixed' ? cardAmount : undefined, kind: m !== 'cash' && cardKind !== 'card' ? cardKind : undefined },
+        payment: { method: m, tendered: m === 'card' ? undefined : tenderedAmount, card_amount: m === 'mixed' ? cardAmount : undefined, kind: m !== 'cash' && cardKind !== 'card' ? cardKind : undefined, ...(split ? { split } : {}) },
         client_created_at: bookEntry ? bookEntry.at : serverDate().toISOString(),
         ...(bookEntry ? { note: `Blloku i veçantë i kuponëve – nr. ${bookEntry.serial}` } : {}),
       }
@@ -728,6 +728,11 @@ export function PosPage() {
         onCash={(t) => void pay('cash', round2(t + credit))}
         onCard={(k) => payCard(k)}
         onMixed={(c, t, k) => void pay('mixed', round2(t + credit), c, k)}
+        onSplit={(first, second, amount) => {
+          // an exchange credit is paid back in cash / card only
+          if (credit > 0) return setError('Ndërrimi me kredi paguhet me kesh ose kartelë')
+          void pay('card', undefined, undefined, first, { kind: second, amount })
+        }}
         onBook={
           canAddProduct
             ? () => {
@@ -1073,6 +1078,8 @@ function localReceipt(
     payment_kind: input.payment.kind ?? null,
     cash_amount: cash,
     card_amount: card,
+    split_kind: input.payment.split?.kind ?? null,
+    split_amount: input.payment.split?.amount ?? 0,
     tendered: cash > 0 ? (t ?? cash) : null,
     change_amount: cash > 0 ? round2((t ?? cash) - cash) : 0,
     reason: null,

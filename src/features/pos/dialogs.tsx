@@ -5,7 +5,7 @@ import { Button, Dialog, Input, Select, Tabs } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import { formatEUR, round2 } from '@/lib/money'
 import { unitLabel } from '@/lib/units'
-import { fetchApprovers, PAYMENT_KIND_LABELS, type PaymentKind } from './api'
+import { fetchApprovers, type PaymentKind, type SplitKind } from './api'
 import type { CartLine } from './cart'
 import { unitDecimals } from '@/lib/units'
 
@@ -292,15 +292,23 @@ export function DiscountDialog({
 // ---------------------------------------------------------------------------
 // Cash payment (phone) – amount given, quick notes, change
 // ---------------------------------------------------------------------------
-type PayTab = 'cash' | 'card' | 'mixed'
 type CardKind = PaymentKind | 'card'
-const CARD_KINDS: [CardKind, string][] = [['card', 'Kartelë'], ...(Object.entries(PAYMENT_KIND_LABELS) as [PaymentKind, string][])]
+/** The four ways of paying at the till; up to two are ticked at once. */
+type Method = 'cash' | 'card' | 'voucher' | 'bank'
+const METHODS: [Method, string][] = [
+  ['cash', 'Kesh'],
+  ['card', 'Kartelë'],
+  ['voucher', 'Vauçer'],
+  ['bank', 'Transfer bankar'],
+]
+const LABEL = Object.fromEntries(METHODS) as Record<Method, string>
 
 /**
- * "Pagesa" – the only place where the payment is chosen (opens after PAGUAJ / F12):
- *  Kesh            what the client gave (typed or Saktë / 5 / 10 / 20 / 50 / 100 €) and the change
- *  Kartelë         card, bank transfer, voucher or cheque for the whole amount
- *  Të kombinuara   part by card (or transfer …), the rest in cash with its change
+ * "Pagesa" – the only place where the payment is chosen (opens after PAGUAJ / F12). The cashier ticks how the client
+ * pays, one or two of Kesh, Kartelë, Vauçer, Transfer bankar:
+ *  one     Kesh: what the client gave (typed or Saktë / 5 … 100 €) and the change; any other: the whole amount
+ *  two     with Kesh: the amount of the other one, the rest in cash with its change;
+ *          without Kesh (e.g. Kartelë + Vauçer): the amount of the second one, the rest with the first
  * then MBYLL SHITJEN (Enter). BLLOKU TATIMOR (owner / manager) enters a coupon of the separate book.
  */
 export function CashDialog({
@@ -311,6 +319,7 @@ export function CashDialog({
   onCash,
   onCard,
   onMixed,
+  onSplit,
   onBook,
   onClose,
 }: {
@@ -322,37 +331,51 @@ export function CashDialog({
   onCash: (tendered: number) => void
   onCard: (kind: CardKind) => void
   onMixed: (cardAmount: number, tendered: number, kind: CardKind) => void
+  /** Two non-cash ways: the first takes the rest, the second its amount. */
+  onSplit: (first: CardKind, second: SplitKind, secondAmount: number) => void
   onBook?: () => void
   onClose: () => void
 }) {
-  const [tab, setTab] = useState<PayTab>('cash')
-  const [kind, setKind] = useState<CardKind>('card')
+  const [sel, setSel] = useState<Method[]>(['cash'])
   const [v, setV] = useState('')
   const [exact, setExact] = useState(false)
-  const [cardPart, setCardPart] = useState('')
+  const [part, setPart] = useState('')
   useEffect(() => {
     if (open) {
-      setTab('cash')
-      setKind('card')
+      setSel(['cash'])
       setV('')
       setExact(false)
-      setCardPart('')
+      setPart('')
     }
   }, [open])
 
-  const c = parseNum(cardPart)
-  const cardOk = tab !== 'mixed' || (c != null && !Number.isNaN(c) && c > 0 && c < total)
-  const cashDue = tab === 'mixed' ? round2(total - (cardOk && c ? c : 0)) : total
+  const toggle = (m: Method) => {
+    setPart('')
+    setSel((x) => (x.includes(m) ? x.filter((y) => y !== m) : x.length < 2 ? [...x, m] : x))
+  }
+  // the two ticked in the order of the list
+  const ticked = METHODS.map(([m]) => m).filter((m) => sel.includes(m))
+  const two = ticked.length === 2
+  const withCash = ticked.includes('cash')
+  const nonCash = ticked.filter((m) => m !== 'cash')
+  // the amount typed: with cash – the non-cash one; without cash – the second one
+  const partOf: Method | null = two ? (withCash ? nonCash[0] : nonCash[1]) : null
+  const restOf: Method | null = two ? (withCash ? 'cash' : nonCash[0]) : null
+
+  const c = parseNum(part)
+  const partOk = !two || (c != null && !Number.isNaN(c) && c > 0 && c < total)
+  const cashDue = withCash ? (two ? round2(total - (partOk && c ? c : 0)) : total) : 0
   const n = parseNum(v)
   const tendered = n == null || Number.isNaN(n) ? cashDue : n
   const change = round2(tendered - cashDue)
-  const short = tab !== 'card' && change < 0
-  const ready = !busy && !short && cardOk
+  const short = withCash && change < 0
+  const ready = !busy && ticked.length > 0 && !short && partOk
+  const kindOf = (m: Method): CardKind => (m === 'cash' ? 'card' : m === 'card' ? 'card' : m)
   const close = () => {
     if (!ready) return
-    if (tab === 'cash') onCash(tendered)
-    else if (tab === 'card') onCard(kind)
-    else onMixed(c!, tendered, kind)
+    if (!two) return ticked[0] === 'cash' ? onCash(tendered) : onCard(kindOf(ticked[0]))
+    if (withCash) return onMixed(c!, tendered, kindOf(partOf!))
+    onSplit(kindOf(restOf!), partOf as SplitKind, c!)
   }
   const pick = (x: number | 'exact') => {
     setExact(x === 'exact')
@@ -360,48 +383,7 @@ export function CashDialog({
   }
   const chip = 'h-11 rounded-ctl border text-[15px] font-semibold tabular-nums disabled:opacity-40'
   const on = 'border-brand-600 bg-brand-100 text-brand-700'
-  const kindLabel = kind === 'card' ? 'kartelë' : PAYMENT_KIND_LABELS[kind].toLowerCase()
-
-  const cashBlock = (
-    <>
-      <Input
-        label={tab === 'mixed' ? 'Marrë kesh nga klienti' : 'Marrë nga klienti'}
-        inputMode="decimal"
-        autoFocus={tab === 'cash'}
-        value={v}
-        onChange={(e) => {
-          setExact(false)
-          setV(e.target.value)
-        }}
-        onKeyDown={(e) => e.key === 'Enter' && close()}
-        placeholder={formatEUR(cashDue)}
-      />
-      <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-6">
-        <button type="button" onClick={() => pick('exact')} className={cn(chip, exact ? on : 'border-field hover:bg-bg')}>
-          Saktë
-        </button>
-        {[5, 10, 20, 50, 100].map((x) => (
-          <button key={x} type="button" disabled={x < cashDue} onClick={() => pick(x)} className={cn(chip, n === x && !exact ? on : 'border-field hover:bg-bg')}>
-            {x} €
-          </button>
-        ))}
-      </div>
-      <div className={cn('flex items-center justify-between rounded-ctl border px-4 py-3', short ? 'border-[#F3C4BE] bg-warn-100 text-warn-700' : 'border-line bg-[#F8FAFC]')}>
-        <span className="text-[15px] font-medium">{short ? 'Mungojnë' : 'Kusuri'}</span>
-        <span className={cn('text-[26px] font-semibold tracking-[-0.015em] tabular-nums', short ? 'text-warn-700' : 'text-brand-700')}>{formatEUR(Math.abs(change))}</span>
-      </div>
-    </>
-  )
-
-  const kinds = (
-    <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Mënyra e pagesës pa kesh">
-      {CARD_KINDS.map(([k, label]) => (
-        <button key={k} type="button" role="radio" aria-checked={kind === k} onClick={() => setKind(k)} className={cn('h-11 rounded-full border px-4 text-[15px] font-semibold', kind === k ? on : 'border-field bg-white text-ink')}>
-          {label}
-        </button>
-      ))}
-    </div>
-  )
+  const low = (m: Method) => LABEL[m].toLowerCase()
 
   return (
     <Dialog open={open} onClose={() => !busy && onClose()} title="Pagesa" width="md:max-w-[500px]">
@@ -410,51 +392,78 @@ export function CashDialog({
           <span className="text-[15px] text-muted">Totali</span>
           <span className="text-[28px] font-semibold tracking-[-0.015em] tabular-nums">{formatEUR(total)}</span>
         </div>
-        <div className="grid grid-cols-3 gap-2" role="tablist" aria-label="Mënyra e pagesës">
-          {(
-            [
-              ['cash', 'Kesh'],
-              ['card', 'Kartelë'],
-              ['mixed', 'Të kombinuara'],
-            ] as const
-          ).map(([t, label]) => (
-            <button
-              key={t}
-              type="button"
-              role="tab"
-              aria-selected={tab === t}
-              onClick={() => setTab(t)}
-              className={cn('h-12 rounded-ctl border text-[15px] font-semibold', tab === t ? 'border-2 border-brand-600 bg-brand-100 text-brand-700' : 'border-field bg-white text-ink hover:bg-bg')}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
 
-        {tab === 'cash' && cashBlock}
-        {tab === 'card' && (
+        <fieldset>
+          <legend className="mb-1.5 text-[15px] font-medium">Mënyra e pagesës (deri në 2)</legend>
+          <div className="grid grid-cols-2 gap-2">
+            {METHODS.map(([m, label]) => {
+              const checked = sel.includes(m)
+              const blocked = !checked && sel.length >= 2
+              return (
+                <label
+                  key={m}
+                  className={cn(
+                    'flex h-12 cursor-pointer items-center gap-3 rounded-ctl border px-3 text-[15px] font-semibold',
+                    checked ? 'border-2 border-brand-600 bg-brand-100 text-brand-700' : 'border-field bg-white text-ink hover:bg-bg',
+                    blocked && 'cursor-not-allowed opacity-50',
+                  )}
+                >
+                  <input type="checkbox" className="h-5 w-5 accent-brand-600" checked={checked} disabled={blocked} onChange={() => toggle(m)} />
+                  {label}
+                </label>
+              )
+            })}
+          </div>
+        </fieldset>
+
+        {ticked.length === 0 && <p className="text-[15px] text-warn-700">Zgjidh si paguan klienti.</p>}
+        {ticked.length === 1 && ticked[0] !== 'cash' && <p className="text-[15px] text-muted">E gjithë shuma paguhet me {low(ticked[0])}.</p>}
+        {two && (
           <>
-            {kinds}
-            <p className="text-[15px] text-muted">E gjithë shuma paguhet me {kindLabel}.</p>
-          </>
-        )}
-        {tab === 'mixed' && (
-          <>
-            {kinds}
             <Input
-              label={`Paguhet me ${kindLabel} (€)`}
+              label={`Paguhet me ${low(partOf!)} (€)`}
               inputMode="decimal"
               autoFocus
-              value={cardPart}
-              onChange={(e) => setCardPart(e.target.value)}
+              value={part}
+              onChange={(e) => setPart(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && !withCash && close()}
               placeholder="0.00"
-              error={cardPart.trim() && !cardOk ? 'Më pak se totali' : undefined}
+              error={part.trim() && !partOk ? 'Më pak se totali' : undefined}
             />
             <div className="flex items-baseline justify-between text-[15px]">
-              <span className="text-muted">Mbetet kesh</span>
-              <span className="font-semibold tabular-nums">{formatEUR(cashDue)}</span>
+              <span className="text-muted">Mbetet me {low(restOf!)}</span>
+              <span className="font-semibold tabular-nums">{formatEUR(round2(total - (partOk && c ? c : 0)))}</span>
             </div>
-            {cashBlock}
+          </>
+        )}
+        {withCash && (
+          <>
+            <Input
+              label={two ? 'Marrë kesh nga klienti' : 'Marrë nga klienti'}
+              inputMode="decimal"
+              autoFocus={!two}
+              value={v}
+              onChange={(e) => {
+                setExact(false)
+                setV(e.target.value)
+              }}
+              onKeyDown={(e) => e.key === 'Enter' && close()}
+              placeholder={formatEUR(cashDue)}
+            />
+            <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-6">
+              <button type="button" onClick={() => pick('exact')} className={cn(chip, exact ? on : 'border-field hover:bg-bg')}>
+                Saktë
+              </button>
+              {[5, 10, 20, 50, 100].map((x) => (
+                <button key={x} type="button" disabled={x < cashDue} onClick={() => pick(x)} className={cn(chip, n === x && !exact ? on : 'border-field hover:bg-bg')}>
+                  {x} €
+                </button>
+              ))}
+            </div>
+            <div className={cn('flex items-center justify-between rounded-ctl border px-4 py-3', short ? 'border-[#F3C4BE] bg-warn-100 text-warn-700' : 'border-line bg-[#F8FAFC]')}>
+              <span className="text-[15px] font-medium">{short ? 'Mungojnë' : 'Kusuri'}</span>
+              <span className={cn('text-[26px] font-semibold tracking-[-0.015em] tabular-nums', short ? 'text-warn-700' : 'text-brand-700')}>{formatEUR(Math.abs(change))}</span>
+            </div>
           </>
         )}
 
