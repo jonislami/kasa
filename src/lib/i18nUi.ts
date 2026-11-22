@@ -657,6 +657,8 @@ export const SR_UI: Record<string, string> = {
   'Veprimtaria e lokalit': 'Delatnost objekta',
   'Lloji i artikullit': 'Vrsta artikla',
   Blloku: 'Blok',
+  'Shëno me ✓ dy mënyrat si paguan klienti.': 'Označi ✓ dva načina na koja kupac plaća.',
+  'Zgjidh dy mënyra pagese': 'Izaberi dva načina plaćanja',
   'Pjesa e dytë duhet të jetë më e vogël se totali': 'Drugi deo mora biti manji od ukupnog iznosa',
   'Zgjidh si paguan klienti.': 'Izaberi kako kupac plaća.',
   'Mënyra e pagesës (deri në 2)': 'Način plaćanja (do 2)',
