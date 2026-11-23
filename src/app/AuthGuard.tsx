@@ -84,6 +84,17 @@ export function RequireManager({ children }: { children: ReactNode }) {
   return <>{children}</>
 }
 
+/**
+ * The audit report (/regjistri): managers on the web see it without downloading; in the SEF app the owner or
+ * manager signed in with the PIN (worker panel, actual_role) sees it and downloads it.
+ */
+export function RequireAuditor({ children }: { children: ReactNode }) {
+  const { ctx } = useAuth()
+  const p = ctx?.profile
+  if (!isManagerRole(p?.role) && !(isSefApp && isManagerRole(p?.actual_role))) return <Navigate to="/" replace />
+  return <>{children}</>
+}
+
 /** Screens of the people who work in the business (till, own work, printer). Not for the accountant. */
 export function RequireStaff({ children }: { children: ReactNode }) {
   const { ctx } = useAuth()

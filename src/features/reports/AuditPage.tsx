@@ -13,6 +13,7 @@ import { fetchPeople, peopleMap } from '@/features/stock/api'
 import { fetchAccountants } from '@/features/accounting/api'
 import { fetchAudit, periodRange, type AuditRow, type PeriodKey } from './api'
 import { SqDateFormat } from '@/lib/sqDate'
+import { isSefApp } from '@/lib/device'
 
 type Tone = 'success' | 'warn' | 'amber' | 'neutral' | 'info'
 
@@ -178,21 +179,31 @@ export function AuditPage() {
   return (
     <>
       <PageHeader
-        title="Regjistri i veprimeve"
+        title={isSefApp ? 'Raporti i auditit' : 'Regjistri i veprimeve'}
         actions={
           <div className="flex gap-2 print:hidden">
             <Button variant="secondary" loading={verify.isPending} onClick={() => verify.mutate()}>
               Kontrollo integritetin
             </Button>
-            <Button variant="secondary" onClick={exportCsv} disabled={rows.length === 0}>
-              CSV
-            </Button>
-            <Button variant="secondary" onClick={() => window.print()} disabled={rows.length === 0}>
-              PDF
-            </Button>
+            {/* the audit report is downloaded only from the SEF app; the web app shows it */}
+            {isSefApp && (
+              <>
+                <Button variant="secondary" onClick={exportCsv} disabled={rows.length === 0}>
+                  CSV
+                </Button>
+                <Button variant="secondary" onClick={() => window.print()} disabled={rows.length === 0}>
+                  PDF
+                </Button>
+              </>
+            )}
           </div>
         }
       />
+      {!isSefApp && (
+        <p className="mx-4 mb-4 rounded-ctl bg-[#EFF6FF] px-4 py-3 text-sm text-bt-600 md:mx-8">
+          Raporti i auditit (CSV / PDF) shkarkohet vetëm nga programi SEF: hyr me PIN-in e pronarit ose të menaxherit, pastaj Menuja → Raporti i auditit.
+        </p>
+      )}
       <p className="-mt-5 hidden px-8 pb-5 text-muted md:block">Çdo veprim në arkë dhe në cilësime, me kohën dhe përdoruesin. Nuk mund të fshihet; çdo rresht është i lidhur me të mëparshmin (SHA-256), që çdo ndryshim të zbulohet.</p>
       {verify.data && (
         <div className={`mx-4 mb-4 rounded-ctl px-4 py-3 text-sm md:mx-8 ${verify.data.ok ? 'bg-brand-100 text-brand-600' : 'bg-warn-100 text-warn-700'}`}>
@@ -269,7 +280,7 @@ export function AuditPage() {
         </Card>
       </div>
 
-      {createPortal(
+      {isSefApp && createPortal(
         <div className="print-root print-a4 hidden text-[11px] text-black">
           <h1 className="text-lg font-bold">Regjistri i veprimeve – {business.name}</h1>
           <p className="mb-3">

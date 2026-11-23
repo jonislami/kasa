@@ -2,8 +2,10 @@ import { useMemo, useState } from 'react'
 import { NOT_READY } from '@/lib/friendlyError'
 import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
 import { KOSOVO_TZ } from '@/lib/clock'
-import { useQuery } from '@tanstack/react-query'
-import { BarChart3, Search } from 'lucide-react'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { BarChart3, FileSpreadsheet, Search } from 'lucide-react'
+import { useBusiness } from '@/app/AuthProvider'
+import { downloadSalesBook, salesBookKind } from './salesBook'
 import { PageHeader } from '@/app/layout/AppLayout'
 import { Badge, Button, Card, Dialog, EmptyState, Input, StatCard, Table, Tabs, Td, Th } from '@/components/ui'
 import { ROLE_LABELS } from '@/lib/business'
@@ -45,6 +47,11 @@ export function ReportsPage() {
 
   const r = report.data
   const t = r?.totals
+
+  // Libri i shitjes: the official ATK Excel file of the period (only the web app downloads it)
+  const { business } = useBusiness()
+  const vatBook = salesBookKind(business.vat_number) === 'sales_vat'
+  const book = useMutation({ mutationFn: () => downloadSalesBook(business, range.from, range.to) })
 
   const exportExcel = async () => {
     if (!r) return
@@ -134,6 +141,28 @@ export function ReportsPage() {
         <StatCard label="Fatura" value={t ? String(t.invoices) : '—'} sub={t && t.invoices ? `Mesatarja ${formatEUR(t.total / t.invoices)}` : undefined} />
         <StatCard label="Fitimi bruto" value={t ? formatEUR(t.profit) : '—'} sub={t && t.total > 0 ? `Marzha ${((t.profit / t.total) * 100).toFixed(1)}%` : undefined} />
         <StatCard label="TVSH e mbledhur" value={t ? formatEUR(t.vat_total) : '—'} sub={t ? `Pa TVSH ${formatEUR(t.net_total)}` : undefined} />
+      </div>
+
+      <div className="px-4 pb-5 md:px-8 md:pt-5">
+        <Card className="flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-ctl bg-brand-100 text-brand-600">
+              <FileSpreadsheet className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <div className="font-semibold">Libri i shitjes {vatBook ? 'me TVSH' : 'jo TVSH'}</div>
+              <p className="text-sm text-muted">
+                {formatRange(range.from, range.to)} · modeli zyrtar i ATK-së, një rresht për çdo kupon fiskal
+                {vatBook ? ' (anulimet dhe kthimet, sipas ATK-së, shkojnë te libri i blerjes)' : ''}.
+              </p>
+              {book.error && <p className="mt-1 text-sm text-warn-700">{(book.error as Error).message}</p>}
+              {book.data !== undefined && !book.isPending && !book.error && <p className="mt-1 text-sm text-brand-600">U shkarkua: {book.data} rreshta.</p>}
+            </div>
+          </div>
+          <Button className="shrink-0" loading={book.isPending} onClick={() => book.mutate()}>
+            <FileSpreadsheet className="h-4 w-4" /> Shkarko në Excel
+          </Button>
+        </Card>
       </div>
 
       {loadState(report) === 'offline' ? (
