@@ -53,7 +53,7 @@ export function registerLock(businessId: string): string | null {
     return null
   }
 }
-function setRegisterLock(businessId: string, registerId: string | null) {
+export function setRegisterLock(businessId: string, registerId: string | null) {
   try {
     if (registerId) {
       localStorage.setItem(lockKey(businessId), registerId)
@@ -62,6 +62,29 @@ function setRegisterLock(businessId: string, registerId: string | null) {
   } catch {
     /* storage unavailable */
   }
+}
+
+/**
+ * The till this device belongs to, as the server knows it now: the id, null when it has none, undefined when it
+ * cannot be asked (offline, or not a linked device). Keeps the local binding in step.
+ */
+export async function fetchDeviceRegister(businessId: string): Promise<string | null | undefined> {
+  const link = await getLink()
+  if (!link || link.business_id !== businessId) return undefined
+  const { data, error } = await supabase.rpc('device_heartbeat', { p: { device_id: link.device_id, app_version: device.appVersion } })
+  if (error || !data || typeof data !== 'object' || !('register_id' in data)) return undefined
+  const reg = (data as { register_id: string | null }).register_id
+  setRegisterLock(businessId, reg)
+  return reg
+}
+
+/** The owner / manager gives this device its till (once); from then on it sells only as that till. */
+export async function assignDeviceRegister(businessId: string, registerId: string): Promise<void> {
+  const link = await getLink()
+  if (!link || link.business_id !== businessId) throw new Error('Kjo pajisje nuk është e lidhur me biznesin')
+  const { error } = await supabase.rpc('update_device', { p: { device_id: link.device_id, register_id: registerId } })
+  if (error) throw new Error(/42501|admini ose menaxheri/i.test(`${error.code} ${error.message}`) ? 'Vetëm pronari ose menaxheri e cakton arkën' : error.message)
+  setRegisterLock(businessId, registerId)
 }
 
 /**
