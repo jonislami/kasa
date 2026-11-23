@@ -24,6 +24,8 @@ export interface PosProduct {
   color_hex?: string | null
   variant_sizes?: string[] | null
   variant_colors?: { name: string; hex: string | null }[] | null
+  /** 0050: the units it sells in (empty = every unit) */
+  unit_ids?: string[] | null
 }
 
 export interface CartLine {

@@ -29,6 +29,7 @@ import {
 } from './api'
 import { ImportDialog } from './ImportDialog'
 import { ProductForm } from './ProductForm'
+import { setProductUnits } from '@/lib/businessUnits'
 import { hasVat } from '@/lib/vat'
 
 const PAGE_SIZE = 25
@@ -104,7 +105,13 @@ export function ProductsPage() {
   }
 
   const save = useMutation({
-    mutationFn: (input: ProductInput) => saveProduct(input),
+    mutationFn: async ({ unit_ids, ...input }: ProductInput) => {
+      const id = await saveProduct(input)
+      // 0050: where it sells (only when the business has two or more units and the choice changed)
+      if (unit_ids && !(input.id === undefined && unit_ids.length === 0)) await setProductUnits(id, unit_ids)
+      void qc.invalidateQueries({ queryKey: ['product-units', id] })
+      return id
+    },
     onSuccess: () => {
       setEditing(null)
       setSaveError(null)

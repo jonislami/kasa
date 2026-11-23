@@ -60,6 +60,8 @@ export interface ProductInput {
   show_in_pos: boolean
   /** ATK category ("Kategoritë e mallrave dhe shërbimeve"); empty → by business type (0032). */
   atk_type?: string
+  /** 0050: the units it sells in (empty = every unit); saved with set_product_units, not by save_product. */
+  unit_ids?: string[]
 }
 
 export interface ImportRow {

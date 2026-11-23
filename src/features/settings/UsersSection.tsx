@@ -10,6 +10,8 @@ import { cn } from '@/lib/cn'
 import { createUser, fetchUsers, setUserPassword, setUserPin, SettingsNotMigrated, updateUser, type BusinessUser } from './api'
 import { fetchStaff, setSpecialty } from '@/features/salon/api'
 import { SqDateFormat } from '@/lib/sqDate'
+import { fetchUnitIds, setWorkerUnits, useBusinessUnits } from '@/lib/businessUnits'
+import { UnitPicker } from '@/components/UnitPicker'
 
 const dtFmt = new SqDateFormat({ timeZone: KOSOVO_TZ, day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 const WEAK = new Set(['0000', '1111', '1234', '2222', '3333', '4444', '5555', '6666', '7777', '8888', '9999', '4321'])
@@ -171,6 +173,14 @@ function UserDialog({
   const [password, setPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
+  // 0050: the units this worker works in (none = every unit); only with two or more units
+  const units = useBusinessUnits()
+  const multiUnit = (units.data?.length ?? 0) > 1
+  const savedUnits = useQuery({ queryKey: ['worker-units', user?.id], queryFn: () => fetchUnitIds('profiles', user!.id), enabled: open && multiUnit && Boolean(user) })
+  const [unitIds, setUnitIds] = useState<string[]>([])
+  useEffect(() => {
+    if (open) setUnitIds(user ? (savedUnits.data ?? []) : [])
+  }, [open, user, savedUnits.data])
 
   useEffect(() => {
     if (!open) return
@@ -198,6 +208,7 @@ function UserDialog({
       if (user) {
         await updateUser({ id: user.id, full_name: name, role, phone: phone || null, commission_pct: commissionPct })
         if (commission) await setSpecialty(user.id, specialty).catch(() => undefined)
+        if (multiUnit && unitIds.join() !== (savedUnits.data ?? []).join()) await setWorkerUnits(user.id, unitIds)
         if (newPassword) await setUserPassword(user.id, newPassword)
         return
       }
@@ -216,6 +227,7 @@ function UserDialog({
         phone: phone || undefined,
       })
       if (commission && specialty.trim()) await setSpecialty(newId, specialty).catch(() => undefined)
+      if (multiUnit && unitIds.length) await setWorkerUnits(newId, unitIds)
     },
     onSuccess: onSaved,
     onError: (e: Error) => setError(e.message),
@@ -272,6 +284,15 @@ function UserDialog({
             ? `${workerTerm}i shet në arkë dhe sheh vetëm punën e vet. Nuk ndryshon produkte, çmime apo stok.`
             : 'Menaxheri sheh gjithçka të biznesit, miraton anulimet dhe lidh pajisjet e reja me email.'}
         </p>
+        {role === 'worker' && (
+          <UnitPicker
+            label="Njësia ku punon"
+            units={units.data ?? []}
+            value={unitIds}
+            onChange={setUnitIds}
+            hint="Në arkën e një njësie, te hyrja me PIN dalin vetëm punëtorët e saj. Pronari dhe menaxherët dalin në çdo njësi."
+          />
+        )}
         {commission && (
           <Input label="Shërbimet që kryen" value={specialty} onChange={(e) => setSpecialtyText(e.target.value)} placeholder="p.sh. Flokë, ngjyrosje" hint="Shfaqet te terminet" />
         )}
