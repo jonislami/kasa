@@ -139,10 +139,19 @@ export class PinLoginError extends Error {
 }
 
 async function callPin(body: Record<string, unknown>): Promise<Record<string, unknown>> {
-  const { data, error } = await supabase.functions.invoke('pin-login', { body })
+  if (typeof navigator !== 'undefined' && !navigator.onLine) throw new PinLoginError('network', 'Nuk ka lidhje me serverin.')
+  let res
+  try {
+    res = await supabase.functions.invoke('pin-login', { body })
+  } catch {
+    throw new PinLoginError('network', 'Nuk ka lidhje me serverin.')
+  }
+  const { data, error } = res
   if (!error) return data as Record<string, unknown>
   // FunctionsHttpError carries the response; read our { error } payload from it.
-  const ctx = (error as { context?: Response }).context
+  const raw = (error as { context?: unknown }).context
+  // a fetch failure (no internet) carries an Error, not the server's Response
+  const ctx = raw instanceof Response ? raw : undefined
   let payload: Record<string, unknown> | null = null
   try {
     payload = ctx ? ((await ctx.json()) as Record<string, unknown>) : null
@@ -162,9 +171,19 @@ async function callPin(body: Record<string, unknown>): Promise<Record<string, un
   throw new PinLoginError('server', code || 'Hyrja me PIN nuk punon ende (Edge Function pin-login).')
 }
 
-export async function fetchPinWorkers(link: DeviceLink): Promise<{ business: { name: string }; workers: PinWorker[] }> {
-  const r = await callPin({ action: 'workers', device_id: link.device_id, secret: link.secret })
-  return r as unknown as { business: { name: string }; workers: PinWorker[] }
+export async function fetchPinWorkers(link: DeviceLink): Promise<{ business: { name: string }; workers: PinWorker[]; offline?: boolean }> {
+  try {
+    const r = (await callPin({ action: 'workers', device_id: link.device_id, secret: link.secret })) as unknown as { business: { name: string }; workers: PinWorker[] }
+    void saveCachedPinWorkers(r)
+    return r
+  } catch (e) {
+    // no internet: the list kept from the last time
+    if (e instanceof PinLoginError && e.code === 'network') {
+      const cached = await cachedPinWorkers()
+      if (cached) return { ...cached, offline: true }
+    }
+    throw e
+  }
 }
 
 export async function pinLogin(link: DeviceLink, userId: string, pin: string): Promise<void> {
@@ -173,4 +192,101 @@ export async function pinLogin(link: DeviceLink, userId: string, pin: string): P
   if (!s) throw new PinLoginError('server', 'Seanca nuk u krijua')
   const { error } = await supabase.auth.setSession(s)
   if (error) throw new PinLoginError('server', error.message)
+  // for signing in on this device without internet next time
+  await rememberPin(userId, pin)
+}
+
+// ---------------------------------------------------------------------------
+// Working without internet: the list of workers and a local check of the PIN
+// ---------------------------------------------------------------------------
+// After a worker signs in online with the PIN, this device keeps (encrypted, device.storage) a PBKDF2 hash of the
+// PIN – never the PIN itself – and the list of workers. Without internet the PIN is checked against that hash, with
+// the same limit as the server (5 wrong tries → 15 minutes). The hash is refreshed at every online sign-in, so a PIN
+// changed by the manager takes effect on this device at the next online sign-in; a hash older than 30 days is not used.
+const WORKERS_KEY = 'pin-workers'
+const VERIFIERS_KEY = 'pin-verifiers'
+const MAX_TRIES = 5
+const LOCK_MS = 15 * 60_000
+const VERIFIER_DAYS = 30
+const ITERATIONS = 150_000
+
+interface Verifier {
+  salt: string
+  hash: string
+  at: string
+  fails: number
+  locked_until: string | null
+}
+
+const toB64 = (b: ArrayBuffer | Uint8Array) => btoa(String.fromCharCode(...new Uint8Array(b)))
+const fromB64 = (s: string) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0))
+
+async function pbkdf2(pin: string, salt: Uint8Array, userId: string): Promise<string> {
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(`${userId}:${pin}`), 'PBKDF2', false, ['deriveBits'])
+  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: salt as BufferSource, iterations: ITERATIONS }, key, 256)
+  return toB64(bits)
+}
+
+async function verifiers(): Promise<Record<string, Verifier>> {
+  try {
+    return (await device.storage.get<Record<string, Verifier>>(VERIFIERS_KEY)) ?? {}
+  } catch {
+    return {}
+  }
+}
+
+async function saveVerifiers(v: Record<string, Verifier>): Promise<void> {
+  try {
+    await device.storage.set(VERIFIERS_KEY, v)
+  } catch {
+    /* storage unavailable – online sign-in still works */
+  }
+}
+
+/** After a successful online sign-in: the PIN hash for signing in on this device without internet. */
+export async function rememberPin(userId: string, pin: string): Promise<void> {
+  const salt = crypto.getRandomValues(new Uint8Array(16))
+  const all = await verifiers()
+  all[userId] = { salt: toB64(salt), hash: await pbkdf2(pin, salt, userId), at: new Date().toISOString(), fails: 0, locked_until: null }
+  await saveVerifiers(all)
+}
+
+/** Checks the PIN on this device (no internet). */
+export async function checkPinOffline(userId: string, pin: string): Promise<void> {
+  const all = await verifiers()
+  const v = all[userId]
+  if (!v || Date.now() - Date.parse(v.at) > VERIFIER_DAYS * 86_400_000)
+    throw new PinLoginError('network', 'Pa internet: ky punëtor nuk ka hyrë së fundi në këtë pajisje. Hyrja e parë (dhe pas 30 ditësh) kërkon internet.')
+  if (v.locked_until && Date.parse(v.locked_until) > Date.now()) throw new PinLoginError('locked', 'Shumë prova të gabuara. Provo pas 15 minutash.')
+  if ((await pbkdf2(pin, fromB64(v.salt), userId)) !== v.hash) {
+    v.fails += 1
+    const left = Math.max(0, MAX_TRIES - v.fails)
+    if (left === 0) {
+      v.locked_until = new Date(Date.now() + LOCK_MS).toISOString()
+      v.fails = 0
+    }
+    await saveVerifiers(all)
+    if (left === 0) throw new PinLoginError('locked', 'Shumë prova të gabuara. Provo pas 15 minutash.')
+    throw new PinLoginError('wrong_pin', `PIN-i është gabim. Të mbetën ${left} prova.`, left)
+  }
+  v.fails = 0
+  v.locked_until = null
+  await saveVerifiers(all)
+}
+
+/** The workers of this device's business, kept for showing the list without internet. */
+export async function cachedPinWorkers(): Promise<{ business: { name: string }; workers: PinWorker[] } | null> {
+  try {
+    return await device.storage.get<{ business: { name: string }; workers: PinWorker[] }>(WORKERS_KEY)
+  } catch {
+    return null
+  }
+}
+
+export async function saveCachedPinWorkers(r: { business: { name: string }; workers: PinWorker[] }): Promise<void> {
+  try {
+    await device.storage.set(WORKERS_KEY, r)
+  } catch {
+    /* ignore */
+  }
 }
