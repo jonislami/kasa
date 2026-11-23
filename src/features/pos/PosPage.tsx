@@ -32,8 +32,9 @@ import { fiscalizeSale } from './fiscal'
 import { formatSq } from '@/lib/sqDate'
 import { roundQty, unitDecimals } from '@/lib/units'
 import { usePrintProblem } from './PrintProblem'
-import { registerLock } from '@/lib/deviceLink'
-import { inUnit } from '@/lib/businessUnits'
+import { assignDeviceRegister, fetchDeviceRegister, registerLock } from '@/lib/deviceLink'
+import { isSefApp } from '@/lib/device'
+import { inUnit, useBusinessUnits } from '@/lib/businessUnits'
 
 
 function stockClass(p: PosProduct) {
@@ -97,8 +98,10 @@ export function PosPage() {
   const registers = useQuery({ queryKey: ['registers'], queryFn: fetchRegisters, retry: false, networkMode: 'always' })
   const receiptSettings = useQuery({ queryKey: ['receipt-settings'], queryFn: fetchReceiptSettings, retry: false, staleTime: 5 * 60_000, networkMode: 'always' })
   const [registerId, setRegisterId] = useState<string | null>(() => registerLock(business.id) ?? localStorage.getItem(`kasa.register.${business.id}`))
-  // a device activated for one till sells only as that till (its ATK key and POS ID); no choosing another one
-  const lockedRegister = registerLock(business.id)
+  // a device activated for one till sells only as that till (its ATK key and POS ID); no choosing another one.
+  // The server is asked once per visit, so a till given / taken away elsewhere is followed here.
+  const deviceRegister = useQuery({ queryKey: ['device-register', business.id], queryFn: () => fetchDeviceRegister(business.id), enabled: isSefApp, staleTime: 60_000, retry: false })
+  const lockedRegister = deviceRegister.data ?? registerLock(business.id)
   const locked = Boolean(lockedRegister && registers.data?.some((r) => r.id === lockedRegister))
   useEffect(() => {
     const list = registers.data
@@ -921,6 +924,22 @@ export function PosPage() {
     </>
   )
 
+  // A SEF device of a business with several tills that has no till yet: the owner / manager gives it one, once.
+  // Until then nobody sells on it (it would not know its ATK key, unit, workers and products).
+  if (isSefApp && deviceRegister.data === null && (registers.data?.length ?? 0) > 1) {
+    return (
+      <AssignRegister
+        registers={registers.data ?? []}
+        canAssign={canAddProduct}
+        onAssign={async (id) => {
+          await assignDeviceRegister(business.id, id)
+          setRegisterId(id)
+          await qc.invalidateQueries({ queryKey: ['device-register', business.id] })
+        }}
+      />
+    )
+  }
+
   // ================= DESKTOP =================
   if (wide) {
     return (
@@ -1308,6 +1327,65 @@ function localReceipt(
 
 
 /** A till button: the icon with its name under it (no icon-only buttons on the till). */
+function AssignRegister({ registers, canAssign, onAssign }: { registers: { id: string; name: string; unit_id?: string | null }[]; canAssign: boolean; onAssign: (id: string) => Promise<void> }) {
+  const units = useBusinessUnits()
+  const unitName = new Map((units.data ?? []).map((u) => [u.id, u.name]))
+  // "Njësia · Arka 1" also for the tills named before the units
+  const label = (r: { name: string; unit_id?: string | null }) => {
+    const u = r.unit_id ? unitName.get(r.unit_id) : null
+    return u && !r.name.startsWith(u) ? `${u} · ${r.name}` : r.name
+  }
+  const [id, setId] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  return (
+    <div className="flex min-h-[60dvh] items-center justify-center p-4">
+      <div className="w-full max-w-[480px] rounded-card border border-line bg-white p-6 shadow-card">
+        <h1 className="text-[22px] font-semibold tracking-[-0.015em]">Cakto arkën e kësaj pajisjeje</h1>
+        <p className="mt-2 text-[15px] text-muted">
+          Biznesi ka disa arka. Kjo pajisje do të shesë vetëm si arka që zgjidhet këtu: me çelësin e saj të ATK-së, në njësinë e saj, me punëtorët dhe artikujt e asaj njësie.
+        </p>
+        {canAssign ? (
+          <>
+            <div className="mt-4">
+              <Select
+                label="Arka"
+                value={id}
+                onChange={(e) => setId(e.target.value)}
+                options={[{ value: '', label: 'Zgjidh arkën' }, ...registers.map((r) => ({ value: r.id, label: label(r) }))]}
+              />
+            </div>
+            {error && <p className="mt-3 rounded-ctl bg-warn-100 px-4 py-3 text-sm text-warn-700">{error}</p>}
+            <Button
+              className="mt-4 w-full"
+              size="lg"
+              disabled={!id}
+              loading={busy}
+              onClick={async () => {
+                setBusy(true)
+                setError(null)
+                try {
+                  await onAssign(id)
+                } catch (e) {
+                  setError((e as Error).message)
+                } finally {
+                  setBusy(false)
+                }
+              }}
+            >
+              Cakto arkën
+            </Button>
+          </>
+        ) : (
+          <p className="mt-4 rounded-ctl bg-amber-100 px-4 py-3 text-[15px] text-amber-700">
+            Thirr pronarin ose menaxherin: hyn me PIN-in e vet në këtë pajisje dhe e cakton arkën njëherë.
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function ToolButton({
   icon: Icon,
   label,

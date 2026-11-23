@@ -408,7 +408,8 @@ function ActivationKeysCard({ d, onChanged }: { d: AdminDetailT; onChanged: () =
     onChanged()
   }
   const create = useMutation({
-    mutationFn: () => createActivationKey({ business: id, register: register || null, label, days: Number(days) || 30 }),
+    // every key names its till (0051): the device sells only as that till
+    mutationFn: () => createActivationKey({ business: id, register: register || d.registers.find((r) => r.active)?.id || null, label, days: Number(days) || 30 }),
     onSuccess: (r) => {
       setCreated(r)
       reload()
@@ -512,10 +513,10 @@ function ActivationKeysCard({ d, onChanged }: { d: AdminDetailT; onChanged: () =
         ) : (
           <div className="grid gap-3">
             <Select
-              label="Arka"
-              value={register}
+              label="Arka (pajisja shet vetëm si kjo arkë)"
+              value={register || d.registers.find((r) => r.active)?.id || ''}
               onChange={(e) => setRegister(e.target.value)}
-              options={[{ value: '', label: 'Pa caktuar (zgjidhet në arkë)' }, ...d.registers.filter((r) => r.active).map((r) => ({ value: r.id, label: r.name }))]}
+              options={d.registers.filter((r) => r.active).map((r) => ({ value: r.id, label: r.name }))}
             />
             <Input label="Shënim (opsional)" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="p.sh. Kompjuteri te banaku" />
             <Select
