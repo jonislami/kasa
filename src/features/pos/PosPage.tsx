@@ -33,6 +33,7 @@ import { formatSq } from '@/lib/sqDate'
 import { roundQty, unitDecimals } from '@/lib/units'
 import { usePrintProblem } from './PrintProblem'
 import { registerLock } from '@/lib/deviceLink'
+import { inUnit } from '@/lib/businessUnits'
 
 
 function stockClass(p: PosProduct) {
@@ -90,7 +91,7 @@ export function PosPage() {
   const [bookOpen, setBookOpen] = useState(false)
   // the book was opened from the payment window: go back to it afterwards
   const [bookFromPay, setBookFromPay] = useState(false)
-  const products = useMemo(() => catalog.data?.products ?? [], [catalog.data])
+  const allProducts = useMemo(() => catalog.data?.products ?? [], [catalog.data])
   const categories = catalog.data?.categories ?? []
 
   const registers = useQuery({ queryKey: ['registers'], queryFn: fetchRegisters, retry: false, networkMode: 'always' })
@@ -108,6 +109,9 @@ export function PosPage() {
     if (registerId) localStorage.setItem(`kasa.register.${business.id}`, registerId)
   }, [registerId, business.id])
   const registerName = registers.data?.find((r) => r.id === registerId)?.name ?? null
+  // 0050: the till of a unit shows only what sells in that unit (a product with no unit sells everywhere)
+  const registerUnit = registers.data?.find((r) => r.id === registerId)?.unit_id ?? null
+  const products = useMemo(() => (registerUnit ? allProducts.filter((p) => inUnit(p.unit_ids, registerUnit)) : allProducts), [allProducts, registerUnit])
   // Fiscal data of this register, cached on the device so offline sales can be signed too.
   useQuery({ queryKey: ['fiscal-context', registerId], queryFn: () => fetchFiscalContext(registerId), enabled: Boolean(registerId), staleTime: 5 * 60_000, retry: false })
 

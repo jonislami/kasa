@@ -6,8 +6,9 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { BarChart3, FileSpreadsheet, Search } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
 import { downloadSalesBook, salesBookKind } from './salesBook'
+import { useBusinessUnits } from '@/lib/businessUnits'
 import { PageHeader } from '@/app/layout/AppLayout'
-import { Badge, Button, Card, Dialog, EmptyState, Input, StatCard, Table, Tabs, Td, Th } from '@/components/ui'
+import { Badge, Button, Card, Dialog, EmptyState, Input, Select, StatCard, Table, Tabs, Td, Th } from '@/components/ui'
 import { ROLE_LABELS } from '@/lib/business'
 import { cn } from '@/lib/cn'
 import { formatEUR, formatInvoiceNo } from '@/lib/money'
@@ -41,8 +42,11 @@ export function ReportsPage() {
   const [customOpen, setCustomOpen] = useState(false)
   const range = periodRange(period, custom)
 
-  const report = useQuery({ queryKey: ['report', range.from, range.to], queryFn: () => fetchReport(range.from, range.to) })
-  const invoices = useQuery({ queryKey: ['invoices', range.from, range.to], queryFn: () => fetchInvoices(range.from, range.to) })
+  // 0050: one unit or all (only with two or more units)
+  const units = useBusinessUnits()
+  const [unit, setUnit] = useState('')
+  const report = useQuery({ queryKey: ['report', range.from, range.to, unit], queryFn: () => fetchReport(range.from, range.to, unit || null) })
+  const invoices = useQuery({ queryKey: ['invoices', range.from, range.to, unit], queryFn: () => fetchInvoices(range.from, range.to, 500, unit || null) })
   const people = useQuery({ queryKey: ['people'], queryFn: fetchPeople, staleTime: 5 * 60_000 })
 
   const r = report.data
@@ -113,6 +117,15 @@ export function ReportsPage() {
         title="Raportet"
         actions={
           <div className="flex flex-wrap gap-2">
+            {(units.data?.length ?? 0) > 1 && (
+              <Select
+                aria-label="Njësia"
+                value={unit}
+                onChange={(e) => setUnit(e.target.value)}
+                className="h-[44px] w-auto"
+                options={[{ value: '', label: 'Të gjitha njësitë' }, ...(units.data ?? []).map((u) => ({ value: u.id, label: u.name }))]}
+              />
+            )}
             <Tabs
               value={period}
               onChange={(v) => {

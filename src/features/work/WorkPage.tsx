@@ -26,6 +26,7 @@ import { MyWork } from '@/features/reports/MyWork'
 import { ShiftCard } from '@/features/reports/ShiftCard'
 import { CommissionReport } from '@/features/salon/CommissionReport'
 import { SqDateFormat } from '@/lib/sqDate'
+import { useBusinessUnits } from '@/lib/businessUnits'
 
 const timeFmt = new SqDateFormat({ timeZone: KOSOVO_TZ, hour: '2-digit', minute: '2-digit' })
 const dayTimeFmt = new SqDateFormat({ timeZone: KOSOVO_TZ, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
@@ -64,11 +65,14 @@ export function WorkPage() {
 function ManagerWork({ workerTerm, commission }: { workerTerm: string; commission: boolean }) {
   const [period, setPeriod] = useState<PeriodKey>('today')
   const range = periodRange(period)
-  const comparison = useQuery({ queryKey: ['work', 'comparison', range.from, range.to], queryFn: () => fetchComparison(range.from, range.to) })
+  // 0050: one unit or all (only with two or more units)
+  const units = useBusinessUnits()
+  const [unit, setUnit] = useState('')
+  const comparison = useQuery({ queryKey: ['work', 'comparison', range.from, range.to, unit], queryFn: () => fetchComparison(range.from, range.to, unit || null) })
   const rows = comparison.data ?? []
   const [selected, setSelected] = useState<string | null>(null)
   useEffect(() => {
-    if (!selected && rows.length) setSelected(rows[0].worker_id)
+    if ((!selected || !rows.some((r) => r.worker_id === selected)) && rows.length) setSelected(rows[0].worker_id)
   }, [rows, selected])
 
   const work = useQuery({
@@ -106,7 +110,16 @@ function ManagerWork({ workerTerm, commission }: { workerTerm: string; commissio
         eyebrow={<span className="md:hidden">{formatRange(range.from, range.to)}</span>}
         title="Puna e punëtorëve"
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {(units.data?.length ?? 0) > 1 && (
+              <Select
+                aria-label="Njësia"
+                value={unit}
+                onChange={(e) => setUnit(e.target.value)}
+                className="h-11 w-auto"
+                options={[{ value: '', label: 'Të gjitha njësitë' }, ...(units.data ?? []).map((u) => ({ value: u.id, label: u.name }))]}
+              />
+            )}
             <span className="hidden text-sm text-muted md:inline">Periudha</span>
             <Select
               aria-label="Periudha"

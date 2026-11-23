@@ -304,11 +304,16 @@ export async function fetchTodaySales(date: string): Promise<SaleRow[]> {
 const POS_COLS = 'id, kind, name, barcode, category_id, unit, sale_price, vat_code, stock, min_stock, substance, duration_min'
 const POS_VARIANT_COLS = ', parent_id, has_variants, variant_size, variant_color, color_hex, variant_sizes, variant_colors'
 let posVariants = true // false once the database answers that migration 0009 is missing
+let posUnits = true // false once the database answers that migration 0050 (products.unit_ids) is missing
 
 export async function fetchPosProducts(): Promise<PosProduct[]> {
   try {
-    return await fetchPosProductsWith(posVariants ? POS_COLS + POS_VARIANT_COLS : POS_COLS)
+    return await fetchPosProductsWith((posVariants ? POS_COLS + POS_VARIANT_COLS : POS_COLS) + (posUnits ? ', unit_ids' : ''))
   } catch (e) {
+    if (posUnits && /unit_ids/i.test((e as Error).message)) {
+      posUnits = false
+      return fetchPosProducts()
+    }
     if (posVariants && /variant|parent_id|has_variants|color_hex/i.test((e as Error).message)) {
       posVariants = false
       return fetchPosProductsWith(POS_COLS)
@@ -344,12 +349,14 @@ async function fetchPosProductsWith(cols: string): Promise<PosProduct[]> {
 export interface Register {
   id: string
   name: string
+  /** the unit (point of sale) of the till (0041) */
+  unit_id?: string | null
 }
 
 /** Active registers; the last list is kept on the device so the till shows its name offline. */
 export async function fetchRegisters(): Promise<Register[]> {
   try {
-    const { data, error } = await supabase.from('registers').select('id, name').eq('active', true).order('name')
+    const { data, error } = await supabase.from('registers').select('id, name, unit_id').eq('active', true).order('name')
     if (error) throw new Error(error.message)
     try {
       localStorage.setItem('kasa.registers', JSON.stringify(data ?? []))

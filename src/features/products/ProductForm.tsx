@@ -7,6 +7,9 @@ import { cn } from '@/lib/cn'
 import { UNIT_OPTIONS, type UnitCode } from '@/lib/units'
 import { VAT_LABELS, type VatCode } from '@/lib/vat'
 import { categoryOptions, DEFAULT_CATEGORY } from '@/lib/atk/catalog'
+import { useQuery } from '@tanstack/react-query'
+import { fetchUnitIds, useBusinessUnits } from '@/lib/businessUnits'
+import { UnitPicker } from '@/components/UnitPicker'
 import { margin, nextInternalBarcode, type Category, type Product, type ProductInput, type ProductKind } from './api'
 
 const VAT_OPTIONS = (Object.keys(VAT_LABELS) as VatCode[]).map((v) => ({ value: v, label: VAT_LABELS[v] }))
@@ -84,6 +87,15 @@ export function ProductForm({
   const [d, setD] = useState<Draft>(() => toDraft(product, type, defaultCategoryId))
   const [localError, setLocalError] = useState<string | null>(null)
   const [genBusy, setGenBusy] = useState(false)
+  // 0050: the units it sells in (none = every unit); only with two or more units
+  const units = useBusinessUnits()
+  const multiUnit = (units.data?.length ?? 0) > 1
+  const savedUnits = useQuery({ queryKey: ['product-units', product?.id], queryFn: () => fetchUnitIds('products', product!.id), enabled: multiUnit && Boolean(product) })
+  const [unitIds, setUnitIds] = useState<string[]>([])
+  useEffect(() => {
+    setUnitIds(product ? (savedUnits.data ?? []) : [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product?.id, savedUnits.data])
 
   useEffect(() => {
     setD(toDraft(product, type, defaultCategoryId))
@@ -145,6 +157,7 @@ export function ProductForm({
       substance: type === 'pharmacy' ? d.substance.trim() || null : null,
       show_in_pos: d.show_in_pos,
       atk_type: d.atk,
+      unit_ids: multiUnit && (!product || unitIds.join() !== (savedUnits.data ?? []).join()) ? unitIds : undefined,
     })
   }
 
@@ -292,6 +305,14 @@ export function ProductForm({
         <input type="checkbox" className="h-5 w-5 accent-brand-600" checked={d.show_in_pos} onChange={(e) => set('show_in_pos', e.target.checked)} />
         Shfaq në arkë (POS)
       </label>
+
+      <UnitPicker
+        label="Shitet në"
+        units={units.data ?? []}
+        value={unitIds}
+        onChange={setUnitIds}
+        hint="Arka e një njësie shfaq vetëm artikujt që shiten aty. Çmimi është i njëjtë në çdo njësi."
+      />
 
       {shownError && <p className="rounded-ctl bg-warn-100 px-4 py-3 text-sm text-warn-700">{shownError}</p>}
 
