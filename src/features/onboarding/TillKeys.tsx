@@ -1,29 +1,20 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, KeyRound, MonitorSmartphone, Plus } from 'lucide-react'
+import { KeyRound, MonitorSmartphone, Plus } from 'lucide-react'
 import { Badge, Button, Card, Dialog, Input, Select } from '@/components/ui'
 import { useBusinessUnits } from '@/lib/businessUnits'
 import { formatKosovoDateTime } from '@/lib/clock'
-import { APP_STATUS, createOwnerKey, fetchOnboarding, fetchOwnerRegisters, OwnerKeysNotMigrated, submitRegisterApplication, type OwnerRegister } from './api'
+import { APP_STATUS, fetchOnboarding, fetchOwnerRegisters, OwnerKeysNotMigrated, submitRegisterApplication } from './api'
 
 const day = (d: string | null | undefined) => (d ? d.slice(0, 10).split('-').reverse().join('.') : '')
 
 /**
- * The owner's tills with the activation key of each (0036): "Merr çelësin" shows a one-time key for the installed
- * program; a new key cancels the unused earlier one of that till.
+ * The owner's tills and the device linked to each. The activation key of a device is made by the KontoSef
+ * administrator only (0054); an extra till is asked for here.
  */
 export function TillKeysCard({ className }: { className?: string }) {
   const qc = useQueryClient()
   const regs = useQuery({ queryKey: ['owner-registers'], queryFn: fetchOwnerRegisters, retry: false })
-  const [shown, setShown] = useState<{ register: string; key: string; expires: string } | null>(null)
-  const refresh = () => void qc.invalidateQueries({ queryKey: ['owner-registers'] })
-  const key = useMutation({
-    mutationFn: async (r: OwnerRegister) => ({ r, k: await createOwnerKey(r.id) }),
-    onSuccess: ({ r, k }) => {
-      setShown({ register: r.name, key: k.key, expires: k.expires_at })
-      refresh()
-    },
-  })
   // an extra till is asked for (in a unit) and activated by the KontoSef administrator: it is paid per till
   const [asking, setAsking] = useState(false)
   const onboarding = useQuery({ queryKey: ['onboarding'], queryFn: fetchOnboarding, staleTime: 30_000 })
@@ -41,7 +32,7 @@ export function TillKeysCard({ className }: { className?: string }) {
           </div>
           <div>
             <h2 className="text-[19px] font-semibold tracking-[-0.015em]">Arkat dhe çelësat</h2>
-            <p className="text-sm text-muted">Instalo KontoSef në pajisjen e arkës dhe shkruaj çelësin njëherë. Një çelës vlen për një pajisje.</p>
+            <p className="text-sm text-muted">Instalo KontoSef në pajisjen e arkës dhe shkruaj çelësin e aktivizimit që ta jep administratori i KontoSef. Një çelës vlen për një pajisje.</p>
           </div>
         </div>
         <Button variant="secondary" onClick={() => setAsking(true)}>
@@ -67,10 +58,7 @@ export function TillKeysCard({ className }: { className?: string }) {
                       : 'Ende pa pajisje'}
                 </div>
               </div>
-              {r.device && <Badge tone="success">E lidhur</Badge>}
-              <Button size="sm" variant={r.device ? 'secondary' : 'primary'} loading={key.isPending && key.variables?.id === r.id} onClick={() => key.mutate(r)}>
-                <KeyRound className="h-4 w-4" /> {r.device || r.key_hint ? 'Çelës i ri' : 'Merr çelësin'}
-              </Button>
+              {r.device ? <Badge tone="success">E lidhur</Badge> : <Badge tone="neutral">Pa pajisje</Badge>}
             </li>
           ))}
         </ul>
@@ -86,7 +74,6 @@ export function TillKeysCard({ className }: { className?: string }) {
           ))}
         </ul>
       )}
-      {key.error && <p className="mt-3 text-sm text-warn-700">{(key.error as Error).message}</p>}
       <AskTillDialog
         open={asking}
         onClose={() => setAsking(false)}
@@ -95,50 +82,7 @@ export function TillKeysCard({ className }: { className?: string }) {
           void qc.invalidateQueries({ queryKey: ['onboarding'] })
         }}
       />
-      <KeyDialog data={shown} onClose={() => setShown(null)} />
     </Card>
-  )
-}
-
-function KeyDialog({ data, onClose }: { data: { register: string; key: string; expires: string } | null; onClose: () => void }) {
-  const [copied, setCopied] = useState(false)
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(data!.key)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
-    } catch {
-      /* the key stays on screen to copy by hand */
-    }
-  }
-  return (
-    <Dialog
-      open={Boolean(data)}
-      onClose={onClose}
-      dismissable={false}
-      title={`Çelësi për ${data?.register ?? ''}`}
-      width="md:max-w-[480px]"
-      footer={
-        <div className="flex justify-end">
-          <Button onClick={onClose}>Mbyll</Button>
-        </div>
-      }
-    >
-      <div className="flex items-center gap-2 rounded-xl border border-brand-600 bg-[#F2F6FC] py-2 pl-4 pr-2">
-        <span className="min-w-0 flex-1 select-all break-all font-mono text-[22px] font-semibold tracking-[-0.015em] tracking-wide">{data?.key}</span>
-        <Button size="sm" variant="secondary" onClick={() => void copy()}>
-          {copied ? <Check className="h-4 w-4 text-brand-600" /> : 'Kopjo'}
-        </Button>
-      </div>
-      <ol className="mt-4 list-decimal space-y-1 pl-5 text-[15px]">
-        <li>Shkarko dhe instalo KontoSef në pajisjen e arkës.</li>
-        <li>Hape programin dhe shkruaj këtë çelës.</li>
-        <li>Punëtorët hyjnë me PIN-in e tyre.</li>
-      </ol>
-      <p className="mt-4 rounded-ctl bg-warn-100 px-4 py-3 text-sm text-warn-700">
-        Çelësi shfaqet vetëm tani dhe vlen deri më {day(data?.expires)}. Nëse humbet, merr një të ri – i vjetri nuk vlen më.
-      </p>
-    </Dialog>
   )
 }
 

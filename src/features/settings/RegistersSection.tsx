@@ -131,11 +131,7 @@ function RegisterDialog({ reg, onClose, onSaved }: { reg: Register | 'new' | nul
       width="md:max-w-[420px]"
       footer={
         <div className="flex justify-end gap-2.5">
-          {r && (
-            <Button variant={r.active ? 'danger' : 'secondary'} className="mr-auto" onClick={() => save.mutate(!r.active)}>
-              {r.active ? 'Çaktivizo' : 'Aktivizo'}
-            </Button>
-          )}
+          {/* activating / deactivating a till is done by the KontoSef administrator only (0054) */}
           <Button variant="secondary" onClick={onClose}>
             Anulo
           </Button>
