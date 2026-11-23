@@ -66,8 +66,10 @@ export function PosPage() {
         void saveCatalog(business.id, products, categories)
         return { products: products.map((p) => ({ ...p, vat_code: saleVatCode(p.vat_code, vat) })), categories, offline: false }
       } catch (e) {
+        // no internet (or no session yet while working offline): the copy kept on this device
         const local = await loadCatalog(business.id)
-        if (local && e instanceof NetworkError)
+        const offline = e instanceof NetworkError || (typeof navigator !== 'undefined' && !navigator.onLine) || /lidhje|internet|fetch|network|JWT|session/i.test((e as Error)?.message ?? '')
+        if (local && offline)
           return { products: local.products.map((p) => ({ ...p, vat_code: saleVatCode(p.vat_code, vat) })), categories: local.categories, offline: true }
         throw e
       }

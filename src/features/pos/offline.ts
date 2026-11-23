@@ -1,6 +1,7 @@
 import { useEffect, useSyncExternalStore } from 'react'
 import { onlineManager } from '@tanstack/react-query'
 import { device } from '@/lib/device'
+import { supabase } from '@/lib/supabase'
 import { attachSaleId, flushFiscal } from '@/lib/fiscal'
 import { repairDuplicateCoupons } from './fiscal'
 import { serverDate } from '@/lib/clock'
@@ -69,6 +70,12 @@ export function syncQueue(onSent?: (s: Sale) => void): Promise<void> {
     set({ syncing: true })
     try {
       await loadPending()
+      // signed in without internet (no session yet): the sales wait for the real session, so they are not refused
+      // or written under someone else
+      if (state.pending.some((p) => !p.rejected)) {
+        const { data } = await supabase.auth.getSession()
+        if (!data.session) return
+      }
       for (const q of state.pending) {
         if (q.rejected) continue
         try {

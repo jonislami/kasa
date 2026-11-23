@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { ChevronLeft, Delete, KeyRound, Lock } from 'lucide-react'
+import { ChevronLeft, Delete, KeyRound, Lock, WifiOff } from 'lucide-react'
+import { useAuth } from '@/app/AuthProvider'
 import { Button } from '@/components/ui'
 import { cn } from '@/lib/cn'
-import { activateWithKey, clearLink, fetchPinWorkers, getLink, pinLogin, PinLoginError, type DeviceLink, type PinWorker } from '@/lib/deviceLink'
+import { activateWithKey, checkPinOffline, clearLink, fetchPinWorkers, getLink, pinLogin, PinLoginError, type DeviceLink, type PinWorker } from '@/lib/deviceLink'
 
 const COLORS = ['bg-brand-600', 'bg-[#475467]', 'bg-[#A16207]', 'bg-[#7C3AED]', 'bg-[#BE123C]', 'bg-[#0F766E]']
 const initials = (n: string) =>
@@ -25,6 +26,9 @@ export function PinLogin() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [relink, setRelink] = useState(false)
+  // no internet: the list kept on this device, the PIN checked here
+  const [offline, setOffline] = useState(false)
+  const { signInOffline } = useAuth()
 
   useEffect(() => {
     void getLink().then(setLink)
@@ -36,6 +40,7 @@ export function PinLogin() {
       .then((r) => {
         setWorkers(r.workers.filter((w) => w.has_pin))
         setBusiness(r.business.name)
+        setOffline(Boolean(r.offline))
       })
       .catch((e: Error) => {
         if (e instanceof PinLoginError && e.code === 'device') {
@@ -53,8 +58,16 @@ export function PinLogin() {
       setBusy(true)
       setError(null)
       try {
-        await pinLogin(link, selected.id, code)
-        // AuthProvider picks up the new session and LoginPage redirects.
+        try {
+          await pinLogin(link, selected.id, code)
+          // AuthProvider picks up the new session and LoginPage redirects.
+        } catch (e) {
+          if (!(e instanceof PinLoginError && e.code === 'network')) throw e
+          // no internet: the PIN is checked on this device; the sales wait and go out when the internet is back
+          await checkPinOffline(selected.id, code)
+          setOffline(true)
+          signInOffline(selected.id, code)
+        }
       } catch (e) {
         setPin('')
         if (e instanceof PinLoginError && e.code === 'device') {
@@ -67,7 +80,7 @@ export function PinLogin() {
         setBusy(false)
       }
     },
-    [link, selected, busy],
+    [link, selected, busy, signInOffline],
   )
 
   const press = useCallback(
@@ -117,6 +130,12 @@ export function PinLogin() {
   if (!selected) {
     return (
       <div className="mt-6">
+        {offline && (
+          <p className="mb-3 flex items-start gap-2 rounded-ctl bg-amber-100 px-4 py-3 text-sm text-amber-700">
+            <WifiOff className="mt-0.5 h-4 w-4 shrink-0" />
+            Pa internet – hyrja me PIN punon për punëtorët që kanë hyrë më parë në këtë pajisje. Shitjet ruhen dhe dërgohen kur të kthehet interneti.
+          </p>
+        )}
         <p className="mb-3 text-sm text-muted">{business ? `${business} · ` : ''}Zgjidh emrin tënd</p>
         {workers === null && !error ? (
           <p className="py-8 text-center text-muted">Duke ngarkuar…</p>

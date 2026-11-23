@@ -5,6 +5,7 @@ import type { Session } from '@supabase/supabase-js'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, supabaseConfigured } from '@/lib/supabase'
 import { cacheOwnerChanged, forgetCache } from '@/lib/queryPersist'
+import { getLink, pinLogin } from '@/lib/deviceLink'
 import type { BusinessType, Role } from '@/lib/business'
 
 export interface Profile {
@@ -72,6 +73,8 @@ interface AuthValue {
   ctx: SessionContext | null
   error: string | null
   signIn: (email: string, password: string, remember: boolean) => Promise<string | null>
+  /** SEF app without internet: a worker whose PIN was checked on this device works with the last known data. */
+  signInOffline: (userId: string, pin: string) => void
   signOut: () => Promise<void>
   refresh: () => void
 }
@@ -82,16 +85,41 @@ const AuthContext = createContext<AuthValue | null>(null)
 const NO_REMEMBER_KEY = 'kasa.noRemember'
 const ALIVE_KEY = 'kasa.alive'
 
+/** The session kept by supabase-js in localStorage (also when its access token expired while there was no internet). */
+function storedSession(): Session | null {
+  try {
+    const key = (supabase.auth as unknown as { storageKey?: string }).storageKey
+    const raw = key ? localStorage.getItem(key) : null
+    const s = raw ? (JSON.parse(raw) as Session) : null
+    return s?.access_token && s.refresh_token && s.user?.id ? s : null
+  } catch {
+    return null
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [sessionLoaded, setSessionLoaded] = useState(!supabaseConfigured)
+  // SEF app without internet: the worker signed in with the PIN checked on this device (the PIN stays only in
+  // memory, to get a real session as soon as the internet is back)
+  const [offlineUser, setOfflineUser] = useState<{ userId: string; pin: string } | null>(null)
   const queryClient = useQueryClient()
 
   useEffect(() => {
     if (!supabaseConfigured) return
     let cancelled = false
     ;(async () => {
-      const { data } = await supabase.auth.getSession()
+      const { data, error } = await supabase.auth.getSession()
+      // Opened without internet after the access token expired: supabase-js cannot refresh it, but the session is
+      // still in storage – work with it; it is refreshed when the internet is back.
+      if (!data.session && error && isNetworkError(error)) {
+        const kept = storedSession()
+        if (kept && !cancelled) {
+          setSession(kept)
+          setSessionLoaded(true)
+          return
+        }
+      }
       // (not on /fjalekalimi: there the session comes from the password link and must stay)
       if (data.session && localStorage.getItem(NO_REMEMBER_KEY) && !sessionStorage.getItem(ALIVE_KEY) && window.location.pathname !== '/fjalekalimi') {
         await supabase.auth.signOut({ scope: 'local' })
@@ -109,7 +137,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const userId = session?.user.id
+  const userId = session?.user.id ?? offlineUser?.userId
+
+  // Back online: an expired session kept offline is refreshed, an offline PIN sign-in becomes a real session.
+  useEffect(() => {
+    const onOnline = async () => {
+      if (offlineUser) {
+        const link = await getLink()
+        if (!link) return
+        try {
+          await pinLogin(link, offlineUser.userId, offlineUser.pin)
+          setOfflineUser(null)
+          void queryClient.invalidateQueries({ queryKey: ['session-context'] })
+        } catch (e) {
+          // the PIN was changed or the worker removed meanwhile: back to the sign-in screen
+          if (!isNetworkError(e) && !/lidhje/i.test((e as Error).message)) setOfflineUser(null)
+        }
+        return
+      }
+      const { data } = await supabase.auth.getSession()
+      if (data.session) setSession(data.session)
+    }
+    window.addEventListener('online', onOnline)
+    const t = window.setInterval(() => navigator.onLine && void onOnline(), 60_000)
+    return () => {
+      window.removeEventListener('online', onOnline)
+      window.clearInterval(t)
+    }
+  }, [offlineUser, queryClient])
 
   // Another person signed in on this device: drop the previous person's cached screens.
   useEffect(() => {
@@ -127,6 +182,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refetchInterval: 30 * 60_000,
     retry: (count, e) => !isNetworkError(e) && count < 1,
     queryFn: async () => {
+      // offline PIN sign-in (no session yet): only the context kept on this device
+      if (!session) {
+        const cached = localStorage.getItem(ctxKey(userId!))
+        if (cached) return { ...(JSON.parse(cached) as SessionContext), offline: true }
+        throw new Error('Pa internet: të dhënat e këtij punëtori nuk janë në këtë pajisje. Hyrja e parë kërkon internet.')
+      }
       try {
         const { data, error } = await supabase.rpc('my_context')
         if (error) throw error
@@ -183,9 +244,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return null
   }, [])
 
+  const signInOffline = useCallback((uid: string, pin: string) => {
+    setOfflineUser({ userId: uid, pin })
+  }, [])
+
   const signOut = useCallback(async () => {
+    setOfflineUser(null)
+    // the SEF app keeps the worker's last context: it is what lets the worker sign in again without internet
     try {
-      if (session?.user.id) localStorage.removeItem(ctxKey(session.user.id))
+      if (session?.user.id && !isSefApp) localStorage.removeItem(ctxKey(session.user.id))
     } catch {
       /* storage unavailable */
     }
@@ -202,7 +269,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthValue>(() => {
     let status: Status
     if (!sessionLoaded) status = 'loading'
-    else if (!session) status = 'anonymous'
+    else if (!session && !offlineUser) status = 'anonymous'
     else if (ctxQuery.isError) status = 'error'
     else if (!ctxQuery.data) status = 'loading'
     else status = 'ready'
@@ -217,10 +284,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ctx,
       error: ctxQuery.error ? (ctxQuery.error as Error).message : null,
       signIn,
+      signInOffline,
       signOut,
       refresh,
     }
-  }, [sessionLoaded, session, ctxQuery.data, ctxQuery.isError, ctxQuery.error, signIn, signOut, refresh])
+  }, [sessionLoaded, session, offlineUser, ctxQuery.data, ctxQuery.isError, ctxQuery.error, signIn, signInOffline, signOut, refresh])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
