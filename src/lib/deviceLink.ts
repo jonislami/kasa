@@ -163,7 +163,7 @@ export interface PinWorker {
 
 export class PinLoginError extends Error {
   constructor(
-    public code: 'device' | 'wrong_pin' | 'locked' | 'no_pin' | 'not_found' | 'server' | 'network',
+    public code: 'device' | 'wrong_pin' | 'locked' | 'no_pin' | 'not_found' | 'no_access' | 'server' | 'network',
     message: string,
     public left?: number,
   ) {
@@ -200,6 +200,7 @@ async function callPin(body: Record<string, unknown>): Promise<Record<string, un
   if (code === 'locked') throw new PinLoginError('locked', 'Shumë prova të gabuara. Provo pas 15 minutash ose kërko PIN të ri nga menaxheri.')
   if (code === 'no_pin') throw new PinLoginError('no_pin', 'Ky punëtor nuk ka PIN. Menaxheri e vendos te Cilësimet → Përdoruesit.')
   if (code === 'not_found') throw new PinLoginError('not_found', 'Punëtori nuk u gjet ose është çaktivizuar.')
+  if (code === 'no_access') throw new PinLoginError('no_access', 'Nuk ke qasje në këtë arkë. Pronari ose menaxheri ta jep te Cilësimet → Arkat → Punëtorët.')
   if (!ctx) throw new PinLoginError('network', 'Nuk ka lidhje me serverin.')
   throw new PinLoginError('server', code || 'Hyrja me PIN nuk punon ende (Edge Function pin-login).')
 }

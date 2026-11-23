@@ -7,6 +7,7 @@ import { BarChart3, FileSpreadsheet, Search } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
 import { downloadSalesBook, salesBookKind } from './salesBook'
 import { useBusinessUnits } from '@/lib/businessUnits'
+import { fetchRegisters } from '@/features/pos/api'
 import { PageHeader } from '@/app/layout/AppLayout'
 import { Badge, Button, Card, Dialog, EmptyState, Input, Select, StatCard, Table, Tabs, Td, Th } from '@/components/ui'
 import { ROLE_LABELS } from '@/lib/business'
@@ -45,8 +46,12 @@ export function ReportsPage() {
   // 0050: one unit or all (only with two or more units)
   const units = useBusinessUnits()
   const [unit, setUnit] = useState('')
-  const report = useQuery({ queryKey: ['report', range.from, range.to, unit], queryFn: () => fetchReport(range.from, range.to, unit || null) })
-  const invoices = useQuery({ queryKey: ['invoices', range.from, range.to, unit], queryFn: () => fetchInvoices(range.from, range.to, 500, unit || null) })
+  // 0052: one till – its total and how much every worker sold on it
+  const tills = useQuery({ queryKey: ['registers'], queryFn: fetchRegisters, staleTime: 5 * 60_000 })
+  const [till, setTill] = useState('')
+  const tillOptions = (tills.data ?? []).filter((r) => !unit || r.unit_id === unit)
+  const report = useQuery({ queryKey: ['report', range.from, range.to, unit, till], queryFn: () => fetchReport(range.from, range.to, unit || null, till || null) })
+  const invoices = useQuery({ queryKey: ['invoices', range.from, range.to, unit, till], queryFn: () => fetchInvoices(range.from, range.to, 500, unit || null, till || null) })
   const people = useQuery({ queryKey: ['people'], queryFn: fetchPeople, staleTime: 5 * 60_000 })
 
   const r = report.data
@@ -121,9 +126,21 @@ export function ReportsPage() {
               <Select
                 aria-label="Njësia"
                 value={unit}
-                onChange={(e) => setUnit(e.target.value)}
+                onChange={(e) => {
+                  setUnit(e.target.value)
+                  setTill('')
+                }}
                 className="h-[44px] w-auto"
                 options={[{ value: '', label: 'Të gjitha njësitë' }, ...(units.data ?? []).map((u) => ({ value: u.id, label: u.name }))]}
+              />
+            )}
+            {(tills.data?.length ?? 0) > 1 && (
+              <Select
+                aria-label="Arka"
+                value={till}
+                onChange={(e) => setTill(e.target.value)}
+                className="h-[44px] w-auto"
+                options={[{ value: '', label: 'Të gjitha arkat' }, ...tillOptions.map((r) => ({ value: r.id, label: r.name }))]}
               />
             )}
             <Tabs

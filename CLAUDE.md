@@ -82,6 +82,10 @@ ATK kërkon që SEF të instalohet në pajisje, ta mbajë çelësin privat të s
   si skedari origjinal i ATK-së (`public/atk/*.xlsx`) i mbushur me të dhëna (`atkXlsx.ts`), me/jo TVSH sipas biznesit
   (kontroll: `scripts/books-preview.ts`); HR: punonjësit, historiku, vijueshmëria, pushimet, kontrata/vendimi/raporti.
 - Çdo shitje, rresht fature, termin dhe veprim ruan `worker_id`, që admini ta shohë punën për punëtor.
+- **Arkat (0051–0052):** biznesi paguan për çdo arkë të lidhur me ATK-në (licenca = numri i arkave). Me aprovim krijohet
+  një arkë për njësi; arka shtesë kërkohet nga pronari për një njësi dhe e aktivizon admini i platformës. Çdo pajisje SEF
+  i takon një arke (pa arkë nuk shet). Qasja e punëtorëve caktohet për arkë (`registers.workers_restricted` +
+  `register_workers`); pronari/menaxheri hyjnë në çdo arkë. Disa punëtorë në një arkë, secili me PIN-in e vet.
 - Punëtorët hyjnë me **PIN 4-shifror** (Edge Function `pin-login`, bcrypt, bllokim pas 5 gabimeve). Pajisja lidhet
   me biznesin kur menaxheri hyn njëherë me email.
 

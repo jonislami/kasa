@@ -152,9 +152,11 @@ function numObj<T>(o: Record<string, unknown>, skip: string[] = []): T {
   return out as T
 }
 
-export async function fetchReport(from: string, to: string, unit?: string | null): Promise<ReportSummary> {
-  // 0050: one unit (report_summary with p_unit); without a unit the two-argument function, as before
-  const { data, error } = await supabase.rpc('report_summary', unit ? { p_from: from, p_to: to, p_unit: unit } : { p_from: from, p_to: to })
+export async function fetchReport(from: string, to: string, unit?: string | null, register?: string | null): Promise<ReportSummary> {
+  // 0050: one unit (report_summary with p_unit); 0052: one till (p_register) – its total and every worker on it;
+  // without either the two-argument function, as before
+  const args = register ? { p_from: from, p_to: to, p_unit: unit ?? null, p_register: register } : unit ? { p_from: from, p_to: to, p_unit: unit } : { p_from: from, p_to: to }
+  const { data, error } = await supabase.rpc('report_summary', args)
   if (error) fail(error)
   const r = data as Record<string, unknown>
   const arr = (k: string, skip: string[] = []) => ((r[k] as Record<string, unknown>[]) ?? []).map((x) => numObj(x, skip))
@@ -316,14 +318,15 @@ export interface InvoiceRow {
   fiscal_status: string
 }
 
-export async function fetchInvoices(from: string, to: string, limit = 500, unit?: string | null): Promise<InvoiceRow[]> {
+export async function fetchInvoices(from: string, to: string, limit = 500, unit?: string | null, register?: string | null): Promise<InvoiceRow[]> {
   let q = supabase
     .from('sales')
     .select('id, kind, invoice_no, ref_sale_id, created_at, worker_id, payment_method, items_count, total, offline, fiscal_status')
     .gte('sale_date', from)
     .lte('sale_date', to)
-  // one unit: the coupons of its tills
-  if (unit) {
+  // one till, or one unit: the coupons of its tills
+  if (register) q = q.eq('register_id', register)
+  else if (unit) {
     const regs = await supabase.from('registers').select('id').eq('unit_id', unit)
     if (regs.error) fail(regs.error)
     const ids = (regs.data ?? []).map((r) => r.id as string)
