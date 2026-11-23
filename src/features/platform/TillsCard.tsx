@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { MonitorSmartphone, Plus, Users } from 'lucide-react'
-import { Badge, Button, Card } from '@/components/ui'
+import { MonitorSmartphone, Plus, Trash2, Users } from 'lucide-react'
+import { Badge, Button, Card, Dialog } from '@/components/ui'
 import { RegisterAccessDialog } from '@/components/RegisterAccessDialog'
-import { addPlatformRegister, fetchPlatformTills } from './onboardingApi'
+import { addPlatformRegister, fetchPlatformTills, removePlatformRegister } from './onboardingApi'
 
 /**
  * The units of a business with their tills (0052). The business pays per till linked with ATK: approval makes one
@@ -17,6 +17,18 @@ export function TillsCard({ businessId, onChanged }: { businessId: string; onCha
   const add = useMutation({
     mutationFn: (unitId: string | null) => addPlatformRegister(businessId, unitId),
     onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['platform-tills', businessId] })
+      onChanged()
+    },
+  })
+  // remove a till: deleted when it never sold, deactivated when it has coupons (they stay); the licence follows
+  const [removing, setRemoving] = useState<{ id: string; name: string; devices: number } | null>(null)
+  const [removed, setRemoved] = useState<string | null>(null)
+  const remove = useMutation({
+    mutationFn: (id: string) => removePlatformRegister(id),
+    onSuccess: (result) => {
+      setRemoved(result === 'deleted' ? `"${removing?.name}" u hoq.` : `"${removing?.name}" ka kuponë, prandaj u çaktivizua (kuponët mbeten).`)
+      setRemoving(null)
       void qc.invalidateQueries({ queryKey: ['platform-tills', businessId] })
       onChanged()
     },
@@ -72,6 +84,9 @@ export function TillsCard({ businessId, onChanged }: { businessId: string; onCha
                       <Button size="sm" variant="secondary" onClick={() => setAccess(r.id)}>
                         <Users className="h-4 w-4" /> Punëtorët
                       </Button>
+                      <Button size="sm" variant="danger" aria-label={`Hiq ${r.name}`} onClick={() => setRemoving({ id: r.id, name: r.name, devices: r.devices })}>
+                        <Trash2 className="h-4 w-4" /> Hiq
+                      </Button>
                     </li>
                   ))}
                 </ul>
@@ -81,6 +96,34 @@ export function TillsCard({ businessId, onChanged }: { businessId: string; onCha
         })}
       </div>
       {add.error && <p className="mt-2 text-sm text-warn-700">{(add.error as Error).message}</p>}
+      {removed && <p className="mt-2 rounded-ctl bg-brand-100 px-4 py-2.5 text-sm text-brand-600">{removed}</p>}
+      <Dialog
+        open={Boolean(removing)}
+        onClose={() => !remove.isPending && setRemoving(null)}
+        title={`Ta heq arkën "${removing?.name ?? ''}"?`}
+        width="md:max-w-[460px]"
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" disabled={remove.isPending} onClick={() => setRemoving(null)}>
+              Anulo
+            </Button>
+            <Button variant="danger" loading={remove.isPending} onClick={() => removing && remove.mutate(removing.id)}>
+              <Trash2 className="h-4 w-4" /> Hiq arkën
+            </Button>
+          </div>
+        }
+      >
+        <div className="flex flex-col gap-2 text-[15px]">
+          <p>Arka që s'ka shitur kurrë fshihet. Arka me kuponë çaktivizohet: kuponët e saj mbeten (ATK i kërkon 10 vjet).</p>
+          {removing && removing.devices > 0 && (
+            <p className="rounded-ctl bg-amber-100 px-3 py-2 text-sm text-amber-700">
+              {removing.devices} pajisje mbeten pa arkë: nuk shesin derisa t'u caktohet një arkë tjetër.
+            </p>
+          )}
+          <p className="text-sm text-muted">Licenca ulet te numri i arkave aktive. Çelësat e papërdorur të kësaj arke anulohen.</p>
+          {remove.error && <p className="rounded-ctl bg-warn-100 px-3 py-2 text-sm text-warn-700">{(remove.error as Error).message}</p>}
+        </div>
+      </Dialog>
       <RegisterAccessDialog registerId={access} onClose={() => setAccess(null)} />
     </Card>
   )

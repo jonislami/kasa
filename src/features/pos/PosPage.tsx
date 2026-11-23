@@ -661,18 +661,11 @@ export function PosPage() {
       {canAddProduct && <ToolButton icon={BookOpen} label={tr('Blloku', lang)} title="Kupon nga blloku i veçantë (pajisja ishte e prishur)" active={Boolean(bookEntry)} onClick={() => setBookOpen(true)} />}
       <ToolButton icon={PauseCircle} label={tr('Në pritje', lang)} title="Kuponët e ruajtur në pritje (F4 e ruan)" badge={held.length || undefined} onClick={() => setHeldOpen(true)} />
       <ToolButton icon={ClipboardList} label={tr('Kuponët', lang)} title="Kuponët e lëshuar: sot dhe më herët, anulimi, kthimi, printimi" badge={queue.pending.length || undefined} badgeTone="warn" onClick={() => navigate('/kuponet')} />
-      {locked && (registers.data?.length ?? 0) > 1 ? (
-        <span className="flex h-[56px] shrink-0 items-center whitespace-nowrap rounded-ctl border border-line bg-bg px-3 text-sm font-semibold" title="Kjo pajisje është aktivizuar për këtë arkë">
+      {/* the till of this device only: no switching to another till (an unassigned device asks for one, once) */}
+      {(registers.data?.length ?? 0) > 1 && registerName && (
+        <span className="flex h-[56px] shrink-0 items-center whitespace-nowrap rounded-ctl border border-line bg-bg px-3 text-sm font-semibold" title="Arka e kësaj pajisjeje">
           {registerName}
         </span>
-      ) : (registers.data?.length ?? 0) > 1 && (
-        <Select
-          aria-label="Arka"
-          value={registerId ?? ''}
-          onChange={(e) => setRegisterId(e.target.value)}
-          className="h-[56px] w-auto"
-          options={(registers.data ?? []).map((r) => ({ value: r.id, label: r.name }))}
-        />
       )}
     </div>
   )
