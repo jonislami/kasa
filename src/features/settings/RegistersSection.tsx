@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import { NOT_READY } from '@/lib/friendlyError'
 import { KOSOVO_TZ } from '@/lib/clock'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Monitor, Plus, Smartphone } from 'lucide-react'
+import { Monitor, Smartphone, Users } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { RegisterAccessDialog } from '@/components/RegisterAccessDialog'
 import { Badge, Button, Card, Dialog, EmptyState, Input, Select } from '@/components/ui'
 import { device } from '@/lib/device'
 import { fetchPeople, peopleMap } from '@/features/stock/api'
@@ -27,6 +29,7 @@ export function RegistersSection() {
   const [editReg, setEditReg] = useState<Register | 'new' | null>(null)
   const [editDev, setEditDev] = useState<DeviceRow | null>(null)
   const regName = new Map((registers.data ?? []).map((r) => [r.id, r.name]))
+  const [accessReg, setAccessReg] = useState<string | null>(null)
 
   return (
     <div className="flex flex-col gap-5">
@@ -36,9 +39,10 @@ export function RegistersSection() {
             <h2 className="text-[16px] font-semibold tracking-[-0.01em]">Arkat</h2>
             <p className="text-sm text-muted">POS ID-në dhe regjistrimin në ATK i bën te faqja Fiskalizimi.</p>
           </div>
-          <Button size="sm" onClick={() => setEditReg('new')}>
-            <Plus className="h-4 w-4" /> Arkë e re
-          </Button>
+          {/* every till is linked with ATK and paid for: a new one is asked for at Llogaria → Arkat dhe çelësat */}
+          <Link to="/llogaria" className="text-sm font-semibold text-brand-600 hover:underline">
+            Kërko arkë shtesë
+          </Link>
         </div>
         <ul className="mt-4 divide-y divide-line border-t border-line">
           {(registers.data ?? []).map((r) => (
@@ -51,6 +55,9 @@ export function RegistersSection() {
               </div>
               <div className="flex items-center gap-2">
                 {!r.active && <Badge tone="warn">Joaktive</Badge>}
+                <Button size="sm" variant="secondary" onClick={() => setAccessReg(r.id)}>
+                  <Users className="h-4 w-4" /> Punëtorët
+                </Button>
                 <Button size="sm" variant="secondary" onClick={() => setEditReg(r)}>
                   Ndrysho
                 </Button>
@@ -102,6 +109,7 @@ export function RegistersSection() {
 
       <RegisterDialog reg={editReg} onClose={() => setEditReg(null)} onSaved={() => { setEditReg(null); void qc.invalidateQueries({ queryKey: ['registers'] }) }} />
       <DeviceDialog dev={editDev} registers={registers.data ?? []} onClose={() => setEditDev(null)} onSaved={() => { setEditDev(null); void qc.invalidateQueries({ queryKey: ['devices'] }) }} />
+      <RegisterAccessDialog registerId={accessReg} onClose={() => setAccessReg(null)} />
     </div>
   )
 }

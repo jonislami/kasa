@@ -24,6 +24,7 @@ import {
 } from './onboardingApi'
 import { PlatformShell } from './PlatformPage'
 import { statusTone } from './ApplicationsPage'
+import { TillsCard } from './TillsCard'
 
 const day = (d: string | null | undefined) => (d ? d.slice(0, 10).split('-').reverse().join('.') : '—')
 
@@ -151,6 +152,7 @@ export function BusinessAdminPage() {
               <LicenseCard id={id} d={d} onSaved={refresh} />
             </div>
 
+            <TillsCard businessId={id} onChanged={refresh} />
             {d.register_applications.length > 0 && <RegistersCard d={d} onChanged={refresh} />}
             <ActivationKeysCard d={d} onChanged={refresh} />
             <DevicesCard d={d} onChanged={refresh} />

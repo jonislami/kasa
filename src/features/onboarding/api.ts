@@ -77,6 +77,8 @@ export interface RegisterApplication {
   note: string | null
   admin_note: string | null
   register_id: string | null
+  /** 0052: the unit the till is asked for */
+  unit_id?: string | null
   created_at: string
   decided_at: string | null
 }

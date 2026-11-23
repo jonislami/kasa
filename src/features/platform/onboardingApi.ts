@@ -142,3 +142,23 @@ export const fetchActivationKeys = (businessId: string) => keysRpc<ActivationKey
 export const createActivationKey = (p: { business: string; register: string | null; label: string; days: number }) =>
   keysRpc<{ id: string; key: string; expires_at: string }>('platform_activation_key_create', { p_business: p.business, p_register: p.register, p_label: p.label || null, p_days: p.days })
 export const revokeActivationKey = (id: string) => keysRpc<void>('platform_activation_key_revoke', { p_id: id })
+
+// --- 0052: the units and tills of a business; one more till in a unit ---
+export interface PlatformTills {
+  max_devices: number
+  units: { id: string; name: string; status: 'pending' | 'approved' | 'rejected' }[]
+  registers: { id: string; name: string; unit_id: string | null; active: boolean; restricted: boolean; workers: number; devices: number }[]
+}
+
+async function tillsRpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
+  const { data, error } = await supabase.rpc(fn, args)
+  if (error) {
+    if (['PGRST202', '42883'].includes(error.code ?? '')) throw new Error('Kërkon migrimin supabase/migrations/0052_tills_and_worker_access.sql në Supabase.')
+    throw new Error(error.message)
+  }
+  return data as T
+}
+
+export const fetchPlatformTills = (businessId: string) => tillsRpc<PlatformTills>('platform_business_tills', { p_business: businessId })
+export const addPlatformRegister = (businessId: string, unitId: string | null, name?: string) =>
+  tillsRpc<string>('platform_register_add', { p_business: businessId, p_unit: unitId, p_name: name?.trim() || null })
