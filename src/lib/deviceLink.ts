@@ -42,6 +42,29 @@ export function defaultDeviceName(): string {
 }
 
 /**
+ * The till this device was activated for (its activation key, or the register a manager assigned to it). A device
+ * bound to a till sells and signs only as that till: its ATK key and POS ID belong to it.
+ */
+const lockKey = (businessId: string) => `kasa.registerLock.${businessId}`
+export function registerLock(businessId: string): string | null {
+  try {
+    return localStorage.getItem(lockKey(businessId))
+  } catch {
+    return null
+  }
+}
+function setRegisterLock(businessId: string, registerId: string | null) {
+  try {
+    if (registerId) {
+      localStorage.setItem(lockKey(businessId), registerId)
+      localStorage.setItem(`kasa.register.${businessId}`, registerId)
+    } else localStorage.removeItem(lockKey(businessId))
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+/**
  * Called after a manager signs in: links this device to the business (once), then keeps it alive.
  * Silent when the migration is missing or the user is not a manager.
  */
@@ -50,15 +73,8 @@ export async function ensureDeviceLinked(business: { id: string; name: string },
   const link = await getLink()
   if (link && link.business_id === business.id && link.device_id === deviceId) {
     const { data } = await supabase.rpc('device_heartbeat', { p: { device_id: deviceId, app_version: device.appVersion } })
-    // The register a manager assigned to this device becomes the till's default.
-    const reg = (data as { register_id?: string | null } | null)?.register_id
-    if (reg) {
-      try {
-        localStorage.setItem(`kasa.register.${business.id}`, reg)
-      } catch {
-        /* storage unavailable */
-      }
-    }
+    // The register this device is bound to (activation key / assigned by a manager): the till uses only that one.
+    if (data && typeof data === 'object' && 'register_id' in data) setRegisterLock(business.id, (data as { register_id: string | null }).register_id)
     // Removed, moved or blocked on the server: a manager signing in here links it again.
     if ((data && (data as { active: boolean }).active) || !isManager) return link
   }
@@ -107,13 +123,7 @@ export async function activateWithKey(key: string): Promise<DeviceLink> {
   const r = data as { device_id: string; secret: string; business_id: string; business_name: string; register_id: string | null }
   const link: DeviceLink = { device_id: r.device_id, business_id: r.business_id, business_name: r.business_name, secret: r.secret, linked_at: new Date().toISOString() }
   await device.storage.set(KEY, link)
-  if (r.register_id) {
-    try {
-      localStorage.setItem(`kasa.register.${r.business_id}`, r.register_id)
-    } catch {
-      /* storage unavailable */
-    }
-  }
+  setRegisterLock(r.business_id, r.register_id)
   return link
 }
 

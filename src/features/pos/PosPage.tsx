@@ -32,6 +32,7 @@ import { fiscalizeSale } from './fiscal'
 import { formatSq } from '@/lib/sqDate'
 import { roundQty, unitDecimals } from '@/lib/units'
 import { usePrintProblem } from './PrintProblem'
+import { registerLock } from '@/lib/deviceLink'
 
 
 function stockClass(p: PosProduct) {
@@ -94,11 +95,15 @@ export function PosPage() {
 
   const registers = useQuery({ queryKey: ['registers'], queryFn: fetchRegisters, retry: false, networkMode: 'always' })
   const receiptSettings = useQuery({ queryKey: ['receipt-settings'], queryFn: fetchReceiptSettings, retry: false, staleTime: 5 * 60_000, networkMode: 'always' })
-  const [registerId, setRegisterId] = useState<string | null>(() => localStorage.getItem(`kasa.register.${business.id}`))
+  const [registerId, setRegisterId] = useState<string | null>(() => registerLock(business.id) ?? localStorage.getItem(`kasa.register.${business.id}`))
+  // a device activated for one till sells only as that till (its ATK key and POS ID); no choosing another one
+  const lockedRegister = registerLock(business.id)
+  const locked = Boolean(lockedRegister && registers.data?.some((r) => r.id === lockedRegister))
   useEffect(() => {
     const list = registers.data
-    if (list?.length && !list.some((r) => r.id === registerId)) setRegisterId(list[0].id)
-  }, [registers.data, registerId])
+    if (locked && lockedRegister && registerId !== lockedRegister) setRegisterId(lockedRegister)
+    else if (list?.length && !list.some((r) => r.id === registerId)) setRegisterId(list[0].id)
+  }, [registers.data, registerId, locked, lockedRegister])
   useEffect(() => {
     if (registerId) localStorage.setItem(`kasa.register.${business.id}`, registerId)
   }, [registerId, business.id])
@@ -649,7 +654,11 @@ export function PosPage() {
       {canAddProduct && <ToolButton icon={BookOpen} label={tr('Blloku', lang)} title="Kupon nga blloku i veçantë (pajisja ishte e prishur)" active={Boolean(bookEntry)} onClick={() => setBookOpen(true)} />}
       <ToolButton icon={PauseCircle} label={tr('Në pritje', lang)} title="Kuponët e ruajtur në pritje (F4 e ruan)" badge={held.length || undefined} onClick={() => setHeldOpen(true)} />
       <ToolButton icon={ClipboardList} label={tr('Kuponët', lang)} title="Kuponët e lëshuar: sot dhe më herët, anulimi, kthimi, printimi" badge={queue.pending.length || undefined} badgeTone="warn" onClick={() => navigate('/kuponet')} />
-      {(registers.data?.length ?? 0) > 1 && (
+      {locked && (registers.data?.length ?? 0) > 1 ? (
+        <span className="flex h-[56px] shrink-0 items-center whitespace-nowrap rounded-ctl border border-line bg-bg px-3 text-sm font-semibold" title="Kjo pajisje është aktivizuar për këtë arkë">
+          {registerName}
+        </span>
+      ) : (registers.data?.length ?? 0) > 1 && (
         <Select
           aria-label="Arka"
           value={registerId ?? ''}
