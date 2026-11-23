@@ -43,7 +43,7 @@ export function BusinessSection() {
           <Input label="Emri i biznesit" value={form.name} onChange={set('name')} />
         </div>
         <Input label="NUI (Numri Unik Identifikues)" inputMode="numeric" maxLength={9} value={form.nui ?? ''} onChange={set('nui')} placeholder="811234567" />
-        <Input label="Nr. i TVSH-së" value={form.vat_number ?? ''} onChange={set('vat_number')} placeholder="330123456" />
+        <Input label="Nr. i TVSH-së" value={form.vat_number ?? ''} readOnly disabled placeholder="Pa TVSH" hint="Ndryshohet me kërkesë te Llogaria → TVSH-ja" />
         <Input label="Nr. fiskal (ATK)" value={form.fiscal_number ?? ''} onChange={set('fiscal_number')} hint="Nga aplikimi për fiskalizim (Faza 9)" />
         <Input label="Telefoni" inputMode="tel" value={form.phone ?? ''} onChange={set('phone')} placeholder="+383 4X XXX XXX" />
         <Input label="Adresa" value={form.address ?? ''} onChange={set('address')} placeholder="Rr. Nëna Terezë 21" />

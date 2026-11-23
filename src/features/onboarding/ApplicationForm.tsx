@@ -111,7 +111,7 @@ const req = (s: string) => (
   </>
 )
 
-function CityInput({ id, label, value, onChange, error, country }: { id: string; label: ReactNode; value: string; onChange: (v: string) => void; error?: string; country: string }) {
+export function CityInput({ id, label, value, onChange, error, country }: { id: string; label: ReactNode; value: string; onChange: (v: string) => void; error?: string; country: string }) {
   return (
     <>
       <Input label={label} value={value} onChange={(e) => onChange(e.target.value)} error={error} list={country === 'Kosovë' ? `${id}-cities` : undefined} autoComplete="address-level2" />
@@ -301,7 +301,7 @@ export function TaxStep({ d, setTax, errors }: { d: ApplicationData; setTax: (p:
 // ---------------------------------------------------------------------------
 // Step 3 – units
 // ---------------------------------------------------------------------------
-function ActivityPicker({ all, value, onChange, error }: { all: Activity[]; value: string[]; onChange: (v: string[]) => void; error?: string }) {
+export function ActivityPicker({ all, value, onChange, error }: { all: Activity[]; value: string[]; onChange: (v: string[]) => void; error?: string }) {
   const [q, setQ] = useState('')
   const list = useMemo(() => {
     const s = q.trim().toLowerCase()

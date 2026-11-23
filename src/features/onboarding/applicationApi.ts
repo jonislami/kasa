@@ -116,7 +116,7 @@ export function docProblem(f: File): string | null {
   return null
 }
 
-const safeName = (n: string) =>
+export const safeName = (n: string) =>
   n
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')

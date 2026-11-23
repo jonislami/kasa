@@ -160,6 +160,12 @@ export const EVENT_LABELS: Record<string, string> = {
   type_changed: 'Lloji i biznesit u ndryshua',
   unit_rejected: 'Njësia u refuzua',
   unit_pending: 'Njësia u kthye në shqyrtim',
+  unit_requested: 'U kërkua një njësi e re',
+  unit_withdrawn: 'Kërkesa për njësi u tërhoq',
+  vat_requested: 'U kërkua kalimi në TVSH',
+  vat_cancelled: 'Kërkesa për TVSH u tërhoq',
+  vat_approved: 'Kalimi në TVSH u miratua',
+  vat_rejected: 'Kërkesa për TVSH u refuzua',
 }
 
 // ---------------------------------------------------------------------------

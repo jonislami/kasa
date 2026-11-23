@@ -11,6 +11,7 @@ import { LICENSE_LABELS, STATUS_LABELS, type BusinessStatus } from '@/features/o
 import { ActivitiesCard } from './ApplicationReview'
 import { decide, fetchOnboardingList, type OnboardingRow } from './onboardingApi'
 import { PlatformShell } from './PlatformPage'
+import { PendingRequestsCard } from './PendingRequestsCard'
 
 type Filter = 'waiting' | BusinessStatus | 'all'
 const FILTERS: [Filter, string][] = [
@@ -68,6 +69,7 @@ export function ApplicationsPage() {
         <StatCard label="Licenca që skadojnë / kanë skaduar" value={expiring} />
       </div>
       <div className="px-4 pb-8 md:px-8 md:py-5">
+        <PendingRequestsCard />
         <Card className="overflow-hidden">
           <div className="flex flex-col gap-3 border-b border-line p-4 lg:flex-row lg:items-center">
             <div className="relative lg:w-[380px]">
