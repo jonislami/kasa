@@ -162,3 +162,4 @@ async function tillsRpc<T>(fn: string, args: Record<string, unknown>): Promise<T
 export const fetchPlatformTills = (businessId: string) => tillsRpc<PlatformTills>('platform_business_tills', { p_business: businessId })
 export const addPlatformRegister = (businessId: string, unitId: string | null, name?: string) =>
   tillsRpc<string>('platform_register_add', { p_business: businessId, p_unit: unitId, p_name: name?.trim() || null })
+export const removePlatformRegister = (registerId: string) => tillsRpc<'deleted' | 'deactivated'>('platform_register_remove', { p_register: registerId })
