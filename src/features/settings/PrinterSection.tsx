@@ -5,7 +5,7 @@ import { useBusiness } from '@/app/AuthProvider'
 import { Badge, Button, Card, Input, Select, Toggle } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import { device, isSefApp } from '@/lib/device'
-import { devicePaper, setDevicePaper, withDevicePaper, type DevicePaper } from '@/lib/printer/devicePaper'
+import { deviceAutoPrint, devicePaper, setDeviceAutoPrint, setDevicePaper, withDevicePaper, type DevicePaper } from '@/lib/printer/devicePaper'
 import { forgetPrinter, lastPrinterName, printerReady, testPageBytes } from '@/lib/printer'
 import { hasModule, isManagerRole } from '@/lib/business'
 import type { Sale } from '@/features/pos/api'
@@ -54,6 +54,7 @@ export function PrinterSection() {
   return (
     <div className="flex flex-col gap-5 xl:flex-row xl:items-start">
       <div className="flex min-w-0 flex-1 flex-col gap-5">
+        {isSefApp && <AutoPrintCard business={Boolean(form.settings.auto_print)} onChange={() => void qc.invalidateQueries({ queryKey: ['receipt-settings'] })} />}
         {isSefApp && <DevicePaperCard value={paper} business={form} onChange={pickPaper} />}
         {device.systemPrint && <WindowsPrinterCard settings={local} />}
         <BluetoothCard settings={local} />
@@ -106,7 +107,7 @@ export function PrinterSection() {
               />
             </div>
             <div className="mt-2 divide-y divide-line">
-              <ToggleRow label="Printo automatikisht pas pagesës" hint={'Fatura del sapo shtypet "Paguaj"'} value={Boolean(form.settings.auto_print)} onChange={(v) => setOpt('auto_print', v)} />
+              <ToggleRow label="Printo automatikisht kuponin" hint="Kuponi printohet sapo mbyllet shitja, në çdo arkë që nuk e ka ndryshuar këtë në vetë arkën" value={Boolean(form.settings.auto_print)} onChange={(v) => setOpt('auto_print', v)} />
               <ToggleRow label="Hap sirtarin e parave (kasa)" hint="Vetëm kur paguhet me kesh" value={Boolean(form.settings.open_drawer)} onChange={(v) => setOpt('open_drawer', v)} />
               <ToggleRow label="Preje letrën në fund" value={form.settings.cut !== false} onChange={(v) => setOpt('cut', v)} />
             </div>
@@ -151,6 +152,23 @@ export function PrinterSection() {
 }
 
 /** The paper roll of the printer at this till (58 / 80 / 100 mm); every role sets it here, on the device. */
+/** "Printo automatikisht kuponin" on this till – every role can switch it where the printer is. */
+function AutoPrintCard({ business, onChange }: { business: boolean; onChange: () => void }) {
+  const [own, setOwn] = useState<boolean | null>(deviceAutoPrint)
+  const on = own ?? business
+  const toggle = (v: boolean) => {
+    setDeviceAutoPrint(v)
+    setOwn(v)
+    onChange()
+  }
+  return (
+    <Card className="p-5">
+      <ToggleRow label="Printo automatikisht kuponin" hint="Kuponi printohet sapo mbyllet shitja, pa shtypur “Printo”. Vlen për këtë arkë." value={on} onChange={toggle} />
+      {own === null && <p className="text-xs text-muted">Tani: si te cilësimet e biznesit ({business ? 'aktiv' : 'joaktiv'}).</p>}
+    </Card>
+  )
+}
+
 function DevicePaperCard({ value, business, onChange }: { value: DevicePaper; business: ReceiptSettings; onChange: (p: DevicePaper) => void }) {
   const paper = value.paper_width ?? business.paper_width
   return (

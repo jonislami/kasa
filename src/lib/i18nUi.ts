@@ -657,6 +657,8 @@ export const SR_UI: Record<string, string> = {
   'Veprimtaria e lokalit': 'Delatnost objekta',
   'Lloji i artikullit': 'Vrsta artikla',
   Blloku: 'Blok',
+  'Kuponi printohet sapo mbyllet shitja, pa shtypur “Printo”. Vlen për këtë arkë.': 'Kupon se štampa čim se prodaja zatvori, bez pritiska na „Štampaj“. Važi za ovu kasu.',
+  'Printo automatikisht kuponin': 'Automatski štampaj kupon',
   'Shëno me ✓ dy mënyrat si paguan klienti.': 'Označi ✓ dva načina na koja kupac plaća.',
   'Zgjidh dy mënyra pagese': 'Izaberi dva načina plaćanja',
   'Pjesa e dytë duhet të jetë më e vogël se totali': 'Drugi deo mora biti manji od ukupnog iznosa',
