@@ -129,8 +129,8 @@ export function Receipt({
 
       {f ? (
         <>
-          {/* ATK (Kërkesat specifike): the QR code itself 20 x 20 mm on every paper; the white paper around is its margin */}
-          <QrImage text={f.qr} className="mx-auto my-[3mm] w-[20mm]" />
+          {/* the QR in proportion to the paper, as the printer prints it: 58 mm → 20 mm, 80 mm → 26.5 mm, 100 mm → 33 mm */}
+          <QrImage text={f.qr} className={cn('mx-auto my-[3mm]', narrow ? 'w-[20mm]' : width > 90 ? 'w-[33mm]' : 'w-[26.5mm]')} />
           {f.status === 'failed' && <div className="text-center text-[7pt]">{x.L.rejected}: {f.error}</div>}
           <FiscalLogo />
         </>
@@ -176,9 +176,10 @@ export function QrImage({ text, className }: { text: string; className?: string 
 
 function Row({ l, r }: { l: React.ReactNode; r: React.ReactNode }) {
   return (
-    <div className="flex justify-between gap-2">
-      <span className="min-w-0 whitespace-nowrap">{l}</span>
-      <span className="shrink-0 text-right tabular-nums">{r}</span>
+    <div className="flex flex-wrap justify-between gap-x-2">
+      <span className="whitespace-nowrap">{l}</span>
+      {/* on narrow paper a long value goes to the next line, on the right */}
+      <span className="ml-auto text-right tabular-nums">{r}</span>
     </div>
   )
 }
