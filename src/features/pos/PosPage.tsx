@@ -194,9 +194,21 @@ export function PosPage() {
     [cart.lines, salon, staffId, lotSum],
   )
 
+  const findByCode = useCallback(
+    (raw: string): PosProduct | undefined => {
+      const code = raw.replace(/[\s\u0000-\u001f]/g, '')
+      if (!code) return undefined
+      const exact = products.find((x) => x.barcode === code)
+      if (exact) return exact
+      const bare = code.replace(/^0+/, '')
+      return bare.length >= 4 ? products.find((x) => x.barcode && x.barcode.replace(/^0+/, '') === bare) : undefined
+    },
+    [products],
+  )
+
   const onScan = useCallback(
     (code: string) => {
-      const p = products.find((x) => x.barcode === code.trim())
+      const p = findByCode(code)
       if (p) {
         setCart((c) => addToCart(c, p, 1, salon ? staffId : null))
         setNotice(`${p.name} u shtua`)
@@ -207,8 +219,67 @@ export function PosPage() {
       } else setError(`Barkodi ${code} nuk u gjet`)
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [products, salon, staffId, lotSum, cart.lines, canAddProduct],
+    [products, findByCode, salon, staffId, lotSum, cart.lines, canAddProduct],
   )
+
+  // A barcode scanner types the code very fast; many add Enter, some do not. A code that is exactly a product's
+  // barcode goes on the coupon by itself, without waiting for Enter.
+  useEffect(() => {
+    const q = search.trim()
+    if (q.length < 4 || !/^[0-9A-Za-z\-_.]+$/.test(q)) return
+    const t = window.setTimeout(() => {
+      const p = findByCode(q)
+      if (!p) return
+      add(p)
+      setNotice(`${p.name} u shtua`)
+      setSearch('')
+    }, 180)
+    return () => window.clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, findByCode])
+
+  // The scanner also works when the search field does not have the focus (after a payment, a click on a product …):
+  // fast keystrokes outside a field are collected and taken as a scanned code.
+  useEffect(() => {
+    let buf = ''
+    let last = 0
+    let timer = 0
+    const flush = () => {
+      const code = buf
+      buf = ''
+      if (code.length >= 4) onScan(code)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null
+      const inField = el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable)
+      if (inField || document.querySelector('[role="dialog"]') || e.ctrlKey || e.altKey || e.metaKey) {
+        buf = ''
+        return
+      }
+      const now = Date.now()
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        if (buf.length >= 4) {
+          e.preventDefault()
+          window.clearTimeout(timer)
+          flush()
+        }
+        buf = ''
+        return
+      }
+      if (e.key.length !== 1) return
+      // a person types slower than ~60 ms between keys; a scanner types faster
+      if (now - last > 60) buf = ''
+      last = now
+      buf += e.key
+      window.clearTimeout(timer)
+      timer = window.setTimeout(flush, 120)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.clearTimeout(timer)
+    }
+  }, [onScan])
 
   const creditParam = params.get('kredit')
   useEffect(() => {
@@ -251,7 +322,7 @@ export function PosPage() {
   const submitSearch = () => {
     const q = search.trim()
     if (!q) return
-    const exact = products.find((p) => p.barcode === q)
+    const exact = findByCode(q)
     if (exact) {
       add(exact)
       setSearch('')
@@ -592,7 +663,8 @@ export function PosPage() {
         autoFocus={wide}
         onChange={(e) => setSearch(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === 'Enter') {
+          // Enter (or Tab, which some scanners send) adds the product
+          if (e.key === 'Enter' || (e.key === 'Tab' && search.trim())) {
             e.preventDefault()
             submitSearch()
           } else if (e.key === 'Escape') setSearch('')
