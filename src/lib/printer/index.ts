@@ -27,7 +27,15 @@ export async function printerReady(): Promise<boolean> {
  * A printer that is set up but does not answer throws a PrinterError – the till says so instead of opening the
  * print dialog by itself.
  */
-async function toReceiptPrinter(chunks: Uint8Array[], chunkSize: number): Promise<'printer' | 'browser'> {
+// one print job at a time on this device: the copies of one coupon stay together, a second job waits its turn
+let jobChain: Promise<unknown> = Promise.resolve()
+function toReceiptPrinter(chunks: Uint8Array[], chunkSize: number): Promise<'printer' | 'browser'> {
+  const run = jobChain.then(() => printJob(chunks, chunkSize))
+  jobChain = run.catch(() => undefined)
+  return run
+}
+
+async function printJob(chunks: Uint8Array[], chunkSize: number): Promise<'printer' | 'browser'> {
   if (await printerReady()) {
     try {
       for (const c of chunks) await device.printer.write(c, chunkSize)
