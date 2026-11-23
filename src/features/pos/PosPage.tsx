@@ -148,6 +148,8 @@ export function PosPage() {
   const [discountOpen, setDiscountOpen] = useState(false)
   const [cashOpen, setCashOpen] = useState(false)
   const [camera, setCamera] = useState(false)
+  // phone: the product list (tap to add) or the coupon being made
+  const [phoneView, setPhoneView] = useState<'products' | 'coupon'>('products')
   const [receipt, setReceipt] = useState<Sale | null>(null)
   const [heldOpen, setHeldOpen] = useState(false)
   const [held, setHeld] = useState<HeldCart[]>(() => loadHeld(business.id))
@@ -1075,27 +1077,100 @@ export function PosPage() {
         {offlineBanner}
         {messages}
         <CameraScanner active={camera} onCode={onScan} />
-        {catalogState}
-        {cart.lines.length > 0 ? (
-          <div className="-mx-4 bg-bg">{cartLines}</div>
-        ) : (
-          !catalogState && (
-            <div className="flex flex-1 flex-col items-center justify-center gap-2 py-10 text-center text-muted">
-              <ScanLine className="h-8 w-8" />
-              Kërko ose skano produktin
-            </div>
+        {/* the products right away (tap to add) or the coupon being made */}
+        <div className="grid grid-cols-2 gap-2 rounded-xl bg-white p-1 shadow-card" role="tablist" aria-label="Pamja">
+          {(
+            [
+              ['products', tr('Produktet', lang)],
+              ['coupon', `${tr('Kuponi', lang)}${cart.lines.length ? ` (${new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 }).format(totals.itemsCount)})` : ''}`],
+            ] as const
+          ).map(([v, label]) => (
+            <button
+              key={v}
+              type="button"
+              role="tab"
+              aria-selected={phoneView === v}
+              onClick={() => setPhoneView(v)}
+              className={cn('h-11 rounded-lg text-[15px] font-semibold', phoneView === v ? 'bg-brand-600 text-white' : 'text-ink')}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {phoneView === 'products' ? (
+          catalogState ?? (
+            <>
+              {categories.length > 0 && (
+                <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+                  {[{ id: 'all', name: tr('Të gjitha', lang) }, ...categories].map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setCategory(c.id)}
+                      className={cn('h-10 shrink-0 rounded-full border px-4 text-[15px] font-medium', category === c.id ? 'border-ink bg-ink text-white' : 'border-line bg-white')}
+                    >
+                      {c.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-2.5">
+                {results.slice(0, 200).map((p) => {
+                  const inCart = cart.lines.filter((l) => l.product.id === p.id || l.product.parent_id === p.id).reduce((t, l) => t + l.quantity, 0)
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => add(p)}
+                      className={cn(
+                        'relative flex min-h-[96px] flex-col rounded-card border bg-white p-3 text-left active:bg-brand-100',
+                        inCart > 0 ? 'border-brand-600' : 'border-line',
+                      )}
+                    >
+                      <span className="line-clamp-2 text-[15px] font-semibold leading-tight">{p.name}</span>
+                      {lotsOn && lotLine(p)}
+                      <span className="mt-auto flex items-end justify-between gap-1 pt-2">
+                        <span className="text-[17px] font-bold tabular-nums">{formatEUR(p.sale_price)}</span>
+                        {p.has_variants ? (
+                          <span className="text-sm text-muted">{variantSummary(p)}</span>
+                        ) : (
+                          showStock && p.kind === 'product' && <span className={cn('text-sm', stockClass(p))}>{formatQty(p.stock, p.unit)}</span>
+                        )}
+                      </span>
+                      {inCart > 0 && (
+                        <span className="absolute -right-1.5 -top-1.5 min-w-[26px] rounded-full bg-brand-600 px-1.5 text-center text-[13px] font-bold leading-[26px] text-white">
+                          {new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 }).format(inCart)}
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
+                {results.length === 0 && <div className="col-span-full py-10 text-center text-muted">Asgjë nuk u gjet</div>}
+              </div>
+            </>
           )
-        )}
-        {cart.lines.length > 0 && (
-          <div className="flex gap-2">
-            <Button variant="secondary" className="flex-1" onClick={() => setDiscountOpen(true)}>
-              Zbritje{totals.discountTotal > 0 && ` (−${formatEUR(totals.discountTotal)})`}
-            </Button>
-            <Button variant="secondary" className="flex-1" onClick={holdCart}>
-              Në pritje
-            </Button>
-            <Button variant="secondary" onClick={() => navigate('/arka/kthim')}>
-              Kthim
+        ) : cart.lines.length > 0 ? (
+          <>
+            <div className="-mx-4 bg-bg">{cartLines}</div>
+            <div className="flex gap-2">
+              <Button variant="secondary" className="flex-1" onClick={() => setDiscountOpen(true)}>
+                Zbritje{totals.discountTotal > 0 && ` (−${formatEUR(totals.discountTotal)})`}
+              </Button>
+              <Button variant="secondary" className="flex-1" onClick={holdCart}>
+                Në pritje
+              </Button>
+              <Button variant="secondary" onClick={() => navigate('/arka/kthim')}>
+                Kthim
+              </Button>
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 py-10 text-center text-muted">
+            <ScanLine className="h-8 w-8" />
+            Kuponi është bosh
+            <Button variant="secondary" onClick={() => setPhoneView('products')}>
+              Zgjidh produktet
             </Button>
           </div>
         )}
