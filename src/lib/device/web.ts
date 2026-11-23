@@ -160,6 +160,64 @@ async function openSerial(port: SerialPortLike): Promise<SerialPortLike> {
   return port
 }
 
+let writeChain: Promise<unknown> = Promise.resolve()
+
+/** A USB printer that stops answering (no paper, cover open, cable) must not hold the port forever. */
+const serialTimeout = (n: number) => 15_000 + Math.ceil(n / 500) * 1000
+
+async function serialWrite(port: SerialPortLike, bytes: Uint8Array): Promise<void> {
+  const ws = port.writable
+  if (!ws) throw new Error('Printeri USB nuk është i lidhur')
+  // left locked by a write that never finished (before this version, or the page was busy): reopen the port
+  if (ws.locked) {
+    await port.close().catch(() => undefined)
+    await openSerial(port)
+    if (!port.writable || port.writable.locked) throw new Error('Printeri USB është i zënë – shkëpute dhe lidhe përsëri te Printeri')
+    return serialWrite(port, bytes)
+  }
+  const w = ws.getWriter()
+  let timer = 0
+  let timedOut = false
+  try {
+    await Promise.race([
+      (async () => {
+        for (let i = 0; i < bytes.length; i += 4096) await w.write(bytes.slice(i, i + 4096))
+      })(),
+      new Promise<never>((_, reject) => {
+        timer = window.setTimeout(() => {
+          timedOut = true
+          reject(new Error('Printeri USB nuk përgjigjet – kontrollo letrën, kapakun dhe kabllin'))
+        }, serialTimeout(bytes.length))
+      }),
+    ])
+  } finally {
+    window.clearTimeout(timer)
+    if (timedOut) {
+      // drop what is stuck so the next print gets a fresh stream (abort itself waits for the stuck write: not long)
+      await Promise.race([w.abort().catch(() => undefined), new Promise((r) => setTimeout(r, 1000))])
+    }
+    try {
+      w.releaseLock()
+    } catch {
+      /* already released */
+    }
+    if (timedOut) {
+      await port.close().catch(() => undefined)
+      await openSerial(port).catch(() => undefined)
+    }
+  }
+}
+
+async function writeNow(bytes: Uint8Array, chunkSize: number): Promise<void> {
+  if (serialPort) return serialWrite(serialPort, bytes)
+  if (!btChar) throw new Error('Printeri nuk është i lidhur')
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.slice(i, i + chunkSize)
+    if (btChar.properties.writeWithoutResponse && btChar.writeValueWithoutResponse) await btChar.writeValueWithoutResponse(chunk)
+    else await btChar.writeValue(chunk)
+  }
+}
+
 async function openCharacteristic(device: BtDevice): Promise<BtCharacteristic> {
   const server = await device.gatt!.connect()
   for (const service of await server.getPrimaryServices()) {
@@ -223,22 +281,12 @@ export const printer: PrinterTransport = {
   isConnected() {
     return Boolean(serialPort?.writable) || Boolean(btDevice?.gatt?.connected && btChar)
   },
-  async write(bytes, chunkSize = 180) {
-    if (serialPort?.writable) {
-      const w = serialPort.writable.getWriter()
-      try {
-        await w.write(bytes)
-      } finally {
-        w.releaseLock()
-      }
-      return
-    }
-    if (!btChar) throw new Error('Printeri nuk është i lidhur')
-    for (let i = 0; i < bytes.length; i += chunkSize) {
-      const chunk = bytes.slice(i, i + chunkSize)
-      if (btChar.properties.writeWithoutResponse && btChar.writeValueWithoutResponse) await btChar.writeValueWithoutResponse(chunk)
-      else await btChar.writeValue(chunk)
-    }
+  write(bytes, chunkSize = 180) {
+    // one write at a time: a second print (auto print, a copy, the kitchen ticket) waits for the first instead of
+    // finding the USB stream locked
+    const run = writeChain.then(() => writeNow(bytes, chunkSize))
+    writeChain = run.catch(() => undefined)
+    return run
   },
   async disconnect() {
     await serialPort?.close().catch(() => undefined)
