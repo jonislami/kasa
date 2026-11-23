@@ -12,6 +12,7 @@ import { cn } from '@/lib/cn'
 import { DownloadCards } from '@/features/download/DownloadPage'
 import { TillKeysCard } from './TillKeys'
 import { AccountApplication } from './AccountApplication'
+import { UnitsCard, VatCard } from './ProfileCards'
 import {
   APP_STATUS,
   DEVICE_LABELS,
@@ -82,6 +83,9 @@ export function AccountPage() {
             {['pending', 'needs_info'].includes(s.business.status) && <AccountApplication s={s} onSaved={reload} fallback={<DataCard s={s} onSaved={reload} />} />}
             {/* before 0036 an active business could wait for a till application: keep that card for it */}
             {s.business.status === 'active' && !s.can_install && <RegisterCard s={s} onSaved={reload} />}
+            {/* after the registration: a new point of sale, and the move into VAT (both approved by the platform admin) */}
+            {['approved', 'active'].includes(s.business.status) && <UnitsCard s={s} />}
+            {['approved', 'active'].includes(s.business.status) && <VatCard s={s} />}
             {s.can_install && <TillKeysCard />}
             {s.can_install && (
               <Card className="p-5 md:p-6">
