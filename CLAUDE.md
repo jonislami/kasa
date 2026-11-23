@@ -140,7 +140,7 @@ ATK kërkon që SEF të instalohet në pajisje, ta mbajë çelësin privat të s
 | `/stoku` | Hyrjet, historiku, lëvizjet, inventarizimi, furnitorët |
 | `/raportet` | Raportet (admin) |
 | `/puna` | admin: puna e çdo punëtori; punëtori: puna e vet e sotme |
-| `/regjistri` | Regjistri i veprimeve (admin/menaxher), CSV + PDF |
+| `/regjistri` | Regjistri i veprimeve: web-i e shfaq (admin/menaxher); CSV + PDF ("Raporti i auditit") vetëm nga SEF-i, me PIN të pronarit/menaxherit |
 | `/terminet` | vetëm Sallon |
 | `/tavolinat` | vetëm Restorant |
 | `/cilesimet` | Cilësimet |

@@ -190,6 +190,29 @@ export async function setProductActive(id: string, active: boolean): Promise<voi
   if (error) fail(error)
 }
 
+/** One product as saved, for the till's edit form (the fields save_product would otherwise reset). */
+export async function fetchProduct(id: string): Promise<Product> {
+  const { data, error } = await supabase.from('products').select(PRODUCT_COLS).eq('id', id).single()
+  if (error) fail(error)
+  return data as unknown as Product
+}
+
+/**
+ * Deletes a product (0048): for good when it was never sold, moved or counted; otherwise it is archived, because
+ * the coupons and the stock history must stay. Before 0048 it is archived.
+ */
+export async function deleteProduct(id: string): Promise<'deleted' | 'archived'> {
+  const { data, error } = await supabase.rpc('delete_product', { p_id: id })
+  if (error) {
+    if (['PGRST202', '42883'].includes(error.code ?? '')) {
+      await setProductActive(id, false)
+      return 'archived'
+    }
+    fail(error)
+  }
+  return data === 'deleted' ? 'deleted' : 'archived'
+}
+
 export async function nextInternalBarcode(): Promise<string> {
   const { data, error } = await supabase.rpc('next_internal_barcode')
   if (error) fail(error)

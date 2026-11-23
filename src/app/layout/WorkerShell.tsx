@@ -2,10 +2,10 @@ import { LicenseBanner } from '@/app/LicenseBanner'
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChefHat, ClipboardList, LogOut, Menu, MoreHorizontal, Printer, ReceiptText, RefreshCw, Square, X } from 'lucide-react'
+import { ChefHat, ClipboardList, LogOut, Menu, MoreHorizontal, Printer, ReceiptText, RefreshCw, ScrollText, Square, X } from 'lucide-react'
 import { useAuth } from '@/app/AuthProvider'
 import { Button, Dialog, Input } from '@/components/ui'
-import { hasModule, type BusinessType } from '@/lib/business'
+import { hasModule, isManagerRole, type BusinessType } from '@/lib/business'
 import { checkClock } from '@/lib/clock'
 import { AtkBadge } from '@/features/fiscal/AtkBadge'
 import { cn } from '@/lib/cn'
@@ -55,7 +55,7 @@ export function WorkerShell({
   children: ReactNode
 }) {
   const lang = useLang()
-  const { signOut, refresh } = useAuth()
+  const { signOut, refresh, ctx } = useAuth()
   const qc = useQueryClient()
   // "Sinkronizo": what changed elsewhere (a table, a product or a price added on the web or another till) comes now
   const [syncing, setSyncing] = useState(false)
@@ -93,6 +93,8 @@ export function WorkerShell({
     { to: '/kuponet', label: 'Kuponët e lëshuar', icon: ReceiptText },
     ...(hasModule(type, 'kitchen') ? [{ to: '/kuzhina', label: 'Ekrani i kuzhinës / barit', icon: ChefHat }] : []),
     { to: '/cilesimet', label: 'Printeri', icon: Printer },
+    // the audit report is downloaded only here, in the SEF app, by the owner or manager signed in with the PIN
+    ...(isManagerRole(ctx?.profile?.actual_role) ? [{ to: '/regjistri', label: 'Raporti i auditit', icon: ScrollText }] : []),
   ]
 
   const railBtn = 'flex w-[72px] flex-col items-center justify-center gap-1.5 rounded-xl py-3 text-[12px] font-semibold'
