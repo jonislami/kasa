@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { BookOpen, Camera, ClipboardList, Minus, PauseCircle, Plus, ScanLine, Search, Trash2, WifiOff, X, type LucideIcon } from 'lucide-react'
+import { BookOpen, Camera, ClipboardList, Minus, PauseCircle, Pencil, Plus, ScanLine, Search, Trash2, WifiOff, X, type LucideIcon } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
 import { Button, Dialog, Select } from '@/components/ui'
 import { hasModule, isManagerRole } from '@/lib/business'
@@ -18,6 +18,7 @@ import { CameraScanner, CashDialog, DiscountDialog, LineDialog } from './dialogs
 import { enqueueSale, loadCatalog, loadHeld, nextOfflineNo, saveCatalog, saveHeld, useOfflineQueue, type HeldCart } from './offline'
 import { PrintArea, Receipt } from './Receipt'
 import { QuickProductDialog } from './QuickProductDialog'
+import { ManageProductsDialog } from './ManageProductsDialog'
 import { BookEntryDialog, type BookEntry } from './BookEntryDialog'
 import { EcouponButton } from './EcouponDialog'
 import { VariantPicker } from './VariantPicker'
@@ -80,6 +81,9 @@ export function PosPage() {
   // "+" in the till: the owner / manager (in the SEF app signed in with PIN) adds a product on the spot
   const canAddProduct = isManagerRole(profile.actual_role ?? profile.role)
   const [quickAdd, setQuickAdd] = useState<{ barcode: string | null } | null>(null)
+  // owner / manager: change or delete a product from the till
+  const [manageOpen, setManageOpen] = useState(false)
+  const [editProductId, setEditProductId] = useState<string | null>(null)
   // ATK (UA neni 45): coupons written by hand from the separate coupon book while the device was down
   const [bookEntry, setBookEntry] = useState<BookEntry | null>(null)
   const [bookOpen, setBookOpen] = useState(false)
@@ -641,6 +645,7 @@ export function PosPage() {
       {canAddProduct && (
         <ToolButton icon={Plus} label={tr('Shto', lang)} primary title={business.type === 'salon' ? 'Shto shërbimin' : 'Shto produktin'} onClick={() => setQuickAdd({ barcode: null })} />
       )}
+      {canAddProduct && <ToolButton icon={Pencil} label={tr('Ndrysho', lang)} title="Ndrysho ose fshi një produkt" onClick={() => setManageOpen(true)} />}
       {canAddProduct && <ToolButton icon={BookOpen} label={tr('Blloku', lang)} title="Kupon nga blloku i veçantë (pajisja ishte e prishur)" active={Boolean(bookEntry)} onClick={() => setBookOpen(true)} />}
       <ToolButton icon={PauseCircle} label={tr('Në pritje', lang)} title="Kuponët e ruajtur në pritje (F4 e ruan)" badge={held.length || undefined} onClick={() => setHeldOpen(true)} />
       <ToolButton icon={ClipboardList} label={tr('Kuponët', lang)} title="Kuponët e lëshuar: sot dhe më herët, anulimi, kthimi, printimi" badge={queue.pending.length || undefined} badgeTone="warn" onClick={() => navigate('/kuponet')} />
@@ -742,6 +747,32 @@ export function PosPage() {
         }}
       />
       {printProblem}
+      <ManageProductsDialog
+        open={manageOpen && !editProductId}
+        products={products}
+        onClose={() => setManageOpen(false)}
+        onEdit={(id) => setEditProductId(id)}
+        onDeleted={(p, result) => {
+          void qc.invalidateQueries({ queryKey: ['products'] })
+          void catalog.refetch()
+          setNotice(result === 'deleted' ? `${p.name} u fshi` : `${p.name} u hoq nga arka (ka shitje, ruhet si joaktiv)`)
+        }}
+      />
+      <QuickProductDialog
+        open={Boolean(editProductId)}
+        editId={editProductId}
+        type={business.type}
+        vatRegistered={vat}
+        categories={catalog.data?.categories ?? []}
+        onClose={() => setEditProductId(null)}
+        onSaved={async (id) => {
+          setEditProductId(null)
+          void qc.invalidateQueries({ queryKey: ['products'] })
+          const fresh = await catalog.refetch()
+          const p = fresh.data?.products.find((x) => x.id === id)
+          if (p) setNotice(`${p.name} u ruajt`)
+        }}
+      />
       <QuickProductDialog
         open={Boolean(quickAdd)}
         type={business.type}

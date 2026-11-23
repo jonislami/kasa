@@ -33,6 +33,7 @@ const ACTIONS: Record<string, { label: string; tone: Tone }> = {
   product_create: { label: 'Produkt i ri', tone: 'info' },
   product_update: { label: 'Ndryshim produkti', tone: 'info' },
   product_archive: { label: 'Arkivim', tone: 'neutral' },
+  product_delete: { label: 'Fshirje produkti', tone: 'warn' },
   product_restore: { label: 'Rikthim', tone: 'neutral' },
   products_import: { label: 'Import', tone: 'info' },
   stock_entry_confirm: { label: 'Hyrje malli', tone: 'success' },
