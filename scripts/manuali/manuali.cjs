@@ -116,7 +116,7 @@ const body = [
     ['Data e dokumentit', 'Nëntor 2026'],
   ]),
   gap(),
-  note('Fotot e ekraneve janë marrë nga një biznes demo ("Market Demo SH.P.K.", NUI 999999991) me të dhëna shembull. Foto e kuponit të printuar (Figura te kapitulli 9) është kupon i vërtetë nga mjedisi test i ATK-së ("TEST – PA VLERË FISKALE").'),
+  note('Fotot e ekraneve janë marrë nga një biznes demo ("Market Demo SH.P.K.", NUI 999999991) me të dhëna shembull. Edhe kuponi te kapitulli 9 është shembull i biznesit demo ("SHEMBULL", "TEST – PA VLERË FISKALE"): NUIKF-ja dhe QR-ja janë tekst shembull, jo kupon i fiskalizuar.'),
   new Paragraph({ children: [new PageBreak()] }),
   new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: 'Përmbajtja', bold: true, size: 32, font: FONT })] }),
   new TableOfContents('Përmbajtja', { hyperlink: true, headingStyleRange: '1-2' }),
@@ -257,7 +257,7 @@ const body = [
   // ---- 9 ----
   h1('9. Kuponi fiskal'),
   p('Kuponi i printuar përmban: tatimpaguesin, emrin dhe numrin e njësisë, adresën, NF-NUI dhe numrin e TVSH-së, emrin dhe **ID-në e punëtorit**, artikujt me sasi, çmim dhe shkronjën e TVSH-së, totalin, mënyrën e pagesës, ndarjen e TVSH-së, numrin e kuponit, datën dhe orën, numrin identifikues të SEF-it, **NUIKF**-në, numrin ditor, **kodin QR** (së paku 20 × 20 mm, më i madh në letër më të gjerë) dhe logon RKS/MF. Në mjedisin test shënohet "TEST – PA VLERË FISKALE"; pa internet "OFFLINE"; ribotimi "KOPJE E KUPONIT".'),
-  ...img('sef', '16-kuponi-printuar', 'Kuponë fiskalë të printuar nga mjedisi test i ATK-së', 420),
+  ...img('sef', '16-kuponi-printuar', 'Shembull i kuponit fiskal në letër 80 mm (biznesi demo, pa vlerë fiskale)', 250),
   p('Letra: 58 mm, 80 mm ose 100 mm. Me pëlqimin e blerësit kuponi dërgohet edhe si **e-kupon** në email (shqip dhe serbisht, me kodin QR).'),
 
   // ---- 10 ----
