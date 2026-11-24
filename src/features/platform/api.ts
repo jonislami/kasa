@@ -45,6 +45,11 @@ async function callPlatformAdmin<T>(body: Record<string, unknown>): Promise<T> {
   return data as T
 }
 
+/** E-mails a till's activation key to the owner of the business (platform-admin, Resend). */
+export function emailActivationKey(input: { business_id: string; key: string; expires_at: string; register_name: string }) {
+  return callPlatformAdmin<{ email: string }>({ action: 'email_activation_key', ...input })
+}
+
 export function createBusiness(input: {
   type: BusinessType
   name: string

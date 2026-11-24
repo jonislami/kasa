@@ -141,7 +141,45 @@ function html(s: Sale, b: Record<string, unknown>, f: Record<string, unknown>, f
 </div></body></html>`
 }
 
-async function send(to: string, subject: string, body: string, qrPng: string, fromName: string): Promise<string | null> {
+/** The same coupon as plain text: mail filters trust a message that has a text part next to the HTML. */
+function text(s: Sale, b: Record<string, unknown>, f: Record<string, unknown>, footer: string | null): string {
+  const title = s.kind === 'void' ? 'KUPON FISKAL I ANULUAR' : s.kind === 'refund' ? 'KUPON FISKAL KTHIMI' : 'KUPON FISKAL'
+  const sign = s.kind === 'sale' ? '' : '-'
+  const u = s.unit ?? null
+  const vat = (s.vat_lines ?? []).filter((v) => (v.code === 'D' || v.code === 'E') && Math.abs(Number(v.vat)) > 0.004)
+  const payment = s.payment_kind && KIND[s.payment_kind] ? (s.payment_method === 'mixed' ? `KESH + ${KIND[s.payment_kind]}` : KIND[s.payment_kind]) : PAY[s.payment_method] ?? s.payment_method
+  const out = [
+    `TATIMPAGUESI: ${b.name}`,
+    u?.name ? `EMRI I NJËSISË: ${u.name}` : null,
+    `NUMRI I NJËSISË: ${f.branch_id}`,
+    (u?.address || b.address) ? `ADRESA: ${u?.address || b.address}${(u?.city || b.city) ? `, ${u?.city || b.city}` : ''}` : null,
+    b.nui ? `NF-NUI: ${b.nui}` : null,
+    b.vat_number ? `NUMRI I TVSH-SË: ${b.vat_number}` : null,
+    '',
+    title,
+    f.env === 'test' ? 'TEST – PA VLERË FISKALE' : null,
+    s.kind !== 'sale' && s.ref_invoice_no ? `KUPON FISKAL NR. ${s.ref_invoice_no}` : null,
+    s.reason ? `ARSYEJA: ${s.reason}` : null,
+    '',
+    ...group(s.items).map((i) => `${i.name}  ${Math.abs(i.quantity)} x ${n2(i.unit_price)} = ${sign}${n2(Math.abs(i.quantity) * Number(i.unit_price))} ${i.vat_code}`),
+    '',
+    `${s.kind === 'refund' ? 'TOTALI I KTHIMIT' : 'TOTALI PËR PAGESË'}: ${sign}${n2(s.total)} EUR`,
+    `MËNYRA E PAGESËS: ${payment}`,
+    ...vat.map((v) => `TVSH ${v.code} ${Math.round(Number(v.rate) * 100)}%: ${n2(v.vat)} EUR`),
+    `TOTALI PA TVSH: ${n2(s.net_total)} EUR`,
+    '',
+    `Nr. ${pad(s.invoice_no, 10)} · ${dt(String(s.client_created_at ?? s.created_at))}`,
+    `NR. IDENTIFIKUES I SEF: ${f.branch_id}-${b.nui}-${f.pos_id}`,
+    `NUIKF: ${f.verification_no}`,
+    `KUPON FISKAL DITOR NR. ${pad(s.daily_no, 4)}`,
+    '',
+    'e-kuponi – kodi QR është në versionin HTML të këtij email-i; skanoje me aplikacionin e ATK-së.',
+    footer ? footer.toUpperCase() : null,
+  ]
+  return out.filter((l) => l !== null).join('\n')
+}
+
+async function send(to: string, subject: string, body: string, plain: string, qrPng: string, fromName: string, replyTo: string | null): Promise<string | null> {
   const key = Deno.env.get('RESEND_API_KEY')
   const from = Deno.env.get('EMAIL_FROM')
   if (!key || !from) return 'Email-et nuk janë konfiguruar (RESEND_API_KEY / EMAIL_FROM në Supabase)'
@@ -153,6 +191,9 @@ async function send(to: string, subject: string, body: string, qrPng: string, fr
       to: [to],
       subject,
       html: body,
+      text: plain,
+      // the buyer's answer goes to the business, not to KontoSef
+      ...(replyTo ? { reply_to: replyTo } : {}),
       attachments: [{ filename: 'kupon-qr.png', content: qrPng, content_id: 'kupon-qr', content_type: 'image/png' }],
     }),
   })
@@ -202,7 +243,11 @@ Deno.serve(async (req) => {
   const appUrl = (Deno.env.get('APP_URL') ?? 'https://kasa-two-psi.vercel.app').replace(/\/$/, '')
   const s = sale as Sale
   const subject = `Kuponi fiskal nr. ${pad(s.invoice_no, 10)} – ${business.name}`
-  const err = await send(email, subject, html(s, business, coupon, (settings?.receipt_footer as string | null) ?? null, `${appUrl}/rks.png`), png, String(business.name))
+  const footer = (settings?.receipt_footer as string | null) ?? null
+  // reply address: the owner's e-mail (a real one, not the internal address of a PIN account)
+  const { data: owner } = await db.from('profiles').select('email').eq('role', 'admin').not('email', 'is', null).limit(1).maybeSingle()
+  const replyTo = owner?.email && EMAIL.test(String(owner.email)) && !/@pin\.kasa\.app$/i.test(String(owner.email)) ? String(owner.email) : null
+  const err = await send(email, subject, html(s, business, coupon, footer, `${appUrl}/rks.png`), text(s, business, coupon, footer), png, String(business.name), replyTo)
   if (err) return json({ error: err }, 502)
 
   // trail: who sent which coupon (the address is kept masked)

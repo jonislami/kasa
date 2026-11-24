@@ -6,7 +6,7 @@ import { FullScreenLoader, SetupMissing } from '@/app/AuthGuard'
 import { SafeAreaStrip } from '@/app/layout/AppLayout'
 import { Logo } from '@/components/Logo'
 import { Button, Input } from '@/components/ui'
-import { supabaseConfigured } from '@/lib/supabase'
+import { supabase, supabaseConfigured } from '@/lib/supabase'
 import { isSefApp } from '@/lib/device'
 import { t as tr } from '@/lib/i18n'
 import { PinLogin } from './PinLogin'
@@ -24,6 +24,18 @@ export function LoginPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showForgot, setShowForgot] = useState(false)
+  const [resetState, setResetState] = useState<{ busy: boolean; done: string | null; error: string | null }>({ busy: false, done: null, error: null })
+  // "Harrove fjalëkalimin?": Supabase sends a one-time link to the address (through the project's SMTP, Resend);
+  // the link opens /fjalekalimi where the new password is chosen
+  const sendReset = async () => {
+    const addr = email.trim()
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addr)) return setResetState({ busy: false, done: null, error: 'Shkruaj email-in e llogarisë sipër' })
+    setResetState({ busy: true, done: null, error: null })
+    const { error: e } = await supabase.auth.resetPasswordForEmail(addr, { redirectTo: `${window.location.origin}/fjalekalimi` })
+    if (e && !/rate|security purposes/i.test(e.message)) return setResetState({ busy: false, done: null, error: /fetch/i.test(e.message) ? 'Nuk ka lidhje me serverin' : e.message })
+    // the same answer whether or not the address has an account (nobody learns which addresses exist)
+    setResetState({ busy: false, done: e ? 'Linku u dërgua pak më parë – kontrollo email-in (edhe te Spam) ose provo pas një minute.' : `Nëse ${addr} ka llogari, linku për fjalëkalimin e ri u dërgua. Kontrollo email-in (edhe te Spam).`, error: null })
+  }
 
   if (!supabaseConfigured) return <SetupMissing />
   if (status === 'loading' && busy) return <FullScreenLoader />
@@ -105,9 +117,16 @@ export function LoginPage() {
                   }
                 />
                 {showForgot && (
-                  <p className="rounded-ctl bg-amber-100 px-4 py-3 text-sm text-amber-700">
-                    Fjalëkalimin e ri ta jep administratori i KontoSef-it (pronari) ose pronari i biznesit (menaxherët).
-                  </p>
+                  <div className="flex flex-col gap-2 rounded-ctl bg-bg px-4 py-3 text-sm">
+                    <p className="text-muted">Shkruaj email-in sipër dhe të dërgojmë një link për të zgjedhur fjalëkalimin e ri.</p>
+                    <div>
+                      <Button type="button" size="sm" variant="secondary" loading={resetState.busy} onClick={() => void sendReset()}>
+                        Dërgo linkun në email
+                      </Button>
+                    </div>
+                    {resetState.done && <p className="text-brand-600">{resetState.done}</p>}
+                    {resetState.error && <p className="text-warn-700">{resetState.error}</p>}
+                  </div>
                 )}
                 <label className="flex cursor-pointer items-center gap-2.5 text-[14px] text-[#344054]">
                   <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="h-4 w-4 rounded accent-brand-600" />

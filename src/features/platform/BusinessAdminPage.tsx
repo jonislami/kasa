@@ -25,6 +25,7 @@ import {
 import { PlatformShell } from './PlatformPage'
 import { statusTone } from './ApplicationsPage'
 import { TillsCard } from './TillsCard'
+import { emailActivationKey } from './api'
 
 const day = (d: string | null | undefined) => (d ? d.slice(0, 10).split('-').reverse().join('.') : '—')
 
@@ -409,18 +410,27 @@ function ActivationKeysCard({ d, onChanged }: { d: AdminDetailT; onChanged: () =
     void qc.invalidateQueries({ queryKey: ['activation-keys', id] })
     onChanged()
   }
+  // the key goes to the owner's e-mail at once; the admin still sees it here (copy) in case the e-mail does not arrive
+  const [mailed, setMailed] = useState<{ ok: boolean; text: string } | null>(null)
   const create = useMutation({
     // every key names its till (0051): the device sells only as that till
     mutationFn: () => createActivationKey({ business: id, register: register || d.registers.find((r) => r.active)?.id || null, label, days: Number(days) || 30 }),
     onSuccess: (r) => {
       setCreated(r)
       reload()
+      const regId = register || d.registers.find((x) => x.active)?.id
+      const regName = d.registers.find((x) => x.id === regId)?.name ?? ''
+      setMailed(null)
+      emailActivationKey({ business_id: id, key: r.key, expires_at: r.expires_at, register_name: regName })
+        .then((m) => setMailed({ ok: true, text: `U dërgua automatikisht te ${m.email}.` }))
+        .catch((e: Error) => setMailed({ ok: false, text: `Email-i nuk u dërgua: ${e.message}. Kopjoje dhe dërgoja vetë.` }))
     },
   })
   const revoke = useMutation({ mutationFn: revokeActivationKey, onSuccess: reload })
   const close = () => {
     setOpen(false)
     setCreated(null)
+    setMailed(null)
     setCopied(false)
     setLabel('')
     setRegister('')
@@ -503,7 +513,7 @@ function ActivationKeysCard({ d, onChanged }: { d: AdminDetailT; onChanged: () =
       >
         {created ? (
           <div>
-            <p className="text-sm text-muted">Dërgoja klientit. Çelësi shfaqet vetëm tani; nëse humbet, gjenero një të ri.</p>
+            <p className="text-sm text-muted">Çelësi i dërgohet pronarit në email. Shfaqet vetëm tani; nëse humbet, gjenero një të ri.</p>
             <div className="mt-4 flex items-center gap-2 rounded-card border border-line bg-bg p-4">
               <span className="flex-1 select-all text-center font-mono text-xl font-semibold tracking-[0.1em]">{created.key}</span>
               <Button size="sm" variant="secondary" onClick={() => void copy()}>
@@ -511,6 +521,9 @@ function ActivationKeysCard({ d, onChanged }: { d: AdminDetailT; onChanged: () =
               </Button>
             </div>
             <p className="mt-3 text-sm text-muted">Vlen deri më {formatKosovoDateTime(created.expires_at)}, për një pajisje.</p>
+            <p className={cn('mt-2 rounded-ctl px-3 py-2 text-sm', !mailed ? 'bg-bg text-muted' : mailed.ok ? 'bg-brand-100 text-brand-600' : 'bg-amber-100 text-amber-700')}>
+              {mailed ? mailed.text : 'Duke e dërguar te email-i i pronarit…'}
+            </p>
           </div>
         ) : (
           <div className="grid gap-3">
