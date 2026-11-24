@@ -26,7 +26,7 @@ import { expiryStatus, fetchLots, formatExpiry, summarizeLots } from '@/lib/lots
 import { printPage, printReceipt } from '@/lib/printer'
 import { serverDate, KOSOVO_TZ } from '@/lib/clock'
 import { fetchReceiptSettings } from '@/features/settings/api'
-import { fetchFiscalContext } from '@/lib/fiscal'
+import { fetchFiscalContext, fiscalBlockReason } from '@/lib/fiscal'
 import { t as tr, useLang } from '@/lib/i18n'
 import { fiscalizeSale } from './fiscal'
 import { formatSq } from '@/lib/sqDate'
@@ -116,7 +116,15 @@ export function PosPage() {
   const registerUnit = registers.data?.find((r) => r.id === registerId)?.unit_id ?? null
   const products = useMemo(() => (registerUnit ? allProducts.filter((p) => inUnit(p.unit_ids, registerUnit)) : allProducts), [allProducts, registerUnit])
   // Fiscal data of this register, cached on the device so offline sales can be signed too.
-  useQuery({ queryKey: ['fiscal-context', registerId], queryFn: () => fetchFiscalContext(registerId), enabled: Boolean(registerId), staleTime: 5 * 60_000, retry: false })
+  const fiscalCtx = useQuery({ queryKey: ['fiscal-context', registerId], queryFn: () => fetchFiscalContext(registerId), enabled: Boolean(registerId), staleTime: 5 * 60_000, retry: false })
+  // No fiscalization, no coupon: a till that is not registered at ATK on this device does not sell at all
+  const fiscalBlock = useQuery({
+    queryKey: ['fiscal-block', registerId, fiscalCtx.dataUpdatedAt],
+    queryFn: () => fiscalBlockReason(registerId),
+    enabled: isSefApp && !fiscalCtx.isLoading,
+    staleTime: 30_000,
+  })
+  const noFiscal = isSefApp ? (fiscalBlock.data ?? null) : null
 
   // ---------- salon: who performs each line, appointment being paid ----------
   const salon = hasModule(business.type, 'commission')
@@ -368,6 +376,12 @@ export function PosPage() {
     async (m: PaymentMethod, tenderedAmount?: number, cardAmount?: number, cardKind: PaymentKind | 'card' = 'card', split?: { kind: SplitKind; amount: number }) => {
       // a ref, not the state: a double press (click + F12) comes before React shows "busy"
       if (cart.lines.length === 0 || busy || payingRef.current) return
+      // checked again at the moment of paying (the till may have been unregistered meanwhile)
+      const block = isSefApp ? await fiscalBlockReason(registerId) : null
+      if (block) {
+        setCashOpen(false)
+        return setError(block)
+      }
       payingRef.current = true
       setError(null)
       const input: CreateSaleInput = {
@@ -439,6 +453,7 @@ export function PosPage() {
 
   // PAGUAJ / F12: the payment is chosen only in the payment window
   const openPayment = () => {
+    if (noFiscal) return setError(noFiscal)
     if (cart.lines.length) setCashOpen(true)
   }
 
@@ -1005,6 +1020,7 @@ export function PosPage() {
               </div>
               {exchangeBanner && <div className="mt-2">{exchangeBanner}</div>}
               {bookBanner && <div className="mt-2">{bookBanner}</div>}
+              {noFiscal && <div className="mt-2 rounded-ctl bg-warn-100 px-3 py-2 text-sm font-medium text-warn-700">{noFiscal}</div>}
               {appointment && (
                 <div className="mt-1 text-sm font-medium text-brand-600">
                   Klienti: {appointment.customer_name} · termini{' '}
@@ -1086,6 +1102,7 @@ export function PosPage() {
             {registerName ?? 'Arka'} · {new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 }).format(totals.itemsCount)} artikuj
           </div>
           {bookBanner && <div className="mt-2">{bookBanner}</div>}
+          {noFiscal && <div className="mt-2 rounded-ctl bg-warn-100 px-3 py-2 text-sm font-medium text-warn-700">{noFiscal}</div>}
         </div>
         <div className="mb-3">{toolbar}</div>
         <div className="flex gap-2">
