@@ -3,6 +3,8 @@
  * Albanian letters ë/ç: code page CP852 or CP1250, or plain replacement (e, c) – a setting,
  * because cheap printers differ.
  */
+import QRCode from 'qrcode'
+
 export type Charset = 'cp852' | 'cp1250' | 'replace'
 
 const ESC = 0x1b
@@ -141,6 +143,29 @@ export class EscPos {
       .raw(GS, 0x28, 0x6b, 0x03, 0x00, 0x31, 0x45, 0x31) // error correction M
       .raw(GS, 0x28, 0x6b, len & 0xff, (len >> 8) & 0xff, 0x31, 0x50, 0x30, ...d) // store
       .raw(GS, 0x28, 0x6b, 0x03, 0x00, 0x31, 0x51, 0x30) // print
+  }
+
+  /**
+   * QR code drawn here and sent as a raster image (GS v 0), like the logo. Many thermal printers draw the built-in
+   * QR (GS ( k) only up to a certain length and silently skip a longer one – the fiscal QR of a coupon with two VAT
+   * rates is longer – so the image works on every printer. `dots` per module.
+   */
+  qrImage(data: string, dots = 4): this {
+    const qr = QRCode.create(data, { errorCorrectionLevel: 'M' })
+    const n = qr.modules.size
+    const quiet = 2 // modules of white around it
+    const px = (n + quiet * 2) * dots
+    const bytesPerRow = Math.ceil(px / 8)
+    const out = new Uint8Array(bytesPerRow * px)
+    for (let y = 0; y < px; y++) {
+      const my = Math.floor(y / dots) - quiet
+      for (let x = 0; x < px; x++) {
+        const mx = Math.floor(x / dots) - quiet
+        if (mx < 0 || my < 0 || mx >= n || my >= n || !qr.modules.get(my, mx)) continue
+        out[y * bytesPerRow + (x >> 3)] |= 0x80 >> (x & 7)
+      }
+    }
+    return this.image(bytesPerRow, px, out)
   }
 
   /** CODE128 barcode (GS k m=73). */
