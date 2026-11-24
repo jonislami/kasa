@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useState, type ChangeEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CalendarCheck, ChevronLeft, ChevronRight, FileSignature, FileSpreadsheet, FileText, History, Plus, Printer, Trash2, UserPlus } from 'lucide-react'
+import { CalendarCheck, ChevronLeft, ChevronRight, FileSignature, FileSpreadsheet, FileText, History, Plus, Printer, Trash2, Upload, UserPlus } from 'lucide-react'
 import { Badge, Button, Card, Dialog, EmptyState, Input, Select } from '@/components/ui'
 import { kosovoDateISO } from '@/lib/clock'
 import { cn } from '@/lib/cn'
@@ -11,6 +11,7 @@ import { addDay, ATT, entitlement, fetchAttendance, fetchHistory, fullName, HIST
 import { EmploymentContract, LeaveDecision, LeaveReport, LeaveReportAll, PrintPortal } from './hrDocs'
 import { CONTRACT_LABELS, deleteLeave, fetchEmployees, LEAVE_LABELS, saveEmployee, type Contract, type Employee, type Leave, type LeaveKind } from './payroll'
 import { downloadSheets } from './xls'
+import { EmployeeImportDialog } from './EmployeeImport'
 
 export type HrView = 'employees' | 'attendance' | 'leaves'
 
@@ -33,6 +34,7 @@ function EmployeesView({ client, list, loading, error }: { client: Client; list:
   const [hist, setHist] = useState<Employee | null>(null)
   const [print, setPrint] = useState<Employee | null>(null)
   const [showInactive, setShowInactive] = useState(false)
+  const [importing, setImporting] = useState(false)
   const shown = list.filter((e) => (showInactive ? true : e.active))
   return (
     <div className="flex flex-col gap-4 md:gap-5">
@@ -60,6 +62,9 @@ function EmployeesView({ client, list, loading, error }: { client: Client; list:
               }
             >
               <FileSpreadsheet className="h-4 w-4" /> Excel
+            </Button>
+            <Button variant="secondary" onClick={() => setImporting(true)}>
+              <Upload className="h-4 w-4" /> Importo listën
             </Button>
             <Button onClick={() => setEdit({ contract: 'indefinite', primary_job: true, start_date: kosovoDateISO(), gross_salary: 0, emp_pension_pct: 5, er_pension_pct: 5, work_days: 5, weekly_hours: 40, active: true })}>
               <UserPlus className="h-4 w-4" /> Punonjës i ri
@@ -99,6 +104,7 @@ function EmployeesView({ client, list, loading, error }: { client: Client; list:
         )}
       </Card>
       <EmployeeDialog client={client} value={edit} onClose={() => setEdit(null)} />
+      <EmployeeImportDialog client={client} existing={list} open={importing} onClose={() => setImporting(false)} />
       <HistoryDialog employee={hist} onClose={() => setHist(null)} />
       {print && (
         <PrintPortal onDone={() => setPrint(null)}>
