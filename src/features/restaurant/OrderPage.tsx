@@ -1,3 +1,5 @@
+import { fiscalBlockReason } from '@/lib/fiscal'
+import { isSefApp } from '@/lib/device'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { isManagerRole } from '@/lib/business'
@@ -584,7 +586,10 @@ function PayDialog({ open, order, menu, registerId, onClose, onPaid }: { open: b
   const change = t == null || Number.isNaN(t) ? null : round2(t - cashDue)
 
   const pay = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
+      // no fiscalization, no coupon (0055): the till must be registered at ATK on this device
+      const block = isSefApp ? await fiscalBlockReason(registerId ?? null) : null
+      if (block) throw new Error(block)
       if (method === 'cash' && t != null && (Number.isNaN(t) || t < total)) throw new Error('Shuma e paguar është më e vogël se totali')
       if (method === 'mixed' && (c == null || Number.isNaN(c) || c <= 0 || c >= total)) throw new Error('Shkruaj sa paguhet me kartelë (më pak se totali)')
       return createSale({

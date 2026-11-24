@@ -140,6 +140,23 @@ export async function isFiscalHere(ctx: FiscalContext | null): Promise<boolean> 
   return device.keys.hasKey(keyAlias(r.id))
 }
 
+/**
+ * Whether this device may issue a coupon for the till: only a till registered at ATK on this very device (its key,
+ * POS ID and the business's NUI, Branch ID and application). Without it no coupon is issued – not even a
+ * "jo-fiskal" one. Reads what is on the device, so it works offline.
+ */
+export async function fiscalBlockReason(registerId: string | null): Promise<string | null> {
+  const where = 'Regjistrimi bëhet te Cilësimet → Fiskalizimi i kësaj arke (pronari ose menaxheri).'
+  if (!registerId) return `Kjo pajisje nuk ka arkë. ${where}`
+  const ctx = await cachedFiscalContext(registerId).catch(() => null)
+  if (!ctx) return navigator.onLine ? `Arka nuk është e regjistruar në ATK. ${where}` : 'Pa internet: të dhënat e fiskalizimit të kësaj arke nuk janë në pajisje. Lidhu njëherë me internet.'
+  const r = ctx.register
+  if (!r || r.status !== 'registered') return `Arka nuk është e regjistruar në ATK: pa fiskalizim nuk lëshohet asnjë kupon. ${where}`
+  if (!(await isFiscalHere(ctx))) return `Arka është e regjistruar në ATK në një pajisje tjetër. Regjistroje në këtë pajisje: ${where}`
+  if (!ctx.nui || !ctx.branch_id || !r.pos_id || !ctx.application_id) return 'Mungojnë të dhënat e fiskalizimit (NUI, Branch ID, POS ID ose aplikacioni). Plotësoji te Fiskalizimi (ATK) në web.'
+  return null
+}
+
 // ---------------------------------------------------------------------------
 // Onboarding (Hapi 3: register this device at ATK)
 // ---------------------------------------------------------------------------
