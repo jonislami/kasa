@@ -224,6 +224,47 @@ Linku vlen vetëm një herë dhe skadon pas pak kohe.`,
   }
 
   // --- accountant account (the separate "KontoSef Kontabilist" program) ---
+  // --- the activation key of a till, e-mailed to the owner right after the admin made it ---
+  if (body.action === 'email_activation_key') {
+    const businessId = String(body.business_id ?? '')
+    const key = String(body.key ?? '').toUpperCase()
+    if (!/^KASA-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(key)) return fail('Çelësi nuk është i saktë')
+    const { data: biz } = await admin.from('businesses').select('name').eq('id', businessId).maybeSingle()
+    if (!biz) return fail('Biznesi nuk u gjet', 404)
+    const { data: owner } = await admin
+      .from('profiles')
+      .select('id, email, full_name')
+      .eq('business_id', businessId)
+      .eq('role', 'admin')
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+    if (!owner?.email || /@pin\.kasa\.app$/i.test(owner.email)) return fail('Pronari i këtij biznesi nuk ka email', 404)
+    const register = String(body.register_name ?? '').slice(0, 80)
+    const expires = String(body.expires_at ?? '')
+    const until = /^\d{4}-\d{2}-\d{2}/.test(expires) ? expires.slice(0, 10).split('-').reverse().join('.') : ''
+    const name = owner.full_name || ''
+    const emailed = await sendEmail(
+      owner.email,
+      `Çelësi i aktivizimit${register ? ` – ${register}` : ''} – KontoSef`,
+      `Përshëndetje ${name},
+
+Çelësi i aktivizimit për ${register || 'arkën'} të ${biz.name}:
+
+${key}
+
+1. Instalo programin KontoSef në pajisjen e arkës (kontosef.app/shkarko).
+2. Hape dhe shkruaj këtë çelës njëherë.
+3. Pastaj hyn me PIN.
+
+Çelësi vlen për një pajisje${until ? ` dhe deri më ${until}` : ''}. Mos ia jep askujt tjetër.`,
+      `<!doctype html><html><body style="margin:0;background:#F7F8FA;font-family:Inter,Segoe UI,Arial,sans-serif;color:#0F172A"><table width="100%" cellpadding="0" cellspacing="0" style="padding:24px 12px"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border:1px solid #E6E8EC;border-radius:12px;overflow:hidden"><tr><td style="background:#0F1B2D;color:#fff;padding:18px 24px;font-size:17px;font-weight:700">KontoSef.app</td></tr><tr><td style="padding:24px"><h1 style="margin:0 0 14px;font-size:20px">Çelësi i aktivizimit</h1><p>Përshëndetje ${esc(name)},</p><p>Çelësi për <b>${esc(register || 'arkën')}</b> të <b>${esc(biz.name)}</b>:</p><p style="margin:18px 0;padding:14px;background:#F1F5F9;border-radius:8px;text-align:center;font-family:Consolas,monospace;font-size:22px;font-weight:700;letter-spacing:2px">${esc(key)}</p><ol style="padding-left:18px;line-height:1.6"><li>Instalo programin KontoSef në pajisjen e arkës (kontosef.app/shkarko).</li><li>Hape dhe shkruaj këtë çelës njëherë.</li><li>Pastaj hyn me PIN.</li></ol><p style="color:#5F6B7A;font-size:13px">Çelësi vlen për një pajisje${until ? ` dhe deri më ${until}` : ''}. Mos ia jep askujt tjetër.</p></td></tr></table></td></tr></table></body></html>`,
+    )
+    if (!emailed) return fail('Email-i nuk u dërgua (kontrollo RESEND_API_KEY / EMAIL_FROM)', 502)
+    await admin.from('audit_log').insert({ business_id: businessId, user_id: caller.id, action: 'activation_key_emailed', entity: 'business', entity_id: businessId, details: { to: owner.email.replace(/^(.).*?@/, '$1***@'), hint: key.slice(-4) } })
+    return json({ email: owner.email })
+  }
+
   if (body.action === 'create_accountant') {
     const fullName = String(body.full_name ?? '').trim().slice(0, 120)
     const office = String(body.office_name ?? '').trim().slice(0, 160) || null
