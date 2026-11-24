@@ -59,6 +59,30 @@ async function sendEmail(to: string, subject: string, text: string, html: string
 
 const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!)
 
+/**
+ * One e-mail in Albanian and Serbian (the two official languages): the Albanian part first, then the Serbian one,
+ * with the shared part (a key, a button) once between them. Plain text in the same order.
+ */
+function bilingual(o: { titleSq: string; titleSr: string; sq: string[]; sr: string[]; middle?: string; sqAfter?: string[]; middleText?: string; noteSq?: string; noteSr?: string }) {
+  const para = (lines: string[]) => lines.map((l) => `<p style="margin:0 0 10px">${l}</p>`).join('')
+  const strip = (h: string) => h.replace(/<[^>]+>/g, '')
+  const lang = (code: string) => `<div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#5F6B7A;margin:0 0 6px">${code}</div>`
+  const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;background:#F7F8FA;font-family:Inter,Segoe UI,Arial,sans-serif;color:#0F172A"><table width="100%" cellpadding="0" cellspacing="0" style="padding:24px 12px"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border:1px solid #E6E8EC;border-radius:12px;overflow:hidden"><tr><td style="background:#0F1B2D;color:#fff;padding:18px 24px;font-size:17px;font-weight:700">KontoSef.app</td></tr><tr><td style="padding:24px">
+${lang('SHQIP')}<h1 style="margin:0 0 12px;font-size:20px">${o.titleSq}</h1>${para(o.sq)}
+${o.middle ?? ''}
+${para(o.sqAfter ?? [])}
+${o.noteSq ? `<p style="color:#5F6B7A;font-size:13px;margin:0 0 4px">${o.noteSq}</p>` : ''}
+<hr style="border:none;border-top:1px solid #E6E8EC;margin:22px 0">
+${lang('SRPSKI')}<h2 style="margin:0 0 12px;font-size:18px">${o.titleSr}</h2>${para(o.sr)}
+${o.noteSr ? `<p style="color:#5F6B7A;font-size:13px;margin:0">${o.noteSr}</p>` : ''}
+</td></tr></table></td></tr></table></body></html>`
+  const text = [
+    o.titleSq, '', ...o.sq.map(strip), ...(o.middleText ? ['', o.middleText, ''] : []), ...(o.sqAfter ?? []).map(strip), ...(o.noteSq ? [strip(o.noteSq)] : []),
+    '', '— SRPSKI —', '', o.titleSr, '', ...o.sr.map(strip), ...(o.middleText ? ['', o.middleText] : []), ...(o.noteSr ? ['', strip(o.noteSr)] : []),
+  ].join('\n')
+  return { html, text }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
   if (req.method !== 'POST') return fail('Metoda nuk lejohet', 405)
@@ -202,17 +226,19 @@ Deno.serve(async (req) => {
     let emailed = false
     if (body.send_email === true) {
       const name = esc(owner.full_name || 'pronar')
-      emailed = await sendEmail(
-        owner.email,
-        'Vendos fjalëkalimin e ri – KontoSef.app',
-        `Përshëndetje ${owner.full_name || ''},
-
-Hape këtë link dhe zgjidh fjalëkalimin e ri për KontoSef.app:
-${actionLink}
-
-Linku vlen vetëm një herë dhe skadon pas pak kohe.`,
-        `<!doctype html><html><body style="margin:0;background:#F7F8FA;font-family:Inter,Segoe UI,Arial,sans-serif;color:#0F172A"><table width="100%" cellpadding="0" cellspacing="0" style="padding:24px 12px"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border:1px solid #E6E8EC;border-radius:12px;overflow:hidden"><tr><td style="background:#0F1B2D;color:#fff;padding:18px 24px;font-size:17px;font-weight:700">KontoSef.app</td></tr><tr><td style="padding:24px"><h1 style="margin:0 0 14px;font-size:20px">Fjalëkalimi i ri</h1><p>Përshëndetje ${name},</p><p>Shtyp butonin dhe zgjidh fjalëkalimin e ri për KontoSef.app.</p><p style="margin:22px 0"><a href="${esc(actionLink)}" style="background:#1F4FA8;color:#fff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:600;display:inline-block">Vendos fjalëkalimin</a></p><p style="color:#5F6B7A;font-size:13px">Linku vlen vetëm një herë dhe skadon pas pak kohe. Nëse nuk e ke kërkuar ti, mos e hap.</p></td></tr></table></td></tr></table></body></html>`,
-      )
+      const who = esc(owner.full_name || '')
+      const button = `<p style="margin:20px 0"><a href="${esc(actionLink)}" style="background:#1F4FA8;color:#fff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:600;display:inline-block">Vendos fjalëkalimin · Postavi lozinku</a></p>`
+      const m = bilingual({
+        titleSq: 'Fjalëkalimi i ri',
+        titleSr: 'Nova lozinka',
+        sq: [`Përshëndetje ${who},`, 'Shtyp butonin dhe zgjidh fjalëkalimin e ri për KontoSef.app.'],
+        sr: [`Poštovani/a ${who},`, 'Kliknite na dugme iznad i izaberite novu lozinku za KontoSef.app.'],
+        middle: button,
+        middleText: actionLink,
+        noteSq: 'Linku vlen vetëm një herë dhe skadon pas pak kohe. Nëse nuk e ke kërkuar ti, mos e hap.',
+        noteSr: 'Link važi samo jednom i ističe ubrzo. Ako ga niste vi zatražili, nemojte ga otvarati.',
+      })
+      emailed = await sendEmail(owner.email, 'Fjalëkalimi i ri · Nova lozinka – KontoSef.app', m.text, m.html)
     }
 
     await admin.from('audit_log').insert([
@@ -244,22 +270,30 @@ Linku vlen vetëm një herë dhe skadon pas pak kohe.`,
     const expires = String(body.expires_at ?? '')
     const until = /^\d{4}-\d{2}-\d{2}/.test(expires) ? expires.slice(0, 10).split('-').reverse().join('.') : ''
     const name = owner.full_name || ''
-    const emailed = await sendEmail(
-      owner.email,
-      `Çelësi i aktivizimit${register ? ` – ${register}` : ''} – KontoSef`,
-      `Përshëndetje ${name},
-
-Çelësi i aktivizimit për ${register || 'arkën'} të ${biz.name}:
-
-${key}
-
-1. Instalo programin KontoSef në pajisjen e arkës (kontosef.app/shkarko).
-2. Hape dhe shkruaj këtë çelës njëherë.
-3. Pastaj hyn me PIN.
-
-Çelësi vlen për një pajisje${until ? ` dhe deri më ${until}` : ''}. Mos ia jep askujt tjetër.`,
-      `<!doctype html><html><body style="margin:0;background:#F7F8FA;font-family:Inter,Segoe UI,Arial,sans-serif;color:#0F172A"><table width="100%" cellpadding="0" cellspacing="0" style="padding:24px 12px"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border:1px solid #E6E8EC;border-radius:12px;overflow:hidden"><tr><td style="background:#0F1B2D;color:#fff;padding:18px 24px;font-size:17px;font-weight:700">KontoSef.app</td></tr><tr><td style="padding:24px"><h1 style="margin:0 0 14px;font-size:20px">Çelësi i aktivizimit</h1><p>Përshëndetje ${esc(name)},</p><p>Çelësi për <b>${esc(register || 'arkën')}</b> të <b>${esc(biz.name)}</b>:</p><p style="margin:18px 0;padding:14px;background:#F1F5F9;border-radius:8px;text-align:center;font-family:Consolas,monospace;font-size:22px;font-weight:700;letter-spacing:2px">${esc(key)}</p><ol style="padding-left:18px;line-height:1.6"><li>Instalo programin KontoSef në pajisjen e arkës (kontosef.app/shkarko).</li><li>Hape dhe shkruaj këtë çelës njëherë.</li><li>Pastaj hyn me PIN.</li></ol><p style="color:#5F6B7A;font-size:13px">Çelësi vlen për një pajisje${until ? ` dhe deri më ${until}` : ''}. Mos ia jep askujt tjetër.</p></td></tr></table></td></tr></table></body></html>`,
-    )
+    const who = esc(name)
+    const reg = esc(register || '')
+    const box = `<p style="margin:18px 0;padding:14px;background:#F1F5F9;border-radius:8px;text-align:center;font-family:Consolas,monospace;font-size:22px;font-weight:700;letter-spacing:2px">${esc(key)}</p>`
+    const m = bilingual({
+      titleSq: 'Çelësi i aktivizimit',
+      titleSr: 'Aktivacioni ključ',
+      sq: [
+        `Përshëndetje ${who},`,
+        `Çelësi për <b>${reg || 'arkën'}</b> të <b>${esc(biz.name)}</b>:`,
+      ],
+      sr: [
+        `Poštovani/a ${who},`,
+        `Ključ za <b>${reg || 'kasu'}</b> preduzeća <b>${esc(biz.name)}</b> je naveden iznad.`,
+        '1. Instalirajte program KontoSef na uređaj kase (kontosef.app/shkarko).',
+        '2. Otvorite ga i jednom unesite ovaj ključ.',
+        '3. Zatim se prijavljujete PIN-om.',
+      ],
+      middle: box,
+      sqAfter: ['1. Instalo programin KontoSef në pajisjen e arkës (kontosef.app/shkarko).', '2. Hape dhe shkruaj këtë çelës njëherë.', '3. Pastaj hyn me PIN.'],
+      middleText: key,
+      noteSq: `Çelësi vlen për një pajisje${until ? ` dhe deri më ${until}` : ''}. Mos ia jep askujt tjetër.`,
+      noteSr: `Ključ važi za jedan uređaj${until ? ` i do ${until}` : ''}. Ne dajte ga nikome drugom.`,
+    })
+    const emailed = await sendEmail(owner.email, `Çelësi i aktivizimit · Aktivacioni ključ${register ? ` – ${register}` : ''} – KontoSef`, m.text, m.html)
     if (!emailed) return fail('Email-i nuk u dërgua (kontrollo RESEND_API_KEY / EMAIL_FROM)', 502)
     await admin.from('audit_log').insert({ business_id: businessId, user_id: caller.id, action: 'activation_key_emailed', entity: 'business', entity_id: businessId, details: { to: owner.email.replace(/^(.).*?@/, '$1***@'), hint: key.slice(-4) } })
     return json({ email: owner.email })
