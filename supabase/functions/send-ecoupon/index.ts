@@ -100,7 +100,11 @@ function html(s: Sale, b: Record<string, unknown>, f: Record<string, unknown>, f
     .map(([k, v]) => `<div>${k}: ${esc(v)}</div>`)
     .join('')
   const sefNo = `${f.branch_id}-${b.nui}-${f.pos_id}`
-  return `<!doctype html><html><body style="margin:0;background:#f4f6f3;padding:16px">
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;background:#f4f6f3;padding:16px">
+<div style="max-width:380px;margin:0 auto 10px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#334155;line-height:1.45">
+  <div>Kuponi juaj fiskal elektronik nga <b>${esc(b.name)}</b>.</div>
+  <div style="color:#64748B">Vaš elektronski fiskalni kupon od <b>${esc(b.name)}</b>.</div>
+</div>
 <div style="max-width:380px;margin:0 auto;background:#fff;padding:16px;font-family:Lato,Arial,Helvetica,sans-serif;font-size:13px;color:#000;line-height:1.35">
   <div style="text-align:center">
     <div>TATIMPAGUESI: ${esc(b.name)}</div>${header}
@@ -138,6 +142,7 @@ function html(s: Sale, b: Record<string, unknown>, f: Record<string, unknown>, f
   <div style="text-align:center;font-style:italic;font-weight:bold;margin-top:8px">e-kuponi</div>
   ${footer ? `<div style="text-align:center;text-transform:uppercase">${esc(footer)}</div>` : ''}
   <div style="text-align:center;font-size:11px;color:#555;margin-top:8px">Kuponin mund ta verifikoni duke skanuar kodin QR me aplikacionin e ATK-së.</div>
+  <div style="text-align:center;font-size:11px;color:#555;margin-top:2px">Kupon možete proveriti skeniranjem QR koda aplikacijom PAK-a.</div>
 </div></body></html>`
 }
 
@@ -149,6 +154,9 @@ function text(s: Sale, b: Record<string, unknown>, f: Record<string, unknown>, f
   const vat = (s.vat_lines ?? []).filter((v) => (v.code === 'D' || v.code === 'E') && Math.abs(Number(v.vat)) > 0.004)
   const payment = s.payment_kind && KIND[s.payment_kind] ? (s.payment_method === 'mixed' ? `KESH + ${KIND[s.payment_kind]}` : KIND[s.payment_kind]) : PAY[s.payment_method] ?? s.payment_method
   const out = [
+    `Kuponi juaj fiskal elektronik nga ${b.name}.`,
+    `Vaš elektronski fiskalni kupon od ${b.name}.`,
+    '',
     `TATIMPAGUESI: ${b.name}`,
     u?.name ? `EMRI I NJËSISË: ${u.name}` : null,
     `NUMRI I NJËSISË: ${f.branch_id}`,
@@ -174,6 +182,7 @@ function text(s: Sale, b: Record<string, unknown>, f: Record<string, unknown>, f
     `KUPON FISKAL DITOR NR. ${pad(s.daily_no, 4)}`,
     '',
     'e-kuponi – kodi QR është në versionin HTML të këtij email-i; skanoje me aplikacionin e ATK-së.',
+    'e-kupon – QR kod je u HTML verziji ove poruke; skenirajte ga aplikacijom PAK-a.',
     footer ? footer.toUpperCase() : null,
   ]
   return out.filter((l) => l !== null).join('\n')
@@ -242,7 +251,7 @@ Deno.serve(async (req) => {
   const png = (await QRCode.toDataURL(String(coupon.qr), { errorCorrectionLevel: 'M', margin: 1, width: 360 })).split(',')[1]
   const appUrl = (Deno.env.get('APP_URL') ?? 'https://kasa-two-psi.vercel.app').replace(/\/$/, '')
   const s = sale as Sale
-  const subject = `Kuponi fiskal nr. ${pad(s.invoice_no, 10)} – ${business.name}`
+  const subject = `Kuponi fiskal · Fiskalni kupon nr. ${pad(s.invoice_no, 10)} – ${business.name}`
   const footer = (settings?.receipt_footer as string | null) ?? null
   // reply address: the owner's e-mail (a real one, not the internal address of a PIN account)
   const { data: owner } = await db.from('profiles').select('email').eq('role', 'admin').not('email', 'is', null).limit(1).maybeSingle()
