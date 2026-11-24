@@ -47,9 +47,9 @@ const body = [
   p('Unë, i nënshkruari, në cilësinë e aplikuesit për certifikimin dhe mirëmbajtjen e Softuerit Elektronik Fiskal të mësipërm, me përgjegjësi të plotë **deklaroj** se softueri **KontoSef.app**, versioni **' + VERSION + '**, është zhvilluar dhe funksionon në pajtueshmëri me:'),
   ...ol([
     'Ligjin Nr. 08/L-257 për Administrimin e Procedurave Tatimore;',
-    'Udhëzimin Administrativ (MF) Nr. 01/2026 për shfrytëzimin e pajisjeve elektronike fiskale, sistemeve fiskale dhe softuerëve elektronikë fiskalë;',
+    'Udhëzimin Administrativ (MF) Nr. 01/2026, datë 27.04.2026, për shfrytëzimin e pajisjeve elektronike fiskale, sistemeve fiskale dhe softuerëve elektronikë fiskalë;',
     'Kërkesat specifike teknike dhe funksionale për pajisjet elektronike fiskale, sistemet fiskale dhe softuerët elektronikë fiskalë, përfshirë ndryshim-plotësimin e vitit 2026;',
-    'Kushtet dhe procedurat për aplikimin, certifikimin dhe mirëmbajtjen e SEF;',
+    'Kushtet dhe Procedurat për Aplikimin, Certifikimin dhe Mirëmbajtjen e Softuerëve Elektronikë Fiskalë (SEF), të miratuara nga Drejtori i Përgjithshëm i ATK-së më 03.07.2026 (sipas nenit 35, paragrafi 5 i Udhëzimit Administrativ (MF) Nr. 01/2026), përfshirë kërkesat e nenit 5 për dokumentacionin dhe të nenit 6 për testimin teknik;',
     'specifikat teknike të shërbimit të fiskalizimit të ATK-së (models.proto, /ca/verify, /ca/signcsr, /pos/coupon).',
   ]),
   p('Në veçanti deklaroj se softueri:'),
