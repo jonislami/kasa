@@ -80,7 +80,9 @@ ATK kërkon që SEF të instalohet në pajisje, ta mbajë çelësin privat të s
   njësitë dërgohen me kodet zyrtare (CP, KGN, PK, LTR – `src/lib/units.ts`).
 - **Kontabilisti – ATK (0032):** skanimi me AI në 4 lloje (`acc_scans.scan_kind`); librat e shitjes/blerjes shkarkohen
   si skedari origjinal i ATK-së (`public/atk/*.xlsx`) i mbushur me të dhëna (`atkXlsx.ts`), me/jo TVSH sipas biznesit
-  (kontroll: `scripts/books-preview.ts`); HR: punonjësit, historiku, vijueshmëria, pushimet, kontrata/vendimi/raporti.
+  (kontroll: `scripts/books-preview.ts`); "Lista e pagave dhe kontributeve" (.xls) dhe "Formulari WR" (.xlsx) mbushen
+  në kopje të shabllonëve origjinalë `public/atk/lista_pagave.xls`, `formulari_wr.xlsx` (`atkForms.ts`, `cfb.ts`; kontroll:
+  `scripts/atk-forms-preview.ts`); HR: punonjësit, historiku, vijueshmëria, pushimet, kontrata/vendimi/raporti.
 - Çdo shitje, rresht fature, termin dhe veprim ruan `worker_id`, që admini ta shohë punën për punëtor.
 - **Arkat (0051–0052):** biznesi paguan për çdo arkë të lidhur me ATK-në (licenca = numri i arkave). Me aprovim krijohet
   një arkë për njësi; arka shtesë kërkohet nga pronari për një njësi dhe e aktivizon admini i platformës. Çdo pajisje SEF
