@@ -7,11 +7,11 @@ import { useBusiness } from '@/app/AuthProvider'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { PageHeader } from '@/app/layout/AppLayout'
-import { Badge, Button, Card, EmptyState, Select } from '@/components/ui'
+import { Badge, Button, Card, EmptyState, Select, Tabs } from '@/components/ui'
 import { formatEUR } from '@/lib/money'
 import { fetchPeople, peopleMap } from '@/features/stock/api'
 import { fetchAccountants } from '@/features/accounting/api'
-import { fetchAudit, periodRange, type AuditRow, type PeriodKey } from './api'
+import { fetchAudit, fetchChain, fetchFiscalLog, periodRange, type AuditRow, type ChainRow, type FiscalLogRow, type PeriodKey } from './api'
 import { SqDateFormat } from '@/lib/sqDate'
 import { isSefApp } from '@/lib/device'
 
@@ -130,8 +130,34 @@ export function describe(a: AuditRow): string {
   }
 }
 
+const FISCAL_ACTIONS: Record<string, string> = { verify: 'Kodi i verifikimit', signcsr: 'Certifikata', coupon: 'Kupon fiskal', store: 'Ruajtja e përgjigjes' }
+
+/** Integrity Check of one row: OK, broken, or written before the chain (0057). */
+function integrity(c: ChainRow | undefined): { label: string; tone: Tone } {
+  if (!c || c.intact == null) return { label: 'Pa zinxhir', tone: 'neutral' }
+  return c.intact ? { label: 'OK', tone: 'success' } : { label: 'I PRISHUR', tone: 'warn' }
+}
+
+function download(name: string, header: string[], body: string[][]) {
+  const esc = (v: string) => `"${v.replace(/"/g, '""')}"`
+  const lines = [header.map(esc).join(';'), ...body.map((r) => r.map(esc).join(';'))]
+  const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = name
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+const fiscalText = (f: FiscalLogRow) =>
+  [f.coupon_id ? `Kuponi ${String(f.coupon_id)}` : null, f.http_status ? `HTTP ${f.http_status}` : null, f.env === 'test' ? 'test' : null, f.message].filter(Boolean).join(' · ')
+
+type Tab = 'actions' | 'fiscal'
+
 export function AuditPage() {
   const { business } = useBusiness()
+  const [tab, setTab] = useState<Tab>('actions')
   const [period, setPeriod] = useState<PeriodKey>('today')
   const [userId, setUserId] = useState('')
   const [action, setAction] = useState('')
@@ -142,6 +168,19 @@ export function AuditPage() {
   const audit = useQuery({
     queryKey: ['audit', range.from, range.to, userId, action],
     queryFn: () => fetchAudit({ from: range.from, to: range.to, userId: userId || undefined, action: action || undefined }),
+    enabled: tab === 'actions',
+  })
+  const fiscal = useQuery({ queryKey: ['fiscal-log', range.from, range.to], queryFn: () => fetchFiscalLog({ from: range.from, to: range.to }), enabled: tab === 'fiscal' })
+  // Previous Hash, Current Hash, Integrity Check of each row (0057)
+  const chain = useQuery({
+    queryKey: ['log-chain', tab, range.from, range.to, tab === 'actions' ? audit.dataUpdatedAt : fiscal.dataUpdatedAt],
+    queryFn: () => fetchChain(tab === 'actions' ? 'audit' : 'fiscal', range.from, range.to),
+  })
+  const registers = useQuery({
+    queryKey: ['register-names', business.id],
+    queryFn: async () => new Map(((await supabase.from('registers').select('id, name')).data ?? []).map((r) => [r.id as string, r.name as string])),
+    staleTime: 5 * 60_000,
+    enabled: tab === 'fiscal',
   })
   // The accountant is not in profiles; without migration 0012 the list is simply empty.
   const accountants = useQuery({ queryKey: ['accountants', business.id], queryFn: () => fetchAccountants().catch(() => []), staleTime: 5 * 60_000 })
@@ -157,29 +196,79 @@ export function AuditPage() {
     return s ? list.filter((x) => x.text.toLowerCase().includes(s)) : list
   }, [audit.data, q])
 
-  // ATK: audit logs protected with an integrity check (0034, audit_verify)
+  const fiscalRows = useMemo(() => {
+    const s = q.trim().toLowerCase()
+    const list = (fiscal.data ?? []).map((f) => ({ f, text: fiscalText(f) }))
+    return s ? list.filter((x) => x.text.toLowerCase().includes(s)) : list
+  }, [fiscal.data, q])
+
+  const links = chain.data ?? new Map<number, ChainRow>()
+  const count = tab === 'actions' ? rows.length : fiscalRows.length
+  const current = tab === 'actions' ? audit : fiscal
+
+  // ATK: logs protected with an integrity check (0034 audit_verify, 0057 fiscal_verify)
   const verify = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.rpc('audit_verify')
+      const { data, error } = await supabase.rpc(tab === 'actions' ? 'audit_verify' : 'fiscal_verify')
       if (error) throw new Error(['PGRST202', '42883'].includes(error.code ?? '') ? NOT_READY : friendlyMessage(error.message))
-      return data as { ok: boolean; checked: number; broken: { id: number; action: string }[] }
+      return { ...(data as { ok: boolean; checked: number; broken: { id: number; action: string }[] }), tab }
     },
   })
 
+  const userName = (id: string | null) => (id ? names.get(id) ?? '' : 'Sistemi')
+  const registerName = (id: string | null) => (id ? registers.data?.get(id) ?? '' : '')
+
   const exportCsv = () => {
-    const esc = (v: string) => `"${v.replace(/"/g, '""')}"`
-    const lines = [
-      ['Data / ora', 'Përdoruesi', 'Veprimi', 'Detajet'].map(esc).join(';'),
-      ...rows.map(({ a, text }) => [dtFmt.format(new Date(a.created_at)), a.user_id ? names.get(a.user_id) ?? '' : 'Sistemi', ACTIONS[a.action]?.label ?? a.action, text].map(esc).join(';')),
-    ]
-    const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `regjistri-${range.from}-${range.to}.csv`
-    link.click()
-    URL.revokeObjectURL(url)
+    const chainCols = (id: number) => {
+      const c = links.get(id)
+      return [c?.prev_hash ?? '', c?.hash ?? '', integrity(c).label]
+    }
+    if (tab === 'actions') {
+      download(
+        `regjistri-${range.from}-${range.to}.csv`,
+        ['ID', 'Data / ora', 'Përdoruesi', 'Veprimi', 'Detajet', 'Payload', 'Previous Hash', 'Current Hash', 'Integrity Check'],
+        rows.map(({ a, text }) => [String(a.id), dtFmt.format(new Date(a.created_at)), userName(a.user_id), ACTIONS[a.action]?.label ?? a.action, text, JSON.stringify(a.details ?? {}), ...chainCols(a.id)]),
+      )
+    } else {
+      download(
+        `log-fiskal-${range.from}-${range.to}.csv`,
+        ['ID', 'Data / ora', 'Arka', 'Përdoruesi', 'Veprimi', 'Statusi', 'Detajet', 'Payload', 'Previous Hash', 'Current Hash', 'Integrity Check'],
+        fiscalRows.map(({ f, text }) => [
+          String(f.id),
+          dtFmt.format(new Date(f.created_at)),
+          registerName(f.register_id),
+          userName(f.user_id),
+          FISCAL_ACTIONS[f.action] ?? f.action,
+          f.ok ? 'OK' : 'Gabim',
+          text,
+          f.payload ?? '',
+          ...chainCols(f.id),
+        ]),
+      )
+    }
   }
+
+  const th = 'border-b border-line px-3 py-3 font-semibold'
+  const td = 'border-b border-line px-3 py-3 align-top'
+  const hashCell = (id: number) => {
+    const c = links.get(id)
+    const it = integrity(c)
+    return (
+      <td className={td}>
+        <Badge tone={it.tone}>{it.label}</Badge>
+        {c?.hash && (
+          <div className="mt-1 font-mono text-[11px] text-muted" title={`Previous: ${c.prev_hash ?? '—'}\nCurrent: ${c.hash}`}>
+            {c.hash.slice(0, 12)}…
+          </div>
+        )}
+      </td>
+    )
+  }
+
+  const printRows =
+    tab === 'actions'
+      ? rows.map(({ a, text }) => ({ id: a.id, at: a.created_at, who: userName(a.user_id) || '—', what: ACTIONS[a.action]?.label ?? a.action, text, payload: JSON.stringify(a.details ?? {}) }))
+      : fiscalRows.map(({ f, text }) => ({ id: f.id, at: f.created_at, who: registerName(f.register_id) || '—', what: FISCAL_ACTIONS[f.action] ?? f.action, text, payload: f.payload ?? '' }))
 
   return (
     <>
@@ -193,10 +282,10 @@ export function AuditPage() {
             {/* the audit report is downloaded only from the SEF app; the web app shows it */}
             {isSefApp && (
               <>
-                <Button variant="secondary" onClick={exportCsv} disabled={rows.length === 0}>
+                <Button variant="secondary" onClick={exportCsv} disabled={count === 0}>
                   CSV
                 </Button>
-                <Button variant="secondary" onClick={() => window.print()} disabled={rows.length === 0}>
+                <Button variant="secondary" onClick={() => window.print()} disabled={count === 0}>
                   PDF
                 </Button>
               </>
@@ -209,19 +298,36 @@ export function AuditPage() {
           Raporti i auditit (CSV / PDF) shkarkohet vetëm nga programi SEF: hyr me PIN-in e pronarit ose të menaxherit, pastaj Menuja → Raporti i auditit.
         </p>
       )}
-      <p className="-mt-5 hidden px-8 pb-5 text-muted md:block">Çdo veprim në arkë dhe në cilësime, me kohën dhe përdoruesin. Nuk mund të fshihet; çdo rresht është i lidhur me të mëparshmin (SHA-256), që çdo ndryshim të zbulohet.</p>
-      {verify.data && (
+      <p className="-mt-5 hidden px-8 pb-5 text-muted md:block">
+        {tab === 'actions'
+          ? 'Çdo veprim në arkë dhe në cilësime, me kohën dhe përdoruesin. Nuk mund të fshihet; çdo rresht është i lidhur me të mëparshmin (SHA-256), që çdo ndryshim të zbulohet.'
+          : 'Çdo komunikim me ATK-në: regjistrimi i arkës, çdo kupon i dërguar me payload-in e tij dhe përgjigjja. Çdo rresht është i lidhur me të mëparshmin (SHA-256).'}
+      </p>
+      <div className="mb-4 px-4 md:px-8 print:hidden">
+        <Tabs
+          value={tab}
+          onChange={(v) => {
+            setTab(v)
+            verify.reset()
+          }}
+          options={[
+            { value: 'actions', label: 'Veprimet' },
+            { value: 'fiscal', label: 'Komunikimi me ATK' },
+          ]}
+        />
+      </div>
+      {verify.data && verify.data.tab === tab && (
         <div className={`mx-4 mb-4 rounded-ctl px-4 py-3 text-sm md:mx-8 ${verify.data.ok ? 'bg-brand-100 text-brand-600' : 'bg-warn-100 text-warn-700'}`}>
           {verify.data.ok
-            ? `Integriteti në rregull: ${verify.data.checked} veprime të kontrolluara, asnjë ndryshim.`
-            : `Kujdes: ${verify.data.broken.length} veprime nuk përputhen me zinxhirin (${verify.data.broken.map((b) => '#' + b.id).join(', ')}).`}
+            ? `Integriteti në rregull: ${verify.data.checked} rreshta të kontrolluar, asnjë ndryshim.`
+            : `Kujdes: ${verify.data.broken.length} rreshta nuk përputhen me zinxhirin (${verify.data.broken.map((b) => '#' + b.id).join(', ')}).`}
         </div>
       )}
       {verify.error && <div className="mx-4 mb-4 rounded-ctl bg-warn-100 px-4 py-3 text-sm text-warn-700 md:mx-8">{(verify.error as Error).message}</div>}
 
       <div className="px-4 pb-8 pt-4 md:px-8 md:pt-0">
         <Card className="overflow-hidden">
-          <div className="grid gap-3 border-b border-line p-4 sm:grid-cols-2 lg:grid-cols-[180px_200px_200px_1fr] print:hidden">
+          <div className={`grid gap-3 border-b border-line p-4 sm:grid-cols-2 print:hidden ${tab === 'actions' ? 'lg:grid-cols-[180px_200px_200px_1fr]' : 'lg:grid-cols-[180px_1fr]'}`}>
             <Select
               label="Periudha"
               value={period}
@@ -233,31 +339,36 @@ export function AuditPage() {
                 { value: 'month', label: 'Ky muaj' },
               ]}
             />
-            <Select label="Përdoruesi" value={userId} onChange={(e) => setUserId(e.target.value)} options={[{ value: '', label: 'Të gjithë' }, ...[...names.entries()].map(([value, label]) => ({ value, label }))]} />
-            <Select label="Veprimi" value={action} onChange={(e) => setAction(e.target.value)} options={[{ value: '', label: 'Të gjitha' }, ...Object.entries(ACTIONS).map(([value, v]) => ({ value, label: v.label }))]} />
+            {tab === 'actions' && (
+              <>
+                <Select label="Përdoruesi" value={userId} onChange={(e) => setUserId(e.target.value)} options={[{ value: '', label: 'Të gjithë' }, ...[...names.entries()].map(([value, label]) => ({ value, label }))]} />
+                <Select label="Veprimi" value={action} onChange={(e) => setAction(e.target.value)} options={[{ value: '', label: 'Të gjitha' }, ...Object.entries(ACTIONS).map(([value, v]) => ({ value, label: v.label }))]} />
+              </>
+            )}
             <div className="flex flex-col gap-1.5">
               <span className="text-sm font-medium">Kërko</span>
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Kërko në detaje" className="h-[46px] rounded-ctl border border-field px-3.5 focus:border-brand-600 focus:outline-none" />
             </div>
           </div>
 
-          {loadState(audit) === 'offline' ? (
-              <OfflineEmpty />
-            ) : loadState(audit) === 'loading' ? (
+          {loadState(current) === 'offline' ? (
+            <OfflineEmpty />
+          ) : loadState(current) === 'loading' ? (
             <p className="py-12 text-center text-muted">Duke ngarkuar…</p>
-          ) : loadState(audit) === 'error' ? (
-            <EmptyState title="Regjistri nuk u ngarkua" text={(audit.error as Error).message} />
-          ) : rows.length === 0 ? (
-            <EmptyState title="Asnjë veprim në këtë periudhë" text="Zgjidh një periudhë më të gjatë ose hiq filtrat." />
-          ) : (
+          ) : loadState(current) === 'error' ? (
+            <EmptyState title="Regjistri nuk u ngarkua" text={(current.error as Error).message} />
+          ) : count === 0 ? (
+            <EmptyState title="Asnjë rresht në këtë periudhë" text="Zgjidh një periudhë më të gjatë ose hiq filtrat." />
+          ) : tab === 'actions' ? (
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-sm">
                 <thead className="bg-[#F9FAFB]">
                   <tr className="text-left text-[13px] text-muted">
-                    <th className="border-b border-line px-4 py-3 font-semibold">Data / ora</th>
-                    <th className="border-b border-line px-3 py-3 font-semibold">Përdoruesi</th>
-                    <th className="border-b border-line px-3 py-3 font-semibold">Veprimi</th>
-                    <th className="border-b border-line px-4 py-3 font-semibold">Detajet</th>
+                    <th className={th + ' px-4'}>Data / ora</th>
+                    <th className={th}>Përdoruesi</th>
+                    <th className={th}>Veprimi</th>
+                    <th className={th + ' px-4'}>Detajet</th>
+                    <th className={th}>Integriteti</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -265,55 +376,104 @@ export function AuditPage() {
                     const meta = ACTIONS[a.action] ?? { label: a.action, tone: 'neutral' as Tone }
                     return (
                       <tr key={a.id}>
-                        <td className="whitespace-nowrap border-b border-line px-4 py-3 font-mono text-[13px]">{dtFmt.format(new Date(a.created_at))}</td>
-                        <td className="whitespace-nowrap border-b border-line px-3 py-3">{a.user_id ? names.get(a.user_id) ?? '—' : 'Sistemi'}</td>
-                        <td className="border-b border-line px-3 py-3">
+                        <td className={td + ' whitespace-nowrap px-4 font-mono text-[13px]'}>{dtFmt.format(new Date(a.created_at))}</td>
+                        <td className={td + ' whitespace-nowrap'}>{a.user_id ? names.get(a.user_id) ?? '—' : 'Sistemi'}</td>
+                        <td className={td}>
                           <Badge tone={meta.tone}>{meta.label}</Badge>
                         </td>
-                        <td className="border-b border-line px-4 py-3">{text}</td>
+                        <td className={td + ' px-4'}>{text}</td>
+                        {hashCell(a.id)}
                       </tr>
                     )
                   })}
                 </tbody>
               </table>
             </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-sm">
+                <thead className="bg-[#F9FAFB]">
+                  <tr className="text-left text-[13px] text-muted">
+                    <th className={th + ' px-4'}>Data / ora</th>
+                    <th className={th}>Arka</th>
+                    <th className={th}>Veprimi</th>
+                    <th className={th + ' px-4'}>Detajet</th>
+                    <th className={th}>Payload</th>
+                    <th className={th}>Integriteti</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {fiscalRows.map(({ f, text }) => (
+                    <tr key={f.id}>
+                      <td className={td + ' whitespace-nowrap px-4 font-mono text-[13px]'}>{dtFmt.format(new Date(f.created_at))}</td>
+                      <td className={td + ' whitespace-nowrap'}>{registerName(f.register_id) || '—'}</td>
+                      <td className={td}>
+                        <Badge tone={f.ok ? 'success' : 'warn'}>{FISCAL_ACTIONS[f.action] ?? f.action}</Badge>
+                      </td>
+                      <td className={td + ' px-4'}>{text}</td>
+                      <td className={td + ' max-w-[220px] truncate font-mono text-[11px] text-muted'} title={f.payload ?? ''}>
+                        {f.payload ?? '—'}
+                      </td>
+                      {hashCell(f.id)}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
           <div className="flex justify-between px-4 py-3 text-sm text-muted">
-            <span>{rows.length} veprime</span>
-            {(audit.data?.length ?? 0) >= 1000 && <span>Shfaqen 1000 të fundit – ngushto periudhën.</span>}
+            <span>{count} rreshta</span>
+            {(current.data?.length ?? 0) >= 1000 && <span>Shfaqen 1000 të fundit – ngushto periudhën.</span>}
           </div>
         </Card>
       </div>
 
-      {isSefApp && createPortal(
-        <div className="print-root print-a4 hidden text-[11px] text-black">
-          <h1 className="text-lg font-bold">Regjistri i veprimeve – {business.name}</h1>
-          <p className="mb-3">
-            {range.from === range.to ? range.from : `${range.from} – ${range.to}`} · {rows.length} veprime
-          </p>
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="text-left">
-                <th className="border-b border-black py-1 pr-2">Data / ora</th>
-                <th className="border-b border-black py-1 pr-2">Përdoruesi</th>
-                <th className="border-b border-black py-1 pr-2">Veprimi</th>
-                <th className="border-b border-black py-1">Detajet</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map(({ a, text }) => (
-                <tr key={a.id}>
-                  <td className="whitespace-nowrap border-b border-gray-300 py-1 pr-2 align-top">{dtFmt.format(new Date(a.created_at))}</td>
-                  <td className="border-b border-gray-300 py-1 pr-2 align-top">{a.user_id ? names.get(a.user_id) ?? '—' : 'Sistemi'}</td>
-                  <td className="border-b border-gray-300 py-1 pr-2 align-top">{ACTIONS[a.action]?.label ?? a.action}</td>
-                  <td className="border-b border-gray-300 py-1 align-top">{text}</td>
+      {isSefApp &&
+        createPortal(
+          <div className="print-root print-a4 hidden text-[10px] text-black">
+            <h1 className="text-lg font-bold">
+              {tab === 'actions' ? 'Regjistri i veprimeve' : 'Log-u i komunikimit me ATK'} – {business.name}
+            </h1>
+            <p className="mb-3">
+              {range.from === range.to ? range.from : `${range.from} – ${range.to}`} · {count} rreshta · Previous Hash / Current Hash: SHA-256
+            </p>
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="text-left">
+                  <th className="border-b border-black py-1 pr-2">Data / ora</th>
+                  <th className="border-b border-black py-1 pr-2">{tab === 'actions' ? 'Përdoruesi' : 'Arka'}</th>
+                  <th className="border-b border-black py-1 pr-2">Veprimi</th>
+                  <th className="border-b border-black py-1 pr-2">Detajet / Payload</th>
+                  <th className="border-b border-black py-1 pr-2">Previous / Current Hash</th>
+                  <th className="border-b border-black py-1">Integrity Check</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>,
-        document.body,
-      )}
+              </thead>
+              <tbody>
+                {printRows.map((r) => {
+                  const c = links.get(r.id)
+                  return (
+                    <tr key={r.id} className="break-inside-avoid">
+                      <td className="whitespace-nowrap border-b border-gray-300 py-1 pr-2 align-top">{dtFmt.format(new Date(r.at))}</td>
+                      <td className="border-b border-gray-300 py-1 pr-2 align-top">{r.who}</td>
+                      <td className="border-b border-gray-300 py-1 pr-2 align-top">{r.what}</td>
+                      <td className="border-b border-gray-300 py-1 pr-2 align-top">
+                        {r.text}
+                        {r.payload && <div className="break-all font-mono text-[7px] text-gray-600">{r.payload}</div>}
+                      </td>
+                      <td className="max-w-[170px] break-all border-b border-gray-300 py-1 pr-2 align-top font-mono text-[7px]">
+                        {c?.prev_hash ?? '—'}
+                        <br />
+                        {c?.hash ?? '—'}
+                      </td>
+                      <td className="border-b border-gray-300 py-1 align-top">{integrity(c).label}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>,
+          document.body,
+        )}
     </>
   )
 }

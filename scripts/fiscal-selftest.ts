@@ -68,6 +68,68 @@ try {
 }
 check('cancel without ReferenceNo is refused', threw)
 
+// --- 1b. item Price carries the discounts (ATK, testimi teknik 2027): Price = line Total / Quantity
+{
+  const h = { nui: '810000001', branchId: 1, posId: 1, applicationId: 1234, location: 'Prishtinë', operatorId: '001', couponId: 12, verificationNo: 'DISC234567890ABC', time: 1727151300 }
+  const d = buildCoupons(
+    {
+      kind: 'sale',
+      total: 20.87,
+      discount_total: 2.17,
+      cash_amount: 20.87,
+      card_amount: 0,
+      vat_lines: [
+        { code: 'E', gross: 13.07, net: 11.08, vat: 1.99 },
+        { code: 'D', gross: 7.8, net: 7.22, vat: 0.58 },
+      ],
+      items: [
+        // no discount → shelf price
+        { name: 'pa zbritje', unit: 'cope', quantity: 3, unit_price: 1.5, total: 4.5, vat_code: 'E' },
+        // 10% on the line: 2 × 2.50 = 5.00 − 0.50 = 4.50 → 2.25
+        { name: 'ulje 10%', unit: 'cope', quantity: 2, unit_price: 2.5, total: 4.5, vat_code: 'E' },
+        // 1.00 € on the line + 0.33 share of the total discount: 3 × 1.80 = 5.40 − 1.33 = 4.07 → 1.3567
+        { name: 'ulje € + total', unit: 'cope', quantity: 3, unit_price: 1.8, total: 4.07, vat_code: 'E' },
+        // weighed: 0.755 kg × 4.00 = 3.02 − 0.10 = 2.92 → 3.8675
+        { name: 'kg me ulje', unit: 'kg', quantity: 0.755, unit_price: 4, total: 2.92, vat_code: 'D' },
+        // 4 decimals: 1 × 5.1234, total discount share 0.24 → 4.88
+        { name: '4 shifra', unit: 'cope', quantity: 1, unit_price: 5.1234, total: 4.88, vat_code: 'D' },
+      ],
+    },
+    h,
+  )
+  const p = d.pos.Items.map((i) => Number(i.Price))
+  check('Price without discount = shelf price', p[0] === 15000, String(p[0]))
+  check('Price after 10% line discount', p[1] === 22500, String(p[1]))
+  check('Price after € line + total discount', p[2] === 13567, String(p[2]))
+  check('Price of weighed item after discount', p[3] === 38675, String(p[3]))
+  check('Price with 4 decimals after total discount', p[4] === 48800, String(p[4]))
+  check('item Totals add up to coupon Total', d.pos.Items.reduce((n, i) => n + BigInt(i.Total), 0n) === d.pos.Total * 100n)
+  check('|Price × Quantity − Total| < 1 cent', d.pos.Items.every((i) => Math.abs(Number(i.Price) * i.Quantity - Number(i.Total)) < 100))
+  check('TotalDiscount in cents', d.pos.TotalDiscount === 217n)
+}
+
+// --- 1c. business outside VAT (testimi teknik: "subjektet që nuk janë të regjistruar në TVSH"): every line A,
+// one tax group A with no tax, TotalNoTax = Total; cash + card
+{
+  const h = { nui: '810000002', branchId: 1, posId: 1, applicationId: 1234, location: 'Prishtinë', operatorId: '001', couponId: 13, verificationNo: 'NOVAT34567890ABC', time: 1727151400 }
+  const items = [
+    { name: 'buke', unit: 'cope', quantity: 2, unit_price: 0.5, total: 1, vat_code: 'A' as const },
+    { name: 'djathe', unit: 'kg', quantity: 0.755, unit_price: 6.2, total: 4.68, vat_code: 'A' as const },
+    { name: 'uje', unit: 'cope', quantity: 6, unit_price: 0.45, total: 2.43, vat_code: 'A' as const }, // 10% off
+    { name: 'kafe', unit: 'cope', quantity: 1, unit_price: 3.1234, total: 2.62, vat_code: 'A' as const }, // 0.50 € off
+    { name: 'leng', unit: 'cope', quantity: 3, unit_price: 1.2, total: 3.27, vat_code: 'A' as const }, // share of 5% total
+  ]
+  const total = 14
+  const nv = buildCoupons({ kind: 'sale', total, discount_total: 1.27, cash_amount: 9, card_amount: 5, vat_lines: [{ code: 'A', gross: total, net: total, vat: 0 }], items }, h)
+  check('outside VAT: items all A', nv.pos.Items.every((i) => i.TaxRate === 'A'))
+  check('outside VAT: one tax group A, no tax', nv.pos.TaxGroups.length === 1 && nv.pos.TaxGroups[0].TaxRate === 'A' && BigInt(nv.pos.TaxGroups[0].TotalTax) === 0n && BigInt(nv.pos.TaxGroups[0].TotalForTax) === 1400n)
+  check('outside VAT: TotalTax 0, TotalNoTax = Total', nv.pos.TotalTax === 0n && nv.pos.TotalNoTax === nv.pos.Total && nv.citizen.TotalNoTax === 1400n)
+  check('outside VAT: cash + card add up', nv.pos.Payments.length === 2 && nv.pos.Payments.reduce((n, p) => n + BigInt(p.Amount), 0n) === 1400n)
+  check('outside VAT: item Totals add up', nv.pos.Items.reduce((n, i) => n + BigInt(i.Total), 0n) === 140000n)
+  const ours = encodePosCoupon(nv.pos)
+  check('outside VAT: PosCoupon bytes', hex(ours) === hex(PosT.encode(PosT.fromObject(asPlain(nv.pos))).finish()))
+}
+
 // --- 2. signature
 const pair = (await webcrypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign', 'verify'])) as CryptoKeyPair
 const signer: RawSigner = async (data) => new Uint8Array(await webcrypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, pair.privateKey, data))

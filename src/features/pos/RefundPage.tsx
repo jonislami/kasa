@@ -7,7 +7,7 @@ import { fiscalizeSale } from './fiscal'
 import { Button, Card, Dialog, Input, Select } from '@/components/ui'
 import { hasModule } from '@/lib/business'
 import { cn } from '@/lib/cn'
-import { formatEUR, formatInvoiceNo, round2 } from '@/lib/money'
+import { formatEUR, formatPrice, formatInvoiceNo, round2 } from '@/lib/money'
 import { unitLabel } from '@/lib/units'
 import { VAT_RATES } from '@/lib/vat'
 import { APPROVAL_MESSAGES, lookupSale, refundSale, type Sale, type SaleItem } from './api'
@@ -220,7 +220,7 @@ export function RefundPage() {
                         <div className="min-w-0 flex-1">
                           <div className="truncate font-semibold">{i.name}</div>
                           <div className="text-xs text-muted">
-                            Blerë {i.quantity} · {formatEUR(i.unit_price)} / {unitLabel(i.unit)}
+                            Blerë {i.quantity} · {formatPrice(i.unit_price)} / {unitLabel(i.unit)}
                             {i.refunded > 0 && ` · kthyer ${i.refunded}`}
                           </div>
                         </div>

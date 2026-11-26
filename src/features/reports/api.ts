@@ -366,6 +366,59 @@ export async function fetchAudit(opts: { from: string; to: string; userId?: stri
   return (data ?? []) as AuditRow[]
 }
 
+/** Previous Hash, Current Hash and Integrity Check of each log row (0057); intact null = written before the chain. */
+export interface ChainRow {
+  id: number
+  prev_hash: string | null
+  hash: string | null
+  intact: boolean | null
+}
+
+/** Chain of audit_log or fiscal_log for a period, by row id; empty before migration 0057. */
+export async function fetchChain(log: 'audit' | 'fiscal', from: string, to: string): Promise<Map<number, ChainRow>> {
+  const { data, error } = await supabase.rpc(log === 'audit' ? 'audit_chain' : 'fiscal_chain', {
+    p_from: new Date(from + 'T00:00:00').toISOString(),
+    p_to: new Date(addDays(to, 1) + 'T00:00:00').toISOString(),
+  })
+  if (error) {
+    if (['PGRST202', '42883'].includes(error.code ?? '')) return new Map()
+    fail(error)
+  }
+  return new Map(((data ?? []) as ChainRow[]).map((r) => [Number(r.id), r]))
+}
+
+/** One call of this business to ATK (fiscal_log). payload: what was sent – {"details", "signature"} of a coupon. */
+export interface FiscalLogRow {
+  id: number
+  register_id: string | null
+  sale_id: string | null
+  user_id: string | null
+  env: string
+  action: string
+  ok: boolean
+  http_status: number | null
+  coupon_id: number | string | null
+  message: string | null
+  payload?: string | null
+  created_at: string
+}
+
+export async function fetchFiscalLog(opts: { from: string; to: string; limit?: number }): Promise<FiscalLogRow[]> {
+  const run = (cols: string) =>
+    supabase
+      .from('fiscal_log')
+      .select(cols)
+      .gte('created_at', new Date(opts.from + 'T00:00:00').toISOString())
+      .lt('created_at', new Date(addDays(opts.to, 1) + 'T00:00:00').toISOString())
+      .order('id', { ascending: false })
+      .limit(opts.limit ?? 1000)
+  const base = 'id, register_id, sale_id, user_id, env, action, ok, http_status, coupon_id, message, created_at'
+  let { data, error } = await run(base + ', payload')
+  if (error?.code === '42703') ({ data, error } = await run(base)) // before 0057: no payload column
+  if (error) fail(error)
+  return (data ?? []) as unknown as FiscalLogRow[]
+}
+
 export const PAY_LABEL = { cash: 'Kesh', card: 'Kartelë', mixed: 'Kesh + Kartelë' } as const
 
 export function pctChange(now: number, before: number): number | null {

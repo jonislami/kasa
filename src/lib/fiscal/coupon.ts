@@ -1,6 +1,6 @@
 // Builds the two ATK messages of one receipt from a KontoSef sale.
 // Units (github.com/fiskalizimi, "Important notes" + the sample coupon):
-//   item Price and item Total → €0.0001 (×10000)
+//   item Price and item Total → €0.0001 (×10000); both after the discounts of the line (Price = Total / Quantity)
 //   coupon Total, Payments, TaxGroups, TotalTax, TotalNoTax, TotalDiscount → cents (×100)
 //   TaxGroups: TotalForTax = base without VAT, TotalTax = VAT (as in the ATK sample: E 10.50 → 889 / 161)
 // PosCoupon and CitizenCoupon get the same header and totals, otherwise ATK marks the coupon
@@ -59,6 +59,21 @@ const big = (v: number | string) => BigInt(String(v).trim() || '0')
 const TYPE: Record<FiscalSale['kind'], CouponTypeValue> = { sale: CouponType.Sale, void: CouponType.Cancel, refund: CouponType.Return }
 const RATE_ORDER: VatCode[] = ['A', 'C', 'D', 'E']
 
+/**
+ * Unit price sent to ATK: the price after every discount of the line – its own discount and its share of the
+ * discount on the total (ATK, testimi teknik 2027: "çmimi sipas artikullit duhet të jetë me zbritje, si te fusha
+ * price ashtu edhe te totali i CouponItem"). Total is the line total after discounts (it adds up to the coupon
+ * Total), Price = Total / Quantity in €0.0001. Without a discount it is the shelf price, as before.
+ */
+function discountedPrice(i: FiscalSaleItem): bigint {
+  const qty = Math.abs(i.quantity)
+  const total = tenThousandths(i.total)
+  if (!(qty > 0)) return tenThousandths(i.unit_price)
+  // no discount on the line: the shelf price itself (avoids 1.4999 for 3 × 1.50 = 4.50 after float division)
+  if (total === tenThousandths(Math.round(qty * Math.abs(i.unit_price) * 100) / 100)) return tenThousandths(i.unit_price)
+  return BigInt(Math.round(Number(total) / qty))
+}
+
 /** NUIKF / VerificationNo: unique per coupon, alphanumeric, no spaces, at most 16 characters. */
 export function newVerificationNo(): string {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -73,7 +88,7 @@ export function buildCoupons(sale: FiscalSale, h: FiscalHeader): { pos: PosCoupo
 
   const items: CouponItem[] = sale.items.map((i) => ({
     Name: i.name.trim().slice(0, 100),
-    Price: tenThousandths(i.unit_price),
+    Price: discountedPrice(i),
     // official ATK codes: "Njësitë matëse" (CP, KGN, PK, LTR…) and "Kategoritë e mallrave dhe shërbimeve"
     Unit: UNITS[i.unit as UnitCode]?.atk ?? unitCode(i.unit) ?? 'CP',
     Quantity: Math.abs(i.quantity),

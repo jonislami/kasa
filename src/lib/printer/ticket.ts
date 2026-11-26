@@ -4,7 +4,7 @@ import { STATION_LABELS } from '@/features/restaurant/api'
 import type { ReceiptSettings } from '@/features/settings/api'
 import { charsPerLine, EscPos } from './escpos'
 
-const qty = (v: number) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 3, useGrouping: false }).format(v)
+const qty = (v: number) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 4, useGrouping: false }).format(v)
 
 /** Kitchen / bar ticket: big table name and quantities, no prices. */
 export function ticketBytes(t: Ticket, s: Pick<ReceiptSettings, 'paper_width' | 'printer_charset'>, reprint = false): Uint8Array {

@@ -5,7 +5,7 @@ import { ChevronLeft, Plus, Trash2, X } from 'lucide-react'
 import { PageHeader } from '@/app/layout/AppLayout'
 import { Button, Card } from '@/components/ui'
 import { cn } from '@/lib/cn'
-import { formatEUR, round2 } from '@/lib/money'
+import { formatEUR, formatPrice, round2 } from '@/lib/money'
 import { unitLabel } from '@/lib/units'
 import { fetchCategories, fetchProducts } from '@/features/products/api'
 import { ProductPicker } from '@/features/stock/ProductPicker'
@@ -111,7 +111,7 @@ export function MenuItemPage() {
       />
       <div className="flex flex-col gap-5 px-4 pb-28 pt-2 md:px-8 md:pb-8">
         <p className="-mt-3 text-muted">
-          {formatEUR(item.sale_price)}
+          {formatPrice(item.sale_price)}
           {cat && ` · ${cat.name}`}
         </p>
         {notice && <div className="rounded-card border border-brand-600/30 bg-brand-100 px-4 py-3 font-medium text-brand-600">{notice}</div>}

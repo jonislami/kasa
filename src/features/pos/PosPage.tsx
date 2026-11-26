@@ -6,7 +6,7 @@ import { useBusiness } from '@/app/AuthProvider'
 import { Button, Dialog, Select } from '@/components/ui'
 import { hasModule, isManagerRole } from '@/lib/business'
 import { cn } from '@/lib/cn'
-import { formatEUR, round2 } from '@/lib/money'
+import { formatEUR, formatPrice, round2 } from '@/lib/money'
 import { formatQty, unitLabel } from '@/lib/units'
 import { useMediaQuery } from '@/lib/useMediaQuery'
 import { fetchCategories } from '@/features/products/api'
@@ -158,7 +158,7 @@ export function PosPage() {
   useEffect(() => {
     localStorage.setItem(cartKey, JSON.stringify(cart))
   }, [cart, cartKey])
-  const totals = useMemo(() => computeTotals(cart), [cart])
+  const totals = useMemo(() => computeTotals(cart, { vatRegistered: vat }), [cart, vat])
 
   // ---------- UI state ----------
   const [search, setSearch] = useState('')
@@ -614,7 +614,7 @@ export function PosPage() {
             <button type="button" onClick={() => setEditLine(l)} className="w-full min-w-0 text-left">
               <div className="truncate text-[15px] font-semibold">{l.product.name}</div>
               <div className="text-sm text-muted">
-                {formatEUR(l.product.sale_price)} / {unitLabel(l.product.unit)}
+                {formatPrice(l.product.sale_price)} / {unitLabel(l.product.unit)}
                 {l.discount > 0 && <span className="text-warn-700"> · −{formatEUR(l.discount)}</span>}
                 <span className="font-semibold text-ink lg:hidden"> · {formatEUR(t?.total ?? 0)}</span>
               </div>
@@ -993,7 +993,7 @@ export function PosPage() {
                     <div className="mt-0.5 line-clamp-2 text-[15px] font-semibold leading-tight">{p.name}</div>
                     {lotsOn && lotLine(p)}
                     <div className="mt-auto flex items-end justify-between pt-3">
-                      <span className="text-lg font-bold tabular-nums">{formatEUR(p.sale_price)}</span>
+                      <span className="text-lg font-bold tabular-nums">{formatPrice(p.sale_price)}</span>
                       {p.has_variants ? (
                         <span className="text-sm text-muted">{variantSummary(p)}</span>
                       ) : (
@@ -1015,7 +1015,7 @@ export function PosPage() {
             <div>
               <div className="text-xl font-semibold">{tr('Kupon i ri', lang)}</div>
               <div className="text-sm text-muted">
-                {cart.lines.length} {cart.lines.length === 1 ? 'produkt' : 'produkte'} · {new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 }).format(totals.itemsCount)} artikuj
+                {cart.lines.length} {cart.lines.length === 1 ? 'produkt' : 'produkte'} · {new Intl.NumberFormat('en-US', { maximumFractionDigits: 4 }).format(totals.itemsCount)} artikuj
                 {registerName && ` · ${registerName}`}
               </div>
               {exchangeBanner && <div className="mt-2">{exchangeBanner}</div>}
@@ -1099,7 +1099,7 @@ export function PosPage() {
         <div className="mb-3">
           <h1 className="text-[26px] font-semibold tracking-[-0.015em] leading-tight">{tr('Kupon i ri', lang)}</h1>
           <div className="text-[15px] text-muted">
-            {registerName ?? 'Arka'} · {new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 }).format(totals.itemsCount)} artikuj
+            {registerName ?? 'Arka'} · {new Intl.NumberFormat('en-US', { maximumFractionDigits: 4 }).format(totals.itemsCount)} artikuj
           </div>
           {bookBanner && <div className="mt-2">{bookBanner}</div>}
           {noFiscal && <div className="mt-2 rounded-ctl bg-warn-100 px-3 py-2 text-sm font-medium text-warn-700">{noFiscal}</div>}
@@ -1137,7 +1137,7 @@ export function PosPage() {
                       showStock && p.kind === 'product' && <span className={cn('text-sm', stockClass(p))}>{formatQty(p.stock, p.unit)}</span>
                     )}
                   </span>
-                  <span className="shrink-0 font-bold tabular-nums">{formatEUR(p.sale_price)}</span>
+                  <span className="shrink-0 font-bold tabular-nums">{formatPrice(p.sale_price)}</span>
                 </button>
               </li>
             ))}
@@ -1155,7 +1155,7 @@ export function PosPage() {
           {(
             [
               ['products', tr('Produktet', lang)],
-              ['coupon', `${tr('Kuponi', lang)}${cart.lines.length ? ` (${new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 }).format(totals.itemsCount)})` : ''}`],
+              ['coupon', `${tr('Kuponi', lang)}${cart.lines.length ? ` (${new Intl.NumberFormat('en-US', { maximumFractionDigits: 4 }).format(totals.itemsCount)})` : ''}`],
             ] as const
           ).map(([v, label]) => (
             <button
@@ -1204,7 +1204,7 @@ export function PosPage() {
                       <span className="line-clamp-2 text-[15px] font-semibold leading-tight">{p.name}</span>
                       {lotsOn && lotLine(p)}
                       <span className="mt-auto flex items-end justify-between gap-1 pt-2">
-                        <span className="text-[17px] font-bold tabular-nums">{formatEUR(p.sale_price)}</span>
+                        <span className="text-[17px] font-bold tabular-nums">{formatPrice(p.sale_price)}</span>
                         {p.has_variants ? (
                           <span className="text-sm text-muted">{variantSummary(p)}</span>
                         ) : (
@@ -1213,7 +1213,7 @@ export function PosPage() {
                       </span>
                       {inCart > 0 && (
                         <span className="absolute -right-1.5 -top-1.5 min-w-[26px] rounded-full bg-brand-600 px-1.5 text-center text-[13px] font-bold leading-[26px] text-white">
-                          {new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 }).format(inCart)}
+                          {new Intl.NumberFormat('en-US', { maximumFractionDigits: 4 }).format(inCart)}
                         </span>
                       )}
                     </button>
@@ -1328,7 +1328,7 @@ function localReceipt(
         line_discount: lt.lineDiscount,
         invoice_discount: lt.invoiceShare,
         total: lt.total,
-        vat_code: l.product.vat_code,
+        vat_code: lt.vat_code,
         refunded: 0,
       }
     }),

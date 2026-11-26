@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Button, Dialog } from '@/components/ui'
 import { cn } from '@/lib/cn'
-import { formatEUR } from '@/lib/money'
+import { formatPrice } from '@/lib/money'
 import type { PosProduct } from './cart'
 
 /** Boutique: pick colour and size of a model; the chosen variant goes on the bill. */
@@ -49,7 +49,7 @@ export function VariantPicker({
       open
       onClose={onClose}
       title={model.name}
-      subtitle={`${formatEUR(model.sale_price)} · zgjidh ${sizes.length > 1 || sizes[0] ? 'madhësinë' : ''}${colors.length > 1 || colors[0] ? (sizes[0] ? ' dhe ngjyrën' : 'ngjyrën') : ''}`}
+      subtitle={`${formatPrice(model.sale_price)} · zgjidh ${sizes.length > 1 || sizes[0] ? 'madhësinë' : ''}${colors.length > 1 || colors[0] ? (sizes[0] ? ' dhe ngjyrën' : 'ngjyrën') : ''}`}
       width="md:max-w-[560px]"
     >
       <div className="flex flex-col gap-5">

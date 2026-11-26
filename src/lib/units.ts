@@ -10,26 +10,26 @@ export type UnitCode =
 
 export const UNITS: Record<UnitCode, { label: string; atk: string; decimals: number }> = {
   cope: { label: 'copë', atk: 'CP', decimals: 0 },
-  kg: { label: 'kg', atk: 'KGN', decimals: 3 },
+  kg: { label: 'kg', atk: 'KGN', decimals: 4 },
   pako: { label: 'pako', atk: 'PK', decimals: 0 },
   liter: { label: 'litër', atk: 'LTR', decimals: 0 },
   ea: { label: 'njësi', atk: 'EA', decimals: 0 },
   xbx: { label: 'kuti', atk: 'XBX', decimals: 0 },
   set: { label: 'set', atk: 'SET', decimals: 0 },
   pal: { label: 'palë', atk: 'PAL', decimals: 0 },
-  kgb: { label: 'kg bruto', atk: 'KGB', decimals: 3 },
+  kgb: { label: 'kg bruto', atk: 'KGB', decimals: 4 },
   grm: { label: 'gram', atk: 'GRM', decimals: 0 },
-  tn: { label: 'ton', atk: 'TN', decimals: 3 },
-  lm: { label: 'metër', atk: 'LM', decimals: 2 },
-  mts: { label: 'm²', atk: 'MTS', decimals: 2 },
-  mtv: { label: 'm³', atk: 'MTV', decimals: 2 },
-  kmt: { label: 'km', atk: 'KMT', decimals: 2 },
-  msk: { label: 'm/s²', atk: 'MSK', decimals: 2 },
-  kwh: { label: 'kWh', atk: 'KWH', decimals: 2 },
+  tn: { label: 'ton', atk: 'TN', decimals: 4 },
+  lm: { label: 'metër', atk: 'LM', decimals: 4 },
+  mts: { label: 'm²', atk: 'MTS', decimals: 4 },
+  mtv: { label: 'm³', atk: 'MTV', decimals: 4 },
+  kmt: { label: 'km', atk: 'KMT', decimals: 4 },
+  msk: { label: 'm/s²', atk: 'MSK', decimals: 4 },
+  kwh: { label: 'kWh', atk: 'KWH', decimals: 4 },
   sec: { label: 'sekondë', atk: 'SEC', decimals: 0 },
   min: { label: 'minutë', atk: 'MIN', decimals: 0 },
-  hur: { label: 'orë', atk: 'HUR', decimals: 2 },
-  op: { label: 'orë pune', atk: 'OP', decimals: 2 },
+  hur: { label: 'orë', atk: 'HUR', decimals: 4 },
+  op: { label: 'orë pune', atk: 'OP', decimals: 4 },
   day: { label: 'ditë', atk: 'DAY', decimals: 0 },
   dp: { label: 'ditë pune', atk: 'DP', decimals: 0 },
   mon: { label: 'muaj', atk: 'MON', decimals: 0 },
@@ -44,7 +44,7 @@ export const UNITS: Record<UnitCode, { label: string; atk: string; decimals: num
 
 export const UNIT_OPTIONS = (Object.keys(UNITS) as UnitCode[]).map((value) => ({ value, label: UNITS[value].label }))
 
-/** Decimals of a quantity in this unit (kg 3, metres / m² / hours 2, the rest whole). */
+/** Decimals of a quantity in this unit (kg, metres, m², hours… up to 4 – 0056; the rest whole). */
 export const unitDecimals = (code: string | null | undefined): number => UNITS[code as UnitCode]?.decimals ?? 0
 
 /** The step of a quantity input for this unit. */

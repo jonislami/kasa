@@ -162,7 +162,8 @@ ATK kërkon që SEF të instalohet në pajisje, ta mbajë çelësin privat të s
 - Marzha = (çmimi i shitjes − çmimi i blerjes) / çmimi i shitjes.
 - Stok i ulët: `stock <= min_stock` (vetëm kur `min_stock > 0`); kritik: `stock <= min_stock / 2`.
   Shërbimet nuk kanë stok dhe nuk dalin në paralajmërime.
-- Njësitë: copë, kg, pako, litër (kg lejon 3 decimale); lidhen me kodet e ATK-së.
+- Njësitë: copë, kg, pako, litër… (kg, metër, orë etj. lejojnë deri 4 decimale – 0056); lidhen me kodet e ATK-së.
+- Çmimi për njësi deri 4 decimale (`formatPrice`); totalet, zbritjet, pagesat dhe TVSH-ja me 2.
 - Numri i faturës: për biznes, rritet automatikisht (rresht i kyçur në `businesses`), shfaqet si `#00487`;
   plus numri ditor. Shitjet offline marrin numër të përkohshëm `OFF-…` dhe çelës idempotence (`client_id`).
 - Pagesat: kesh, kartelë, të kombinuara; kusuri. Zbritje për artikull dhe për nëntotal.

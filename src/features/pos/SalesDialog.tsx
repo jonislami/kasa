@@ -282,7 +282,7 @@ export function SalesDialog({
                             {r.offline && <Badge tone="amber">Offline</Badge>}
                           </div>
                           <div className="text-sm text-muted">
-                            {time(r.created_at)} · {r.payment_kind ? PAYMENT_KIND_LABELS[r.payment_kind] : PAY_LABEL[r.payment_method]} · {new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 }).format(r.items_count)} artikuj
+                            {time(r.created_at)} · {r.payment_kind ? PAYMENT_KIND_LABELS[r.payment_kind] : PAY_LABEL[r.payment_method]} · {new Intl.NumberFormat('en-US', { maximumFractionDigits: 4 }).format(r.items_count)} artikuj
                           </div>
                         </div>
                         <span className={cn('font-bold tabular-nums', r.total < 0 && 'text-warn-700')}>{loadingId === r.id ? '…' : formatEUR(r.total)}</span>
