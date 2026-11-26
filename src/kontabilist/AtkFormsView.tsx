@@ -28,6 +28,10 @@ import { fetchEmployees, fetchPayroll } from './payroll'
 
 const n2 = (v: number) => new Intl.NumberFormat('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v)
 const slug = (s: string) => s.replace(/[^\p{L}\p{N}]+/gu, '-').toLowerCase()
+// column widths of the templates (Excel characters → px: 7 px per character + 5)
+const px = (chars: number) => Math.round(chars * 7 + 5)
+const PAY_WIDTHS = [2247, 2588, 2958, 2958, 3584, 3612, 4295, 3697, 2218, 3043, 3925].map((w) => px(w / 256))
+const WR_WIDTHS = [9.109375, ...Array<number>(13).fill(14.6640625), 21.77734375].map(px)
 const letter = (i: number) => String.fromCharCode(65 + i)
 const monthEnd = (m: string) => {
   const d = new Date(`${m.slice(0, 7)}-01T00:00:00Z`)
@@ -46,23 +50,39 @@ async function download(file: string, filename: string, fill: (t: Uint8Array) =>
   setTimeout(() => URL.revokeObjectURL(url), 2000)
 }
 
-/** Lista e pagave dhe kontributeve + Formulari WR of a month, as ATK's two templates. */
+function MonthNav({ month, setMonth }: { month: string; setMonth: (m: string) => void }) {
+  return (
+    <div className="flex items-center self-start overflow-hidden rounded-ctl border border-line bg-white">
+      <button type="button" aria-label="Muaji i kaluar" className="flex h-10 w-10 items-center justify-center hover:bg-bg" onClick={() => setMonth(addMonths(month, -1))}>
+        <ChevronLeft className="h-4 w-4" />
+      </button>
+      <span className="min-w-[140px] px-2 text-center font-semibold">{monthName(month)}</span>
+      <button type="button" aria-label="Muaji tjetër" className="flex h-10 w-10 items-center justify-center hover:bg-bg disabled:text-[#B5BCC7]" disabled={month >= monthStart()} onClick={() => setMonth(addMonths(month, 1))}>
+        <ChevronRight className="h-4 w-4" />
+      </button>
+    </div>
+  )
+}
+
+/** Pagat → "Lista e pagave për ATK": ATK's payroll template of a month. */
 export function AtkFormsView({ client }: { client: Client }) {
   const [month, setMonth] = useState(() => addMonths(monthStart(), -1))
   return (
     <>
-      <div className="flex items-center overflow-hidden rounded-ctl border border-line bg-white self-start">
-        <button type="button" aria-label="Muaji i kaluar" className="flex h-10 w-10 items-center justify-center hover:bg-bg" onClick={() => setMonth(addMonths(month, -1))}>
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-        <span className="min-w-[140px] px-2 text-center font-semibold">{monthName(month)}</span>
-        <button type="button" aria-label="Muaji tjetër" className="flex h-10 w-10 items-center justify-center hover:bg-bg disabled:text-[#B5BCC7]" disabled={month >= monthStart()} onClick={() => setMonth(addMonths(month, 1))}>
-          <ChevronRight className="h-4 w-4" />
-        </button>
-      </div>
+      <MonthNav month={month} setMonth={setMonth} />
       <PayForm client={client} month={month} />
-      <WrForm client={client} month={month} />
     </>
+  )
+}
+
+/** Its own page ("Formulari WR", Administrata tatimore): ATK's WR template of a month. */
+export function WrTab({ client }: { client: Client }) {
+  const [month, setMonth] = useState(() => addMonths(monthStart(), -1))
+  return (
+    <div className="flex flex-col gap-4 md:gap-5">
+      <MonthNav month={month} setMonth={setMonth} />
+      <WrForm client={client} month={month} />
+    </div>
   )
 }
 
@@ -184,7 +204,7 @@ function PayForm({ client, month }: { client: Client; month: string }) {
         <>
           <Issues items={issues} />
           <div className="px-5 pb-5">
-            <Sheet head={PAY_HEAD} widths={[90, 100, 115, 85, 100, 100, 105, 105, 70, 95, 95]}>
+            <Sheet head={PAY_HEAD} widths={PAY_WIDTHS}>
               {rows.map((r, i) => {
                 const e = payContrib(r.gross)
                 return (
@@ -288,7 +308,7 @@ function WrForm({ client, month }: { client: Client; month: string }) {
         {rent.isLoading && !rows ? (
           <p className="py-8 text-center text-muted">Duke ngarkuar…</p>
         ) : (
-          <Sheet head={WR_HEAD} widths={[46, 110, 170, 90, 90, 90, 100, 95, 105, 105, 95, 115, 115, 115, 150]}>
+          <Sheet head={WR_HEAD} widths={WR_WIDTHS}>
             {shown.map((r, i) => (
               <tr key={i} className="group">
                 {rowNo(i + 3)}

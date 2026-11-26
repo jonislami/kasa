@@ -47,7 +47,7 @@ export function PayrollTab({ client }: { client: Client }) {
         {(
           [
             ['list', 'Lista e pagave'],
-            ['atk', 'Formularët ATK (pagat, WR)'],
+            ['atk', 'Lista e pagave për ATK'],
             ['employees', 'Punëtorët dhe pushimet'],
             ['year', 'Viti'],
           ] as const
