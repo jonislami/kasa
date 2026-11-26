@@ -8,7 +8,7 @@ import { PageHeader } from '@/app/layout/AppLayout'
 import { Badge, Button, Card, Dialog, EmptyState, Select, Table, Td, Th } from '@/components/ui'
 import { businessType, hasModule } from '@/lib/business'
 import { cn } from '@/lib/cn'
-import { formatEUR } from '@/lib/money'
+import { formatEUR, formatPrice } from '@/lib/money'
 import { formatQty, unitLabel } from '@/lib/units'
 import type { VatCode } from '@/lib/vat'
 import { useMediaQuery } from '@/lib/useMediaQuery'
@@ -358,7 +358,7 @@ export function ProductsPage() {
                             </Td>
                             <Td className="hidden 2xl:table-cell">{p.category_id ? catName.get(p.category_id) : '—'}</Td>
                             <Td className="text-right text-muted">{p.purchase_price ? formatEUR(p.purchase_price) : '—'}</Td>
-                            <Td className="text-right font-semibold">{formatEUR(p.sale_price)}</Td>
+                            <Td className="text-right font-semibold">{formatPrice(p.sale_price)}</Td>
                             <Td className={cn('text-right', m != null && m < 0 && 'text-warn-700')}>{m == null ? '—' : `${(m * 100).toFixed(1)}%`}</Td>
                             {vat && <Td>{p.vat_code}</Td>}
                             {showStock && <Td className="text-right">{p.kind === 'service' ? '—' : <StockBadge p={p} />}</Td>}
@@ -383,7 +383,7 @@ export function ProductsPage() {
                             </div>
                           </div>
                           <div className="shrink-0 text-right">
-                            <div className="text-[17px] font-semibold tracking-[-0.015em] tabular-nums">{formatEUR(p.sale_price)}</div>
+                            <div className="text-[17px] font-semibold tracking-[-0.015em] tabular-nums">{formatPrice(p.sale_price)}</div>
                             <div className="text-sm text-muted">
                               {p.kind === 'service' ? (p.duration_min ? `${p.duration_min} min` : 'shërbim') : showStock ? <StockBadge p={p} /> : unitLabel(p.unit)}
                             </div>

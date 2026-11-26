@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { Pencil, Search, Trash2 } from 'lucide-react'
 import { Button, Dialog } from '@/components/ui'
-import { formatEUR } from '@/lib/money'
+import { formatPrice } from '@/lib/money'
 import { unitLabel } from '@/lib/units'
 import { deleteProduct } from '@/features/products/api'
 import type { PosProduct } from './cart'
@@ -76,7 +76,7 @@ export function ManageProductsDialog({
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-medium">{p.name}</div>
                     <div className="truncate text-sm text-muted tabular-nums">
-                      {formatEUR(p.sale_price)} / {unitLabel(p.unit)}
+                      {formatPrice(p.sale_price)} / {unitLabel(p.unit)}
                       {p.barcode ? ` · ${p.barcode}` : ''}
                       {p.has_variants ? ' · me variante' : ''}
                     </div>

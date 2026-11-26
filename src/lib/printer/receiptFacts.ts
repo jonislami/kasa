@@ -136,7 +136,7 @@ export function groupItems<T extends Item & { total?: number; atk_type?: string 
       out.push({ ...i })
     } else {
       const g = out[k]
-      g.quantity = Math.round((g.quantity + i.quantity) * 1000) / 1000
+      g.quantity = Math.round((g.quantity + i.quantity) * 10000) / 10000
       g.line_discount = r2(g.line_discount + i.line_discount)
       if (g.total != null && i.total != null) g.total = r2(g.total + i.total)
     }

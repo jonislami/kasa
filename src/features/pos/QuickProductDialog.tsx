@@ -65,7 +65,7 @@ export function QuickProductDialog({
         setLoaded(p)
         setKind(p.kind)
         setName(p.name)
-        setPrice(Number(p.sale_price).toFixed(2))
+        setPrice(String(Number(p.sale_price)))
         setVat(p.vat_code)
         setBarcode(p.barcode ?? '')
         setUnit(p.unit)

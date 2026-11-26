@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { BookOpen, Delete, ShieldCheck } from 'lucide-react'
 import { Button, Dialog, Input, Select, Tabs } from '@/components/ui'
 import { cn } from '@/lib/cn'
-import { formatEUR, round2 } from '@/lib/money'
+import { formatEUR, formatPrice, round2 } from '@/lib/money'
 import { unitLabel } from '@/lib/units'
 import { fetchApprovers, type PaymentKind, type SplitKind } from './api'
 import type { CartLine } from './cart'
@@ -176,7 +176,7 @@ export function LineDialog({
   }
 
   return (
-    <Dialog open onClose={onClose} title={line.product.name} subtitle={`${formatEUR(line.product.sale_price)} / ${unitLabel(line.product.unit)}`} width="md:max-w-[420px]">
+    <Dialog open onClose={onClose} title={line.product.name} subtitle={`${formatPrice(line.product.sale_price)} / ${unitLabel(line.product.unit)}`} width="md:max-w-[420px]">
       <form
         className="flex flex-col gap-4"
         onSubmit={(e) => {

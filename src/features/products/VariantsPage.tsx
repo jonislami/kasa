@@ -5,7 +5,7 @@ import { ChevronLeft, Plus, X } from 'lucide-react'
 import { useBusiness } from '@/app/AuthProvider'
 import { Button, Card, Dialog, EmptyState, Input, Select } from '@/components/ui'
 import { cn } from '@/lib/cn'
-import { formatEUR } from '@/lib/money'
+import { formatPrice } from '@/lib/money'
 import { VAT_RATES } from '@/lib/vat'
 import { fetchCategories, fetchProducts, saveVariants, type Product } from './api'
 import { Label, LABEL_SIZES, usePrintLabels, type LabelData, type LabelSize } from './Labels'
@@ -85,7 +85,7 @@ export function VariantsPage() {
         <div>
           <h1 className="text-[26px] font-semibold tracking-[-0.015em] leading-tight md:text-[30px]">{model.name}</h1>
           <p className="text-muted">
-            {[catName, formatEUR(model.sale_price), `TVSH ${Math.round(VAT_RATES[model.vat_code] * 100)}%`, `${variants.length} variante`, `${total} copë në stok`].filter(Boolean).join(' · ')}
+            {[catName, formatPrice(model.sale_price), `TVSH ${Math.round(VAT_RATES[model.vat_code] * 100)}%`, `${variants.length} variante`, `${total} copë në stok`].filter(Boolean).join(' · ')}
           </p>
         </div>
         <div className="flex gap-2">
@@ -223,7 +223,7 @@ function LabelsPanel({
     name: model.name,
     detail: [v.variant_color, v.variant_size].filter(Boolean).join(' · ') || null,
     barcode: v.barcode ?? '',
-    price: formatEUR(v.sale_price),
+    price: formatPrice(v.sale_price),
   })
   const preview = selected ?? variants[0]
   const items = (): LabelData[] => {

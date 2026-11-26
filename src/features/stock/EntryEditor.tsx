@@ -405,7 +405,7 @@ export function EntryEditor({
         <Input label="Shënim" value={draft.note} placeholder="p.sh. malli erdhi i plotë" onChange={(e) => setDraft((d) => ({ ...d, note: e.target.value }))} />
         <div className="flex flex-col gap-1 text-[15px]">
           <div className="text-muted">
-            {draft.lines.length} produkte · {Number(totals.units.toFixed(3))} njësi
+            {draft.lines.length} produkte · {Number(totals.units.toFixed(4))} njësi
           </div>
           <div className="flex justify-between text-muted">
             <span>Vlera pa TVSH</span>

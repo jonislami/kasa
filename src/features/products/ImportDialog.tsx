@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { CheckCircle2, Download, FileSpreadsheet, Upload } from 'lucide-react'
 import { Button, Dialog } from '@/components/ui'
-import { formatEUR } from '@/lib/money'
+import { formatPrice } from '@/lib/money'
 import { unitLabel } from '@/lib/units'
 import { importProducts } from './api'
 import { parseCsv, parseSheet, TEMPLATE_COLUMNS, type ParsedImport } from './importParse'
@@ -206,7 +206,7 @@ export function ImportDialog({
                           <td className="px-3 py-2 font-medium">{r.name}</td>
                           <td className="px-3 py-2 tabular-nums text-muted">{r.barcode ?? '—'}</td>
                           <td className="px-3 py-2">{r.category ?? '—'}</td>
-                          <td className="px-3 py-2 text-right tabular-nums">{formatEUR(r.sale_price)}</td>
+                          <td className="px-3 py-2 text-right tabular-nums">{formatPrice(r.sale_price)}</td>
                           <td className="px-3 py-2">{r.vat_code ?? 'E'}</td>
                           <td className="px-3 py-2 text-right tabular-nums">
                             {r.kind === 'service' ? 'shërbim' : r.stock != null ? `${r.stock} ${unitLabel(r.unit ?? 'cope')}` : '—'}

@@ -19,8 +19,8 @@ Krahasimi i kërkesave të ftesës me kodin (gjendja më 26.11.2026). Legjenda: 
 | 3 | Kupon për subjekt **me TVSH** | ✅ | normat E/D/C/A, TaxGroups |
 | 4 | Kupon për subjekt **pa TVSH** | 🟡 | produktet marrin `A` (`QuickProductDialog`, `ProductForm`); **të verifikohet në ambientin test** se ATK e pranon dhe kuponi nuk shfaq "NUMRI I TVSH-SË"/ndarjen e TVSH-së |
 | 5 | 5 artikuj për kupon me norma të ndryshme | ✅ | |
-| 6 | **Çmime me 2 dhe 4 shifra pas presjes** | ❌ | `products.sale_price` dhe `sale_items.unit_price` janë `numeric(12,2)`; klienti rrumbullakon me `round2` → **G2** |
-| 7 | **Sasi me 2 dhe 4 shifra pas presjes** | ❌ | `quantity numeric(14,3)`, kg = 3 shifra (`src/lib/units.ts`, `_unit_decimals`) → **G2** |
+| 6 | **Çmime me 2 dhe 4 shifra pas presjes** | ✅ | G2 (dega `atk-cmimi-me-zbritje`, kërkon migrimin 0056): çmimi `numeric(14,4)`, ekrani `formatPrice`, kuponi deri 4 shifra |
+| 7 | **Sasi me 2 dhe 4 shifra pas presjes** | ✅ | G2: sasia `numeric(14,4)`; kg, metër, orë… deri 4 shifra (`_unit_decimals`, `src/lib/units.ts`); copë, pako, litër mbeten të plota |
 | 8 | Zbritje për artikull në % dhe vlerë | ✅ | `dialogs.tsx` (€ / %) |
 | 9 | **`Price` i artikullit me zbritjen e përfshirë** (edhe `Price`, edhe `Total` te `CouponItem`) | ✅ | G1 (dega `atk-cmimi-me-zbritje`): `Price = Total / Quantity` pas zbritjes së rreshtit dhe pjesës së zbritjes së totalit; kuponi i printuar mbetet si Shtojca F (çmimi + "Ulje") |
 | 10 | Zbritje në totalin e shitjes në % dhe vlerë | ✅ | `dialogs.tsx` (zbritja e nëntotalit), ndahet në rreshta (`invoice_discount`) |

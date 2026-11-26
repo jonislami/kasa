@@ -41,7 +41,7 @@ export function LotsTab({ products, lots, loading }: { products: Product[]; lots
     const inLots = new Map<string, number>()
     for (const l of lots) inLots.set(l.product_id, (inLots.get(l.product_id) ?? 0) + l.quantity)
     return products
-      .map((p) => ({ p, free: Math.round((p.stock - (inLots.get(p.id) ?? 0)) * 1000) / 1000 }))
+      .map((p) => ({ p, free: Math.round((p.stock - (inLots.get(p.id) ?? 0)) * 10000) / 10000 }))
       .filter((x) => x.free > 0)
   }, [products, lots])
 

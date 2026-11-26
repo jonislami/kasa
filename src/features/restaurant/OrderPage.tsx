@@ -9,7 +9,7 @@ import { useBusiness } from '@/app/AuthProvider'
 import { Badge, Button, Card, Dialog, Input, Tabs } from '@/components/ui'
 import { serverDate } from '@/lib/clock'
 import { cn } from '@/lib/cn'
-import { formatEUR, round2 } from '@/lib/money'
+import { formatEUR, formatPrice, round2 } from '@/lib/money'
 import { printPage, printReceipt, printTicket } from '@/lib/printer'
 import { fetchCategories } from '@/features/products/api'
 import { APPROVAL_MESSAGES, createSale, type ApprovalError, type PaymentMethod, type Sale } from '@/features/pos/api'
@@ -218,7 +218,7 @@ export function OrderPage() {
           >
             <span className="line-clamp-2 text-[15px] font-semibold leading-tight">{m.name}</span>
             <span className="mt-auto flex items-end justify-between pt-2">
-              <span className="font-bold tabular-nums">{formatEUR(m.sale_price)}</span>
+              <span className="font-bold tabular-nums">{formatPrice(m.sale_price)}</span>
               {m.modifiers.length > 0 && <span className="text-xs text-muted">opsione</span>}
             </span>
           </button>
@@ -509,7 +509,7 @@ function ModifierDialog({ item, onClose, onAdd }: { item: MenuItem | null; onClo
       return { ...c, [g]: cur.includes(o) ? [] : [o] }
     })
   return (
-    <Dialog open onClose={onClose} title={item.name} subtitle={formatEUR(item.sale_price)} width="md:max-w-[520px]">
+    <Dialog open onClose={onClose} title={item.name} subtitle={formatPrice(item.sale_price)} width="md:max-w-[520px]">
       <div className="flex flex-col gap-4">
         {item.modifiers.map((g) => (
           <div key={g.name}>
