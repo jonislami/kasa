@@ -28,6 +28,7 @@ import {
   type PayrollRun,
 } from './payroll'
 import { downloadSheets } from './xls'
+import { AtkFormsView } from './AtkFormsView'
 
 const n2 = (v: number) => new Intl.NumberFormat('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v)
 const slug = (s: string) => s.replace(/[^\p{L}\p{N}]+/gu, '-').toLowerCase()
@@ -39,13 +40,14 @@ const STATUS: Record<PayrollRun['status'], { label: string; tone: 'amber' | 'inf
 
 /** Pagat: payroll of the month, employees, leaves, year overview. */
 export function PayrollTab({ client }: { client: Client }) {
-  const [view, setView] = useState<'list' | 'employees' | 'year'>('list')
+  const [view, setView] = useState<'list' | 'atk' | 'employees' | 'year'>('list')
   return (
     <div className="flex flex-col gap-4 md:gap-5">
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {(
           [
             ['list', 'Lista e pagave'],
+            ['atk', 'Lista e pagave për ATK'],
             ['employees', 'Punëtorët dhe pushimet'],
             ['year', 'Viti'],
           ] as const
@@ -56,6 +58,7 @@ export function PayrollTab({ client }: { client: Client }) {
         ))}
       </div>
       {view === 'list' && <PayrollMonthView client={client} />}
+      {view === 'atk' && <AtkFormsView client={client} />}
       {view === 'employees' && <EmployeesView client={client} />}
       {view === 'year' && <YearView client={client} />}
     </div>

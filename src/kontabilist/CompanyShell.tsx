@@ -17,6 +17,7 @@ import {
   ChevronDown,
   ChevronRight,
   FileBarChart,
+  FileSpreadsheet,
   FileText,
   HandCoins,
   LayoutGrid,
@@ -88,6 +89,7 @@ export const MENU: { group: string; icon: LucideIcon; items: MenuItem[] }[] = [
     items: [
       { key: 'tvsh', label: 'Formulari i TVSH-së dhe librat', icon: Percent },
       { key: 'librat_atk', label: 'Libri i shitjes dhe i blerjes (ATK)', icon: BookOpen },
+      { key: 'wr', label: 'Formulari WR – tatimi në burim', icon: FileSpreadsheet },
       { key: 'tvsh_permbledhje', label: 'TVSH sipas normave', icon: FileBarChart },
       { key: 'tatimet', label: 'Tatimet e tjera dhe afatet', icon: CalendarDays },
     ],
