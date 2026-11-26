@@ -33,7 +33,7 @@ Krahasimi i kërkesave të ftesës me kodin (gjendja më 26.11.2026). Legjenda: 
 | 17 | Kuponët nga blloku i kuponëve (me dorë) | ✅ | numri serik + koha në letër (UA neni 45) |
 | 18 | Sinkronizimi i orës online dhe offline | 🟡 | `serverNow()` (`src/lib/clock`); offline përdor diferencën e fundit me serverin – të provohet: ndrysho orën e Windows-it, pastaj shit offline |
 | 19 | Siguria dhe integriteti | ✅ | çelës jo i eksportueshëm (DPAPI / Keystore), RLS, shitje të pandryshueshme |
-| 20 | **Log-et: PayLoad, Hash Chain (Current Hash, Previous Hash, Integrity Check)** | 🟡 | `audit_log` ka `prev_hash`/`hash` + `audit_verify()` (0034), por: (a) `fiscal_log` nuk ka zinxhir as payload; (b) eksporti CSV/PDF nuk i shfaq kolonat Payload / Current Hash / Previous Hash / Integrity Check → **G3** |
+| 20 | **Log-et: PayLoad, Hash Chain (Current Hash, Previous Hash, Integrity Check)** | ✅ | G3 (kërkon migrimin 0057): `fiscal_log` me payload (details + signature të dërguara te ATK) dhe zinxhir SHA-256, `fiscal_verify()`; Raporti i auditit: skeda "Komunikimi me ATK", kolona Integriteti, CSV/PDF me Payload, Previous Hash, Current Hash, Integrity Check për çdo rresht (edhe për Veprimet) |
 | 21 | Printimi fizik i kuponit | ✅ | ESC/POS Bluetooth/USB, 58/80 mm |
 
 ## 2. Punët që mungojnë (renditja e propozuar)
