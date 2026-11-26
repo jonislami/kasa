@@ -28,7 +28,8 @@ import {
   type PayrollRun,
 } from './payroll'
 import { downloadSheets } from './xls'
-import { AtkFormsView } from './AtkFormsView'
+import { AtkFormsView, downloadAtkTemplate } from './AtkFormsView'
+import { buildPayRows, fillPayTemplate } from './atkForms'
 
 const n2 = (v: number) => new Intl.NumberFormat('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v)
 const slug = (s: string) => s.replace(/[^\p{L}\p{N}]+/gu, '-').toLowerCase()
@@ -96,17 +97,22 @@ function PayrollMonthView({ client }: { client: Client }) {
   )
   const label = monthName(month)
 
-  const wpk = () =>
-    downloadSheets(`wpk-${slug(client.name)}-${month.slice(0, 7)}.xlsx`, [
-      {
-        name: 'WPK',
-        columns: ['Nr.', 'Numri personal', 'Emri dhe mbiemri', 'Punëdhënësi', 'Paga bruto', 'Kontributi i punëtorit', 'Kontributi i punëdhënësit', 'Kontributet gjithsej', 'Baza e tatueshme', 'Tatimi i mbajtur', 'Paga neto'],
-        rows: [
-          ...lines.map((l, i) => [i + 1, l.personal_no ?? '', l.name, l.primary_job ? 'Parësor' : 'Dytësor', l.gross, l.emp_contrib, l.er_contrib, l.emp_contrib + l.er_contrib, l.tax_base, l.tax, l.net]),
-          ['', '', 'Gjithsej', '', t.gross, t.emp, t.er, t.emp + t.er, t.gross - t.emp, t.tax, t.net],
-        ],
-      },
-    ])
+  // WPK: ATK's own payroll template (lista_pagave.xls) filled with the month, ready for import
+  const emps = useQuery({ queryKey: ['client', client.id, 'employees'], queryFn: () => fetchEmployees(client.id) })
+  const [wpkError, setWpkError] = useState('')
+  const [wpkBusy, setWpkBusy] = useState(false)
+  const wpk = async () => {
+    setWpkError('')
+    setWpkBusy(true)
+    try {
+      const rows = buildPayRows(lines, emps.data ?? (await fetchEmployees(client.id)))
+      await downloadAtkTemplate('lista_pagave.xls', `wpk-${slug(client.name)}-${month.slice(0, 7)}.xls`, (tpl) => fillPayTemplate(tpl, rows), 'application/vnd.ms-excel')
+    } catch (e) {
+      setWpkError((e as Error).message)
+    } finally {
+      setWpkBusy(false)
+    }
+  }
   const bank = () =>
     downloadSheets(`urdhri-pageses-pagat-${slug(client.name)}-${month.slice(0, 7)}.xlsx`, [
       {
@@ -131,7 +137,7 @@ function PayrollMonthView({ client }: { client: Client }) {
         {r && (
           <div className="flex flex-wrap items-center gap-2">
             <Badge tone={STATUS[r.status].tone}>{STATUS[r.status].label}</Badge>
-            <Button variant="secondary" onClick={() => void wpk()} disabled={!lines.length}>
+            <Button variant="secondary" onClick={() => void wpk()} loading={wpkBusy} disabled={!lines.length}>
               <FileSpreadsheet className="h-4 w-4" /> WPK për ATK
             </Button>
             <Button variant="secondary" onClick={() => void bank()} disabled={!lines.length}>
@@ -166,6 +172,7 @@ function PayrollMonthView({ client }: { client: Client }) {
           </div>
         )}
       </div>
+      {wpkError && <p className="rounded-ctl bg-warn-100 px-4 py-3 text-sm text-warn-700">{wpkError}</p>}
       {(prepare.error || line.error || status.error) && <p className="rounded-ctl bg-warn-100 px-4 py-3 text-sm text-warn-700">{((prepare.error ?? line.error ?? status.error) as Error).message}</p>}
 
       {run.isLoading ? (

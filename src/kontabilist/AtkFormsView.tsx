@@ -39,7 +39,8 @@ const monthEnd = (m: string) => {
   return d.toISOString().slice(0, 10)
 }
 
-async function download(file: string, filename: string, fill: (t: Uint8Array) => Uint8Array, mime: string) {
+/** Downloads a copy of one of ATK's templates (public/atk) filled by `fill`. */
+export async function downloadAtkTemplate(file: string, filename: string, fill: (t: Uint8Array) => Uint8Array, mime: string) {
   const res = await fetch(`${import.meta.env.BASE_URL}atk/${file}`)
   if (!res.ok) throw new Error('Shablloni i ATK-së nuk u gjet.')
   const url = URL.createObjectURL(new Blob([fill(new Uint8Array(await res.arrayBuffer())) as BlobPart], { type: mime }))
@@ -170,7 +171,7 @@ function PayForm({ client, month }: { client: Client; month: string }) {
     setError('')
     setBusy(true)
     try {
-      await download('lista_pagave.xls', `lista-e-pagave-${slug(client.name)}-${month.slice(0, 7)}.xls`, (t) => fillPayTemplate(t, rows), 'application/vnd.ms-excel')
+      await downloadAtkTemplate('lista_pagave.xls', `lista-e-pagave-${slug(client.name)}-${month.slice(0, 7)}.xls`, (t) => fillPayTemplate(t, rows), 'application/vnd.ms-excel')
     } catch (e) {
       setError((e as Error).message)
     } finally {
@@ -268,7 +269,7 @@ function WrForm({ client, month }: { client: Client; month: string }) {
     setError('')
     setBusy(true)
     try {
-      await download('formulari_wr.xlsx', `formulari-wr-${slug(client.name)}-${month.slice(0, 7)}.xlsx`, (t) => fillWrTemplate(t, shown), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+      await downloadAtkTemplate('formulari_wr.xlsx', `formulari-wr-${slug(client.name)}-${month.slice(0, 7)}.xlsx`, (t) => fillWrTemplate(t, shown), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     } catch (e) {
       setError((e as Error).message)
     } finally {
