@@ -68,6 +68,46 @@ try {
 }
 check('cancel without ReferenceNo is refused', threw)
 
+// --- 1b. item Price carries the discounts (ATK, testimi teknik 2027): Price = line Total / Quantity
+{
+  const h = { nui: '810000001', branchId: 1, posId: 1, applicationId: 1234, location: 'Prishtinë', operatorId: '001', couponId: 12, verificationNo: 'DISC234567890ABC', time: 1727151300 }
+  const d = buildCoupons(
+    {
+      kind: 'sale',
+      total: 20.87,
+      discount_total: 2.17,
+      cash_amount: 20.87,
+      card_amount: 0,
+      vat_lines: [
+        { code: 'E', gross: 13.07, net: 11.08, vat: 1.99 },
+        { code: 'D', gross: 7.8, net: 7.22, vat: 0.58 },
+      ],
+      items: [
+        // no discount → shelf price
+        { name: 'pa zbritje', unit: 'cope', quantity: 3, unit_price: 1.5, total: 4.5, vat_code: 'E' },
+        // 10% on the line: 2 × 2.50 = 5.00 − 0.50 = 4.50 → 2.25
+        { name: 'ulje 10%', unit: 'cope', quantity: 2, unit_price: 2.5, total: 4.5, vat_code: 'E' },
+        // 1.00 € on the line + 0.33 share of the total discount: 3 × 1.80 = 5.40 − 1.33 = 4.07 → 1.3567
+        { name: 'ulje € + total', unit: 'cope', quantity: 3, unit_price: 1.8, total: 4.07, vat_code: 'E' },
+        // weighed: 0.755 kg × 4.00 = 3.02 − 0.10 = 2.92 → 3.8675
+        { name: 'kg me ulje', unit: 'kg', quantity: 0.755, unit_price: 4, total: 2.92, vat_code: 'D' },
+        // 4 decimals: 1 × 5.1234, total discount share 0.24 → 4.88
+        { name: '4 shifra', unit: 'cope', quantity: 1, unit_price: 5.1234, total: 4.88, vat_code: 'D' },
+      ],
+    },
+    h,
+  )
+  const p = d.pos.Items.map((i) => Number(i.Price))
+  check('Price without discount = shelf price', p[0] === 15000, String(p[0]))
+  check('Price after 10% line discount', p[1] === 22500, String(p[1]))
+  check('Price after € line + total discount', p[2] === 13567, String(p[2]))
+  check('Price of weighed item after discount', p[3] === 38675, String(p[3]))
+  check('Price with 4 decimals after total discount', p[4] === 48800, String(p[4]))
+  check('item Totals add up to coupon Total', d.pos.Items.reduce((n, i) => n + BigInt(i.Total), 0n) === d.pos.Total * 100n)
+  check('|Price × Quantity − Total| < 1 cent', d.pos.Items.every((i) => Math.abs(Number(i.Price) * i.Quantity - Number(i.Total)) < 100))
+  check('TotalDiscount in cents', d.pos.TotalDiscount === 217n)
+}
+
 // --- 2. signature
 const pair = (await webcrypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign', 'verify'])) as CryptoKeyPair
 const signer: RawSigner = async (data) => new Uint8Array(await webcrypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, pair.privateKey, data))
