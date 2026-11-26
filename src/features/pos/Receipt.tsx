@@ -99,7 +99,8 @@ export function Receipt({
         <Row key={k} l={k} r={`${v}€`} />
       ))}
       <div className="border-b border-dashed border-black">
-        {x.hasVat && <Row l={x.L.net} r={`${x.main.net}€`} />}
+        {/* UA neni 7 pika 2.12: on every coupon */}
+        <Row l={x.L.net} r={`${x.main.net}€`} />
       </div>
 
       {x.returned && (

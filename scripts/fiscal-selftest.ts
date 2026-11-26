@@ -108,6 +108,28 @@ check('cancel without ReferenceNo is refused', threw)
   check('TotalDiscount in cents', d.pos.TotalDiscount === 217n)
 }
 
+// --- 1c. business outside VAT (testimi teknik: "subjektet që nuk janë të regjistruar në TVSH"): every line A,
+// one tax group A with no tax, TotalNoTax = Total; cash + card
+{
+  const h = { nui: '810000002', branchId: 1, posId: 1, applicationId: 1234, location: 'Prishtinë', operatorId: '001', couponId: 13, verificationNo: 'NOVAT34567890ABC', time: 1727151400 }
+  const items = [
+    { name: 'buke', unit: 'cope', quantity: 2, unit_price: 0.5, total: 1, vat_code: 'A' as const },
+    { name: 'djathe', unit: 'kg', quantity: 0.755, unit_price: 6.2, total: 4.68, vat_code: 'A' as const },
+    { name: 'uje', unit: 'cope', quantity: 6, unit_price: 0.45, total: 2.43, vat_code: 'A' as const }, // 10% off
+    { name: 'kafe', unit: 'cope', quantity: 1, unit_price: 3.1234, total: 2.62, vat_code: 'A' as const }, // 0.50 € off
+    { name: 'leng', unit: 'cope', quantity: 3, unit_price: 1.2, total: 3.27, vat_code: 'A' as const }, // share of 5% total
+  ]
+  const total = 14
+  const nv = buildCoupons({ kind: 'sale', total, discount_total: 1.27, cash_amount: 9, card_amount: 5, vat_lines: [{ code: 'A', gross: total, net: total, vat: 0 }], items }, h)
+  check('outside VAT: items all A', nv.pos.Items.every((i) => i.TaxRate === 'A'))
+  check('outside VAT: one tax group A, no tax', nv.pos.TaxGroups.length === 1 && nv.pos.TaxGroups[0].TaxRate === 'A' && BigInt(nv.pos.TaxGroups[0].TotalTax) === 0n && BigInt(nv.pos.TaxGroups[0].TotalForTax) === 1400n)
+  check('outside VAT: TotalTax 0, TotalNoTax = Total', nv.pos.TotalTax === 0n && nv.pos.TotalNoTax === nv.pos.Total && nv.citizen.TotalNoTax === 1400n)
+  check('outside VAT: cash + card add up', nv.pos.Payments.length === 2 && nv.pos.Payments.reduce((n, p) => n + BigInt(p.Amount), 0n) === 1400n)
+  check('outside VAT: item Totals add up', nv.pos.Items.reduce((n, i) => n + BigInt(i.Total), 0n) === 140000n)
+  const ours = encodePosCoupon(nv.pos)
+  check('outside VAT: PosCoupon bytes', hex(ours) === hex(PosT.encode(PosT.fromObject(asPlain(nv.pos))).finish()))
+}
+
 // --- 2. signature
 const pair = (await webcrypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign', 'verify'])) as CryptoKeyPair
 const signer: RawSigner = async (data) => new Uint8Array(await webcrypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, pair.privateKey, data))

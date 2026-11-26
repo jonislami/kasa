@@ -122,11 +122,14 @@ export interface CartTotals {
  * Mirrors create_sale on the server: line totals, the invoice discount spread over the lines
  * by size (largest first, remainder on the largest), then VAT once per rate over the gross of that rate.
  */
-export function computeTotals(cart: Cart): CartTotals {
+export function computeTotals(cart: Cart, opts: { vatRegistered?: boolean } = {}): CartTotals {
+  // a business outside VAT sells everything as A (0%), as the server does (0042, sale_items_vat): the offline
+  // receipt and its fiscal coupon must carry the same rates as the sale stored later
+  const outsideVat = opts.vatRegistered === false
   const base = cart.lines.map((l) => {
     const gross = round2(l.quantity * l.product.sale_price)
     const lineDiscount = Math.min(round2(l.discount), gross)
-    return { key: l.key, gross, lineDiscount, invoiceShare: 0, total: round2(gross - lineDiscount), vat_code: l.product.vat_code }
+    return { key: l.key, gross, lineDiscount, invoiceShare: 0, total: round2(gross - lineDiscount), vat_code: outsideVat ? ('A' as VatCode) : l.product.vat_code }
   })
   const subtotal = round2(base.reduce((s, l) => s + l.total, 0))
   const invoiceDiscount = Math.min(round2(cart.invoiceDiscount), subtotal)

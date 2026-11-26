@@ -17,7 +17,7 @@ Krahasimi i kërkesave të ftesës me kodin (gjendja më 26.11.2026). Legjenda: 
 | 1 | Onboarding i ri (regjistrim i ri i arkës te ATK) | ✅ | `registerOnDevice()` – çelës i ri, verify → CSR → signcsr. Të provohet nga zero në një pajisje të pastër |
 | 2 | Kuponi sipas UA neni 7 + Shtojcat (logo RKS, etiketat, anulimi, kthimi) | ✅ | `docs/atk/krahasimi-kerkesat-2026.md`, pjesa B |
 | 3 | Kupon për subjekt **me TVSH** | ✅ | normat E/D/C/A, TaxGroups |
-| 4 | Kupon për subjekt **pa TVSH** | 🟡 | produktet marrin `A` (`QuickProductDialog`, `ProductForm`); **të verifikohet në ambientin test** se ATK e pranon dhe kuponi nuk shfaq "NUMRI I TVSH-SË"/ndarjen e TVSH-së |
+| 4 | Kupon për subjekt **pa TVSH** | 🟡 | G4: kodi gati – çdo rresht A (trigger `sale_items_vat` + `saleVatCode`, edhe offline), grupi A pa tatim, TotalNoTax = Total, pa "NUMRI I TVSH-SË" (UA 7.2.2); "TOTALI PA TVSH" tani në çdo kupon (UA 7.2.12); vetëtest. **Mbetet prova në ambientin test të ATK-së** me NUI pa TVSH |
 | 5 | 5 artikuj për kupon me norma të ndryshme | ✅ | |
 | 6 | **Çmime me 2 dhe 4 shifra pas presjes** | ✅ | G2 (dega `atk-cmimi-me-zbritje`, kërkon migrimin 0056): çmimi `numeric(14,4)`, ekrani `formatPrice`, kuponi deri 4 shifra |
 | 7 | **Sasi me 2 dhe 4 shifra pas presjes** | ✅ | G2: sasia `numeric(14,4)`; kg, metër, orë… deri 4 shifra (`_unit_decimals`, `src/lib/units.ts`); copë, pako, litër mbeten të plota |

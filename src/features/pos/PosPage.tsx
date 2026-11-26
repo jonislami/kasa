@@ -158,7 +158,7 @@ export function PosPage() {
   useEffect(() => {
     localStorage.setItem(cartKey, JSON.stringify(cart))
   }, [cart, cartKey])
-  const totals = useMemo(() => computeTotals(cart), [cart])
+  const totals = useMemo(() => computeTotals(cart, { vatRegistered: vat }), [cart, vat])
 
   // ---------- UI state ----------
   const [search, setSearch] = useState('')
@@ -1328,7 +1328,7 @@ function localReceipt(
         line_discount: lt.lineDiscount,
         invoice_discount: lt.invoiceShare,
         total: lt.total,
-        vat_code: l.product.vat_code,
+        vat_code: lt.vat_code,
         refunded: 0,
       }
     }),
