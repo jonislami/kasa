@@ -106,7 +106,7 @@ function PayrollMonthView({ client }: { client: Client }) {
     setWpkBusy(true)
     try {
       const rows = buildPayRows(lines, emps.data ?? (await fetchEmployees(client.id)))
-      await downloadAtkTemplate('lista_pagave.xls', `wpk-${slug(client.name)}-${month.slice(0, 7)}.xls`, (tpl) => fillPayTemplate(tpl, rows), 'application/vnd.ms-excel')
+      await downloadAtkTemplate('lista_pagave.xls', `cm-wm-${slug(client.name)}-${month.slice(0, 7)}.xls`, (tpl) => fillPayTemplate(tpl, rows), 'application/vnd.ms-excel')
     } catch (e) {
       setWpkError((e as Error).message)
     } finally {
@@ -138,7 +138,7 @@ function PayrollMonthView({ client }: { client: Client }) {
           <div className="flex flex-wrap items-center gap-2">
             <Badge tone={STATUS[r.status].tone}>{STATUS[r.status].label}</Badge>
             <Button variant="secondary" onClick={() => void wpk()} loading={wpkBusy} disabled={!lines.length}>
-              <FileSpreadsheet className="h-4 w-4" /> WPK për ATK
+              <FileSpreadsheet className="h-4 w-4" /> CM WM
             </Button>
             <Button variant="secondary" onClick={() => void bank()} disabled={!lines.length}>
               <Landmark className="h-4 w-4" /> Urdhri për bankën
