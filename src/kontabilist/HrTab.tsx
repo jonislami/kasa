@@ -12,6 +12,7 @@ import { EmploymentContract, LeaveDecision, LeaveReport, LeaveReportAll, PrintPo
 import { CONTRACT_LABELS, deleteLeave, fetchEmployees, LEAVE_LABELS, saveEmployee, type Contract, type Employee, type Leave, type LeaveKind } from './payroll'
 import { downloadSheets } from './xls'
 import { EmployeeImportDialog } from './EmployeeImport'
+import { downloadContract, downloadLeaveDecision } from './officeFormsApi'
 
 export type HrView = 'employees' | 'attendance' | 'leaves'
 
@@ -33,6 +34,8 @@ function EmployeesView({ client, list, loading, error }: { client: Client; list:
   const [edit, setEdit] = useState<Partial<Employee> | null>(null)
   const [hist, setHist] = useState<Employee | null>(null)
   const [print, setPrint] = useState<Employee | null>(null)
+  // the employment contract on the office's own Word form; a service contract keeps the printed model
+  const contract = useMutation({ mutationFn: (e: Employee) => downloadContract(client, e) })
   const [showInactive, setShowInactive] = useState(false)
   const [importing, setImporting] = useState(false)
   const shown = list.filter((e) => (showInactive ? true : e.active))
@@ -94,7 +97,13 @@ function EmployeesView({ client, list, loading, error }: { client: Client; list:
                   <Button size="sm" variant="secondary" title="Historiku i marrëdhënies së punës" onClick={() => setHist(e)}>
                     <History className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" variant="secondary" onClick={() => setPrint(e)}>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    title={e.contract === 'service' ? 'Printo kontratën e shërbimit' : 'Shkarko kontratën e punës (Word)'}
+                    loading={contract.isPending && contract.variables?.id === e.id}
+                    onClick={() => (e.contract === 'service' ? setPrint(e) : contract.mutate(e))}
+                  >
                     <FileSignature className="h-4 w-4" /> <span className="hidden sm:inline">Kontrata</span>
                   </Button>
                 </div>
@@ -103,6 +112,12 @@ function EmployeesView({ client, list, loading, error }: { client: Client; list:
           </ul>
         )}
       </Card>
+      {contract.error && <p className="text-sm text-warn-700">{(contract.error as Error).message}</p>}
+      {contract.data && contract.data.missing.length > 0 && (
+        <p className="rounded-ctl bg-amber-100 px-4 py-2.5 text-sm text-amber-700">
+          Kontrata e {contract.data.name} u shkarkua. Mbetën bosh (si në formular): {contract.data.missing.join(', ')}. Plotësoji te të dhënat e punonjësit ose me dorë.
+        </p>
+      )}
       <EmployeeDialog client={client} value={edit} onClose={() => setEdit(null)} />
       <EmployeeImportDialog client={client} existing={list} open={importing} onClose={() => setImporting(false)} />
       <HistoryDialog employee={hist} onClose={() => setHist(null)} />
@@ -444,6 +459,9 @@ function LeavesView({ client, year, setYear, list, loading }: { client: Client; 
   const qc = useQueryClient()
   const [add, setAdd] = useState<{ employee_id?: string } | null>(null)
   const [print, setPrint] = useState<PrintDoc | null>(null)
+  // the annual-leave decision on the office's own Word form; the other kinds keep the printed decision
+  const decision = useMutation({ mutationFn: (p: { e: Employee; leave: Leave }) => downloadLeaveDecision(client, p.e, p.leave) })
+  const openDecision = (e: Employee, leave: Leave) => (leave.kind === 'annual' ? decision.mutate({ e, leave }) : setPrint({ kind: 'decision', e, leave }))
   const active = list.filter((e) => e.active || e.leaves.length)
   const del = useMutation({ mutationFn: deleteLeave, onSuccess: () => void qc.invalidateQueries({ queryKey: ['client', client.id] }) })
 
@@ -549,7 +567,7 @@ function LeavesView({ client, year, setYear, list, loading }: { client: Client; 
                           </td>
                           <td colSpan={4} className="px-5 text-right">
                             <div className="flex justify-end gap-1">
-                              <Button size="sm" variant="ghost" onClick={() => setPrint({ kind: 'decision', e, leave: l })}>
+                              <Button size="sm" variant="ghost" loading={decision.isPending && decision.variables?.leave.id === l.id} onClick={() => openDecision(e, l)} title={l.kind === 'annual' ? 'Shkarko aktvendimin (Word)' : 'Printo vendimin'}>
                                 <Printer className="h-4 w-4" /> Vendimi
                               </Button>
                               <button type="button" aria-label="Fshi" onClick={() => confirm('Ta fshij këtë pushim?') && del.mutate(l.id)} className="inline-flex h-9 w-9 items-center justify-center rounded-ctl text-muted hover:bg-warn-100 hover:text-warn-700">
@@ -571,7 +589,8 @@ function LeavesView({ client, year, setYear, list, loading }: { client: Client; 
         Pushimi vjetor: së paku 4 javë (20 ditë pune për 5 ditë në javë, 24 për 6), 1 ditë shtesë për çdo 5 vjet përvojë te punëdhënësi, ditët shtesë të punonjësit; proporcionalisht me muajt e punës në vit. Festat zyrtare nuk llogariten si ditë pushimi.
       </p>
 
-      <LeaveDialog client={client} list={active} value={add} year={year} onClose={() => setAdd(null)} onSaved={(e, leave) => { setAdd(null); if (leave.kind !== 'other') setPrint({ kind: 'decision', e, leave }) }} />
+      <LeaveDialog client={client} list={active} value={add} year={year} onClose={() => setAdd(null)} onSaved={(e, leave) => { setAdd(null); if (leave.kind !== 'other') openDecision(e, leave) }} />
+      {decision.error && <p className="text-sm text-warn-700">{(decision.error as Error).message}</p>}
       {print && (
         <PrintPortal onDone={() => setPrint(null)}>
           {print.kind === 'decision' ? (
@@ -659,7 +678,7 @@ function LeaveDialog({ client, list, value, year, onClose, onSaved }: { client: 
           <Input label="Shënim" value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} />
         </div>
         <label className="flex items-center gap-2 text-[15px] sm:col-span-2">
-          <input type="checkbox" className="h-5 w-5 accent-brand-600" checked={f.printNow} onChange={(e) => setF({ ...f, printNow: e.target.checked })} /> Printo vendimin pas ruajtjes
+          <input type="checkbox" className="h-5 w-5 accent-brand-600" checked={f.printNow} onChange={(e) => setF({ ...f, printNow: e.target.checked })} /> Vendimi pas ruajtjes (pushimi vjetor: aktvendimi në Word)
         </label>
         {f.kind === 'annual' && auto > 0 && auto < 10 && (
           <p className="text-xs text-muted sm:col-span-2">Punëtori duhet të marrë së paku 10 ditë të njëpasnjëshme pushim vjetor gjatë vitit (pjesa tjetër mund të ndahet).</p>

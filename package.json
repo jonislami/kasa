@@ -23,7 +23,7 @@
     "android:open": "cap open android",
     "ios:open": "cap open ios",
     "test:fiscal": "tsx scripts/fiscal-selftest.ts",
-    "test:kontabilist": "tsx --tsconfig tsconfig.app.json scripts/compliance-selftest.ts"
+    "test:kontabilist": "tsx --tsconfig tsconfig.app.json scripts/compliance-selftest.ts && tsx --tsconfig tsconfig.app.json scripts/office-forms-preview.ts"
   },
   "dependencies": {
     "@capacitor-community/bluetooth-le": "^8.3.0",

@@ -35,6 +35,7 @@ import {
   type StatementLine,
 } from './ledger'
 import { downloadSheets } from './xls'
+import { downloadStatements } from './officeFormsApi'
 
 const n2 = (v: number) => new Intl.NumberFormat('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v)
 const slug = (s: string) => s.replace(/[^\p{L}\p{N}]+/gu, '-').toLowerCase()
@@ -482,6 +483,9 @@ export function TrialBalanceTab({ client, from, to }: { client: Client; from: st
 export function StatementsTab({ client, from, to }: { client: Client; from: string; to: string }) {
   const st = useQuery({ queryKey: ['client', client.id, 'statements', from, to], queryFn: () => fetchStatements(client.id, from, to) })
   const [printing, setPrinting] = useState(false)
+  // the financial statements on the office's KSRF form, for the year of the chosen period
+  const ksrfYear = Number(to.slice(0, 4))
+  const ksrf = useMutation({ mutationFn: () => downloadStatements(client, ksrfYear) })
   useEffect(() => {
     if (!printing) return
     const t = setTimeout(() => {
@@ -579,7 +583,10 @@ export function StatementsTab({ client, from, to }: { client: Client; from: stri
 
   return (
     <div className="flex flex-col gap-4 md:gap-5">
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button onClick={() => ksrf.mutate()} loading={ksrf.isPending} title={`Formulari i pasqyrave financiare (KSRF) për vitin ${ksrfYear} dhe ${ksrfYear - 1}`}>
+          Pasqyrat KSRF {ksrfYear} (Excel)
+        </Button>
         <Button variant="secondary" onClick={() => void xlsx()} disabled={!d}>
           Excel
         </Button>
@@ -587,6 +594,17 @@ export function StatementsTab({ client, from, to }: { client: Client; from: stri
           <Printer className="h-4 w-4" /> Printo / PDF
         </Button>
       </div>
+      {ksrf.error && <p className="rounded-ctl bg-warn-100 px-4 py-2.5 text-sm text-warn-700">{(ksrf.error as Error).message}</p>}
+      {ksrf.data && (
+        <div className={cn('rounded-ctl px-4 py-2.5 text-sm', Math.abs(ksrf.data.check) < 0.01 && Math.abs(ksrf.data.checkPrev) < 0.01 && !ksrf.data.unmapped.length ? 'bg-brand-100 text-brand-700' : 'bg-amber-100 text-amber-700')}>
+          Pasqyrat KSRF {ksrfYear} u shkarkuan.{' '}
+          {Math.abs(ksrf.data.check) < 0.01 && Math.abs(ksrf.data.checkPrev) < 0.01
+            ? 'Bilanci i gjendjes barazohet për të dy vitet.'
+            : `Bilanci nuk barazohet: diferenca ${n2(ksrf.data.check)} (${ksrfYear}), ${n2(ksrf.data.checkPrev)} (${ksrfYear - 1}) – kontrollo bilancin provues.`}
+          {ksrf.data.unmapped.length > 0 && ` Kontot ${ksrf.data.unmapped.join(', ')} janë vendosur te "të tjera" në shpalosje – kontrolloji.`}
+          {' '}Shuma e furnitorëve është vetëm te shënimi 3.8 (bilanci i merr nga aty).
+        </div>
+      )}
       {!d ? <p className={st.error ? 'text-sm text-warn-700' : 'py-10 text-center text-muted'}>{st.error ? (st.error as Error).message : 'Duke ngarkuar…'}</p> : content}
       {printing &&
         content &&
