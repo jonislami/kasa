@@ -5,6 +5,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from '@/app/AuthProvider'
 import { App } from './App'
 import '@/index.css'
+import './theme.css'
+
+// the program's own denser, flatter design system (theme.css), not shared with the till app
+document.documentElement.classList.add('acc')
 
 // "KontoSef Kontabilist" – the accountant's own program (web + Windows). Same database as KontoSef,
 // its own entry point (kontabilist.html), build (vite.kontabilist.config.ts) and installer.

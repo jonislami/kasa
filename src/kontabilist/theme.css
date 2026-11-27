@@ -1,0 +1,131 @@
+/*
+ * KontoSef Kontabilist – the program's own design system, on top of the shared Tailwind tokens.
+ * Scoped to <html class="acc"> (set in main.tsx), so the KontoSef till app is not touched.
+ *
+ * Principles: dense, flat, square-ish; one accent colour (brand-600); no shadows, gradients or motion;
+ * clear type hierarchy (page title 18px, section 14px semibold, data 13px tabular).
+ * On phones (< md) touch sizes stay 44px and inputs 16px (no zoom on iOS) – only shape and depth change.
+ */
+
+/* ---- shape and depth: everywhere -------------------------------------------------- */
+.acc .rounded-card,
+.acc .rounded-ctl,
+.acc .rounded-lg,
+.acc .rounded-xl,
+.acc .rounded-2xl,
+.acc .rounded-3xl,
+.acc .rounded-\[10px\],
+.acc .rounded-\[12px\],
+.acc .rounded-\[14px\],
+.acc .rounded-\[16px\],
+.acc .rounded-\[18px\] {
+  border-radius: 4px;
+}
+.acc .rounded-md {
+  border-radius: 3px;
+}
+.acc .shadow-card,
+.acc .shadow-sm,
+.acc .shadow-md,
+.acc .shadow-lg {
+  box-shadow: none;
+}
+.acc .shadow-pop {
+  box-shadow: 0 6px 20px -6px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(15, 23, 42, 0.06);
+}
+.acc .backdrop-blur {
+  backdrop-filter: none;
+}
+.acc .transition-colors,
+.acc .transition-transform,
+.acc .transition-all,
+.acc .transition {
+  transition: none;
+}
+.acc :where(a, button, [role='button'], [role='tab'], summary, [tabindex]):focus-visible {
+  outline: 2px solid #1f4fa8;
+  outline-offset: 1px;
+  border-radius: 3px;
+}
+.acc input:focus,
+.acc select:focus,
+.acc textarea:focus {
+  --tw-ring-shadow: 0 0 0 0 transparent;
+  box-shadow: 0 0 0 1px #1f4fa8;
+}
+.acc td,
+.acc .num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- density: desktop ------------------------------------------------------------- */
+@media (min-width: 768px) {
+  html.acc {
+    /* every rem-based size (spacing, h-10, text-sm…) shrinks by 1/8 */
+    font-size: 14px;
+  }
+  .acc body {
+    font-size: 13px;
+  }
+
+  /* controls: 34px high instead of 44–48px */
+  .acc .h-\[44px\],
+  .acc .h-\[46px\],
+  .acc .h-\[48px\],
+  .acc .h-btn,
+  .acc .md\:h-btn {
+    height: 34px;
+  }
+  .acc .min-h-btn,
+  .acc .min-h-\[44px\],
+  .acc .min-h-\[46px\],
+  .acc .min-h-\[48px\] {
+    min-height: 34px;
+  }
+  .acc .h-\[52px\] {
+    height: 38px;
+  }
+
+  /* type: one scale */
+  .acc .text-\[38px\],
+  .acc .text-\[34px\],
+  .acc .md\:text-\[38px\],
+  .acc .md\:text-\[34px\],
+  .acc .text-\[30px\],
+  .acc .text-\[26px\],
+  .acc .md\:text-\[26px\],
+  .acc .text-\[24px\],
+  .acc .text-\[22px\] {
+    font-size: 18px;
+    letter-spacing: -0.01em;
+  }
+  .acc .text-\[20px\],
+  .acc .text-\[19px\],
+  .acc .text-\[18px\] {
+    font-size: 15px;
+  }
+  .acc .text-\[17px\],
+  .acc .text-\[16px\] {
+    font-size: 14px;
+  }
+  .acc .text-\[15px\],
+  .acc .md\:text-\[15px\],
+  .acc .text-\[14px\] {
+    font-size: 13px;
+  }
+  .acc .text-\[13px\],
+  .acc .text-\[12px\] {
+    font-size: 12px;
+  }
+}
+
+/* ---- tables (shared Table / Th / Td and plain tables) ------------------------------ */
+.acc table th {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ---- dialogs: square, no blur ----------------------------------------------------- */
+.acc [role='dialog'] {
+  border-radius: 4px;
+}

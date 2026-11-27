@@ -8,19 +8,8 @@ function fail(error: { code?: string; message: string }): never {
   throw new Error(error.message)
 }
 const n = (v: unknown) => (v == null ? 0 : Number(v))
-const r2 = (v: number) => Math.round((v + Number.EPSILON) * 100) / 100
 
-/** Same as the database (acc_wage_tax), for the preview in forms. */
-export function wageTax(base: number, primary: boolean): number {
-  return primary ? r2(Math.max(Math.min(base, 450) - 250, 0) * 0.08 + Math.max(base - 450, 0) * 0.1) : r2(Math.max(base, 0) * 0.1)
-}
-
-export function salaryPreview(gross: number, empPct: number, erPct: number, primary: boolean) {
-  const emp = r2((gross * empPct) / 100)
-  const er = r2((gross * erPct) / 100)
-  const tax = wageTax(gross - emp, primary)
-  return { emp, er, tax, net: r2(gross - emp - tax), cost: r2(gross + er) }
-}
+export { wageTax, salaryPreview } from './taxMath'
 
 export type Contract = 'indefinite' | 'fixed' | 'part_time' | 'service'
 export const CONTRACT_LABELS: Record<Contract, string> = { indefinite: 'Me kohë të pacaktuar', fixed: 'Me kohë të caktuar', part_time: 'Me kohë të pjesshme', service: 'Kontratë shërbimi' }

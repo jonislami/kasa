@@ -22,7 +22,8 @@
     "cap:sync": "npm run build && cap sync",
     "android:open": "cap open android",
     "ios:open": "cap open ios",
-    "test:fiscal": "tsx scripts/fiscal-selftest.ts"
+    "test:fiscal": "tsx scripts/fiscal-selftest.ts",
+    "test:kontabilist": "tsx --tsconfig tsconfig.app.json scripts/compliance-selftest.ts"
   },
   "dependencies": {
     "@capacitor-community/bluetooth-le": "^8.3.0",

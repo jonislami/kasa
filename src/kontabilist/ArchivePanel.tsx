@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Archive, ChevronLeft, Download, ExternalLink, FileText, Image as ImageIcon, Pencil, Search, Share2, Trash2, Upload } from 'lucide-react'
+import { Archive, Download, ExternalLink, FileText, Image as ImageIcon, Pencil, Search, Share2, Trash2, Upload } from 'lucide-react'
 import { Badge, Button, Card, Dialog, EmptyState, Input, Select } from '@/components/ui'
 import { kosovoDateISO } from '@/lib/clock'
 import { cn } from '@/lib/cn'
@@ -12,16 +11,10 @@ import { CATEGORY_LABELS, downloadJson, fetchArchive, fetchClientBackup, saveArc
 
 /** Office-wide archive page (/arkiva). */
 export function ArchivePage({ me }: { me: AccMe }) {
-  const navigate = useNavigate()
   const [pw, setPw] = useState(false)
   return (
-    <TopShell me={me} onPassword={() => setPw(true)}>
-      <div className="mx-auto w-full max-w-[1200px] px-4 pb-12 pt-6 md:px-8 md:pt-10">
-        <button type="button" onClick={() => navigate('/')} className="mb-3 flex items-center gap-1 text-sm font-semibold text-muted hover:text-ink">
-          <ChevronLeft className="h-4 w-4" /> Kompanitë
-        </button>
-        <h1 className="text-[30px] font-semibold tracking-[-0.015em] leading-tight md:text-[34px]">Arkiva e dokumenteve</h1>
-        <p className="mt-1 text-muted">Faturat, kontratat, deklaratat, ekstraktet bankare dhe dokumentet e punëtorëve të të gjithë klientëve, sipas vitit dhe muajit.</p>
+    <TopShell me={me} onPassword={() => setPw(true)} title="Arkiva e dokumenteve">
+      <div className="mx-auto w-full max-w-[1400px]">
         <div className="mt-5">
           <ArchivePanel canBackup={me.accountant?.role !== 'assistant'} />
         </div>

@@ -1,21 +1,22 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Archive, Briefcase, Building2, ChevronLeft, ChevronRight, KeyRound, LayoutGrid, List, LogOut, MoreVertical, Plus, Search, Users } from 'lucide-react'
-import { useAuth } from '@/app/AuthProvider'
-import { Badge, Button, Card, Dialog, EmptyState, Input, Select, Table, Td, Th } from '@/components/ui'
-import { LogoMark } from '@/components/Logo'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Building2, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
+import { Badge, Button, Card, EmptyState } from '@/components/ui'
 import { loadState, OfflineEmpty } from '@/components/ui/LoadState'
 import { cn } from '@/lib/cn'
 import { kosovoDateISO, serverNow } from '@/lib/clock'
 import { formatEUR } from '@/lib/money'
-import { supabase } from '@/lib/supabase'
 import { AccountingNotMigrated, addMonths, formatDay, monthName, monthStart, vatDueDate } from '@/features/accounting/api'
 import { fetchClients, type AccMe, type ClientRow } from './api'
 import { ClientDialog, EMPTY_CLIENT } from './ClientDialog'
-import { DeadlineRow } from './TaxesTab'
-import { fetchCalendar } from './vat'
-import { fetchOfficeProfile } from './work'
+import { DataTable, Segments, type Column } from './DataTable'
+import { Frame } from './Frame'
+import { PasswordDialog } from './PasswordDialog'
+import { fetchCalendar, FILING_LABELS } from './vat'
+import { fetchRequests, fetchTasks } from './work'
+
+export { PasswordDialog }
 
 function ago(iso: string | null | undefined): string | null {
   if (!iso) return null
@@ -29,38 +30,29 @@ function ago(iso: string | null | undefined): string | null {
 }
 
 const vatDue = (c: ClientRow) => c.vat_out - c.vat_in
-
-/** Initials and a steady colour per company (same name → same colour). */
-const AVATAR = ['bg-[#1D4ED8]', 'bg-[#047857]', 'bg-[#C2410C]', 'bg-[#7E22CE]', 'bg-[#BE123C]', 'bg-[#0E7490]', 'bg-[#4338CA]', 'bg-[#B45309]', 'bg-[#0E6B4E]']
-const avatarColor = (name: string) => AVATAR[[...name].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7) % AVATAR.length]
-const initial = (name: string) => (name.trim()[0] ?? '?').toUpperCase()
+const vatText = (c: ClientRow, ended: boolean) => (!c.active || c.vat_status === 'na' ? '' : c.vat_status === 'filed' ? 'TVSH e dorëzuar' : ended ? "TVSH për t'u bërë" : '')
 
 function VatBadge({ c, late, ended }: { c: ClientRow; late: boolean; ended: boolean }) {
-  if (!c.active || c.vat_status === 'na') return null
-  if (c.vat_status === 'filed') return <Badge tone="success">TVSH e dorëzuar</Badge>
-  if (!ended) return null
-  return <Badge tone={late ? 'warn' : 'amber'}>TVSH për t'u bërë</Badge>
-}
-
-function LinkBadge({ c }: { c: ClientRow }) {
-  if (c.link_status === 'approved') return <span className="rounded-full border border-[#D3DEF2] bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-700">Lidhur me KontoSef</span>
-  if (c.link_status === 'pending') return <span className="rounded-full border border-[#FDE68A] bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">KontoSef · në pritje</span>
-  return null
+  if (!c.active || c.vat_status === 'na') return <span className="text-muted">—</span>
+  if (c.vat_status === 'filed') return <Badge tone="success">E dorëzuar</Badge>
+  if (!ended) return <span className="text-muted">muaji vazhdon</span>
+  return <Badge tone={late ? 'warn' : 'amber'}>{late ? 'Me vonesë' : "Për t'u bërë"}</Badge>
 }
 
 type Filter = 'all' | 'todo' | 'kasa' | 'archived'
 
-/** "Kompanitë" – every client company of the accountant: cards (or a list with the month's figures). */
+/**
+ * "Kompanitë" – the office's start page. On top what needs doing (deadlines, tasks, documents asked from
+ * clients – the whole team's for an admin, one's own otherwise), below every client company in one table.
+ */
 export function ClientsPage({ me }: { me: AccMe }) {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const [month, setMonth] = useState(() => addMonths(monthStart(), -1)) // the month being closed
-  const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<Filter>('all')
-  const [view, setView] = useState<'grid' | 'list'>(() => (localStorage.getItem('kasa.acc.view') === 'list' ? 'list' : 'grid'))
   const [newOpen, setNewOpen] = useState(false)
   const [passwordOpen, setPasswordOpen] = useState(false)
-  useEffect(() => localStorage.setItem('kasa.acc.view', view), [view])
+  const admin = (me.accountant?.role ?? 'admin') === 'admin'
 
   const clients = useQuery({ queryKey: ['clients', month], queryFn: () => fetchClients(month), retry: (count, e) => !(e instanceof AccountingNotMigrated) && count < 1 })
   const all = clients.data ?? []
@@ -69,170 +61,111 @@ export function ClientsPage({ me }: { me: AccMe }) {
   const late = kosovoDateISO() > vatDueDate(month)
   const todo = (c: ClientRow) => c.active && c.vat_status === 'open' && ended
 
-  const rows = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    return all
-      .filter((c) => (filter === 'archived' ? !c.active : c.active))
-      .filter((c) => (filter === 'todo' ? todo(c) : filter === 'kasa' ? c.link_status === 'approved' || c.link_status === 'pending' : true))
-      .filter((c) => !q || c.name.toLowerCase().includes(q) || (c.nui ?? '').includes(q) || (c.city ?? '').toLowerCase().includes(q))
+  const rows = useMemo(
+    () => all.filter((c) => (filter === 'archived' ? !c.active : c.active)).filter((c) => (filter === 'todo' ? todo(c) : filter === 'kasa' ? c.link_status === 'approved' || c.link_status === 'pending' : true)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clients.data, search, filter, month])
+    [clients.data, filter, month],
+  )
 
   const stats = {
     todo: active.filter(todo).length,
     vat: active.filter((c) => c.vat_status === 'open').reduce((s, c) => s + Math.max(0, vatDue(c)), 0),
-    sales: active.reduce((s, c) => s + c.sales, 0),
   }
 
+  const columns: Column<ClientRow>[] = [
+    {
+      id: 'name',
+      label: 'Kompania',
+      fixed: true,
+      width: 280,
+      text: (c) => `${c.name} ${c.activity ?? ''}`,
+      sort: (c) => c.name.toLowerCase(),
+      render: (c) => (
+        <span className="flex min-w-0 items-center gap-2">
+          <span className="truncate font-medium">{c.name}</span>
+          {c.link_status === 'approved' && <span className="shrink-0 text-[11px] font-semibold text-brand-600">KontoSef</span>}
+          {c.link_status === 'pending' && <span className="shrink-0 text-[11px] text-amber-700">KontoSef në pritje</span>}
+        </span>
+      ),
+    },
+    { id: 'nui', label: 'NUI', width: 110, text: (c) => c.nui ?? '', render: (c) => <span className="tabular-nums">{c.nui || '—'}</span> },
+    { id: 'city', label: 'Qyteti', width: 110, text: (c) => c.city ?? '', render: (c) => c.city || '—' },
+    { id: 'activity', label: 'Aktiviteti', hidden: true, text: (c) => c.activity ?? '', render: (c) => c.activity || '—' },
+    {
+      id: 'vat',
+      label: `TVSH ${monthName(month)}`,
+      width: 150,
+      text: (c) => vatText(c, ended),
+      sort: (c) => (c.vat_status === 'open' ? 0 : c.vat_status === 'filed' ? 2 : 1),
+      render: (c) => <VatBadge c={c} late={late} ended={ended} />,
+    },
+    { id: 'sales', label: 'Shitjet', width: 120, money: (c) => c.sales, render: (c) => formatEUR(c.sales) },
+    { id: 'purchases', label: 'Blerjet', width: 120, money: (c) => c.purchases, render: (c) => formatEUR(c.purchases) },
+    { id: 'vatdue', label: 'TVSH për pagesë', width: 130, money: (c) => (c.vat_status === 'na' ? 0 : vatDue(c)), render: (c) => (c.vat_status === 'na' ? '—' : formatEUR(vatDue(c))) },
+    { id: 'docs', label: 'Dokumente', width: 90, align: 'right', hidden: true, sort: (c) => c.docs, text: (c) => String(c.docs), render: (c) => c.docs },
+    { id: 'seen', label: 'Aktiviteti i fundit', width: 130, sort: (c) => c.last_activity ?? '', text: (c) => ago(c.last_activity) ?? '', render: (c) => <span className="text-muted">{ago(c.last_activity) ?? '—'}</span> },
+  ]
+
+  const toolbar = (
+    <>
+      <MonthStepper month={month} onChange={setMonth} max={monthStart()} />
+      {me.accountant?.role !== 'assistant' && (
+        <Button size="sm" onClick={() => setNewOpen(true)}>
+          <Plus className="h-4 w-4" /> Kompani e re
+        </Button>
+      )}
+    </>
+  )
+
   return (
-    <TopShell me={me} onPassword={() => setPasswordOpen(true)}>
-      <div className="mx-auto w-full max-w-[1320px] px-4 pb-12 pt-6 md:px-8 md:pt-10">
-        {/* title + tools */}
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-          <h1 className="text-[30px] font-semibold tracking-[-0.015em] leading-tight md:text-[34px] lg:mr-4">Kompanitë</h1>
-          <div className="relative flex-1 lg:max-w-[380px]">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Kërko kompaninë, NUI ose qytetin…"
-              className="h-[48px] w-full rounded-ctl border border-line bg-white pl-10 pr-3 shadow-sm focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
-            />
-          </div>
-          <div className="flex flex-wrap items-center gap-2 lg:ml-auto">
-            <div className="flex h-[48px] items-center gap-1 rounded-ctl border border-line bg-white p-1 shadow-sm">
-              {(['grid', 'list'] as const).map((v) => (
-                <button
-                  key={v}
-                  type="button"
-                  aria-label={v === 'grid' ? 'Kartat' : 'Lista'}
-                  onClick={() => setView(v)}
-                  className={cn('flex h-full w-10 items-center justify-center rounded-lg', view === v ? 'bg-bg text-ink' : 'text-muted hover:text-ink')}
-                >
-                  {v === 'grid' ? <LayoutGrid className="h-5 w-5" /> : <List className="h-5 w-5" />}
-                </button>
-              ))}
+    <TopShell me={me} onPassword={() => setPasswordOpen(true)} title="Kompanitë" toolbar={toolbar}>
+      <div className="flex flex-col gap-3 md:gap-4">
+        {clients.error instanceof AccountingNotMigrated ? (
+          <Card>
+            <EmptyState icon={<Building2 className="h-6 w-6" />} title="Programi nuk është aktivizuar ende" text="Administratori duhet të ekzekutojë migrimin supabase/migrations/0013_accountant_app.sql në Supabase." />
+          </Card>
+        ) : loadState(clients) === 'offline' ? (
+          <OfflineEmpty />
+        ) : (
+          <>
+            <div className="flex flex-wrap gap-x-6 gap-y-1 border border-line bg-white px-3 py-2 text-[13px]">
+              <Fact label="Kompani aktive" value={String(active.length)} />
+              <Fact label={`TVSH ${monthName(month)} për t'u bërë`} value={String(stats.todo)} tone={stats.todo && late ? 'warn' : undefined} sub={ended ? `afati ${formatDay(vatDueDate(month))}` : 'muaji vazhdon'} />
+              <Fact label="TVSH për pagesë (të hapura)" value={formatEUR(stats.vat)} />
+              <Fact label="Shitjet e klientëve" value={formatEUR(active.reduce((s, c) => s + c.sales, 0))} />
             </div>
-            <Select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value as Filter)}
-              className="h-[48px] shadow-sm"
-              options={[
-                { value: 'all', label: `Të gjitha (${active.length})` },
-                { value: 'todo', label: `Punët e hapura (${stats.todo})` },
-                { value: 'kasa', label: 'Të lidhura me KontoSef' },
-                ...(all.some((c) => !c.active) ? [{ value: 'archived', label: `Të arkivuara (${all.filter((c) => !c.active).length})` }] : []),
-              ]}
-            />
-            {me.accountant?.role !== 'assistant' && (
-              <Button size="lg" className="h-[48px] bg-brand-600 hover:bg-[#1A4390]" onClick={() => setNewOpen(true)}>
-                <Plus className="h-5 w-5" /> Kompani e re
-              </Button>
-            )}
-          </div>
-        </div>
 
-        {/* month strip: what the figures and the VAT badges refer to */}
-        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted">
-          <div className="flex items-center overflow-hidden rounded-ctl border border-line bg-white">
-            <button type="button" aria-label="Muaji i kaluar" className="flex h-9 w-9 items-center justify-center hover:bg-bg" onClick={() => setMonth((m) => addMonths(m, -1))}>
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <span className="min-w-[120px] px-1 text-center font-semibold text-ink">{monthName(month)}</span>
-            <button type="button" aria-label="Muaji tjetër" className="flex h-9 w-9 items-center justify-center hover:bg-bg disabled:text-[#B5BCC7]" disabled={month >= monthStart()} onClick={() => setMonth((m) => addMonths(m, 1))}>
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-          <span>
-            <strong className="text-ink">{stats.todo}</strong> me TVSH për t'u bërë{ended && ` · afati ${formatDay(vatDueDate(month))}`}
-          </span>
-          <span>
-            TVSH për pagesë <strong className="text-ink">{formatEUR(stats.vat)}</strong>
-          </span>
-          <span>
-            Shitjet e klientëve <strong className="text-ink">{formatEUR(stats.sales)}</strong>
-          </span>
-        </div>
-
-        <UpcomingDeadlines onOpen={(clientId, tab) => navigate(`/klient/${clientId}/${tab}`)} />
-
-        <div className="mt-6">
-          {clients.error instanceof AccountingNotMigrated ? (
-            <Card>
-              <EmptyState icon={<Building2 className="h-6 w-6" />} title="Programi nuk është aktivizuar ende" text="Administratori duhet të ekzekutojë migrimin supabase/migrations/0013_accountant_app.sql në Supabase." />
-            </Card>
-          ) : loadState(clients) === 'offline' ? (
-            <OfflineEmpty />
-          ) : loadState(clients) === 'loading' ? (
-            <p className="py-16 text-center text-muted">Duke ngarkuar…</p>
-          ) : loadState(clients) === 'error' ? (
-            <p className="py-8 text-sm text-warn-700">{(clients.error as Error).message}</p>
-          ) : rows.length === 0 && all.length > 0 ? (
-            <Card>
-              <EmptyState icon={<Building2 className="h-6 w-6" />} title="Asnjë kompani me këtë kërkim" />
-            </Card>
-          ) : view === 'grid' ? (
-            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-              {rows.map((c) => (
-                <CompanyCard key={c.id} c={c} late={late} ended={ended} onOpen={(tab) => navigate(`/klient/${c.id}${tab ? `/${tab}` : ''}`)} />
-              ))}
-              {filter !== 'archived' && (
-                <button
-                  type="button"
-                  onClick={() => setNewOpen(true)}
-                  className="flex min-h-[230px] flex-col items-center justify-center gap-2 rounded-[18px] border-2 border-dashed border-field text-muted hover:border-brand-600 hover:text-brand-600"
-                >
-                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm">
-                    <Plus className="h-6 w-6" />
-                  </span>
-                  <span className="font-semibold">Shto kompani</span>
-                  <span className="max-w-[240px] text-center text-sm">Çdo biznes – edhe ata që nuk përdorin arkën KontoSef.</span>
-                </button>
-              )}
+            <div className="grid items-start gap-3 md:gap-4 lg:grid-cols-3">
+              <DeadlinesPanel onOpen={(clientId, tab) => navigate(`/klient/${clientId}/${tab}`)} />
+              <TasksPanel admin={admin} onOpen={(clientId) => navigate(clientId ? `/klient/${clientId}/zyra` : '/puna')} />
+              <RequestsPanel onOpen={(clientId) => navigate(`/klient/${clientId}/zyra`)} />
             </div>
-          ) : (
-            <Card className="overflow-hidden">
-              <Table>
-                <thead className="bg-[#F9FAFB]">
-                  <tr>
-                    <Th className="pl-5">Kompania</Th>
-                    <Th className="hidden md:table-cell">NUI</Th>
-                    <Th className="hidden lg:table-cell">Aktiviteti i fundit</Th>
-                    <Th className="text-right">Shitjet</Th>
-                    <Th className="hidden text-right md:table-cell">Blerjet</Th>
-                    <Th className="hidden text-right md:table-cell">TVSH</Th>
-                    <Th className="pr-5">Muaji</Th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((c) => (
-                    <tr key={c.id} onClick={() => navigate(`/klient/${c.id}`)} className="cursor-pointer hover:bg-[#F9FAFB]">
-                      <Td className="pl-5">
-                        <div className="flex items-center gap-3">
-                          <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[15px] font-bold text-white', avatarColor(c.name))}>{initial(c.name)}</span>
-                          <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2 font-semibold">
-                              {c.name} <LinkBadge c={c} />
-                            </div>
-                            <div className="text-xs text-muted">{[c.city, c.activity].filter(Boolean).join(' · ') || '—'}</div>
-                          </div>
-                        </div>
-                      </Td>
-                      <Td className="hidden md:table-cell">{c.nui || '—'}</Td>
-                      <Td className="hidden whitespace-nowrap lg:table-cell">{ago(c.last_activity) ?? '—'}</Td>
-                      <Td className="text-right">{formatEUR(c.sales)}</Td>
-                      <Td className="hidden text-right md:table-cell">{formatEUR(c.purchases)}</Td>
-                      <Td className="hidden text-right md:table-cell">{c.vat_status === 'na' ? '—' : formatEUR(vatDue(c))}</Td>
-                      <Td className="pr-5">
-                        <VatBadge c={c} late={late} ended={ended} />
-                      </Td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </Card>
-          )}
-        </div>
+
+            <DataTable
+              id="office-clients"
+              rows={rows}
+              columns={columns}
+              rowKey={(c) => c.id}
+              onOpen={(c) => navigate(`/klient/${c.id}`)}
+              loading={loadState(clients) === 'loading'}
+              error={loadState(clients) === 'error' ? (clients.error as Error).message : null}
+              exportName={`Kompanitë ${monthName(month)}`}
+              empty="Asnjë kompani. Shto të parën me “Kompani e re”."
+              filters={
+                <Segments
+                  value={filter}
+                  onChange={setFilter}
+                  options={[
+                    { value: 'all', label: 'Aktive', count: active.length },
+                    { value: 'todo', label: 'TVSH e hapur', count: stats.todo },
+                    { value: 'kasa', label: 'KontoSef' },
+                    ...(all.some((c) => !c.active) ? [{ value: 'archived' as const, label: 'Arkivuar', count: all.filter((c) => !c.active).length }] : []),
+                  ]}
+                />
+              }
+            />
+          </>
+        )}
       </div>
 
       <ClientDialog
@@ -249,231 +182,171 @@ export function ClientsPage({ me }: { me: AccMe }) {
   )
 }
 
-/** Deadlines of all companies: late ones and the next 30 days that are not filed yet. */
-function UpcomingDeadlines({ onOpen }: { onOpen: (clientId: string, tab: string) => void }) {
-  const today = kosovoDateISO()
-  const plus = (n: number) => {
-    const x = new Date(today + 'T12:00:00')
-    x.setDate(x.getDate() + n)
-    return x.toISOString().slice(0, 10)
-  }
-  const cal = useQuery({ queryKey: ['calendar', 'all', today], queryFn: () => fetchCalendar(plus(-60), plus(30)) })
-  const open = (cal.data ?? []).filter((d) => d.status === 'open' || d.status === 'draft')
-  if (!open.length) return null
-  const late = open.filter((d) => d.due < today).length
+export function MonthStepper({ month, onChange, max }: { month: string; onChange: (m: string) => void; max?: string }) {
   return (
-    <Card className="mt-5 overflow-hidden">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-3.5">
-        <h2 className="font-semibold">Afatet tatimore të afërta</h2>
-        <span className={cn('text-sm', late ? 'font-semibold text-[#DC2626]' : 'text-muted')}>
-          {open.length} për t'u bërë{late ? ` · ${late} me vonesë` : ''}
-        </span>
-      </div>
-      <ul className="max-h-[300px] divide-y divide-line overflow-y-auto">
-        {open.slice(0, 12).map((d) => (
-          <DeadlineRow key={d.client_id + d.kind + d.period} d={d} today={today} showClient onOpen={() => onOpen(d.client_id, d.kind === 'vat' ? 'tvsh' : 'tatimet')} />
-        ))}
-      </ul>
-    </Card>
-  )
-}
-
-function CompanyCard({ c, late, ended, onOpen }: { c: ClientRow; late: boolean; ended: boolean; onOpen: (tab?: string) => void }) {
-  const [menu, setMenu] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    if (!menu) return
-    const close = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setMenu(false)
-    document.addEventListener('mousedown', close)
-    return () => document.removeEventListener('mousedown', close)
-  }, [menu])
-  const seen = ago(c.last_activity)
-
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={() => onOpen()}
-      onKeyDown={(e) => e.key === 'Enter' && onOpen()}
-      className="group relative flex min-h-[230px] cursor-pointer flex-col rounded-[18px] border border-line bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
-    >
-      <div className="flex items-start justify-between">
-        <span className={cn('flex h-14 w-14 items-center justify-center rounded-2xl text-[22px] font-semibold tracking-[-0.015em] text-white', avatarColor(c.name))}>{initial(c.name)}</span>
-        <div ref={ref} className="relative" onClick={(e) => e.stopPropagation()}>
-          <button type="button" aria-label="Veprimet" onClick={() => setMenu((m) => !m)} className="flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-bg hover:text-ink">
-            <MoreVertical className="h-5 w-5" />
-          </button>
-          {menu && (
-            <div className="absolute right-0 top-10 z-20 w-[220px] overflow-hidden rounded-card border border-line bg-white py-1 shadow-pop">
-              {[
-                ['', 'Hape'],
-                ['shitjet', 'Faturat e shitjes'],
-                ['blerjet', 'Blerjet & shpenzimet'],
-                ['borxhet', 'Borxhet'],
-                ['tvsh', 'TVSH'],
-                ['klienti', 'Të dhënat e kompanisë'],
-              ].map(([tab, label]) => (
-                <button key={label} type="button" onClick={() => onOpen(tab || undefined)} className="block w-full px-4 py-2.5 text-left text-[15px] hover:bg-bg">
-                  {label}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-      <div className="mt-5 text-[20px] font-semibold tracking-[-0.015em] leading-tight">{c.name}</div>
-      <div className="mt-1 text-[15px] text-muted">{[c.city, 'Kosovë'].filter(Boolean).join(', ')}</div>
-      <div className="mt-3 flex flex-wrap gap-2">
-        <LinkBadge c={c} />
-        <VatBadge c={c} late={late} ended={ended} />
-      </div>
-      <div className="mt-auto flex items-center justify-between border-t border-line pt-4 text-sm">
-        <span className="flex items-center gap-2 font-semibold">
-          <span className={cn('h-2 w-2 rounded-full', c.active ? 'bg-[#12B76A]' : 'bg-[#B5BCC7]')} />
-          {c.active ? 'Aktiv' : 'Arkivuar'}
-        </span>
-        <span className="flex items-center gap-2 text-muted">
-          {seen && `Hapur ${seen}`}
-          <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-        </span>
-      </div>
+    <div className="flex h-[44px] items-center border border-field bg-white md:h-8">
+      <button type="button" aria-label="Muaji i kaluar" className="flex h-full w-9 items-center justify-center hover:bg-bg md:w-8" onClick={() => onChange(addMonths(month, -1))}>
+        <ChevronLeft className="h-4 w-4" />
+      </button>
+      <span className="min-w-[118px] px-1 text-center text-[13px] font-semibold">{monthName(month)}</span>
+      <button type="button" aria-label="Muaji tjetër" className="flex h-full w-9 items-center justify-center hover:bg-bg disabled:text-[#B5BCC7] md:w-8" disabled={Boolean(max) && month >= max!} onClick={() => onChange(addMonths(month, 1))}>
+        <ChevronRight className="h-4 w-4" />
+      </button>
     </div>
   )
 }
 
-/** The first page has no sidebar: a white bar with the office, the account menu and "Dil". */
-export function TopShell({ me, onPassword, children }: { me: AccMe; onPassword: () => void; children: React.ReactNode }) {
-  const { signOut } = useAuth()
-  const navigate = useNavigate()
-  const [menu, setMenu] = useState(false)
-  const logo = useQuery({ queryKey: ['acc-office-profile'], queryFn: fetchOfficeProfile, staleTime: 5 * 60_000, retry: false })
-  const name = me.accountant?.full_name || me.accountant?.email || 'Kontabilist'
-  const doSignOut = async () => {
-    await signOut()
-    navigate('/login', { replace: true })
-  }
+function Fact({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: 'warn' }) {
   return (
-    <div className="min-h-dvh bg-bg">
-      <div className="fixed inset-x-0 top-0 z-50 h-safe-top bg-brand-900" />
-      <header className="sticky top-0 z-40 bg-brand-900 pt-safe text-white">
-        <div className="flex h-16 items-center gap-3 px-4 md:px-8">
-          {logo.data?.logo ? <img src={logo.data.logo} alt="" className="h-9 w-9 rounded-lg bg-white object-contain p-0.5" /> : <LogoMark size={36} />}
-          <div className="min-w-0">
-            <div className="truncate text-[15px] font-semibold leading-tight tracking-[-0.015em]">{me.accountant?.office_name || "KontoSef Kontabilist"}</div>
-            <div className="text-[12px] text-white/55">Kontabilist</div>
-          </div>
-          <div className="flex-1" />
-          <button type="button" onClick={() => navigate('/arkiva')} className="hidden h-11 items-center gap-2 rounded-ctl px-3 text-[14px] font-medium text-white/75 hover:bg-white/[0.07] hover:text-white md:flex">
-            <Archive className="h-4 w-4" /> Arkiva
-          </button>
-          <button type="button" onClick={() => navigate('/puna')} className="flex h-11 items-center gap-2 rounded-ctl px-3 text-[14px] font-medium text-white/75 hover:bg-white/[0.07] hover:text-white">
-            <Briefcase className="h-4 w-4" /> <span className="hidden sm:inline">Puna</span>
-          </button>
-          <button type="button" onClick={() => navigate('/zyra')} className="hidden h-11 items-center gap-2 rounded-ctl px-3 text-[14px] font-medium text-white/75 hover:bg-white/[0.07] hover:text-white md:flex">
-            <Users className="h-4 w-4" /> Zyra
-          </button>
-          <div className="relative">
-            <button type="button" onClick={() => setMenu((m) => !m)} aria-label="Llogaria" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-[14px] font-semibold text-white ring-1 ring-white/15">
-              {initial(name)}
-            </button>
-            {menu && (
-              <div className="absolute right-0 top-11 z-50 w-[260px] overflow-hidden rounded-card border border-line bg-white text-ink shadow-pop" onMouseLeave={() => setMenu(false)}>
-                <div className="border-b border-line px-4 py-3">
-                  <div className="truncate font-semibold">{name}</div>
-                  <div className="truncate text-sm text-muted">{me.accountant?.email}</div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMenu(false)
-                    onPassword()
-                  }}
-                  className="flex w-full items-center gap-2 px-4 py-3 text-left hover:bg-bg"
-                >
-                  <KeyRound className="h-4 w-4" /> Ndrysho fjalëkalimin
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMenu(false)
-                    navigate('/zyra')
-                  }}
-                  className="flex w-full items-center gap-2 border-t border-line px-4 py-3 text-left hover:bg-bg"
-                >
-                  <Users className="h-4 w-4" /> Zyra, ekipi dhe siguria
-                </button>
-              </div>
-            )}
-          </div>
-          <button type="button" onClick={() => void doSignOut()} className="flex h-11 items-center gap-2 rounded-ctl bg-white/10 px-4 font-semibold text-white hover:bg-white/20">
-            <LogOut className="h-4 w-4" /> <span className="hidden sm:inline">Dil</span>
-          </button>
-        </div>
-      </header>
-      <main>{children}</main>
-    </div>
+    <span className="flex items-baseline gap-1.5">
+      <span className="text-muted">{label}</span>
+      <b className={cn('tabular-nums', tone === 'warn' ? 'text-warn-700' : 'text-ink')}>{value}</b>
+      {sub && <span className="text-[12px] text-muted">({sub})</span>}
+    </span>
   )
 }
 
-export function PasswordDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [a, setA] = useState('')
-  const [b, setB] = useState('')
-  const [done, setDone] = useState(false)
-  const save = useMutation({
-    mutationFn: async () => {
-      if (a.length < 8) throw new Error('Fjalëkalimi duhet të ketë të paktën 8 shenja')
-      if (a !== b) throw new Error('Fjalëkalimet nuk përputhen')
-      const { error } = await supabase.auth.updateUser({ password: a })
-      if (error) throw new Error(/different from the old/i.test(error.message) ? 'Zgjidh një fjalëkalim të ndryshëm nga i vjetri' : error.message)
-    },
-    onSuccess: () => {
-      setA('')
-      setB('')
-      setDone(true)
-    },
-  })
-  const close = () => {
-    save.reset()
-    setDone(false)
-    setA('')
-    setB('')
-    onClose()
-  }
+/** A compact list with a header: the work lists of the start page and of the company panel. */
+export function Panel({ title, meta, more, children }: { title: string; meta?: ReactNode; more?: { label: string; onClick: () => void }; children: ReactNode }) {
   return (
-    <Dialog
-      open={open}
-      onClose={close}
-      title="Ndrysho fjalëkalimin"
-      width="md:max-w-[440px]"
-      footer={
-        <div className="flex justify-end gap-2">
-          <Button variant="secondary" onClick={close}>
-            {done ? 'Mbyll' : 'Anulo'}
-          </Button>
-          {!done && (
-            <Button loading={save.isPending} onClick={() => save.mutate()}>
-              Ruaj
-            </Button>
-          )}
-        </div>
-      }
-    >
-      {done ? (
-        <p className="rounded-ctl bg-brand-100 px-4 py-3 text-brand-600">Fjalëkalimi u ndryshua.</p>
-      ) : (
-        <form
-          className="flex flex-col gap-3"
-          onSubmit={(e) => {
-            e.preventDefault()
-            save.mutate()
-          }}
-        >
-          <Input label="Fjalëkalimi i ri" type="password" autoComplete="new-password" value={a} onChange={(e) => setA(e.target.value)} hint="Të paktën 8 shenja" />
-          <Input label="Përsërite" type="password" autoComplete="new-password" value={b} onChange={(e) => setB(e.target.value)} error={save.error ? (save.error as Error).message : null} />
-          <button type="submit" className="hidden" />
-        </form>
+    <section className="flex min-h-[120px] flex-col border border-line bg-white">
+      <div className="flex items-center gap-2 border-b border-line px-3 py-2">
+        <h2 className="flex-1 text-[13px] font-semibold text-ink">{title}</h2>
+        {meta && <span className="text-[12px] text-muted">{meta}</span>}
+      </div>
+      <div className="flex-1">{children}</div>
+      {more && (
+        <button type="button" onClick={more.onClick} className="border-t border-line px-3 py-1.5 text-left text-[12px] font-semibold text-brand-600 hover:bg-bg">
+          {more.label}
+        </button>
       )}
-    </Dialog>
+    </section>
   )
 }
 
+export const PanelRow = ({ onClick, children }: { onClick?: () => void; children: ReactNode }) => (
+  <li>
+    <button type="button" onClick={onClick} className="flex w-full items-center gap-2 border-b border-line px-3 py-1.5 text-left text-[13px] hover:bg-[#F7F8FA]">
+      {children}
+    </button>
+  </li>
+)
+
+const plusDays = (iso: string, n: number) => {
+  const x = new Date(iso + 'T12:00:00')
+  x.setDate(x.getDate() + n)
+  return x.toISOString().slice(0, 10)
+}
+
+export function DueText({ today, due }: { today: string; due: string }) {
+  const left = Math.round((Date.parse(due + 'T12:00:00') - Date.parse(today + 'T12:00:00')) / 86_400_000)
+  return (
+    <span className={cn('shrink-0 text-[12px] tabular-nums', left < 0 ? 'font-semibold text-warn-700' : left <= 3 ? 'text-amber-700' : 'text-muted')}>{left < 0 ? `${-left} ditë vonë` : left === 0 ? 'sot' : formatDay(due)}</span>
+  )
+}
+
+const Muted = ({ children }: { children: ReactNode }) => <p className="px-3 py-3 text-[13px] text-muted">{children}</p>
+
+/** Deadlines of all companies the user sees: late ones and the next 30 days that are not filed yet. */
+function DeadlinesPanel({ onOpen }: { onOpen: (clientId: string, tab: string) => void }) {
+  const today = kosovoDateISO()
+  const cal = useQuery({ queryKey: ['calendar', 'all', today], queryFn: () => fetchCalendar(plusDays(today, -60), plusDays(today, 30)) })
+  const open = (cal.data ?? []).filter((d) => d.status === 'open' || d.status === 'draft')
+  const late = open.filter((d) => d.due < today).length
+  const [all, setAll] = useState(false)
+  return (
+    <Panel title="Afatet tatimore" meta={cal.data ? `${open.length} të hapura${late ? ` · ${late} vonë` : ''}` : undefined} more={open.length > 7 ? { label: all ? 'Më pak' : `Të gjitha (${open.length})`, onClick: () => setAll(!all) } : undefined}>
+      {!cal.data ? (
+        <Muted>Duke ngarkuar…</Muted>
+      ) : !open.length ? (
+        <Muted>Asnjë afat i hapur në 30 ditët e ardhshme.</Muted>
+      ) : (
+        <ul className="max-h-[260px] overflow-y-auto">
+          {(all ? open : open.slice(0, 7)).map((d) => (
+            <PanelRow key={d.client_id + d.kind + d.period} onClick={() => onOpen(d.client_id, d.kind === 'vat' ? 'tvsh' : d.kind === 'payroll' ? 'pagat' : 'tatimet')}>
+              <span className="min-w-0 flex-1 truncate">
+                <span className="font-medium">{d.client}</span>{' '}
+                <span className="text-muted">
+                  · {FILING_LABELS[d.kind]} {d.kind === 'income_annual' ? d.period.slice(0, 4) : monthName(d.period)}
+                </span>
+              </span>
+              <DueText today={today} due={d.due} />
+            </PanelRow>
+          ))}
+        </ul>
+      )}
+    </Panel>
+  )
+}
+
+function TasksPanel({ admin, onOpen }: { admin: boolean; onOpen: (clientId: string | null) => void }) {
+  const today = kosovoDateISO()
+  const tasks = useQuery({ queryKey: ['acc-tasks', admin ? 'all' : 'mine', null, false], queryFn: () => fetchTasks(admin ? 'all' : 'mine'), retry: false })
+  const list = [...(tasks.data ?? [])].sort((a, b) => (a.due_date ?? '9999').localeCompare(b.due_date ?? '9999'))
+  return (
+    <Panel title={admin ? 'Detyrat e ekipit' : 'Detyrat e mia'} meta={tasks.data ? `${list.length} të hapura` : undefined} more={{ label: 'Hap punën dhe detyrat', onClick: () => onOpen(null) }}>
+      {tasks.isLoading ? (
+        <Muted>Duke ngarkuar…</Muted>
+      ) : tasks.error ? (
+        <Muted>Detyrat nuk u ngarkuan.</Muted>
+      ) : !list.length ? (
+        <Muted>Asnjë detyrë e hapur.</Muted>
+      ) : (
+        <ul className="max-h-[260px] overflow-y-auto">
+          {list.slice(0, 7).map((t) => (
+            <PanelRow key={t.id} onClick={() => onOpen(t.client_id)}>
+              {t.priority === 'high' && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-warn-700" title="Prioritet i lartë" />}
+              <span className="min-w-0 flex-1 truncate">
+                <span className="font-medium">{t.title}</span>
+                <span className="text-muted">
+                  {[t.client_name, admin ? t.assigned_name : null]
+                    .filter(Boolean)
+                    .map((x) => ` · ${x}`)
+                    .join('')}
+                </span>
+              </span>
+              {t.due_date ? <DueText today={today} due={t.due_date} /> : <span className="text-[12px] text-muted">pa afat</span>}
+            </PanelRow>
+          ))}
+        </ul>
+      )}
+    </Panel>
+  )
+}
+
+function RequestsPanel({ onOpen }: { onOpen: (clientId: string) => void }) {
+  const today = kosovoDateISO()
+  const req = useQuery({ queryKey: ['acc-requests', 'requested', null], queryFn: () => fetchRequests('requested'), retry: false })
+  const list = [...(req.data ?? [])].sort((a, b) => (a.due_date ?? '9999').localeCompare(b.due_date ?? '9999'))
+  return (
+    <Panel title="Dokumentet e kërkuara nga klientët" meta={req.data ? `${list.length} në pritje` : undefined}>
+      {req.isLoading ? (
+        <Muted>Duke ngarkuar…</Muted>
+      ) : req.error ? (
+        <Muted>Kërkesat nuk u ngarkuan.</Muted>
+      ) : !list.length ? (
+        <Muted>Asnjë dokument në pritje.</Muted>
+      ) : (
+        <ul className="max-h-[260px] overflow-y-auto">
+          {list.slice(0, 7).map((r) => (
+            <PanelRow key={r.id} onClick={() => onOpen(r.client_id)}>
+              <span className="min-w-0 flex-1 truncate">
+                <span className="font-medium">{r.client_name}</span> <span className="text-muted">· {r.title}</span>
+              </span>
+              {r.due_date ? <DueText today={today} due={r.due_date} /> : null}
+            </PanelRow>
+          ))}
+        </ul>
+      )}
+    </Panel>
+  )
+}
+
+/** Office pages (Kompanitë, Puna, Arkiva, Zyra) in the common frame. */
+export function TopShell({ me, onPassword, title, toolbar, children }: { me: AccMe; onPassword: () => void; title?: ReactNode; toolbar?: ReactNode; children: ReactNode }) {
+  return (
+    <Frame me={me} onPassword={onPassword} title={title} toolbar={toolbar}>
+      {children}
+    </Frame>
+  )
+}
