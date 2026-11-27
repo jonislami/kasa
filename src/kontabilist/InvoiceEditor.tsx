@@ -22,6 +22,7 @@ import {
 } from './api'
 import { EMPTY_PARTNER, PartnerDialog } from './PartnersTab'
 import { VAT_FLAG_LABELS, type VatFlag } from './vat'
+import { useHotkey } from './shortcuts'
 
 const VAT_OPTIONS: { value: VatCode; label: string }[] = [
   { value: 'E', label: '18%' },
@@ -70,6 +71,22 @@ export function newInvoice(kind: InvoiceInput['kind'], date?: string, over: Part
  * Amounts come from the lines (price without VAT, discount, rate) – or, mostly for supplier invoices,
  * straight from the paper: base and VAT per rate. The server recomputes everything the same way.
  */
+const catKey = (clientId: string, kind: string, partnerId: string) => `acc.partnerCat.${clientId}.${kind}.${partnerId}`
+function lastCategory(clientId: string, kind: string, partnerId: string): DocCategory | null {
+  try {
+    return (localStorage.getItem(catKey(clientId, kind, partnerId)) as DocCategory | null) ?? null
+  } catch {
+    return null
+  }
+}
+function rememberCategory(clientId: string, kind: string, partnerId: string, c: DocCategory) {
+  try {
+    localStorage.setItem(catKey(clientId, kind, partnerId), c)
+  } catch {
+    /* storage unavailable */
+  }
+}
+
 export function InvoiceEditor({ clientId, value, onClose, onSaved }: { clientId: string; value: InvoiceInput | null; onClose: () => void; onSaved: (id: string, docNo: string) => void }) {
   const qc = useQueryClient()
   const [f, setF] = useState<InvoiceInput>(() => value ?? newInvoice('sale'))
@@ -109,6 +126,7 @@ export function InvoiceEditor({ clientId, value, onClose, onSaved }: { clientId:
         force,
       }),
     onSuccess: (r) => {
+      if (f.partner_id) rememberCategory(clientId, kind, f.partner_id, f.category)
       void qc.invalidateQueries({ queryKey: ['client', clientId] })
       onSaved(r.id, r.doc_no)
     },
@@ -116,6 +134,10 @@ export function InvoiceEditor({ clientId, value, onClose, onSaved }: { clientId:
       if (e instanceof DuplicateInvoice) setDupe(e.message)
     },
   })
+
+  // Ctrl+Enter (⌘+Enter) saves from any field of the form
+  const open = Boolean(value)
+  useHotkey('ctrl+enter', () => !save.isPending && save.mutate(false), open)
 
   const setLine = (i: number, patch: Partial<DocLine>) => setF({ ...f, lines: f.lines.map((l, j) => (j === i ? { ...l, ...patch } : l)) })
   const amountField = (k: 'net_e' | 'vat_e' | 'net_d' | 'vat_d' | 'amt_c' | 'amt_a', label: string, vatOf?: { key: 'vat_e' | 'vat_d'; rate: number }) => (
@@ -149,8 +171,8 @@ export function InvoiceEditor({ clientId, value, onClose, onSaved }: { clientId:
               <Button variant="secondary" onClick={onClose}>
                 Anulo
               </Button>
-              <Button loading={save.isPending && !dupe} onClick={() => save.mutate(false)}>
-                Ruaj
+              <Button loading={save.isPending && !dupe} onClick={() => save.mutate(false)} title="Ruaj (Ctrl+Enter)">
+                Ruaj <kbd className="hidden text-[11px] font-normal opacity-70 md:inline">Ctrl ↵</kbd>
               </Button>
             </div>
           </div>
@@ -209,7 +231,12 @@ export function InvoiceEditor({ clientId, value, onClose, onSaved }: { clientId:
                   <Select
                     label={purchase ? 'Furnitori' : 'Blerësi'}
                     value={f.partner_id ?? ''}
-                    onChange={(e) => setF({ ...f, partner_id: e.target.value || null })}
+                    onChange={(e) => {
+                      const pid = e.target.value || null
+                      // a new document takes the category last used with this partner (remembered on this device)
+                      const last = !f.id && pid ? lastCategory(clientId, kind, pid) : null
+                      setF({ ...f, partner_id: pid, ...(last ? { category: last } : {}) })
+                    }}
                     options={[{ value: '', label: '— pa partner të regjistruar —' }, ...partnerOptions.map((p) => ({ value: p.id, label: p.name + (p.nui ? ` · ${p.nui}` : '') }))]}
                   />
                 </div>
@@ -221,7 +248,14 @@ export function InvoiceEditor({ clientId, value, onClose, onSaved }: { clientId:
             {!f.partner_id ? (
               <>
                 <Input label="Emri (pa regjistruar)" value={f.partner_name ?? ''} onChange={(e) => setF({ ...f, partner_name: e.target.value })} />
-                <Input label="NUI" inputMode="numeric" maxLength={9} value={f.partner_nui ?? ''} onChange={(e) => setF({ ...f, partner_nui: e.target.value.replace(/\D/g, '') })} />
+                <Input
+                  label="NUI"
+                  inputMode="numeric"
+                  maxLength={9}
+                  value={f.partner_nui ?? ''}
+                  onChange={(e) => setF({ ...f, partner_nui: e.target.value.replace(/\D/g, '') })}
+                  error={f.partner_nui && f.partner_nui.length !== 9 ? `${f.partner_nui.length} nga 9 shifra – ATK e kërkon të plotë` : null}
+                />
               </>
             ) : (
               <Select

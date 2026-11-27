@@ -359,6 +359,12 @@ export interface BookIssue {
   text: string
 }
 
+/** A foreign partner has no Kosovo number: the document is marked so the book writes the ATK code instead. */
+const FOREIGN_HINT: Record<BookDoc['kind'], string> = {
+  purchase: ' Nëse furnitori është i huaj, shëno te fatura "Ngarkesë e kundërt" (shërbim) ose "Import" (mall).',
+  sale: ' Nëse blerësi është i huaj, shëno "Eksport" ose "Shërbim jashtë vendit".',
+}
+
 export function checkBooks(docs: BookDoc[], vatRegistered: boolean, from: string, to: string): BookIssue[] {
   const out: BookIssue[] = []
   const seen = new Map<string, BookDoc>()
@@ -370,9 +376,9 @@ export function checkBooks(docs: BookDoc[], vatRegistered: boolean, from: string
     // a fiscal coupon is sold to the final consumer ("Qytetar", code 1)
     if (d.source === 'kasa') {
       /* nothing to check */
-    } else if (!nui) out.push({ level: d.kind === 'purchase' ? 'error' : 'warn', doc: d, text: `${who}: mungon NUI / numri fiskal${d.kind === 'sale' ? ' i blerësit (ose kodi sipas udhëzimit të ATK-së)' : ' i shitësit'}.` })
+    } else if (!nui) out.push({ level: d.kind === 'purchase' ? 'error' : 'warn', doc: d, text: `${who}: mungon NUI / numri fiskal${d.kind === 'sale' ? ' i blerësit (ose kodi sipas udhëzimit të ATK-së)' : ' i shitësit'}.${FOREIGN_HINT[d.kind]}` })
     else if (!/^\d$/.test(nui) && !/^\d{9}$/.test(nui) && !(d.kind === 'purchase' && /^\d{10}$/.test(nui)))
-      out.push({ level: 'error', doc: d, text: `${who}: NUI / numri fiskal "${nui}" duhet të ketë 9 shifra${d.kind === 'purchase' ? ' (ose 10 për numrin personal)' : ''}.` })
+      out.push({ level: 'error', doc: d, text: `${who}: NUI / numri fiskal "${nui}" duhet të ketë 9 shifra${d.kind === 'purchase' ? ' (ose 10 për numrin personal)' : ''}.${FOREIGN_HINT[d.kind]}` })
     const parts = r2(d.net_e + d.vat_e + d.net_d + d.vat_d + d.amt_c + d.amt_a + d.vat_nd)
     if (Math.abs(Math.abs(parts) - Math.abs(d.total)) > 0.05) out.push({ level: 'error', doc: d, text: `${who}: shuma e normave (${parts.toFixed(2)}) nuk përputhet me totalin (${d.total.toFixed(2)}).` })
     if (d.net_e && Math.abs(Math.abs(d.vat_e) + Math.abs(d.vat_nd && d.net_e ? d.vat_nd : 0) - Math.abs(d.net_e) * 0.18) > 0.05 + Math.abs(d.net_e) * 0.002)

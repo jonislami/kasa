@@ -41,6 +41,8 @@ export function AtkBooksTab({ client }: { client: Client }) {
   const [from, setFrom] = useState(`${today.slice(0, 7)}-01`)
   const [to, setTo] = useState(today)
   const [showAll, setShowAll] = useState(false)
+  // validation before export: a book with errors downloads only after the accountant confirms
+  const [ask, setAsk] = useState<BookKind | null>(null)
   const period = periodOf(pk, anchor, from, to)
   const books = useMemo<BookKind[]>(() => (client.vat_registered ? ['sales_vat', 'purchase_vat'] : ['sales_novat', 'purchase_novat']), [client.vat_registered])
 
@@ -105,7 +107,7 @@ export function AtkBooksTab({ client }: { client: Client }) {
         )}
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {books.map((b) => (
-            <Button key={b} className="h-14 justify-start text-left" disabled={!docs.data} loading={download.isPending && download.variables === b} onClick={() => download.mutate(b)}>
+            <Button key={b} className="h-14 justify-start text-left" disabled={!docs.data} loading={download.isPending && download.variables === b} onClick={() => (errors.length ? setAsk(b) : download.mutate(b))}>
               <Download className="h-5 w-5" />
               <span>
                 {BOOK_LABELS[b]}
@@ -114,6 +116,26 @@ export function AtkBooksTab({ client }: { client: Client }) {
             </Button>
           ))}
         </div>
+        {ask && (
+          <div className="mt-3 flex flex-wrap items-center gap-3 rounded-ctl bg-warn-100 px-4 py-3 text-sm text-warn-700">
+            <XCircle className="h-5 w-5 shrink-0" />
+            <span className="min-w-0 flex-1">
+              {BOOK_LABELS[ask]} ka {errors.length} gabime (shih kontrollin më poshtë). EDI i ATK-së mund ta refuzojë skedarin ose deklarata del e pasaktë.
+            </span>
+            <Button variant="secondary" onClick={() => setAsk(null)}>
+              Anulo
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                download.mutate(ask)
+                setAsk(null)
+              }}
+            >
+              Shkarko gjithsesi
+            </Button>
+          </div>
+        )}
         {download.error && <p className="mt-2 text-sm text-warn-700">{(download.error as Error).message}</p>}
         {docs.error && <p className="mt-2 text-sm text-warn-700">{(docs.error as Error).message}</p>}
       </Card>

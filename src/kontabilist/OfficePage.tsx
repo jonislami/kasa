@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronLeft, FileSpreadsheet, History, KeyRound, ShieldCheck, UserPlus, Users } from 'lucide-react'
+import { FileSpreadsheet, History, KeyRound, ShieldCheck, UserPlus, Users } from 'lucide-react'
 import { Badge, Button, Card, Dialog, EmptyState, Input, Select, Table, Td, Th } from '@/components/ui'
 import { formatKosovoDateTime, kosovoDateISO } from '@/lib/clock'
 import { cn } from '@/lib/cn'
@@ -37,18 +37,13 @@ type Tab = 'ekipi' | 'historiku' | 'siguria'
 
 /** Zyra: team and access, history of actions, two-factor login and office settings. */
 export function OfficePage({ me }: { me: AccMe }) {
-  const navigate = useNavigate()
   const [tab, setTab] = useState<Tab>('ekipi')
   const [pw, setPw] = useState(false)
   const office = useQuery({ queryKey: ['acc-office'], queryFn: fetchOffice })
   const admin = office.data?.is_admin ?? false
   return (
-    <TopShell me={me} onPassword={() => setPw(true)}>
-      <div className="mx-auto w-full max-w-[1200px] px-4 pb-12 pt-6 md:px-8 md:pt-10">
-        <button type="button" onClick={() => navigate('/')} className="mb-3 flex items-center gap-1 text-sm font-semibold text-muted hover:text-ink">
-          <ChevronLeft className="h-4 w-4" /> Kompanitë
-        </button>
-        <h1 className="text-[30px] font-semibold tracking-[-0.015em] leading-tight md:text-[34px]">{office.data?.office_name || me.accountant?.office_name || 'Zyra'}</h1>
+    <TopShell me={me} onPassword={() => setPw(true)} title={office.data?.office_name || me.accountant?.office_name || 'Zyra'}>
+      <div className="mx-auto w-full max-w-[1400px]">
         <p className="mt-1 text-muted">
           {me.accountant?.full_name} · {ROLE_LABELS[(me.accountant?.role ?? 'admin') as OfficeRole]}
         </p>

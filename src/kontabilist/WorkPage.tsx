@@ -67,12 +67,8 @@ export function WorkPage({ me }: { me: AccMe }) {
     ...(admin ? ([['kontratat', 'Kontratat dhe tarifat', null], ['faturimi', 'Faturimi i klientëve', null]] as [Tab, string, null][]) : []),
   ]
   return (
-    <TopShell me={me} onPassword={() => setPw(true)}>
-      <div className="mx-auto w-full max-w-[1200px] px-4 pb-12 pt-6 md:px-8 md:pt-10">
-        <button type="button" onClick={() => navigate('/')} className="mb-3 flex items-center gap-1 text-sm font-semibold text-muted hover:text-ink">
-          <ChevronLeft className="h-4 w-4" /> Kompanitë
-        </button>
-        <h1 className="text-[30px] font-semibold tracking-[-0.015em] leading-tight md:text-[34px]">Puna e zyrës</h1>
+    <TopShell me={me} onPassword={() => setPw(true)} title="Puna e zyrës">
+      <div className="mx-auto w-full max-w-[1400px]">
         {s && (
           <p className="mt-1 text-muted">
             {s.my_tasks} detyra të mia · {s.overdue_tasks > 0 && <span className="font-semibold text-warn-700">{s.overdue_tasks} me afat të kaluar · </span>}

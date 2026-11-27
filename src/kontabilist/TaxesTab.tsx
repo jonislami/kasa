@@ -7,6 +7,7 @@ import { cn } from '@/lib/cn'
 import { formatEUR } from '@/lib/money'
 import { formatDay, monthName } from '@/features/accounting/api'
 import type { Client } from './api'
+import { extraDeadlines, regimeIssues } from './compliance'
 import { fetchCalendar, fetchTaxOverview, FILING_LABELS, quarterTax, REGIME_LABELS, saveFiling, setTaxRegime, type Deadline, type FilingKind, type TaxRegime } from './vat'
 
 const VAT_THRESHOLD = 30000
@@ -25,6 +26,8 @@ export function TaxesTab({ client, onGo }: { client: Client; onGo: (tab: string)
   }
   const regime = useMutation({ mutationFn: (r: TaxRegime) => setTaxRegime(client.id, r), onSuccess: refresh })
   const d = ov.data
+  const extra = d ? extraDeadlines({ vat_registered: d.vat_registered, regime: d.regime }, addDays(today, -30), addDays(today, 150)) : []
+  const regimeWarn = d ? regimeIssues({ regime: d.regime, legal_form: client.legal_form, vat_registered: d.vat_registered, sales_12m: d.sales_12m }).filter((i) => !i.text.includes('regjistrohet për TVSH')) : [] // the VAT threshold has its own notice below
   const filing = (kind: FilingKind, period: string) => d?.filings.find((f) => f.kind === kind && f.period === period)
 
   return (
@@ -56,6 +59,22 @@ export function TaxesTab({ client, onGo }: { client: Client; onGo: (tab: string)
         </p>
       )}
 
+      {regimeWarn.length > 0 && (
+        <ul className="flex flex-col gap-2">
+          {regimeWarn.map((i) => (
+            <li key={i.text} className={cn('flex items-start gap-2 rounded-ctl px-4 py-3 text-sm', i.level === 'error' ? 'bg-warn-100 text-warn-700' : 'bg-amber-100 text-amber-700')}>
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span className="flex-1">{i.text}</span>
+              {i.tab === 'klienti' && (
+                <button type="button" className="shrink-0 font-semibold underline" onClick={() => onGo('klienti')}>
+                  Të dhënat
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+
       {/* deadlines of this company */}
       <Card className="overflow-hidden">
         <div className="flex items-center gap-3 border-b border-line px-5 py-4">
@@ -71,6 +90,35 @@ export function TaxesTab({ client, onGo }: { client: Client; onGo: (tab: string)
             {cal.data.map((x) => (
               <DeadlineRow key={x.kind + x.period} d={x} today={today} onOpen={() => (x.kind === 'vat' ? onGo('tvsh') : setFile({ kind: x.kind as FilingKind, period: x.period, amount: x.amount ?? 0, title: FILING_LABELS[x.kind] }))} />
             ))}
+          </ul>
+        )}
+        {extra.length > 0 && (
+          <ul className="divide-y divide-line border-t border-line">
+            {extra.map((x) => {
+              const left = Math.round((Date.parse(x.due + 'T12:00:00') - Date.parse(today + 'T12:00:00')) / 86_400_000)
+              return (
+                <li key={x.code + x.period} className="flex flex-wrap items-center gap-3 px-5 py-3">
+                  <span className={cn('h-2.5 w-2.5 shrink-0 rounded-full', left < 0 ? 'bg-[#94A3B8]' : left <= 10 ? 'bg-[#F59E0B]' : 'bg-[#94A3B8]')} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-semibold">
+                      {x.label} <span className="font-normal text-muted">· {x.code}</span>
+                    </span>
+                  </span>
+                  {x.code === 'RB' ? (
+                    <button type="button" className="text-sm font-semibold text-brand-600 hover:underline" onClick={() => onGo('rb')}>
+                      Përgatit
+                    </button>
+                  ) : x.code === 'LB/LSH' ? (
+                    <button type="button" className="text-sm font-semibold text-brand-600 hover:underline" onClick={() => onGo('librat_atk')}>
+                      Librat
+                    </button>
+                  ) : null}
+                  <span className="text-sm text-muted">
+                    {formatDay(x.due)} · {left < 0 ? 'kaloi' : left === 0 ? 'sot' : `pas ${left} ditësh`}
+                  </span>
+                </li>
+              )
+            })}
           </ul>
         )}
       </Card>

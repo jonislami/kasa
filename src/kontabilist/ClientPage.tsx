@@ -3,7 +3,7 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Building2, Download, Link2, Pencil, Unlink } from 'lucide-react'
 import { useAuth } from '@/app/AuthProvider'
-import { Button, Card, Dialog, EmptyState, Input, StatCard } from '@/components/ui'
+import { Button, Card, Dialog, EmptyState, Input } from '@/components/ui'
 import { formatKosovoDateTime, kosovoDateISO } from '@/lib/clock'
 import { formatEUR } from '@/lib/money'
 import { VAT_LABELS } from '@/lib/vat'
@@ -30,9 +30,11 @@ import { ClientDialog } from './ClientDialog'
 import { DocumentsTab } from './DocumentsTab'
 import { AtkBooksTab } from './AtkBooksTab'
 import { WrTab } from './AtkFormsView'
+import { ComplianceTab, Rb500Tab } from './ComplianceTab'
 import { HrTab } from './HrTab'
+import { useHotkey } from './shortcuts'
 
-type TabKey = 'librat_atk' | 'wr' | 'punonjesit' | 'vijueshmeria' | 'pushimet' | 'inventari' | 'arkiva' | 'zyra' | 'skanimi' | 'pagat' | 'konto' | 'ditari' | 'libri' | 'bilanci' | 'pasqyrat' | 'asetet' | 'mbyllja' | 'paneli' | 'pasqyra' | 'banka' | 'tatimet' | 'tvsh_permbledhje' | 'shitjet' | 'proformat' | 'blerjet' | 'partneret' | 'borxhet' | 'tvsh' | 'fitimi' | 'arka' | 'stoku' | 'klienti'
+type TabKey = 'kontrolli' | 'rb' | 'librat_atk' | 'wr' | 'punonjesit' | 'vijueshmeria' | 'pushimet' | 'inventari' | 'arkiva' | 'zyra' | 'skanimi' | 'pagat' | 'konto' | 'ditari' | 'libri' | 'bilanci' | 'pasqyrat' | 'asetet' | 'mbyllja' | 'paneli' | 'pasqyra' | 'banka' | 'tatimet' | 'tvsh_permbledhje' | 'shitjet' | 'proformat' | 'blerjet' | 'partneret' | 'borxhet' | 'tvsh' | 'fitimi' | 'arka' | 'stoku' | 'klienti'
 const TABS: { key: TabKey; label: string; kasaOnly?: boolean }[] = [
   { key: 'paneli', label: 'Paneli' },
   { key: 'pasqyra', label: 'Pasqyra' },
@@ -60,7 +62,9 @@ const TABS: { key: TabKey; label: string; kasaOnly?: boolean }[] = [
   { key: 'mbyllja', label: 'Mbyllja e muajit' },
   { key: 'tvsh_permbledhje', label: 'TVSH sipas normave' },
   { key: 'tvsh', label: 'TVSH' },
+  { key: 'kontrolli', label: 'Kontrolli para dorëzimit' },
   { key: 'librat_atk', label: 'Libri i shitjes dhe i blerjes (ATK)' },
+  { key: 'rb', label: 'Blerjet mbi 500 € (RB)' },
   { key: 'wr', label: 'Formulari WR – tatimi në burim' },
   { key: 'fitimi', label: 'Fitimi' },
   { key: 'arka', label: 'Arka', kasaOnly: true },
@@ -140,6 +144,10 @@ export function ClientPage({ me }: { me: AccMe }) {
     [id, linked],
   )
 
+  // Alt+← / Alt+→: previous / next period on the pages that have one
+  useHotkey('alt+arrowleft', () => setPeriod((p) => shiftPeriod(p, -1)))
+  useHotkey('alt+arrowright', () => setPeriod((p) => (periodRange(p).to >= kosovoDateISO() ? p : shiftPeriod(p, 1))))
+
   const tab = TABS.find((t) => t.key === (tabParam ?? 'paneli'))
   if (!tab || (tab.kasaOnly && books.data && !linked)) return <Navigate to={`/klient/${id}`} replace />
 
@@ -167,11 +175,11 @@ export function ClientPage({ me }: { me: AccMe }) {
   }
 
   const toolbar =
-    ['klienti', 'paneli', 'pagat', 'skanimi', 'zyra', 'arkiva', 'inventari', 'tvsh', 'tatimet', 'borxhet', 'konto', 'asetet', 'mbyllja', 'librat_atk', 'wr', 'punonjesit', 'vijueshmeria', 'pushimet'].includes(tab.key) ? undefined : (
+    ['klienti', 'paneli', 'pagat', 'skanimi', 'zyra', 'arkiva', 'inventari', 'tvsh', 'tatimet', 'borxhet', 'konto', 'asetet', 'mbyllja', 'librat_atk', 'wr', 'punonjesit', 'vijueshmeria', 'pushimet', 'kontrolli', 'rb'].includes(tab.key) ? undefined : (
       <>
         <PeriodPicker period={period} onChange={setPeriod} disableNext={isCurrent} />
         <Button variant="secondary" onClick={() => void exportAll()} disabled={!s} loading={exporting}>
-          <Download className="h-4 w-4" /> Excel
+          <Download className="h-4 w-4" /> Periudha në Excel
         </Button>
       </>
     )
@@ -193,11 +201,6 @@ export function ClientPage({ me }: { me: AccMe }) {
 
   return (
     <CompanyShell me={me} client={client ?? null} linked={linked} active={tab.key} toolbar={toolbar}>
-      {!['klienti', 'paneli', 'pagat', 'skanimi', 'zyra', 'arkiva', 'inventari', 'tvsh', 'tatimet', 'borxhet', 'konto', 'asetet', 'mbyllja', 'librat_atk', 'wr', 'punonjesit', 'vijueshmeria', 'pushimet'].includes(tab.key) && (
-        <p className="-mt-1 mb-3 text-sm text-muted">
-          {TABS.find((t) => t.key === tab.key)?.label} · {formatDay(range.from)} – {formatDay(range.to)}
-        </p>
-      )}
       {exportError && <p className="mb-3 rounded-ctl bg-warn-100 px-4 py-2.5 text-sm text-warn-700">{exportError}</p>}
 
       {!s || !client ? (
@@ -210,20 +213,18 @@ export function ClientPage({ me }: { me: AccMe }) {
             {tab.key === 'banka' && <BankTab client={client} from={range.from} to={range.to} onChanged={refresh} />}
             {tab.key === 'shitjet' && (
               <>
-                <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
-                  <StatCard label="Shitjet (me TVSH)" value={formatEUR(s.sales.gross)} sub={`${s.sales.docs} dokumente`} />
-                  <StatCard label="Baza (pa TVSH)" value={formatEUR(s.sales.net)} />
-                  <StatCard label="TVSH e mbledhur" value={formatEUR(s.sales.vat)} />
-                  {books.data?.kasa ? (
-                    <StatCard label="Nga arka KontoSef" value={formatEUR(books.data.kasa.sales.gross)} sub={`${books.data.kasa.sales.docs} kuponë`} />
-                  ) : (
-                    <StatCard label="Pa arkëtuar (sot)" value={formatEUR(books.data?.receivable ?? 0)} tone={(books.data?.receivable ?? 0) > 0 ? 'warn' : 'default'} sub="nga të gjitha periudhat" />
-                  )}
-                </div>
+                <Facts
+                  items={[
+                    ['Shitjet me TVSH', formatEUR(s.sales.gross), `${s.sales.docs} dokumente`],
+                    ['Baza', formatEUR(s.sales.net)],
+                    ['TVSH e llogaritur', formatEUR(s.sales.vat)],
+                    books.data?.kasa ? ['Nga arka KontoSef', formatEUR(books.data.kasa.sales.gross), `${books.data.kasa.sales.docs} kuponë`] : ['Pa arkëtuar sot (të gjitha periudhat)', formatEUR(books.data?.receivable ?? 0), undefined, (books.data?.receivable ?? 0) > 0],
+                  ]}
+                />
                 <DocumentsTab client={client} kind="sale" from={range.from} to={range.to} onChanged={refresh} />
                 {kasaOpen && books.data?.kasa && (
                   <>
-                    <h2 className="mt-2 text-[19px] font-semibold">Nga arka KontoSef · {books.data.kasa.business.name}</h2>
+                    <h2 className="mt-2 text-[14px] font-semibold">Nga arka KontoSef · {books.data.kasa.business.name}</h2>
                     <SalesTab s={books.data.kasa} />
                   </>
                 )}
@@ -231,16 +232,18 @@ export function ClientPage({ me }: { me: AccMe }) {
             )}
             {tab.key === 'blerjet' && (
               <>
-                <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
-                  <StatCard label="Blerjet e mallit dhe mjeteve" value={formatEUR(s.purchases.gross)} sub={`${s.purchases.docs} fatura`} />
-                  <StatCard label="Shpenzimet" value={formatEUR(s.expenses.gross)} sub={`${s.expenses.docs} dokumente`} />
-                  <StatCard label="TVSH e zbritshme" value={formatEUR(s.purchases.vat + s.expenses.vat)} />
-                  <StatCard label="Pa paguar furnitorëve (sot)" value={formatEUR(books.data?.payable ?? 0)} tone={(books.data?.payable ?? 0) > 0 ? 'warn' : 'default'} sub="nga të gjitha periudhat" />
-                </div>
+                <Facts
+                  items={[
+                    ['Malli dhe mjetet', formatEUR(s.purchases.gross), `${s.purchases.docs} fatura`],
+                    ['Shpenzimet', formatEUR(s.expenses.gross), `${s.expenses.docs} dokumente`],
+                    ['TVSH e zbritshme', formatEUR(s.purchases.vat + s.expenses.vat)],
+                    ['Pa paguar sot (të gjitha periudhat)', formatEUR(books.data?.payable ?? 0), undefined, (books.data?.payable ?? 0) > 0],
+                  ]}
+                />
                 <DocumentsTab client={client} kind="purchase" from={range.from} to={range.to} onChanged={refresh} />
                 {kasaOpen && books.data?.kasa && (
                   <>
-                    <h2 className="mt-2 text-[19px] font-semibold">Hyrjet e mallit në KontoSef · {books.data.kasa.business.name}</h2>
+                    <h2 className="mt-2 text-[14px] font-semibold">Hyrjet e mallit në KontoSef · {books.data.kasa.business.name}</h2>
                     <PurchasesTab s={books.data.kasa} />
                   </>
                 )}
@@ -250,6 +253,8 @@ export function ClientPage({ me }: { me: AccMe }) {
             {tab.key === 'partneret' && <PartnersTab clientId={client.id} clientName={client.name} from={range.from} to={range.to} />}
             {tab.key === 'borxhet' && <DebtsTab client={client} onChanged={refresh} />}
             {tab.key === 'tvsh' && <VatFormTab client={client} />}
+            {tab.key === 'kontrolli' && <ComplianceTab client={client} onGo={(t) => navigate(`/klient/${id}/${t}`)} />}
+            {tab.key === 'rb' && <Rb500Tab client={client} onGo={(t) => navigate(`/klient/${id}/${t}`)} />}
             {tab.key === 'tvsh_permbledhje' && <VatTab s={s} period={period} />}
             {tab.key === 'konto' && <CoaTab client={client} />}
             {tab.key === 'ditari' && <JournalTab client={client} from={range.from} to={range.to} />}
@@ -496,6 +501,21 @@ function ClientTab({ client, kasaName, onChanged, admin }: { client: Client; kas
         {backup.error && <p className="mt-2 text-sm text-warn-700">{(backup.error as Error).message}</p>}
         {remove.error && <p className="mt-3 text-sm text-warn-700">{(remove.error as Error).message}</p>}
       </Dialog>
+    </div>
+  )
+}
+
+/** One line of figures above a list (instead of big stat cards). */
+function Facts({ items }: { items: [string, string, string?, boolean?][] }) {
+  return (
+    <div className="flex flex-wrap gap-x-6 gap-y-1 border border-line bg-white px-3 py-2 text-[13px]">
+      {items.map(([label, value, sub, warn]) => (
+        <span key={label} className="flex items-baseline gap-1.5">
+          <span className="text-muted">{label}</span>
+          <b className={warn ? 'tabular-nums text-warn-700' : 'tabular-nums text-ink'}>{value}</b>
+          {sub && <span className="text-[12px] text-muted">({sub})</span>}
+        </span>
+      ))}
     </div>
   )
 }
