@@ -201,3 +201,49 @@ direkt; kompania tjetër hapet në të njëjtën faqe.
 
 **Nuk u ridizajnua ende** (marrin vetëm stilin e ri të përbashkët): formularët e brendshëm të TVSH-së, pagave, HR-së,
 bankës, inventarit, ditarit dhe pasqyrave. Tabelat e tyre duhet të kalojnë te `DataTable` një nga një.
+
+## 9. Formularët e zyrës (kontratat, aktvendimi, pasqyrat KSRF)
+
+Burimi: skedarët origjinalë të zyrës (`formatet e atks`), të përgatitur si shabllone në `public/hr/` me
+`scripts/prepare-hr-templates.ts`. Përgatitja mund të ekzekutohet përsëri kur ndryshon ndonjë formular.
+Paraqitja e skedarëve nuk preket: vetëm vendet bosh marrin shenja, me formatin e pjesës origjinale. Pa të dhëna,
+dokumenti del identik me origjinalin; kjo është kontrolluar me tekstin e plotë të të dy kontratave.
+
+| Formulari | Ku | Çka plotësohet |
+|---|---|---|
+| Kontrata e punës me kohë të caktuar / të pacaktuar (.docx) | Punonjësit → Kontrata | kompania, NUI, adresa, përfaqësuesi; punonjësi, nr. personal, vendbanimi, profesioni, IBAN, detyrat; periudha, fillimi, puna provuese; orët, orari, vendi; paga bruto mujore dhe për orë (bruto ÷ orët mujore = orët javore × 52 ÷ 12); pushimi vjetor; gjykata (qyteti i kompanisë). Pas shkarkimit tregohen fushat që mbetën bosh. |
+| Aktvendim për pushim vjetor (.docx) | Pushimet → Vendimi (pushimi vjetor) | koka (kompania, NUI, adresa), punonjësi, viti, ditët, nga–deri, data e kthimit (dita e parë e punës pas pushimit) |
+| Pasqyrat financiare sipas SKRF (.xlsx) | Pasqyrat financiare → Pasqyrat KSRF | fleta "Shpalosje" nga bilanci provues i vitit (kolona C) dhe i vitit para tij (D); 3.2 mjetet në kolonën G; titujt dhe vitet. Fletët B-Gj, P-A, PNE, Prr-P i llogarit Excel-i me formulat e skedarit kur hapet. |
+
+**Të dhënat shembull të origjinaleve u hoqën:**
+- aktvendimi kishte 8 vendime me punëtorët e një kompanie tjetër, dhe mbeti vetëm struktura e njërit;
+- pasqyrat kishin emrin, NUI-në, adresën dhe shifrat e vitit 2023 të asaj kompanie, si dhe rezultatet e formulave të ruajtura;
+- te të gjithë skedarët u hoqën emrat e autorëve në metadata.
+
+**Ndryshimet e vetme në paraqitje (vetëm kur ka të dhëna):**
+- Te "Vendi i punës" etiketa është e qendërzuar me 13 hapësira dhe me zhvendosje negative. Kur ka vlerë, ai paragraf
+  merr zhvendosje 0 dhe rreshtim majtas, përndryshe teksti del jashtë qelizës.
+- Aktvendimi mbaron me një paragraf të fshehur 0,7 pt, në vend të rreshtave bosh që e kishin aktvendimin tjetër
+  pas vetes. Kështu printohet në 1 faqe, si në origjinal.
+
+**Lidhja e kontove me shpalosjet** (plani kontabël i programit):
+- **Paraja (3.3):** arka 1010 dhe banka 10xx; saldo negative shkon te mbitërheqja (3.7).
+- **Arkëtueshmet dhe parapagimet:** arkëtueshmet 1200 te 3.4; parapagimet 14xx dhe TVSH 1600 te 3.4.1. Kredia e TVSH-së
+  (3790 me saldo debi) llogaritet si parapagim i TVSH-së.
+- **Stoqet dhe mjetet:** stoqet 13xx te 3.5; mjetet 22xx dhe amortizimi 229x te 3.2.
+- **Detyrimet:** furnitorët 31xx te 3.8; kreditë 32xx, pagat 34xx, kontributet 35xx, TVSH 36xx/3790 dhe tatimet 3700 te 3.7.
+- **Kapitali (3.13):** kapitali 4000; pjesa tjetër e kapitalit dhe rezultatet e viteve të kaluara si fitime të bartura.
+- **Të hyrat dhe KMSH:** të hyrat 5xxx te 3.6; KMSH 6000 te 3.9.
+- **Shpenzimet:** administrative, të shpërndarjes dhe financiare sipas kontos (3.10.1–3.10.3); pagat edhe te 3.10.1.1.
+- **Konto të tjera:** shkojnë te "të tjera" dhe tregohen pas shkarkimit.
+
+**Për t'u konfirmuar:**
+1. Bilanci (B-Gj) i merr furnitorët nga 3.8 (D34) dhe pjesën tjetër të 3.7 nga C116 (D40) pa zbritur rreshtin 114.
+   Prandaj furnitorët shkruhen vetëm te 3.8, që të mos numërohen dy herë.
+2. Kreditë 32xx shkojnë te "Kredi afatgjatë" (programi nuk e ndan pjesën afatshkurtër).
+3. Tatimi 3700 shkon te "Obligimi për tatim në fitim"; P-A e llogarit vetë tatimin 10% të fitimit.
+4. Stoku 1300 shkon te "Mallrat e përfunduara".
+5. Pasqyra e rrjedhës së parasë (Prr-P) mbetet për t'u plotësuar me dorë, siç është edhe në skedar.
+6. Excel-i në këtë kompjuter nuk u hap dot me automatizim (bllokohet edhe me skedarin origjinal), ndaj rezultatet e
+   formulave nuk u lexuan nga Excel. Barazimi u kontrollua me të njëjtat formula në program (diferenca 0 me provën dhe
+   me JetFund SH.P.K.).
