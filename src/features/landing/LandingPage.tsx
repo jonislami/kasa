@@ -39,6 +39,7 @@ export function PublicHeader() {
           <nav className="flex items-center gap-1 text-[14px] font-medium text-[#344054]">
             <a href="/#per-ke" className="hidden rounded-ctl px-3 py-2 hover:bg-[#F5F6F8] md:inline">Për kë është</a>
             <a href="/#perfshihet" className="hidden rounded-ctl px-3 py-2 hover:bg-[#F5F6F8] md:inline">Çfarë përfshihet</a>
+            <Link to="/kontabilisti" className="hidden rounded-ctl px-3 py-2 hover:bg-[#F5F6F8] lg:inline">Për kontabilistët</Link>
             <Link to="/shkarko" className="hidden rounded-ctl px-3 py-2 hover:bg-[#F5F6F8] sm:inline">Shkarko</Link>
             <Link to="/regjistrohu" className="ml-2 hidden h-9 items-center rounded-ctl border border-field px-3.5 font-semibold text-ink hover:bg-[#F9FAFB] sm:flex">
               Regjistrohu
@@ -69,6 +70,7 @@ export function PublicFooter() {
             <ul className="mt-3 flex flex-col gap-2 text-muted">
               <li><a href="/#perfshihet" className="hover:text-ink">Çfarë përfshihet</a></li>
               <li><Link to="/shkarko" className="hover:text-ink">Shkarko</Link></li>
+              <li><Link to="/kontabilisti" className="hover:text-ink">KontoSef Kontabilist</Link></li>
               <li><Link to="/login" className="hover:text-ink">Hyr</Link></li>
             </ul>
           </div>

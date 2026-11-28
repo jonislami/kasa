@@ -6,6 +6,7 @@ import { Blocked, FullScreenLoader, RequireAuditor, RequireBusiness, RequireMana
 import { AppLayout } from './layout/AppLayout'
 import { workerHome } from './nav'
 import { LandingPage } from '@/features/landing/LandingPage'
+import { KontabilistPage } from '@/features/landing/KontabilistPage'
 import { DownloadPage } from '@/features/download/DownloadPage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { NewPasswordPage } from '@/features/auth/NewPasswordPage'
@@ -86,6 +87,7 @@ export function AppRoutes() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/shkarko" element={<DownloadPage />} />
+      <Route path="/kontabilisti" element={<KontabilistPage />} />
       <Route path="/fjalekalimi" element={<NewPasswordPage />} />
       <Route
         path="/regjistrohu"

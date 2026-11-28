@@ -100,6 +100,13 @@ export function DownloadPage() {
             </div>
           </div>
         )}
+        <Link to="/kontabilisti" className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-card border border-line bg-white px-6 py-5 shadow-card hover:border-field">
+          <span>
+            <span className="block text-[16px] font-semibold text-ink">Je kontabilist?</span>
+            <span className="block text-[14px] text-muted">Shkarko KontoSef Kontabilist – programi për zyrat e kontabilitetit, për Windows dhe në shfletues.</span>
+          </span>
+          <span className="text-[14px] font-semibold text-brand-600">KontoSef Kontabilist →</span>
+        </Link>
       </main>
       <PublicFooter />
     </div>
