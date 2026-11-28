@@ -6,7 +6,7 @@ import { kosovoDateISO } from '@/lib/clock'
 import { cn } from '@/lib/cn'
 import { formatEUR } from '@/lib/money'
 import { addMonths, monthName, monthStart } from '@/features/accounting/api'
-import { downloadWorkbook } from '@/features/accounting/export'
+import { downloadCellSheets } from './reportApi'
 import type { Client } from './api'
 import { buildRows, checkBooks, totals } from './atkBooks'
 import { fetchBookDocs } from './atkBooksApi'
@@ -218,7 +218,7 @@ export function Rb500Tab({ client, onGo }: { client: Client; onGo: (tab: string)
 
   const download = useMutation({
     mutationFn: () =>
-      downloadWorkbook(`Blerjet mbi 500 euro - ${client.name.replace(/[\\/:*?"<>|]+/g, ' ')} - ${year}.xlsx`, [
+      downloadCellSheets(`Blerjet mbi 500 euro - ${client.name.replace(/[\\/:*?"<>|]+/g, ' ')} - ${year}.xlsx`, [
         {
           name: `RB ${year}`,
           widths: [6, 18, 44, 12, 16],
