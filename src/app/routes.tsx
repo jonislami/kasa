@@ -8,6 +8,10 @@ import { workerHome } from './nav'
 import { LandingPage } from '@/features/landing/LandingPage'
 import { KontabilistPage } from '@/features/landing/KontabilistPage'
 import { DownloadPage } from '@/features/download/DownloadPage'
+import { ArkaPage } from '@/features/site/ArkaPage'
+import { BusinessPage } from '@/features/site/BusinessPage'
+import { DevicesPage } from '@/features/site/DevicesPage'
+import { StartPage } from '@/features/site/StartPage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { NewPasswordPage } from '@/features/auth/NewPasswordPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
@@ -88,6 +92,11 @@ export function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/shkarko" element={<DownloadPage />} />
       <Route path="/kontabilisti" element={<KontabilistPage />} />
+      <Route path="/si-funksionon" element={<ArkaPage />} />
+      <Route path="/biznese/:kind" element={<BusinessPage />} />
+      <Route path="/biznese" element={<Navigate to="/biznese/tregti" replace />} />
+      <Route path="/pajisjet" element={<DevicesPage />} />
+      <Route path="/fillo" element={<StartPage />} />
       <Route path="/fjalekalimi" element={<NewPasswordPage />} />
       <Route
         path="/regjistrohu"
