@@ -115,7 +115,7 @@ export function resetAccountantPassword(user_id: string, password: string) {
 }
 
 /** Where accountants sign in (set VITE_KONTABILIST_URL to the web address of the program). */
-export const KONTABILIST_ADDRESS = (import.meta.env.VITE_KONTABILIST_URL as string | undefined)?.trim() || 'Programi "KontoSef Kontabilist"'
+export const KONTABILIST_ADDRESS = (import.meta.env.VITE_KONTABILIST_URL as string | undefined)?.trim() || 'https://kontabilisti.kontosef.app'
 
 /** 10 characters without look-alikes (0/O, 1/l/I), at least one of each class. */
 export function generatePassword(length = 10): string {

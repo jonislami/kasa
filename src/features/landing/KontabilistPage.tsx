@@ -10,7 +10,7 @@ import { PublicFooter, PublicHeader } from './LandingPage'
  * (the newest GitHub release tagged kontabilist-v…, built with `npm run dist:win:kontabilist`) and the web version.
  */
 const REPO = 'jonislami/kasa'
-export const KONTABILIST_WEB = ((import.meta.env.VITE_KONTABILIST_URL as string | undefined)?.trim() || 'https://kasa-kontabilist.vercel.app').replace(/\/$/, '')
+export const KONTABILIST_WEB = ((import.meta.env.VITE_KONTABILIST_URL as string | undefined)?.trim() || 'https://kontabilisti.kontosef.app').replace(/\/$/, '')
 
 interface Asset {
   name: string
