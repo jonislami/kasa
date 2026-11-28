@@ -150,6 +150,7 @@ export function ClientsPage({ me }: { me: AccMe }) {
               loading={loadState(clients) === 'loading'}
               error={loadState(clients) === 'error' ? (clients.error as Error).message : null}
               exportName={`Kompanitë ${monthName(month)}`}
+              title={`Kompanitë – ${monthName(month)}`}
               empty="Asnjë kompani. Shto të parën me “Kompani e re”."
               filters={
                 <Segments

@@ -11,6 +11,7 @@ import { MENU, OFFICE_NAV, menuItem } from './nav'
 import { PasswordDialog } from './PasswordDialog'
 import { ShortcutsDialog } from './shortcuts'
 import { fetchOfficeProfile } from './work'
+import { setReportClient, setReportOffice } from './reportApi'
 
 const RAIL_KEY = 'acc.nav.rail'
 const CLOSED_KEY = 'acc.nav.closed'
@@ -70,6 +71,9 @@ export function Frame({
   const id = client?.id
 
   useEffect(() => setDrawer(false), [location.pathname])
+  // the Excel reports carry the open company and the office (name, logo) in their title block
+  useEffect(() => setReportClient(client ?? null), [client])
+  useEffect(() => setReportOffice(office.data?.office_name || me.accountant?.office_name, office.data?.logo), [office.data, me.accountant?.office_name])
   useEffect(() => save(RAIL_KEY, rail), [rail])
   useEffect(() => save(CLOSED_KEY, closed), [closed])
 

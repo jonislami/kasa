@@ -416,7 +416,7 @@ function ImportItemsDialog({ clientId, open, onClose, onSaved }: { clientId: str
       width="md:max-w-[560px]"
       footer={
         <div className="flex justify-between gap-2">
-          <Button variant="secondary" onClick={() => void downloadSheets('shablloni-artikujt.xlsx', [{ name: 'Artikujt', columns: IMPORT_COLUMNS.map(([, l]) => l), rows: [['CC05', '3800000000000', 'Coca Cola 0.5L', 'copë', 'E', 0.5, 0.9, 24, 'Pije', 48]] }])}>
+          <Button variant="secondary" onClick={() => void downloadSheets('shablloni-artikujt.xlsx', [{ name: 'Artikujt', columns: IMPORT_COLUMNS.map(([, l]) => l), rows: [['CC05', '3800000000000', 'Coca Cola 0.5L', 'copë', 'E', 0.5, 0.9, 24, 'Pije', 48]] }], { plain: true })}>
             Shablloni
           </Button>
           <div className="flex gap-2">

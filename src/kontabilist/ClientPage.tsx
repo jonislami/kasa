@@ -10,7 +10,8 @@ import { VAT_LABELS } from '@/lib/vat'
 import { AccountingNotMigrated, fetchPurchases, fetchStockList, formatDay, PAYMENT_LABELS, periodOf, periodRange, setActiveBusiness, shiftPeriod, type Period } from '@/features/accounting/api'
 import { BooksScopeProvider, CashTab, OverviewTab, PeriodPicker, ProfitTab, VatTab, type BooksScope } from '@/features/accounting/AccountingPage'
 import { PurchasesTab, SalesTab, StockTab } from '@/features/accounting/BooksTabs'
-import { downloadWorkbook, profitSheet, purchasesSheet, salesDailySheet, stockSheet, vatSheet, type Cell, type Sheet } from '@/features/accounting/export'
+import { profitSheet, purchasesSheet, salesDailySheet, stockSheet, vatSheet, type Cell, type Sheet } from '@/features/accounting/export'
+import { downloadCellSheets } from './reportApi'
 import { cancelLink, categoryLabel, deleteClient, docNet, fetchClientBooks, fetchDocs, PAY_STATUS_LABELS, requestLink, saveClient, setClientPeriod, type AccMe, type Client, type Doc, type DocKind } from './api'
 import { BankTab } from './BankTab'
 import { DashboardTab } from './DashboardTab'
@@ -166,7 +167,7 @@ export function ClientPage({ me }: { me: AccMe }) {
         sheets.splice(3, 0, { ...purchasesSheet(books.data.kasa, kasaPurchases), name: 'Hyrjet e mallit (KontoSef)' })
         sheets.push(stockSheet(books.data.kasa, stock))
       }
-      await downloadWorkbook(`${client.name.replace(/[^\p{L}\p{N}]+/gu, '-').toLowerCase()}-${range.from}-${range.to}.xlsx`, sheets)
+      await downloadCellSheets(`${client.name.replace(/[^\p{L}\p{N}]+/gu, '-').toLowerCase()}-${range.from}-${range.to}.xlsx`, sheets)
     } catch (e) {
       setExportError((e as Error).message)
     } finally {

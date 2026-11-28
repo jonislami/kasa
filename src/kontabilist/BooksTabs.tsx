@@ -34,7 +34,8 @@ import {
   type ManualEntry,
   type StatementLine,
 } from './ledger'
-import { downloadSheets } from './xls'
+import { downloadReport } from './reportApi'
+import type { Row as ReportRow } from './reportXlsx'
 import { downloadStatements } from './officeFormsApi'
 
 const n2 = (v: number) => new Intl.NumberFormat('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v)
@@ -357,14 +358,36 @@ export function LedgerTab({ client, from, to }: { client: Client; from: string; 
     bal = Math.round((bal + r.debit - r.credit) * 100) / 100
     return { ...r, balance: bal }
   })
-  const xlsx = () =>
-    downloadSheets(`libri-kryesor-${account}-${slug(client.name)}-${from}-${to}.xlsx`, [
-      {
-        name: `Konto ${account}`,
-        columns: ['Data', 'Burimi', 'Nr.', 'Përshkrimi', 'Partneri', 'Debi', 'Kredi', 'Saldo'],
-        rows: [[from, 'Saldo fillestare', '', '', '', null, null, gl.data?.opening ?? 0], ...rows.map((r) => [r.date, SOURCE_LABELS[r.source], r.ref, r.text, r.partner, r.debit || null, r.credit || null, r.balance])],
-      },
-    ])
+  const xlsx = () => {
+    const dr = rows.reduce((a, r) => a + r.debit, 0)
+    const cr = rows.reduce((a, r) => a + r.credit, 0)
+    return downloadReport(
+      `libri-kryesor-${account}-${slug(client.name)}-${from}-${to}.xlsx`,
+      [
+        {
+          name: `Konto ${account}`,
+          title: `Kartela e kontos ${account}${name ? ` – ${name}` : ''}`,
+          columns: [
+            { header: 'Data', kind: 'date' },
+            { header: 'Burimi' },
+            { header: 'Nr.', kind: 'code' },
+            { header: 'Përshkrimi' },
+            { header: 'Partneri' },
+            { header: 'Debi', kind: 'money' },
+            { header: 'Kredi', kind: 'money' },
+            { header: 'Saldo', kind: 'money' },
+          ],
+          rows: [
+            { cells: [from, 'Saldo fillestare', null, null, null, null, null, gl.data?.opening ?? 0], style: 'subtotal' },
+            ...rows.map((r): ReportRow => ({ cells: [r.date, SOURCE_LABELS[r.source], r.ref, r.text, r.partner, r.debit || null, r.credit || null, r.balance] })),
+            { cells: [null, 'Qarkullimi i periudhës', null, null, null, dr, cr, null], style: 'total' },
+            { cells: [to, 'Saldo përfundimtare', null, null, null, null, null, Math.round(((gl.data?.opening ?? 0) + dr - cr) * 100) / 100], style: 'grand' },
+          ],
+        },
+      ],
+      { title: `Kartela e kontos ${account}` },
+    )
+  }
   return (
     <Card className="overflow-hidden">
       <div className="flex flex-col gap-3 px-5 py-4 lg:flex-row lg:items-end lg:justify-between">
@@ -424,10 +447,28 @@ export function TrialBalanceTab({ client, from, to }: { client: Client; from: st
   const tb = useQuery({ queryKey: ['client', client.id, 'tb', from, to], queryFn: () => fetchTrialBalance(client.id, from, to) })
   const rows = tb.data ?? []
   const t = rows.reduce((a, r) => ({ o: a.o + r.opening, d: a.d + r.debit, c: a.c + r.credit, cl: a.cl + r.closing }), { o: 0, d: 0, c: 0, cl: 0 })
-  const xlsx = () =>
-    downloadSheets(`bilanci-provues-${slug(client.name)}-${from}-${to}.xlsx`, [
-      { name: 'Bilanci provues', columns: ['Konto', 'Emri', 'Saldo fillestare', 'Debi', 'Kredi', 'Saldo përfundimtare'], rows: [...rows.map((r) => [r.code, r.name, r.opening, r.debit, r.credit, r.closing]), ['', 'Gjithsej', t.o, t.d, t.c, t.cl]] },
+  const xlsx = () => {
+    const GROUPS: [AccountType, string][] = [['asset', 'PASURITË'], ['liability', 'DETYRIMET'], ['equity', 'KAPITALI'], ['income', 'TË HYRAT'], ['expense', 'SHPENZIMET']]
+    const body: ReportRow[] = []
+    for (const [type, label] of GROUPS) {
+      const list = rows.filter((r) => r.type === type)
+      if (!list.length) continue
+      const g = list.reduce((a, r) => ({ o: a.o + r.opening, d: a.d + r.debit, c: a.c + r.credit, cl: a.cl + r.closing }), { o: 0, d: 0, c: 0, cl: 0 })
+      body.push({ cells: [null, label], style: 'group' })
+      body.push(...list.map((r): ReportRow => ({ cells: [r.code, r.name, r.opening, r.debit, r.credit, r.closing], indent: 1 })))
+      body.push({ cells: [null, `Gjithsej ${label.toLowerCase()}`, g.o, g.d, g.c, g.cl], style: 'subtotal' })
+    }
+    body.push({ cells: [null, 'Gjithsej bilanci provues', t.o, t.d, t.c, t.cl], style: 'grand' })
+    body.push({ cells: [Math.abs(t.d - t.c) < 0.01 && Math.abs(t.cl) < 0.01 ? 'Debia e periudhës = Kredia e periudhës; saldot përfundimtare barazohen.' : `Kujdes: diferenca debi − kredi ${n2(t.d - t.c)}, saldo ${n2(t.cl)}.`], style: 'note' })
+    return downloadReport(`bilanci-provues-${slug(client.name)}-${from}-${to}.xlsx`, [
+      {
+        name: 'Bilanci provues',
+        columns: [{ header: 'Konto', kind: 'code' }, { header: 'Emri i kontos' }, { header: 'Saldo fillestare', kind: 'money' }, { header: 'Debi', kind: 'money' }, { header: 'Kredi', kind: 'money' }, { header: 'Saldo përfundimtare', kind: 'money' }],
+        rows: body,
+        filter: false,
+      },
     ])
+  }
   return (
     <Card className="overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
@@ -506,31 +547,55 @@ export function StatementsTab({ client, from, to }: { client: Client; from: stri
     return { assets, liabilities, equity, income, expenses, result: income - expenses }
   }, [d])
 
-  const xlsx = () =>
-    d &&
-    view &&
-    downloadSheets(`pasqyrat-financiare-${slug(client.name)}-${to}.xlsx`, [
-      {
-        name: 'Bilanci i gjendjes',
-        columns: ['Konto', 'Emri', 'Shuma'],
-        rows: [
-          ['', 'PASURITË', null],
-          ...d.assets.map((x) => [x.code, x.name, x.amount]),
-          ['', 'Gjithsej pasuritë', view.assets],
-          ['', 'DETYRIMET', null],
-          ...d.liabilities.map((x) => [x.code, x.name, x.amount]),
-          ['', 'KAPITALI', null],
-          ...d.equity.map((x) => [x.code, x.name, x.amount]),
-          ['', 'Rezultati i periudhës', d.result_to_date],
-          ['', 'Gjithsej detyrimet dhe kapitali', view.liabilities + view.equity],
-        ],
-      },
-      {
-        name: 'Pasqyra e të ardhurave',
-        columns: ['Konto', 'Emri', 'Shuma'],
-        rows: [...d.income.map((x) => [x.code, x.name, x.amount]), ['', 'Gjithsej të hyrat', view.income], ...d.expenses.map((x) => [x.code, x.name, x.amount]), ['', 'Gjithsej shpenzimet', view.expenses], ['', 'Fitimi / humbja', view.result]],
-      },
-    ])
+  const xlsx = () => {
+    if (!d || !view) return
+    const lines = (l: StatementLine[]): ReportRow[] => l.map((x) => ({ cells: [x.code, x.name, x.amount], indent: 1 }))
+    const cols = [{ header: 'Konto', kind: 'code' as const }, { header: 'Zëri' }, { header: 'Shuma (€)', kind: 'money' as const }]
+    const diff = Math.round((view.assets - view.liabilities - view.equity) * 100) / 100
+    return downloadReport(
+      `pasqyrat-financiare-${slug(client.name)}-${from}-${to}.xlsx`,
+      [
+        {
+          name: 'Bilanci i gjendjes',
+          title: `Pasqyra e pozicionit financiar më ${formatDay(d.as_of)}`,
+          columns: cols,
+          filter: false,
+          band: false,
+          rows: [
+            { cells: [null, 'PASURITË'], style: 'group' },
+            ...lines(d.assets),
+            { cells: [null, 'Gjithsej pasuritë', view.assets], style: 'total' },
+            { cells: [null, 'DETYRIMET'], style: 'group' },
+            ...lines(d.liabilities),
+            { cells: [null, 'Gjithsej detyrimet', view.liabilities], style: 'subtotal' },
+            { cells: [null, 'KAPITALI'], style: 'group' },
+            ...lines(d.equity),
+            { cells: [null, 'Rezultati i periudhës (fitimi / humbja)', d.result_to_date], indent: 1 },
+            { cells: [null, 'Gjithsej kapitali', view.equity], style: 'subtotal' },
+            { cells: [null, 'Gjithsej detyrimet dhe kapitali', view.liabilities + view.equity], style: 'grand' },
+            { cells: [Math.abs(diff) < 0.01 ? 'Pasuritë = Detyrimet + Kapitali.' : `Kujdes: diferenca ${n2(diff)} ndërmjet pasurive dhe detyrimeve me kapitalin.`], style: 'note' },
+          ],
+        },
+        {
+          name: 'Pasqyra e të ardhurave',
+          title: `Pasqyra e fitimit ose humbjes ${formatDay(d.from)} – ${formatDay(d.as_of)}`,
+          columns: cols,
+          filter: false,
+          band: false,
+          rows: [
+            { cells: [null, 'TË HYRAT'], style: 'group' },
+            ...lines(d.income),
+            { cells: [null, 'Gjithsej të hyrat', view.income], style: 'total' },
+            { cells: [null, 'SHPENZIMET'], style: 'group' },
+            ...lines(d.expenses),
+            { cells: [null, 'Gjithsej shpenzimet', view.expenses], style: 'total' },
+            { cells: [null, view.result >= 0 ? 'Fitimi i periudhës' : 'Humbja e periudhës', view.result], style: 'grand' },
+          ],
+        },
+      ],
+      { title: 'Pasqyrat financiare', period: `${formatDay(d.from)} – ${formatDay(d.as_of)}` },
+    )
+  }
 
   const block = (title: string, lines: StatementLine[], total: number, extra?: { label: string; amount: number }) => (
     <div className="mb-3">

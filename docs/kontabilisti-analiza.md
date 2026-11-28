@@ -247,3 +247,45 @@ dokumenti del identik me origjinalin; kjo është kontrolluar me tekstin e plot�
 6. Excel-i në këtë kompjuter nuk u hap dot me automatizim (bllokohet edhe me skedarin origjinal), ndaj rezultatet e
    formulave nuk u lexuan nga Excel. Barazimi u kontrollua me të njëjtat formula në program (diferenca 0 me provën dhe
    me JetFund SH.P.K.).
+
+## 10. Raportet në Excel – paraqitja e përbashkët
+
+Të gjitha raportet që nuk kanë format të ATK-së dalin tani me të njëjtin identitet vizual. Shkruesi është
+`src/kontabilist/reportXlsx.ts`, pa librari të re; shkarkimi dhe konteksti janë te `reportApi.ts`.
+
+**Çka ka çdo fletë:**
+- **Koka:** kompania e hapur (me NUI, nr. TVSH dhe adresën), titulli i raportit, periudha, data e gjenerimit, zyra
+  që e përgatiti dhe logoja e zyrës lart djathtas, kur është ngarkuar te Zyra → Siguria dhe zyra.
+- **Titujt e kolonave:** brez blu i errët, të fiksuar gjatë lëvizjes, të përsëritur në çdo faqe të printuar, me filtër
+  te listat.
+- **Formatet:** shumat `#,##0.00`, negativet me të kuqe dhe zero si "–"; datat si data të vërteta Excel-i
+  (dd.mm.yyyy); përqindjet `0.00%`; kontot, NUI-ja dhe IBAN-i si tekst. Numrat rreshtohen djathtas.
+- **Rreshtat:** ngjyrosje e lehtë alternative; grupet (p.sh. PASURITË) me sfond të hirtë; nëntotalet me vijë sipër;
+  totalet të theksuara; rezultati përfundimtar me vijë të dyfishtë.
+- **Gjerësitë dhe printimi:** gjerësitë sipas përmbajtjes, pa vija rrjete; A4, në gjerësi të faqes, horizontal kur ka
+  shumë kolona; poshtë "kompania · Faqja n / m · titulli".
+
+**Raportet e përshtatura veçanërisht:**
+- **Bilanci provues:** i grupuar sipas llojit të kontos, me nëntotal për çdo grup dhe kontrollin "Debia = Kredia".
+- **Kartela e kontos (libri kryesor):** saldo fillestare, qarkullimi i periudhës, saldo përfundimtare.
+- **Pasqyrat financiare:** dy fletë, pozicioni financiar (pasuri / detyrime / kapital, me kontrollin e barazimit) dhe
+  fitimi ose humbja.
+
+Raportet e tjera marrin strukturën vetë nga përmbajtja: "Gjithsej…" si total, titujt pa shuma si grupe, fitimi ose
+humbja si rezultat. Këtu hyjnë eksporti i periudhës (5 fletë), listat e faturave dhe të kompanive, partnerët dhe
+kartelat e tyre, borxhet, arka dhe banka, pagat dhe urdhri për bankën, HR, inventari, puna e zyrës, historiku dhe RB.
+
+**Pa ndryshim (formate zyrtare ose skedarë që programi i lexon përsëri):**
+- librat e ATK-së, CM WM, Formulari WR;
+- formularët e zyrës (kontratat, aktvendimi, KSRF);
+- shablloni i importit të artikujve, sepse importi e kërkon titullin në rreshtin 1.
+
+Importi i punonjësve dhe i faturave e gjen rreshtin e titujve kudo, ndaj vazhdon të lexojë edhe eksportet e reja
+(provuar me `read-excel-file`).
+
+**Testimi:**
+- `scripts/report-xlsx-preview.ts`, pjesë e `npm run test:kontabilist`: 19 kontrolle (koka, titujt e fiksuar,
+  printimi, logoja, formatet, llojet e kolonave, totalet, filtri, datat).
+- XML i vlefshëm, i lexuar nga `openpyxl` dhe `read-excel-file`.
+- Eksportet reale u provuan me JetFund SH.P.K.: bilanci provues, pasqyrat, kartela, blerjet, borxhet dhe periudha.
+- Excel-i i këtij kompjuteri nuk punon me automatizim, ndaj pamja nuk u kontrollua brenda Excel-it.

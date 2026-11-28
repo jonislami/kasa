@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { ArrowDown, ArrowUp, Columns3, Download, Search, X } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { formatEUR } from '@/lib/money'
-import { downloadWorkbook, type Cell } from '@/features/accounting/export'
+import { downloadReport } from './reportApi'
+import type { Kind, Row as ReportRow } from './reportXlsx'
 
 export interface Column<T> {
   id: string
@@ -55,6 +56,7 @@ export function DataTable<T>({
   loading,
   error,
   exportName,
+  title,
   maxHeight = 'calc(100dvh - 210px)',
   limit = 500,
 }: {
@@ -75,6 +77,8 @@ export function DataTable<T>({
   loading?: boolean
   error?: string | null
   exportName?: string
+  /** Title of the exported report (e.g. "Faturat e shitjes"). */
+  title?: string
   maxHeight?: string
   limit?: number
 }) {
@@ -176,12 +180,12 @@ export function DataTable<T>({
   }
 
   const exportRows = async (rs: T[]) => {
-    const head: Cell[] = visible.map((c) => ({ value: c.label, fontWeight: 'bold' }))
-    const body: Cell[][] = rs.map((r) => visible.map((c) => (c.money ? { value: Math.round(c.money(r) * 100) / 100, type: Number, format: '#,##0.00' } : { value: textOf(c, r), type: String })))
-    const foot: Cell[] = visible.map((c, i) => (c.money ? { value: Math.round(sumOf(rs, c) * 100) / 100, type: Number, format: '#,##0.00', fontWeight: 'bold' } : i === 0 ? { value: `Gjithsej (${rs.length})`, fontWeight: 'bold' } : null))
-    await downloadWorkbook(`${(exportName ?? id).replace(/[\\/:*?"<>|]+/g, ' ')}.xlsx`, [
-      { name: 'Lista', rows: [head, ...body, foot], widths: visible.map((c) => Math.max(10, Math.round((saved.widths?.[c.id] ?? c.width ?? 120) / 7))) },
-    ])
+    // the common report layout: column kinds from the table (amounts, dates, codes), totals of the amounts
+    const kindOf = (c: Column<T>): Kind => (c.money ? 'money' : /^(data|afati|fillimi|përfundimi)/i.test(c.label) ? 'date' : /nui|nr\.|iban|konto|kodi/i.test(c.label) ? 'code' : 'text')
+    const kinds = visible.map(kindOf)
+    const rows: ReportRow[] = rs.map((r) => ({ cells: visible.map((c) => (c.money ? Math.round(c.money(r) * 100) / 100 : textOf(c, r))) }))
+    rows.push({ cells: visible.map((c, i) => (c.money ? Math.round(sumOf(rs, c) * 100) / 100 : i === 0 ? `Gjithsej (${rs.length})` : null)), style: 'total' })
+    await downloadReport(`${(exportName ?? id).replace(/[\\/:*?"<>|]+/g, ' ')}.xlsx`, [{ name: title ?? 'Lista', columns: visible.map((c, i) => ({ header: c.label, kind: kinds[i] })), rows }], { title })
   }
 
   const onKeyDown = (e: React.KeyboardEvent) => {

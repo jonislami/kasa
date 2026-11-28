@@ -152,6 +152,7 @@ export function DocumentsTab({ client, kind, from, to, onChanged }: { client: Cl
         error={docs.error ? (docs.error as Error).message : null}
         empty={t.empty}
         exportName={`${client.name} ${kind === 'sale' ? 'shitjet' : kind === 'purchase' ? 'blerjet' : 'proformat'} ${from}_${to}`}
+        title={kind === 'sale' ? 'Faturat e shitjes' : kind === 'purchase' ? 'Blerjet dhe shpenzimet' : 'Faturat proformë'}
         filters={
           <>
             {kind !== 'proforma' && (
